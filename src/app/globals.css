@@ -1,12 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Amethysta&display=swap');
+
+
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #bebbbb;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #ffffff;
   }
 }
 
