@@ -1,8 +1,9 @@
 'use client';
 import { useState } from "react";
-import { AppBar, Toolbar, IconButton, InputBase, Drawer, List, ListItem, ListItemText, Collapse } from "@mui/material";
+import { AppBar, Toolbar, IconButton, InputBase, Drawer, List, ListItem, ListItemText, Collapse, Dialog, Paper } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
+import CloseIcon from "@mui/icons-material/Close";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
@@ -13,6 +14,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 export default function Navbar() {
     const [open, setOpen] = useState(false);
     const [openSubmenus, setOpenSubmenus] = useState({});
+    const [searchOpen, setSearchOpen] = useState(false);
     const isMobile = useMediaQuery('(max-width:768px)');
 
     const toggleDrawer = (state) => () => {
@@ -24,6 +26,10 @@ export default function Navbar() {
             ...prev,
             [index]: !prev[index]
         }));
+    };
+
+    const toggleSearch = () => {
+        setSearchOpen(!searchOpen);
     };
 
     const menuCategories = [
@@ -58,110 +64,160 @@ export default function Navbar() {
         <>
             {/* Navbar */}
             <AppBar position="static" color="transparent" elevation={0} sx={{ backgroundColor: "white", padding: "8px 16px" }}>
-                <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', padding: '0 !important' }}>
-                    {/* Left - Hamburger Menu */}
-                    <IconButton onClick={toggleDrawer(true)} sx={{ color: "#171717" }}>
-                        <MenuIcon />
-                    </IconButton>
+                <Toolbar sx={{display: 'flex', justifyContent: 'space-between', padding: '0 !important'}}>
+                    {/* Left section - Hamburger Menu and Logo */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center'
+                    }}>
+                        {/* Hamburger Menu */}
+                        <IconButton onClick={toggleDrawer(true)} sx={{color: "#171717"}}>
+                            <MenuIcon fontSize="large"/>
+                        </IconButton>
 
-                    {/*Logo */}
-                    <h1 className="text-xl font-bold"
-                        style={{
-                            color: "#171717",
-                            fontFamily: "'Amethysta', serif",
-                            marginLeft: isMobile ? 'auto' : '8px',
-                            marginRight: isMobile ? 'auto' : '0',
-                            textAlign: isMobile ? 'center' : 'left',
-                            flexGrow: isMobile ? 1 : 0
-                        }}>
-                        VÍSTELICA
-                    </h1>
+                        {/* Logo - left aligned on desktop, not shown on mobile */}
+                        {!isMobile && (
+                            <h1 className="text-xl font-bold"
+                                style={{
+                                    fontSize: "37px",
+                                    color: "#171717",
+                                    fontFamily: "'Amethysta', serif",
+                                    marginLeft: '40%', // Increased left padding/margin
 
+                                }}>
+                                VÍSTELICA
+                            </h1>
+                        )}
+                    </div>
+
+                    {/* Logo - centered on mobile only */}
+                    {isMobile && (
+                        <h1 className="text-xl font-bold"
+                            style={{
+                                fontSize: "37px",
+                                color: "#171717",
+                                fontFamily: "'Amethysta', serif",
+                                textAlign: 'center',
+                                flex: 1
+                            }}>
+                            VÍSTELICA
+                        </h1>
+                    )}
 
                     {/* Right - Icons in One Line */}
                     <div style={{display: "flex", alignItems: "center", gap: "16px"}}>
-                        {isMobile ? (
-                            <div style={{display: "flex", alignItems: "center", gap: "16px"}}>
-                                <IconButton sx={{ color: "#171717" }}>
-                                    <SearchIcon />
+                        {/* Search Button - Both Mobile & Desktop with same size */}
+                        <IconButton onClick={toggleSearch} sx={{color: "#171717"}}>
+                            <SearchIcon sx={{fontSize: "34px"}}/>
+                        </IconButton>
+
+                        {!isMobile && (
+                            <>
+                                <IconButton sx={{color: "#171717"}}>
+                                    <AccountCircleIcon sx={{fontSize: "34px"}}/>
                                 </IconButton>
-                                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                                    <IconButton sx={{ color: "#171717" }}>
-                                        <ShoppingBagIcon />
-                                    </IconButton>
-                                    <span style={{
-                                        position: "absolute",
-                                        top: 0,
-                                        right: 0,
-                                        backgroundColor: "black",
-                                        color: "white",
-                                        fontSize: "12px",
-                                        borderRadius: "50%",
-                                        width: "16px",
-                                        height: "16px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center"
-                                    }}>
-                                        0
-                                    </span>
-                                </div>
-                            </div>
-                        ) : (
-                            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                                <div style={{ display: "flex", alignItems: "center", border: "1px solid #171717", borderRadius: "4px", padding: "4px 8px" }}>
-                                    <SearchIcon sx={{ color: "#171717" }} />
-                                    <InputBase placeholder="Buscar..." sx={{ color: "#171717", marginLeft: 1 }} />
-                                </div>
-                                <IconButton sx={{ color: "#171717" }}>
-                                    <AccountCircleIcon />
+                                <IconButton sx={{color: "#171717"}}>
+                                    <FavoriteBorderIcon sx={{fontSize: "34px"}}/>
                                 </IconButton>
-                                <IconButton sx={{ color: "#171717" }}>
-                                    <FavoriteBorderIcon />
-                                </IconButton>
-                                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                                    <IconButton sx={{ color: "#171717" }}>
-                                        <ShoppingBagIcon />
-                                    </IconButton>
-                                    <span style={{
-                                        position: "absolute",
-                                        top: 0,
-                                        right: 0,
-                                        backgroundColor: "black",
-                                        color: "white",
-                                        fontSize: "12px",
-                                        borderRadius: "50%",
-                                        width: "16px",
-                                        height: "16px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center"
-                                    }}>
-                                        0
-                                    </span>
-                                </div>
-                            </div>
+                            </>
                         )}
+
+                        {/* Shopping Bag - Both Mobile & Desktop */}
+                        <div style={{position: "relative", display: "flex", alignItems: "center"}}>
+                            <IconButton sx={{color: "#171717"}}>
+                                <ShoppingBagIcon sx={{fontSize: "34px"}}/>
+                            </IconButton>
+                            <span style={{
+                                position: "absolute",
+                                top: 0,
+                                right: 0,
+                                backgroundColor: "black",
+                                color: "white",
+                                fontSize: "12px",
+                                borderRadius: "50%",
+                                width: "16px",
+                                height: "16px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center"
+                            }}>
+                            0
+                        </span>
+                        </div>
                     </div>
                 </Toolbar>
+
+                {/* Search Panel below logo */}
+                {searchOpen && (
+                    <Paper elevation={0} square sx={{
+                        width: '100%',
+                        padding: '16px',
+                        borderBottom: '1px solid #e0e0e0',
+                        borderTop: '1px solid #e0e0e0'
+                    }}>
+                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                            <div style={{display: 'flex', alignItems: 'center', flexGrow: 1, marginRight: '16px'}}>
+                                <SearchIcon sx={{color: "#171717", fontSize: "24px", marginRight: '8px'}}/>
+                                <InputBase
+                                    autoFocus
+                                    placeholder="¿Qué estás buscando?"
+                                    sx={{
+                                        flexGrow: 1,
+                                        fontSize: '16px',
+                                        color: "#171717"
+                                    }}
+                                />
+                            </div>
+                            <IconButton onClick={toggleSearch}>
+                                <CloseIcon/>
+                            </IconButton>
+                        </div>
+                        <div style={{padding: '10px 0'}}>
+                            <h3 style={{fontWeight: 'bold', marginBottom: '10px'}}>BÚSQUEDAS POPULARES</h3>
+                            <div style={{display: 'flex', flexWrap: 'wrap', gap: '10px'}}>
+                                {['Camisas', 'Vestidos', 'Pantalones', 'Trajes', 'Rebajas'].map((item, index) => (
+                                    <div key={index} style={{
+                                        padding: '8px 12px',
+                                        border: '1px solid #e0e0e0',
+                                        borderRadius: '20px',
+                                        fontSize: '14px',
+                                        cursor: 'pointer'
+                                    }}>
+                                        {item}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </Paper>
+                )}
             </AppBar>
 
             {/* Sliding Menu */}
-            <Drawer anchor="left" open={open} onClose={toggleDrawer(false)}>
-                <div className="w-full sm:w-80">
+            <Drawer anchor="left" open={open} onClose={toggleDrawer(false)}
+                sx={{
+                width: isMobile ? '100%' : '500px',
+                height: isMobile ? '100%' : 'auto',
+                '& .MuiDrawer-paper': {
+                    width: isMobile ? '100%' : '500px',
+                    height: isMobile ? '100%' : '100%',
+                }
+            }}
+                >
+                <div style={{width: '100%', height: '100%'}}>
                     {/* Menu Header with Icons */}
                     {isMobile && (
                         <div className="flex justify-end p-4 border-b border-gray-200">
-                            <IconButton sx={{ color: "#171717" }}>
-                                <SearchIcon />
+                            <IconButton sx={{color: "#171717"}} onClick={toggleSearch}>
+                                <SearchIcon/>
                             </IconButton>
                             <div className="relative">
-                                <IconButton sx={{ color: "#171717" }}>
-                                    <ShoppingBagIcon />
+                                <IconButton sx={{color: "#171717"}}>
+                                    <ShoppingBagIcon/>
                                 </IconButton>
-                                <span className="absolute top-0 right-0 bg-black text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                                    0
-                                </span>
+                                <span
+                                    className="absolute top-0 right-0 bg-black text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                                0
+                            </span>
                             </div>
                         </div>
                     )}
@@ -176,8 +232,10 @@ export default function Navbar() {
                                 borderRadius: "0",
                                 width: "40px",
                                 height: "40px",
-                                "&:hover": { backgroundColor: "#E4B002",
-                                    color: "white"}
+                                "&:hover": {
+                                    backgroundColor: "#E4B002",
+                                    color: "white"
+                                }
                             }}
                         >
                             ✕
@@ -185,7 +243,7 @@ export default function Navbar() {
                     </div>
 
                     {/* Menu Categories with Subcategories */}
-                    <List sx={{ pt: 0 }}>
+                    <List sx={{pt: 0}}>
                         {menuCategories.map((category, index) => (
                             <div key={index}>
                                 <ListItem
@@ -200,10 +258,10 @@ export default function Navbar() {
                                     <ListItemText
                                         primary={category.name}
                                         primaryTypographyProps={{
-                                            style: { fontWeight: 500 }
+                                            style: {fontWeight: 500}
                                         }}
                                     />
-                                    {openSubmenus[index] ? <ExpandLess /> : <ExpandMore />}
+                                    {openSubmenus[index] ? <ExpandLess/> : <ExpandMore/>}
                                 </ListItem>
 
                                 <Collapse in={openSubmenus[index]} timeout="auto" unmountOnExit>
@@ -223,7 +281,7 @@ export default function Navbar() {
                                                 <ListItemText
                                                     primary={subcat}
                                                     primaryTypographyProps={{
-                                                        style: { fontWeight: 400, fontSize: '0.95rem' }
+                                                        style: {fontWeight: 400, fontSize: '0.95rem'}
                                                     }}
                                                 />
                                             </ListItem>
