@@ -205,22 +205,7 @@ export default function Navbar() {
                 >
                 <div style={{width: '100%', height: '100%'}}>
                     {/* Menu Header with Icons */}
-                    {isMobile && (
-                        <div className="flex justify-end p-4 border-b border-gray-200">
-                            <IconButton sx={{color: "#171717"}} onClick={toggleSearch}>
-                                <SearchIcon/>
-                            </IconButton>
-                            <div className="relative">
-                                <IconButton sx={{color: "#171717"}}>
-                                    <ShoppingBagIcon/>
-                                </IconButton>
-                                <span
-                                    className="absolute top-0 right-0 bg-black text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                                0
-                            </span>
-                            </div>
-                        </div>
-                    )}
+
 
                     {/* Close Button */}
                     <div className="p-4">
