@@ -14,15 +14,88 @@ import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
 import Sidebar from '@/app/pages/admin/components/Sidebar';
 import OrderTable from '@/app/pages/admin/components/OrderTable';
 import OrderList from '@/app/pages/admin/components/OrderList';
+import CustomerTable from '@/app/pages/admin/components/CustomerTable';
+import CustomerList from '@/app/pages/admin/components/CustomerList';
+import SupplierTable from "@/app/pages/admin/components/SupplierTable";
+import SupplierList from "@/app/pages/admin/components/SupplierList";
+import ProductTable from "@/app/pages/admin/components/ProductTable";
+import ProductList from "@/app/pages/admin/components/ProductList";
 import Header from '@/app/pages/admin/components/Header';
 
+
 const JoyOrderDashboardTemplate = () => {
+    const [activeTab, setActiveTab] = React.useState('orders');
+    const renderContent = () => {
+        switch (activeTab) {
+            case 'orders':
+                return (
+                    <>
+                        <Typography level="h2" component="h1">
+                            Pedidos
+                        </Typography>
+                        <OrderTable />
+                        <OrderList />
+                    </>
+                );
+            case 'suppliers':
+                return (
+                    <>
+                        <Typography level="h2" component="h1">
+                            Proveedores
+                        </Typography>
+                        <SupplierTable/>
+                        <SupplierList/>
+                    </>
+                );
+            case 'customers':
+                return (
+                    <>
+                        <Typography level="h2" component="h1">
+                            Clientes
+                        </Typography>
+                        <CustomerTable/>
+                        <CustomerList/>
+                    </>
+                );
+            case 'products':
+                return (
+                    <>
+                        <Typography level="h2" component="h1">
+                            Productos
+                        </Typography>
+                        <ProductTable/>
+                        <ProductList/>
+                    </>
+                );
+            default:
+                return (
+                    <>
+                        <Typography level="h2" component="h1">
+                            Pedidos
+                        </Typography>
+                        <OrderTable />
+                        <OrderList />
+                    </>
+                );
+        }
+    };
+
+    const getBreadcrumbText = () => {
+        switch (activeTab) {
+            case 'orders': return 'Pedidos';
+            case 'suppliers': return 'Proveedores';
+            case 'customers': return 'Clientes';
+            case 'products': return 'Productos';
+            default: return 'Pedidos';
+        }
+    };
+
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
             <Box sx={{ display: 'flex', minHeight: '100dvh' }}>
                 <Header />
-                <Sidebar/>
+                <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
                 <Box
                     component="main"
                     className="MainContent"
@@ -57,36 +130,12 @@ const JoyOrderDashboardTemplate = () => {
                             >
                                 <HomeRoundedIcon />
                             </Link>
-                            <Link
-                                underline="hover"
-                                color="neutral"
-                                href="#some-link"
-                                sx={{ fontSize: 12, fontWeight: 500 }}
-                            >
-                                Dashboard
-                            </Link>
                             <Typography color="primary" sx={{ fontWeight: 500, fontSize: 12 }}>
-                                Orders
+                                {getBreadcrumbText()}
                             </Typography>
                         </Breadcrumbs>
                     </Box>
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            mb: 1,
-                            gap: 1,
-                            flexDirection: { xs: 'column', sm: 'row' },
-                            alignItems: { xs: 'start', sm: 'center' },
-                            flexWrap: 'wrap',
-                            justifyContent: 'space-between',
-                        }}
-                    >
-                        <Typography level="h2" component="h1">
-                            Pedidos
-                        </Typography>
-                    </Box>
-                    <OrderTable />
-                    <OrderList />
+                    {renderContent()}
                 </Box>
             </Box>
         </CssVarsProvider>

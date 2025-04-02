@@ -9,9 +9,6 @@ import FormControl from '@mui/joy/FormControl';
 import FormLabel from '@mui/joy/FormLabel';
 import Link from '@mui/joy/Link';
 import Input from '@mui/joy/Input';
-import Modal from '@mui/joy/Modal';
-import ModalDialog from '@mui/joy/ModalDialog';
-import ModalClose from '@mui/joy/ModalClose';
 import Table from '@mui/joy/Table';
 import Sheet from '@mui/joy/Sheet';
 import Checkbox from '@mui/joy/Checkbox';
@@ -22,103 +19,54 @@ import MenuButton from '@mui/joy/MenuButton';
 import MenuItem from '@mui/joy/MenuItem';
 import Dropdown from '@mui/joy/Dropdown';
 
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import SearchIcon from '@mui/icons-material/Search';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import BlockIcon from '@mui/icons-material/Block';
-import AutorenewRoundedIcon from '@mui/icons-material/AutorenewRounded';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
-import CreditCardIcon from '@mui/icons-material/CreditCard';
-import PaymentIcon from '@mui/icons-material/Payment';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
-const rows = [
+const customers = [
     {
-        id: 'INV-1234',
-        date: '3 Feb, 2023',
-        status: 'Reembolsado',
-        customer: {
-            initial: 'O',
-            name: 'Olivia Ryhe',
-            email: 'olivia@email.com',
-        },
-        shippingAddress: 'Calle Principal 123, Madrid, España',
-        paymentMethod: 'tarjeta'
+        id: 'USR-001',
+        email: 'cliente1@example.com',
+        banned: false,
+        name: 'Juan Pérez',
+        avatar: '/static/images/avatar/1.jpg'
     },
     {
-        id: 'INV-1233',
-        date: '3 Feb, 2023',
-        status: 'Pagado',
-        customer: {
-            initial: 'S',
-            name: 'Steve Hampton',
-            email: 'steve.hamp@email.com',
-        },
-        shippingAddress: 'Avenida Secundaria 456, Barcelona, España',
-        paymentMethod: 'bizum'
+        id: 'USR-002',
+        email: 'cliente2@example.com',
+        banned: true,
+        name: 'María García',
+        avatar: '/static/images/avatar/2.jpg'
     },
     {
-        id: 'INV-1232',
-        date: '3 Feb, 2023',
-        status: 'Reembolsado',
-        customer: {
-            initial: 'C',
-            name: 'Ciaran Murray',
-            email: 'ciaran.murray@email.com',
-        },
-        shippingAddress: 'Plaza Central 789, Valencia, España',
-        paymentMethod: 'paypal'
+        id: 'USR-003',
+        email: 'cliente3@example.com',
+        banned: false,
+        name: 'Carlos López',
+        avatar: '/static/images/avatar/3.jpg'
     },
     {
-        id: 'INV-1231',
-        date: '4 Feb, 2023',
-        status: 'Reembolsado',
-        customer: {
-            initial: 'M',
-            name: 'Maria Macdonald',
-            email: 'maria.mc@email.com',
-        },
-        shippingAddress: 'Callejón 101, Sevilla, España',
-        paymentMethod: 'tarjeta'
+        id: 'USR-004',
+        email: 'cliente4@example.com',
+        banned: true,
+        name: 'Ana Martínez',
+        avatar: '/static/images/avatar/4.jpg'
     },
     {
-        id: 'INV-1230',
-        date: '5 Feb, 2023',
-        status: 'Cancelado',
-        customer: {
-            initial: 'C',
-            name: 'Charles Fulton',
-            email: 'fulton@email.com',
-        },
-        shippingAddress: 'Paseo Marítimo 202, Málaga, España',
-        paymentMethod: 'bizum'
+        id: 'USR-005',
+        email: 'cliente5@example.com',
+        banned: false,
+        name: 'Pedro Sánchez',
+        avatar: '/static/images/avatar/5.jpg'
     },
 ];
 
-function descendingComparator(a, b, orderBy) {
-    if (b[orderBy] < a[orderBy]) {
-        return -1;
-    }
-    if (b[orderBy] > a[orderBy]) {
-        return 1;
-    }
-    return 0;
-}
-
-function getComparator(order, orderBy) {
-    return order === 'desc'
-        ? (a, b) => descendingComparator(a, b, orderBy)
-        : (a, b) => -descendingComparator(a, b, orderBy);
-}
-
-function RowMenu() {
+function RowMenu({ customer, onToggleBan }) {
     return (
         <Dropdown>
             <MenuButton
@@ -129,7 +77,15 @@ function RowMenu() {
             </MenuButton>
             <Menu size="sm" sx={{ minWidth: 140 }}>
                 <MenuItem>Editar</MenuItem>
-                <MenuItem>Renombrar</MenuItem>
+                {customer.banned ? (
+                    <MenuItem onClick={() => onToggleBan(customer.id, false)}>
+                        Desbanear
+                    </MenuItem>
+                ) : (
+                    <MenuItem onClick={() => onToggleBan(customer.id, true)}>
+                        Banear
+                    </MenuItem>
+                )}
                 <Divider />
                 <MenuItem color="danger">Eliminar</MenuItem>
             </Menu>
@@ -137,14 +93,19 @@ function RowMenu() {
     );
 }
 
-export default function OrderTable() {
+export default function CustomerTable() {
     const [order, setOrder] = React.useState('desc');
     const [orderBy, setOrderBy] = React.useState('id');
     const [selected, setSelected] = React.useState([]);
-    const [open, setOpen] = React.useState(false);
+    const [customersData, setCustomersData] = React.useState(customers);
     const [nameFilter, setNameFilter] = React.useState('');
     const [emailFilter, setEmailFilter] = React.useState('');
-    const [dateFilter, setDateFilter] = React.useState('');
+
+    const handleToggleBan = (customerId, banStatus) => {
+        setCustomersData(prev => prev.map(customer =>
+            customer.id === customerId ? { ...customer, banned: banStatus } : customer
+        ));
+    };
 
     const handleSort = (property) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -152,25 +113,20 @@ export default function OrderTable() {
         setOrderBy(property);
     };
 
-    const renderPaymentMethodIcon = (method) => {
-        switch(method) {
-            case 'tarjeta':
-                return <CreditCardIcon fontSize="small" />;
-            case 'bizum':
-                return <PaymentIcon fontSize="small" />;
-            case 'paypal':
-                return <AccountBalanceWalletIcon fontSize="small" />;
-            default:
-                return <CreditCardIcon fontSize="small" />;
+    const filteredCustomers = customersData.filter(customer => {
+        const matchesName = customer.name.toLowerCase().includes(nameFilter.toLowerCase());
+        const matchesEmail = customer.email.toLowerCase().includes(emailFilter.toLowerCase());
+        return matchesName && matchesEmail;
+    });
+
+    const sortedCustomers = [...filteredCustomers].sort((a, b) => {
+        if (a[orderBy] < b[orderBy]) {
+            return order === 'asc' ? -1 : 1;
         }
-    };
-
-    const filteredRows = rows.filter(row => {
-        const matchesName = row.customer.name.toLowerCase().includes(nameFilter.toLowerCase());
-        const matchesEmail = row.customer.email.toLowerCase().includes(emailFilter.toLowerCase());
-        const matchesDate = row.date.toLowerCase().includes(dateFilter.toLowerCase());
-
-        return matchesName && matchesEmail && matchesDate;
+        if (a[orderBy] > b[orderBy]) {
+            return order === 'asc' ? 1 : -1;
+        }
+        return 0;
     });
 
     return (
@@ -208,16 +164,6 @@ export default function OrderTable() {
                         onChange={(e) => setEmailFilter(e.target.value)}
                     />
                 </FormControl>
-                <FormControl sx={{ flex: 1 }} size="sm">
-                    <FormLabel>Buscar por fecha</FormLabel>
-                    <Input
-                        size="sm"
-                        placeholder="Fecha del pedido"
-                        startDecorator={<CalendarMonthIcon />}
-                        value={dateFilter}
-                        onChange={(e) => setDateFilter(e.target.value)}
-                    />
-                </FormControl>
             </Box>
             <Sheet
                 className="OrderTableContainer"
@@ -249,16 +195,16 @@ export default function OrderTable() {
                             <Checkbox
                                 size="sm"
                                 indeterminate={
-                                    selected.length > 0 && selected.length !== filteredRows.length
+                                    selected.length > 0 && selected.length !== customersData.length
                                 }
-                                checked={selected.length === filteredRows.length}
+                                checked={selected.length === customersData.length}
                                 onChange={(event) => {
                                     setSelected(
-                                        event.target.checked ? filteredRows.map((row) => row.id) : [],
+                                        event.target.checked ? customersData.map((row) => row.id) : [],
                                     );
                                 }}
                                 color={
-                                    selected.length > 0 || selected.length === filteredRows.length
+                                    selected.length > 0 || selected.length === customersData.length
                                         ? 'primary'
                                         : undefined
                                 }
@@ -283,66 +229,59 @@ export default function OrderTable() {
                                 ID
                             </Link>
                         </th>
-                        <th style={{ width: 140, padding: '12px 6px' }}>
+                        <th style={{ width: 200, padding: '12px 6px' }}>
                             <Link
                                 underline="none"
                                 color="primary"
                                 component="button"
-                                onClick={() => handleSort('date')}
+                                onClick={() => handleSort('name')}
                                 endDecorator={<ArrowDropDownIcon />}
                                 sx={{
                                     fontWeight: 'lg',
                                     '& svg': {
                                         transition: '0.2s',
-                                        transform: orderBy === 'date' && order === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)',
+                                        transform: orderBy === 'name' && order === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)',
                                     },
                                 }}
                             >
-                                Fecha
+                                Nombre
+                            </Link>
+                        </th>
+                        <th style={{ width: 240, padding: '12px 6px' }}>
+                            <Link
+                                underline="none"
+                                color="primary"
+                                component="button"
+                                onClick={() => handleSort('email')}
+                                endDecorator={<ArrowDropDownIcon />}
+                                sx={{
+                                    fontWeight: 'lg',
+                                    '& svg': {
+                                        transition: '0.2s',
+                                        transform: orderBy === 'email' && order === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)',
+                                    },
+                                }}
+                            >
+                                Email
                             </Link>
                         </th>
                         <th style={{ width: 140, padding: '12px 6px' }}>Estado</th>
-                        <th style={{ width: 200, padding: '12px 6px' }}>Cliente</th>
-                        <th style={{ width: 220, padding: '12px 6px' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <LocationOnIcon fontSize="small" />
-                                <span>Dirección</span>
-                            </Box>
-                        </th>
-                        <th style={{ width: 150, padding: '12px 6px' }}>
-                            <Link
-                                underline="none"
-                                color="primary"
-                                component="button"
-                                onClick={() => handleSort('paymentMethod')}
-                                endDecorator={<ArrowDropDownIcon />}
-                                sx={{
-                                    fontWeight: 'lg',
-                                    '& svg': {
-                                        transition: '0.2s',
-                                        transform: orderBy === 'paymentMethod' && order === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)',
-                                    },
-                                }}
-                            >
-                                Método Pago
-                            </Link>
-                        </th>
-                        <th style={{ width: 80, padding: '12px 6px' }}></th>
+                        <th style={{ width: 100, padding: '12px 6px' }}>Acciones</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {[...filteredRows].sort(getComparator(order, orderBy)).map((row) => (
-                        <tr key={row.id}>
+                    {sortedCustomers.map((customer) => (
+                        <tr key={customer.id}>
                             <td style={{ textAlign: 'center' }}>
                                 <Checkbox
                                     size="sm"
-                                    checked={selected.includes(row.id)}
-                                    color={selected.includes(row.id) ? 'primary' : undefined}
+                                    checked={selected.includes(customer.id)}
+                                    color={selected.includes(customer.id) ? 'primary' : undefined}
                                     onChange={(event) => {
                                         setSelected((ids) =>
                                             event.target.checked
-                                                ? ids.concat(row.id)
-                                                : ids.filter((itemId) => itemId !== row.id),
+                                                ? ids.concat(customer.id)
+                                                : ids.filter((itemId) => itemId !== customer.id),
                                         );
                                     }}
                                     slotProps={{ checkbox: { sx: { textAlign: 'left' } } }}
@@ -350,60 +289,32 @@ export default function OrderTable() {
                                 />
                             </td>
                             <td>
-                                <Typography level="body-xs">{row.id}</Typography>
+                                <Typography level="body-xs">{customer.id}</Typography>
                             </td>
                             <td>
-                                <Typography level="body-xs">{row.date}</Typography>
+                                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                    <Avatar size="sm" src={customer.avatar} />
+                                    <Typography level="body-xs">{customer.name}</Typography>
+                                </Box>
+                            </td>
+                            <td>
+                                <Typography level="body-xs">{customer.email}</Typography>
                             </td>
                             <td>
                                 <Chip
                                     variant="soft"
                                     size="sm"
                                     startDecorator={
-                                        {
-                                            Pagado: <CheckRoundedIcon />,
-                                            Reembolsado: <AutorenewRoundedIcon />,
-                                            Cancelado: <BlockIcon />,
-                                        }[row.status]
+                                        customer.banned ? <BlockIcon /> : <CheckRoundedIcon />
                                     }
-                                    color={
-                                        {
-                                            Pagado: 'success',
-                                            Reembolsado: 'neutral',
-                                            Cancelado: 'danger',
-                                        }[row.status]
-                                    }
+                                    color={customer.banned ? 'danger' : 'success'}
                                 >
-                                    {row.status}
-                                </Chip>
-                            </td>
-                            <td>
-                                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                                    <Avatar size="sm">{row.customer.initial}</Avatar>
-                                    <div>
-                                        <Typography level="body-xs">{row.customer.name}</Typography>
-                                        <Typography level="body-xs">{row.customer.email}</Typography>
-                                    </div>
-                                </Box>
-                            </td>
-                            <td>
-                                <Typography level="body-xs" sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px' }}>
-                                    {row.shippingAddress}
-                                </Typography>
-                            </td>
-                            <td>
-                                <Chip
-                                    variant="outlined"
-                                    size="sm"
-                                    startDecorator={renderPaymentMethodIcon(row.paymentMethod)}
-                                >
-                                    {row.paymentMethod === 'tarjeta' ? 'Tarjeta' :
-                                        row.paymentMethod === 'bizum' ? 'Bizum' : 'PayPal'}
+                                    {customer.banned ? 'Baneado' : 'Activo'}
                                 </Chip>
                             </td>
                             <td>
                                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                    <RowMenu />
+                                    <RowMenu customer={customer} onToggleBan={handleToggleBan} />
                                 </Box>
                             </td>
                         </tr>

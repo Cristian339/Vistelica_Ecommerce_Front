@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { ColorPaletteProp } from '@mui/joy/styles';
-import Avatar from '@mui/joy/Avatar';
 import Box from '@mui/joy/Box';
 import Button from '@mui/joy/Button';
 import Chip from '@mui/joy/Chip';
@@ -9,9 +8,6 @@ import FormControl from '@mui/joy/FormControl';
 import FormLabel from '@mui/joy/FormLabel';
 import Link from '@mui/joy/Link';
 import Input from '@mui/joy/Input';
-import Modal from '@mui/joy/Modal';
-import ModalDialog from '@mui/joy/ModalDialog';
-import ModalClose from '@mui/joy/ModalClose';
 import Table from '@mui/joy/Table';
 import Sheet from '@mui/joy/Sheet';
 import Checkbox from '@mui/joy/Checkbox';
@@ -22,101 +18,65 @@ import MenuButton from '@mui/joy/MenuButton';
 import MenuItem from '@mui/joy/MenuItem';
 import Dropdown from '@mui/joy/Dropdown';
 
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import SearchIcon from '@mui/icons-material/Search';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
-import BlockIcon from '@mui/icons-material/Block';
-import AutorenewRoundedIcon from '@mui/icons-material/AutorenewRounded';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
-import CreditCardIcon from '@mui/icons-material/CreditCard';
-import PaymentIcon from '@mui/icons-material/Payment';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
-import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import PhoneIcon from '@mui/icons-material/Phone';
+import BusinessIcon from '@mui/icons-material/Business';
+import PublicIcon from '@mui/icons-material/Public';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import PersonIcon from '@mui/icons-material/Person';
 
-const rows = [
+const suppliers = [
     {
-        id: 'INV-1234',
-        date: '3 Feb, 2023',
-        status: 'Reembolsado',
-        customer: {
-            initial: 'O',
-            name: 'Olivia Ryhe',
-            email: 'olivia@email.com',
-        },
-        shippingAddress: 'Calle Principal 123, Madrid, España',
-        paymentMethod: 'tarjeta'
+        id: 'SUP-001',
+        companyName: 'Tecnologías Avanzadas S.A.',
+        email: 'contacto@tecnologias-avanzadas.com',
+        address: 'Calle Innovación 123, Barcelona, España',
+        phone: '+34 933 456 789',
+        country: 'España',
+        iban: 'ES91 2100 0418 4502 0005 1332'
     },
     {
-        id: 'INV-1233',
-        date: '3 Feb, 2023',
-        status: 'Pagado',
-        customer: {
-            initial: 'S',
-            name: 'Steve Hampton',
-            email: 'steve.hamp@email.com',
-        },
-        shippingAddress: 'Avenida Secundaria 456, Barcelona, España',
-        paymentMethod: 'bizum'
+        id: 'SUP-002',
+        companyName: 'Componentes Globales Ltd.',
+        email: 'info@componentes-globales.com',
+        address: 'Av. Industrial 456, Hamburgo, Alemania',
+        phone: '+49 40 12345678',
+        country: 'Alemania',
+        iban: 'DE89 3704 0044 0532 0130 00'
     },
     {
-        id: 'INV-1232',
-        date: '3 Feb, 2023',
-        status: 'Reembolsado',
-        customer: {
-            initial: 'C',
-            name: 'Ciaran Murray',
-            email: 'ciaran.murray@email.com',
-        },
-        shippingAddress: 'Plaza Central 789, Valencia, España',
-        paymentMethod: 'paypal'
+        id: 'SUP-003',
+        companyName: 'Electrónica del Pacífico',
+        email: 'ventas@electronica-pacifico.cl',
+        address: 'Calle Tecnológica 789, Santiago, Chile',
+        phone: '+56 2 2345 6789',
+        country: 'Chile',
+        iban: 'CL09 1234 5678 9012 3456 7890'
     },
     {
-        id: 'INV-1231',
-        date: '4 Feb, 2023',
-        status: 'Reembolsado',
-        customer: {
-            initial: 'M',
-            name: 'Maria Macdonald',
-            email: 'maria.mc@email.com',
-        },
-        shippingAddress: 'Callejón 101, Sevilla, España',
-        paymentMethod: 'tarjeta'
+        id: 'SUP-004',
+        companyName: 'Suministros Industriales Norte',
+        email: 'pedidos@suministros-norte.com',
+        address: 'Rue Commerce 101, París, Francia',
+        phone: '+33 1 2345 6789',
+        country: 'Francia',
+        iban: 'FR76 3000 6000 0112 3456 7890 134'
     },
     {
-        id: 'INV-1230',
-        date: '5 Feb, 2023',
-        status: 'Cancelado',
-        customer: {
-            initial: 'C',
-            name: 'Charles Fulton',
-            email: 'fulton@email.com',
-        },
-        shippingAddress: 'Paseo Marítimo 202, Málaga, España',
-        paymentMethod: 'bizum'
+        id: 'SUP-005',
+        companyName: 'Materiales Premium Italia',
+        email: 'amministrazione@materiales-premium.it',
+        address: 'Via Roma 202, Milán, Italia',
+        phone: '+39 02 1234 5678',
+        country: 'Italia',
+        iban: 'IT60 X054 2811 1010 0000 0123 456'
     },
 ];
-
-function descendingComparator(a, b, orderBy) {
-    if (b[orderBy] < a[orderBy]) {
-        return -1;
-    }
-    if (b[orderBy] > a[orderBy]) {
-        return 1;
-    }
-    return 0;
-}
-
-function getComparator(order, orderBy) {
-    return order === 'desc'
-        ? (a, b) => descendingComparator(a, b, orderBy)
-        : (a, b) => -descendingComparator(a, b, orderBy);
-}
 
 function RowMenu() {
     return (
@@ -129,7 +89,6 @@ function RowMenu() {
             </MenuButton>
             <Menu size="sm" sx={{ minWidth: 140 }}>
                 <MenuItem>Editar</MenuItem>
-                <MenuItem>Renombrar</MenuItem>
                 <Divider />
                 <MenuItem color="danger">Eliminar</MenuItem>
             </Menu>
@@ -137,14 +96,12 @@ function RowMenu() {
     );
 }
 
-export default function OrderTable() {
+export default function SupplierTable() {
     const [order, setOrder] = React.useState('desc');
     const [orderBy, setOrderBy] = React.useState('id');
     const [selected, setSelected] = React.useState([]);
-    const [open, setOpen] = React.useState(false);
     const [nameFilter, setNameFilter] = React.useState('');
     const [emailFilter, setEmailFilter] = React.useState('');
-    const [dateFilter, setDateFilter] = React.useState('');
 
     const handleSort = (property) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -152,25 +109,20 @@ export default function OrderTable() {
         setOrderBy(property);
     };
 
-    const renderPaymentMethodIcon = (method) => {
-        switch(method) {
-            case 'tarjeta':
-                return <CreditCardIcon fontSize="small" />;
-            case 'bizum':
-                return <PaymentIcon fontSize="small" />;
-            case 'paypal':
-                return <AccountBalanceWalletIcon fontSize="small" />;
-            default:
-                return <CreditCardIcon fontSize="small" />;
+    const filteredSuppliers = suppliers.filter(supplier => {
+        const matchesName = supplier.companyName.toLowerCase().includes(nameFilter.toLowerCase());
+        const matchesEmail = supplier.email.toLowerCase().includes(emailFilter.toLowerCase());
+        return matchesName && matchesEmail;
+    });
+
+    const sortedSuppliers = [...filteredSuppliers].sort((a, b) => {
+        if (a[orderBy] < b[orderBy]) {
+            return order === 'asc' ? -1 : 1;
         }
-    };
-
-    const filteredRows = rows.filter(row => {
-        const matchesName = row.customer.name.toLowerCase().includes(nameFilter.toLowerCase());
-        const matchesEmail = row.customer.email.toLowerCase().includes(emailFilter.toLowerCase());
-        const matchesDate = row.date.toLowerCase().includes(dateFilter.toLowerCase());
-
-        return matchesName && matchesEmail && matchesDate;
+        if (a[orderBy] > b[orderBy]) {
+            return order === 'asc' ? 1 : -1;
+        }
+        return 0;
     });
 
     return (
@@ -192,7 +144,7 @@ export default function OrderTable() {
                     <FormLabel>Buscar por nombre</FormLabel>
                     <Input
                         size="sm"
-                        placeholder="Nombre del cliente"
+                        placeholder="Nombre del proveedor"
                         startDecorator={<PersonIcon />}
                         value={nameFilter}
                         onChange={(e) => setNameFilter(e.target.value)}
@@ -202,20 +154,10 @@ export default function OrderTable() {
                     <FormLabel>Buscar por email</FormLabel>
                     <Input
                         size="sm"
-                        placeholder="Email del cliente"
+                        placeholder="Email del proveedor"
                         startDecorator={<EmailIcon />}
                         value={emailFilter}
                         onChange={(e) => setEmailFilter(e.target.value)}
-                    />
-                </FormControl>
-                <FormControl sx={{ flex: 1 }} size="sm">
-                    <FormLabel>Buscar por fecha</FormLabel>
-                    <Input
-                        size="sm"
-                        placeholder="Fecha del pedido"
-                        startDecorator={<CalendarMonthIcon />}
-                        value={dateFilter}
-                        onChange={(e) => setDateFilter(e.target.value)}
                     />
                 </FormControl>
             </Box>
@@ -249,16 +191,16 @@ export default function OrderTable() {
                             <Checkbox
                                 size="sm"
                                 indeterminate={
-                                    selected.length > 0 && selected.length !== filteredRows.length
+                                    selected.length > 0 && selected.length !== suppliers.length
                                 }
-                                checked={selected.length === filteredRows.length}
+                                checked={selected.length === suppliers.length}
                                 onChange={(event) => {
                                     setSelected(
-                                        event.target.checked ? filteredRows.map((row) => row.id) : [],
+                                        event.target.checked ? suppliers.map((row) => row.id) : [],
                                     );
                                 }}
                                 color={
-                                    selected.length > 0 || selected.length === filteredRows.length
+                                    selected.length > 0 || selected.length === suppliers.length
                                         ? 'primary'
                                         : undefined
                                 }
@@ -283,66 +225,88 @@ export default function OrderTable() {
                                 ID
                             </Link>
                         </th>
-                        <th style={{ width: 140, padding: '12px 6px' }}>
+                        <th style={{ width: 180, padding: '12px 6px' }}>
                             <Link
                                 underline="none"
                                 color="primary"
                                 component="button"
-                                onClick={() => handleSort('date')}
+                                onClick={() => handleSort('companyName')}
                                 endDecorator={<ArrowDropDownIcon />}
                                 sx={{
                                     fontWeight: 'lg',
                                     '& svg': {
                                         transition: '0.2s',
-                                        transform: orderBy === 'date' && order === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)',
+                                        transform: orderBy === 'companyName' && order === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)',
                                     },
                                 }}
                             >
-                                Fecha
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <BusinessIcon fontSize="small" />
+                                    <span>Empresa</span>
+                                </Box>
                             </Link>
                         </th>
-                        <th style={{ width: 140, padding: '12px 6px' }}>Estado</th>
-                        <th style={{ width: 200, padding: '12px 6px' }}>Cliente</th>
-                        <th style={{ width: 220, padding: '12px 6px' }}>
+                        <th style={{ width: 160, padding: '12px 6px' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <EmailIcon fontSize="small" />
+                                <span>Email</span>
+                            </Box>
+                        </th>
+                        <th style={{ width: 200, padding: '12px 6px' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <LocationOnIcon fontSize="small" />
                                 <span>Dirección</span>
                             </Box>
                         </th>
-                        <th style={{ width: 150, padding: '12px 6px' }}>
+                        <th style={{ width: 140, padding: '12px 6px' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <PhoneIcon fontSize="small" />
+                                <span>Teléfono</span>
+                            </Box>
+                        </th>
+                        <th style={{ width: 120, padding: '12px 6px' }}>
                             <Link
                                 underline="none"
                                 color="primary"
                                 component="button"
-                                onClick={() => handleSort('paymentMethod')}
+                                onClick={() => handleSort('country')}
                                 endDecorator={<ArrowDropDownIcon />}
                                 sx={{
                                     fontWeight: 'lg',
                                     '& svg': {
                                         transition: '0.2s',
-                                        transform: orderBy === 'paymentMethod' && order === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)',
+                                        transform: orderBy === 'country' && order === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)',
                                     },
                                 }}
                             >
-                                Método Pago
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <PublicIcon fontSize="small" />
+                                    <span>País</span>
+                                </Box>
                             </Link>
+                        </th>
+                        <th style={{ width: 160, padding: '12px 6px' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <AccountBalanceIcon fontSize="small" />
+                                <span>IBAN</span>
+                            </Box>
                         </th>
                         <th style={{ width: 80, padding: '12px 6px' }}></th>
                     </tr>
                     </thead>
                     <tbody>
-                    {[...filteredRows].sort(getComparator(order, orderBy)).map((row) => (
-                        <tr key={row.id}>
+                    {sortedSuppliers.map((supplier) => (
+                        <tr key={supplier.id}>
                             <td style={{ textAlign: 'center' }}>
                                 <Checkbox
                                     size="sm"
-                                    checked={selected.includes(row.id)}
-                                    color={selected.includes(row.id) ? 'primary' : undefined}
+                                    checked={selected.includes(supplier.id)}
+                                    color={selected.includes(supplier.id) ? 'primary' : undefined}
                                     onChange={(event) => {
                                         setSelected((ids) =>
                                             event.target.checked
-                                                ? ids.concat(row.id)
-                                                : ids.filter((itemId) => itemId !== row.id),
+                                                ? ids.concat(supplier.id)
+                                                : ids.filter((itemId) => itemId !== supplier.id),
                                         );
                                     }}
                                     slotProps={{ checkbox: { sx: { textAlign: 'left' } } }}
@@ -350,56 +314,29 @@ export default function OrderTable() {
                                 />
                             </td>
                             <td>
-                                <Typography level="body-xs">{row.id}</Typography>
+                                <Typography level="body-xs">{supplier.id}</Typography>
                             </td>
                             <td>
-                                <Typography level="body-xs">{row.date}</Typography>
+                                <Typography level="body-xs">{supplier.companyName}</Typography>
                             </td>
                             <td>
-                                <Chip
-                                    variant="soft"
-                                    size="sm"
-                                    startDecorator={
-                                        {
-                                            Pagado: <CheckRoundedIcon />,
-                                            Reembolsado: <AutorenewRoundedIcon />,
-                                            Cancelado: <BlockIcon />,
-                                        }[row.status]
-                                    }
-                                    color={
-                                        {
-                                            Pagado: 'success',
-                                            Reembolsado: 'neutral',
-                                            Cancelado: 'danger',
-                                        }[row.status]
-                                    }
-                                >
-                                    {row.status}
-                                </Chip>
-                            </td>
-                            <td>
-                                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                                    <Avatar size="sm">{row.customer.initial}</Avatar>
-                                    <div>
-                                        <Typography level="body-xs">{row.customer.name}</Typography>
-                                        <Typography level="body-xs">{row.customer.email}</Typography>
-                                    </div>
-                                </Box>
+                                <Typography level="body-xs">{supplier.email}</Typography>
                             </td>
                             <td>
                                 <Typography level="body-xs" sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px' }}>
-                                    {row.shippingAddress}
+                                    {supplier.address}
                                 </Typography>
                             </td>
                             <td>
-                                <Chip
-                                    variant="outlined"
-                                    size="sm"
-                                    startDecorator={renderPaymentMethodIcon(row.paymentMethod)}
-                                >
-                                    {row.paymentMethod === 'tarjeta' ? 'Tarjeta' :
-                                        row.paymentMethod === 'bizum' ? 'Bizum' : 'PayPal'}
+                                <Typography level="body-xs">{supplier.phone}</Typography>
+                            </td>
+                            <td>
+                                <Chip variant="outlined" size="sm">
+                                    {supplier.country}
                                 </Chip>
+                            </td>
+                            <td>
+                                <Typography level="body-xs">{supplier.iban}</Typography>
                             </td>
                             <td>
                                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>

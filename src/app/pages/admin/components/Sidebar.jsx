@@ -60,7 +60,7 @@ function Toggler({ defaultExpanded = false, renderToggle, children }) {
     );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ activeTab, setActiveTab }) {
     return (
         <Sheet
             className="Sidebar"
@@ -141,9 +141,11 @@ export default function Sidebar() {
                         '--ListItem-radius': (theme) => theme.vars.radius.sm,
                     }}
                 >
-
                     <ListItem>
-                        <ListItemButton selected>
+                        <ListItemButton
+                            selected={activeTab === 'orders'}
+                            onClick={() => setActiveTab('orders')}
+                        >
                             <ShoppingCartRoundedIcon />
                             <ListItemContent>
                                 <Typography level="title-sm">Pedidos</Typography>
@@ -151,7 +153,10 @@ export default function Sidebar() {
                         </ListItemButton>
                     </ListItem>
                     <ListItem>
-                        <ListItemButton>
+                        <ListItemButton
+                            selected={activeTab === 'suppliers'}
+                            onClick={() => setActiveTab('suppliers')}
+                        >
                             <LocalShippingIcon/>
                             <ListItemContent>
                                 <Typography level="title-sm">Proveedores</Typography>
@@ -159,7 +164,10 @@ export default function Sidebar() {
                         </ListItemButton>
                     </ListItem>
                     <ListItem>
-                        <ListItemButton>
+                        <ListItemButton
+                            selected={activeTab === 'customers'}
+                            onClick={() => setActiveTab('customers')}
+                        >
                             <PersonIcon/>
                             <ListItemContent>
                                 <Typography level="title-sm">Clientes</Typography>
@@ -167,14 +175,16 @@ export default function Sidebar() {
                         </ListItemButton>
                     </ListItem>
                     <ListItem>
-                        <ListItemButton>
+                        <ListItemButton
+                            selected={activeTab === 'products'}
+                            onClick={() => setActiveTab('products')}
+                        >
                             <ShoppingBasketSharpIcon/>
                             <ListItemContent>
                                 <Typography level="title-sm">Productos</Typography>
                             </ListItemContent>
                         </ListItemButton>
                     </ListItem>
-
                 </List>
 
             </Box>

@@ -3,10 +3,9 @@ import { useColorScheme } from '@mui/joy/styles';
 import IconButton from '@mui/joy/IconButton';
 
 import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
-import LightModeIcon from '@mui/icons-material/LightMode';
+import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 
-export default function ColorSchemeToggle(props) {
-    const { onClick, sx, ...other } = props;
+export default function ColorSchemeToggle() {
     const { mode, setMode } = useColorScheme();
     const [mounted, setMounted] = React.useState(false);
 
@@ -20,40 +19,29 @@ export default function ColorSchemeToggle(props) {
                 size="sm"
                 variant="outlined"
                 color="neutral"
-                {...other}
-                sx={sx}
-                disabled
+                sx={{
+                    '&:first-of-type': {  // Cambiado de :first-child a :first-of-type
+                        display: 'none',
+                        '@media (min-width: 900px)': {
+                            display: 'inline-flex',
+                        },
+                    },
+                }}
             />
         );
     }
 
     return (
         <IconButton
-            data-screenshot="toggle-mode"
+            id="toggle-mode"
             size="sm"
             variant="outlined"
             color="neutral"
-            {...other}
-            onClick={(event) => {
-                if (mode === 'light') {
-                    setMode('dark');
-                } else {
-                    setMode('light');
-                }
-                onClick?.(event);
+            onClick={() => {
+                setMode(mode === 'light' ? 'dark' : 'light');
             }}
-            sx={[
-                mode === 'dark'
-                    ? { '& > *:first-child': { display: 'none' } }
-                    : { '& > *:first-child': { display: 'initial' } },
-                mode === 'light'
-                    ? { '& > *:last-child': { display: 'none' } }
-                    : { '& > *:last-child': { display: 'initial' } },
-                ...(Array.isArray(sx) ? sx : [sx]),
-            ]}
         >
-            <DarkModeRoundedIcon />
-            <LightModeIcon />
+            {mode === 'light' ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}
         </IconButton>
     );
 }
