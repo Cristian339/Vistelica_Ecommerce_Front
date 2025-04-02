@@ -1,13 +1,18 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Amethysta, Tenor_Sans } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { getDesignTokens } from '../pages/shared-theme/themePrimitives';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const amethysta = Amethysta({
+  weight: ['400'],
+  variable: "--font-amethysta",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const tenorSans = Tenor_Sans({
+  weight: ['400'],
+  variable: "--font-tenor-sans",
   subsets: ["latin"],
 });
 
@@ -18,10 +23,10 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
+      <html lang="en">
+      <body className={`${amethysta.variable} ${tenorSans.variable}`}>
+      {children}
       </body>
-    </html>
+      </html>
   );
 }
