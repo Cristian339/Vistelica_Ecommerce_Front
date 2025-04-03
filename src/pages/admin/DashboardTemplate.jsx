@@ -14,7 +14,7 @@ import dynamic from 'next/dynamic';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 
-// Carga dinámica de los componentes que podrían causar el problema
+// Componentes dinámicos
 const OrderTable = dynamic(() => import('./components/OrderTable'), { ssr: false });
 const OrderList = dynamic(() => import('./components/OrderList'), { ssr: false });
 const CustomerTable = dynamic(() => import('./components/CustomerTable'), { ssr: false });
@@ -23,14 +23,13 @@ const SupplierTable = dynamic(() => import('./components/SupplierTable'), { ssr:
 const SupplierList = dynamic(() => import('./components/SupplierList'), { ssr: false });
 const ProductTable = dynamic(() => import('./components/ProductTable'), { ssr: false });
 const ProductList = dynamic(() => import('./components/ProductList'), { ssr: false });
+const CategoryTable = dynamic(() => import('./components/CategoryTable'), { ssr: false });
+const CategoryList = dynamic(() => import('./components/CategoryList'), { ssr: false });
+const SubcategoryTable = dynamic(() => import('./components/SubcategoryTable'), { ssr: false });
+const SubcategoryList = dynamic(() => import('./components/SubcategoryList'), { ssr: false });
 
 const JoyOrderDashboardTemplate = ({ children }) => {
     const [activeTab, setActiveTab] = React.useState('orders');
-
-    // Mover el estado a useEffect para evitar discrepancias en el renderizado inicial
-    React.useEffect(() => {
-        // Puedes inicializar el estado aquí si es necesario
-    }, []);
 
     const renderContent = () => {
         switch (activeTab) {
@@ -74,6 +73,26 @@ const JoyOrderDashboardTemplate = ({ children }) => {
                         <ProductList/>
                     </>
                 );
+            case 'categories':
+                return (
+                    <>
+                        <Typography level="h2" component="h1">
+                            Categorías
+                        </Typography>
+                        <CategoryTable/>
+                        <CategoryList/>
+                    </>
+                );
+            case 'subcategories':
+                return (
+                    <>
+                        <Typography level="h2" component="h1">
+                            Subcategorías
+                        </Typography>
+                        <SubcategoryTable/>
+                        <SubcategoryList/>
+                    </>
+                );
             default:
                 return (
                     <>
@@ -93,6 +112,8 @@ const JoyOrderDashboardTemplate = ({ children }) => {
             case 'suppliers': return 'Proveedores';
             case 'customers': return 'Clientes';
             case 'products': return 'Productos';
+            case 'categories': return 'Categorías';
+            case 'subcategories': return 'Subcategorías';
             default: return 'Pedidos';
         }
     };

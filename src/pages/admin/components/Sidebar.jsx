@@ -9,10 +9,12 @@ import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import Divider from '@mui/joy/Divider';
 import IconButton from '@mui/joy/IconButton';
 import Input from '@mui/joy/Input';
+import CategoryIcon from '@mui/icons-material/Category';
 import List from '@mui/joy/List';
 import ListItem from '@mui/joy/ListItem';
 import ListItemButton, { listItemButtonClasses } from '@mui/joy/ListItemButton';
 import ListItemContent from '@mui/joy/ListItemContent';
+import WidgetsIcon from '@mui/icons-material/Widgets';
 import Typography from '@mui/joy/Typography';
 import Sheet from '@mui/joy/Sheet';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
@@ -168,6 +170,28 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                             <ShoppingBasketSharpIcon/>
                             <ListItemContent>
                                 <Typography level="title-sm">Productos</Typography>
+                            </ListItemContent>
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem>
+                        <ListItemButton
+                            selected={activeTab === 'categories'}
+                            onClick={() => setActiveTab('categories')}
+                        >
+                            <CategoryIcon />
+                            <ListItemContent>
+                                <Typography level="title-sm">Categorías</Typography>
+                            </ListItemContent>
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem>
+                        <ListItemButton
+                            selected={activeTab === 'subcategories'}
+                            onClick={() => setActiveTab('subcategories')}
+                        >
+                            <WidgetsIcon />
+                            <ListItemContent>
+                                <Typography level="title-sm">Subcategorías</Typography>
                             </ListItemContent>
                         </ListItemButton>
                     </ListItem>
