@@ -20,7 +20,12 @@ import Input from '@mui/joy/Input';
 import Modal from '@mui/joy/Modal';
 import ModalDialog from '@mui/joy/ModalDialog';
 import ModalClose from '@mui/joy/ModalClose';
-import Button from '@mui/joy/Button'; // Importación añadida
+import Button from '@mui/joy/Button';
+import Select from '@mui/joy/Select';
+import Option from '@mui/joy/Option';
+import Stack from '@mui/joy/Stack';
+import DialogTitle from '@mui/joy/DialogTitle';
+import DialogContent from '@mui/joy/DialogContent';
 
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
@@ -38,7 +43,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
-const listItems = [
+const initialListItems = [
     {
         id: 'INV-1234',
         date: '3 Feb, 2023',
@@ -90,7 +95,137 @@ function renderPaymentMethodIcon(method) {
     }
 }
 
-function RowMenu() {
+function EditOrderForm({ order, onSave, onClose }) {
+    const [formData, setFormData] = React.useState(order || {
+        id: '',
+        date: '',
+        status: 'Pagado',
+        customer: {
+            initial: '',
+            name: '',
+            email: '',
+        },
+        shippingAddress: '',
+        paymentMethod: 'tarjeta'
+    });
+
+    React.useEffect(() => {
+        if (order) {
+            setFormData(order);
+        }
+    }, [order]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => {
+            if (name.startsWith('customer.')) {
+                const field = name.split('.')[1];
+                return {
+                    ...prev,
+                    customer: {
+                        ...prev.customer,
+                        [field]: value
+                    }
+                };
+            }
+            return { ...prev, [name]: value };
+        });
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSave(formData);
+    };
+
+    if (!order) return null;
+
+    return (
+        <Modal open={!!order} onClose={onClose}>
+            <ModalDialog>
+                <DialogTitle>Editar Pedido</DialogTitle>
+                <DialogContent>Modifique los detalles del pedido</DialogContent>
+                <form onSubmit={handleSubmit}>
+                    <Stack spacing={2}>
+                        <FormControl>
+                            <FormLabel>ID</FormLabel>
+                            <Input
+                                name="id"
+                                value={formData.id}
+                                disabled
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Fecha</FormLabel>
+                            <Input
+                                name="date"
+                                value={formData.date}
+                                onChange={handleChange}
+                                required
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Estado</FormLabel>
+                            <Select
+                                value={formData.status}
+                                onChange={(e, value) => {
+                                    setFormData(prev => ({ ...prev, status: value }));
+                                }}
+                            >
+                                <Option value="Pagado">Pagado</Option>
+                                <Option value="Reembolsado">Reembolsado</Option>
+                                <Option value="Cancelado">Cancelado</Option>
+                            </Select>
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Nombre del Cliente</FormLabel>
+                            <Input
+                                name="customer.name"
+                                value={formData.customer.name}
+                                onChange={handleChange}
+                                required
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Email del Cliente</FormLabel>
+                            <Input
+                                name="customer.email"
+                                type="email"
+                                value={formData.customer.email}
+                                onChange={handleChange}
+                                required
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Dirección de Envío</FormLabel>
+                            <Input
+                                name="shippingAddress"
+                                value={formData.shippingAddress}
+                                onChange={handleChange}
+                                required
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Método de Pago</FormLabel>
+                            <Select
+                                value={formData.paymentMethod}
+                                onChange={(e, value) => {
+                                    setFormData(prev => ({ ...prev, paymentMethod: value }));
+                                }}
+                            >
+                                <Option value="tarjeta">Tarjeta</Option>
+                                <Option value="bizum">Bizum</Option>
+                                <Option value="paypal">PayPal</Option>
+                            </Select>
+                        </FormControl>
+                        <Button type="submit">Guardar cambios</Button>
+                    </Stack>
+                </form>
+            </ModalDialog>
+        </Modal>
+    );
+}
+
+function RowMenu({ order, onEdit }) {
     return (
         <Dropdown>
             <MenuButton
@@ -100,7 +235,7 @@ function RowMenu() {
                 <MoreHorizRoundedIcon />
             </MenuButton>
             <Menu size="sm" sx={{ minWidth: 140 }}>
-                <MenuItem>Editar</MenuItem>
+                <MenuItem onClick={() => onEdit(order)}>Editar</MenuItem>
                 <Divider />
                 <MenuItem color="danger">Eliminar</MenuItem>
             </Menu>
@@ -112,7 +247,20 @@ export default function OrderList() {
     const [nameFilter, setNameFilter] = React.useState('');
     const [emailFilter, setEmailFilter] = React.useState('');
     const [dateFilter, setDateFilter] = React.useState('');
-    const [open, setOpen] = React.useState(false);
+    const [openFilter, setOpenFilter] = React.useState(false);
+    const [editingOrder, setEditingOrder] = React.useState(null);
+    const [listItems, setListItems] = React.useState(initialListItems);
+
+    const handleEditOrder = (order) => {
+        setEditingOrder(order);
+    };
+
+    const handleSaveOrder = (updatedOrder) => {
+        setListItems(prev => prev.map(order =>
+            order.id === updatedOrder.id ? updatedOrder : order
+        ));
+        setEditingOrder(null);
+    };
 
     const filteredItems = listItems.filter(item => {
         const matchesName = item.customer.name.toLowerCase().includes(nameFilter.toLowerCase());
@@ -137,13 +285,13 @@ export default function OrderList() {
                     size="sm"
                     variant="outlined"
                     color="neutral"
-                    onClick={() => setOpen(true)}
+                    onClick={() => setOpenFilter(true)}
                 >
                     <FilterAltIcon />
                 </IconButton>
             </Box>
 
-            <Modal open={open} onClose={() => setOpen(false)}>
+            <Modal open={openFilter} onClose={() => setOpenFilter(false)}>
                 <ModalDialog aria-labelledby="filter-modal" layout="fullscreen">
                     <ModalClose />
                     <Typography id="filter-modal" level="h2">
@@ -171,12 +319,18 @@ export default function OrderList() {
                                 onChange={(e) => setDateFilter(e.target.value)}
                             />
                         </FormControl>
-                        <Button color="primary" onClick={() => setOpen(false)}>
+                        <Button color="primary" onClick={() => setOpenFilter(false)}>
                             Aplicar filtros
                         </Button>
                     </Box>
                 </ModalDialog>
             </Modal>
+
+            <EditOrderForm
+                order={editingOrder}
+                onSave={handleSaveOrder}
+                onClose={() => setEditingOrder(null)}
+            />
 
             {filteredItems.map((listItem) => (
                 <List key={listItem.id} size="sm" sx={{ '--ListItem-paddingX': 0 }}>
@@ -240,7 +394,7 @@ export default function OrderList() {
                             >
                                 {listItem.status}
                             </Chip>
-                            <RowMenu />
+                            <RowMenu order={listItem} onEdit={handleEditOrder} />
                         </Box>
                     </ListItem>
                     <ListDivider />

@@ -21,6 +21,11 @@ import Menu from '@mui/joy/Menu';
 import MenuButton from '@mui/joy/MenuButton';
 import MenuItem from '@mui/joy/MenuItem';
 import Dropdown from '@mui/joy/Dropdown';
+import Select from '@mui/joy/Select';
+import Option from '@mui/joy/Option';
+import Stack from '@mui/joy/Stack';
+import DialogTitle from '@mui/joy/DialogTitle';
+import DialogContent from '@mui/joy/DialogContent';
 
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import SearchIcon from '@mui/icons-material/Search';
@@ -39,7 +44,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
-const rows = [
+const initialRows = [
     {
         id: 'INV-1234',
         date: '3 Feb, 2023',
@@ -118,7 +123,137 @@ function getComparator(order, orderBy) {
         : (a, b) => -descendingComparator(a, b, orderBy);
 }
 
-function RowMenu() {
+function EditOrderForm({ order, onSave, onClose }) {
+    const [formData, setFormData] = React.useState(order || {
+        id: '',
+        date: '',
+        status: 'Pagado',
+        customer: {
+            initial: '',
+            name: '',
+            email: '',
+        },
+        shippingAddress: '',
+        paymentMethod: 'tarjeta'
+    });
+
+    React.useEffect(() => {
+        if (order) {
+            setFormData(order);
+        }
+    }, [order]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => {
+            if (name.startsWith('customer.')) {
+                const field = name.split('.')[1];
+                return {
+                    ...prev,
+                    customer: {
+                        ...prev.customer,
+                        [field]: value
+                    }
+                };
+            }
+            return { ...prev, [name]: value };
+        });
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSave(formData);
+    };
+
+    if (!order) return null;
+
+    return (
+        <Modal open={!!order} onClose={onClose}>
+            <ModalDialog>
+                <DialogTitle>Editar Pedido</DialogTitle>
+                <DialogContent>Modifique los detalles del pedido</DialogContent>
+                <form onSubmit={handleSubmit}>
+                    <Stack spacing={2}>
+                        <FormControl>
+                            <FormLabel>ID</FormLabel>
+                            <Input
+                                name="id"
+                                value={formData.id}
+                                disabled
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Fecha</FormLabel>
+                            <Input
+                                name="date"
+                                value={formData.date}
+                                onChange={handleChange}
+                                required
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Estado</FormLabel>
+                            <Select
+                                value={formData.status}
+                                onChange={(e, value) => {
+                                    setFormData(prev => ({ ...prev, status: value }));
+                                }}
+                            >
+                                <Option value="Pagado">Pagado</Option>
+                                <Option value="Reembolsado">Reembolsado</Option>
+                                <Option value="Cancelado">Cancelado</Option>
+                            </Select>
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Nombre del Cliente</FormLabel>
+                            <Input
+                                name="customer.name"
+                                value={formData.customer.name}
+                                onChange={handleChange}
+                                required
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Email del Cliente</FormLabel>
+                            <Input
+                                name="customer.email"
+                                type="email"
+                                value={formData.customer.email}
+                                onChange={handleChange}
+                                required
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Dirección de Envío</FormLabel>
+                            <Input
+                                name="shippingAddress"
+                                value={formData.shippingAddress}
+                                onChange={handleChange}
+                                required
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Método de Pago</FormLabel>
+                            <Select
+                                value={formData.paymentMethod}
+                                onChange={(e, value) => {
+                                    setFormData(prev => ({ ...prev, paymentMethod: value }));
+                                }}
+                            >
+                                <Option value="tarjeta">Tarjeta</Option>
+                                <Option value="bizum">Bizum</Option>
+                                <Option value="paypal">PayPal</Option>
+                            </Select>
+                        </FormControl>
+                        <Button type="submit">Guardar cambios</Button>
+                    </Stack>
+                </form>
+            </ModalDialog>
+        </Modal>
+    );
+}
+
+function RowMenu({ order, onEdit }) {
     return (
         <Dropdown>
             <MenuButton
@@ -128,7 +263,7 @@ function RowMenu() {
                 <MoreHorizRoundedIcon />
             </MenuButton>
             <Menu size="sm" sx={{ minWidth: 140 }}>
-                <MenuItem>Editar</MenuItem>
+                <MenuItem onClick={() => onEdit(order)}>Editar</MenuItem>
                 <MenuItem>Renombrar</MenuItem>
                 <Divider />
                 <MenuItem color="danger">Eliminar</MenuItem>
@@ -141,7 +276,8 @@ export default function OrderTable() {
     const [order, setOrder] = React.useState('desc');
     const [orderBy, setOrderBy] = React.useState('id');
     const [selected, setSelected] = React.useState([]);
-    const [open, setOpen] = React.useState(false);
+    const [rows, setRows] = React.useState(initialRows);
+    const [editingOrder, setEditingOrder] = React.useState(null);
     const [nameFilter, setNameFilter] = React.useState('');
     const [emailFilter, setEmailFilter] = React.useState('');
     const [dateFilter, setDateFilter] = React.useState('');
@@ -150,6 +286,17 @@ export default function OrderTable() {
         const isAsc = orderBy === property && order === 'asc';
         setOrder(isAsc ? 'desc' : 'asc');
         setOrderBy(property);
+    };
+
+    const handleEditOrder = (order) => {
+        setEditingOrder(order);
+    };
+
+    const handleSaveOrder = (updatedOrder) => {
+        setRows(prev => prev.map(order =>
+            order.id === updatedOrder.id ? updatedOrder : order
+        ));
+        setEditingOrder(null);
     };
 
     const renderPaymentMethodIcon = (method) => {
@@ -219,6 +366,13 @@ export default function OrderTable() {
                     />
                 </FormControl>
             </Box>
+
+            <EditOrderForm
+                order={editingOrder}
+                onSave={handleSaveOrder}
+                onClose={() => setEditingOrder(null)}
+            />
+
             <Sheet
                 className="OrderTableContainer"
                 variant="outlined"
@@ -403,7 +557,7 @@ export default function OrderTable() {
                             </td>
                             <td>
                                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                    <RowMenu />
+                                    <RowMenu order={row} onEdit={handleEditOrder} />
                                 </Box>
                             </td>
                         </tr>

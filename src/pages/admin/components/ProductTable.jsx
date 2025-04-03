@@ -19,6 +19,12 @@ import Menu from '@mui/joy/Menu';
 import MenuButton from '@mui/joy/MenuButton';
 import MenuItem from '@mui/joy/MenuItem';
 import Dropdown from '@mui/joy/Dropdown';
+import Modal from '@mui/joy/Modal';
+import ModalDialog from '@mui/joy/ModalDialog';
+import DialogTitle from '@mui/joy/DialogTitle';
+import DialogContent from '@mui/joy/DialogContent';
+import Stack from '@mui/joy/Stack';
+import AddIcon from '@mui/icons-material/Add';
 
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
@@ -86,7 +92,7 @@ const products = [
     },
 ];
 
-function RowMenu() {
+function RowMenu({ product, onEdit }) {
     return (
         <Dropdown>
             <MenuButton
@@ -96,11 +102,100 @@ function RowMenu() {
                 <MoreHorizRoundedIcon />
             </MenuButton>
             <Menu size="sm" sx={{ minWidth: 140 }}>
-                <MenuItem>Editar</MenuItem>
+                <MenuItem onClick={() => onEdit(product)}>Editar</MenuItem>
                 <Divider />
                 <MenuItem color="danger">Eliminar</MenuItem>
             </Menu>
         </Dropdown>
+    );
+}
+
+function ProductForm({ product, onClose, mode = 'add' }) {
+    return (
+        <Modal open={!!product} onClose={onClose}>
+            <ModalDialog>
+                <DialogTitle>{mode === 'add' ? 'Añadir nuevo producto' : 'Editar producto'}</DialogTitle>
+                <DialogContent>
+                    {mode === 'add' ? 'Complete los detalles del producto' : 'Modifique los detalles del producto'}
+                </DialogContent>
+                <form
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        onClose();
+                    }}
+                >
+                    <Stack spacing={2}>
+                        <FormControl>
+                            <FormLabel>ID del Producto</FormLabel>
+                            <Input
+                                autoFocus
+                                required
+                                value={product?.id || ''}
+                                disabled={mode === 'edit'}
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Nombre</FormLabel>
+                            <Input
+                                required
+                                value={product?.name || ''}
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Descripción</FormLabel>
+                            <Input
+                                required
+                                value={product?.description || ''}
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Precio</FormLabel>
+                            <Input
+                                type="number"
+                                required
+                                startDecorator="$"
+                                value={product?.price || ''}
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Stock</FormLabel>
+                            <Input
+                                type="number"
+                                required
+                                value={product?.stock || ''}
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Talla</FormLabel>
+                            <Select value={product?.size || ''}>
+                                {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                                    <Option key={size} value={size}>{size}</Option>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Categoría</FormLabel>
+                            <Select value={product?.category || ''}>
+                                {[...new Set(products.map(p => p.category))].map(category => (
+                                    <Option key={category} value={category}>{category}</Option>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Subcategoría</FormLabel>
+                            <Select value={product?.subcategory || ''}>
+                                {[...new Set(products.map(p => p.subcategory))].map(subcategory => (
+                                    <Option key={subcategory} value={subcategory}>{subcategory}</Option>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <Button type="submit">
+                            {mode === 'add' ? 'Añadir Producto' : 'Guardar Cambios'}
+                        </Button>
+                    </Stack>
+                </form>
+            </ModalDialog>
+        </Modal>
     );
 }
 
@@ -112,11 +207,36 @@ export default function ProductTable() {
     const [sizeFilter, setSizeFilter] = React.useState('');
     const [categoryFilter, setCategoryFilter] = React.useState('');
     const [subcategoryFilter, setSubcategoryFilter] = React.useState('');
+    const [formProduct, setFormProduct] = React.useState(null);
+    const [formMode, setFormMode] = React.useState('add');
 
     const handleSort = (property) => {
         const isAsc = orderBy === property && order === 'asc';
         setOrder(isAsc ? 'desc' : 'asc');
         setOrderBy(property);
+    };
+
+    const handleAddProduct = () => {
+        setFormMode('add');
+        setFormProduct({
+            id: '',
+            name: '',
+            description: '',
+            price: '',
+            stock: '',
+            size: '',
+            category: '',
+            subcategory: ''
+        });
+    };
+
+    const handleEditProduct = (product) => {
+        setFormMode('edit');
+        setFormProduct({ ...product });
+    };
+
+    const handleCloseForm = () => {
+        setFormProduct(null);
     };
 
     // Tallas estándar para el desplegable
@@ -215,7 +335,25 @@ export default function ProductTable() {
                         ))}
                     </Select>
                 </FormControl>
+
+                <Button
+                    size="sm"
+                    variant="solid"
+                    color="primary"
+                    startDecorator={<AddIcon />}
+                    onClick={handleAddProduct}
+                    sx={{ alignSelf: 'flex-end' }}
+                >
+                    Añadir
+                </Button>
             </Box>
+
+            {/* Formulario para añadir/editar producto */}
+            <ProductForm
+                product={formProduct}
+                onClose={handleCloseForm}
+                mode={formMode}
+            />
 
             <Sheet
                 className="OrderTableContainer"
@@ -426,7 +564,7 @@ export default function ProductTable() {
                             </td>
                             <td>
                                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                    <RowMenu />
+                                    <RowMenu product={product} onEdit={handleEditProduct} />
                                 </Box>
                             </td>
                         </tr>

@@ -1,30 +1,37 @@
+'use client';
 import * as React from 'react';
 import { CssVarsProvider } from '@mui/joy/styles';
 import CssBaseline from '@mui/joy/CssBaseline';
 import Box from '@mui/joy/Box';
-import Button from '@mui/joy/Button';
 import Breadcrumbs from '@mui/joy/Breadcrumbs';
 import Link from '@mui/joy/Link';
 import Typography from '@mui/joy/Typography';
-
+import adminTheme from "@/theme/adminTheme";
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
-import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
+import dynamic from 'next/dynamic';
 
-import Sidebar from '@/app/pages/admin/components/Sidebar';
-import OrderTable from '@/app/pages/admin/components/OrderTable';
-import OrderList from '@/app/pages/admin/components/OrderList';
-import CustomerTable from '@/app/pages/admin/components/CustomerTable';
-import CustomerList from '@/app/pages/admin/components/CustomerList';
-import SupplierTable from "@/app/pages/admin/components/SupplierTable";
-import SupplierList from "@/app/pages/admin/components/SupplierList";
-import ProductTable from "@/app/pages/admin/components/ProductTable";
-import ProductList from "@/app/pages/admin/components/ProductList";
-import Header from '@/app/pages/admin/components/Header';
+import Sidebar from './components/Sidebar';
+import Header from './components/Header';
 
+// Carga dinámica de los componentes que podrían causar el problema
+const OrderTable = dynamic(() => import('./components/OrderTable'), { ssr: false });
+const OrderList = dynamic(() => import('./components/OrderList'), { ssr: false });
+const CustomerTable = dynamic(() => import('./components/CustomerTable'), { ssr: false });
+const CustomerList = dynamic(() => import('./components/CustomerList'), { ssr: false });
+const SupplierTable = dynamic(() => import('./components/SupplierTable'), { ssr: false });
+const SupplierList = dynamic(() => import('./components/SupplierList'), { ssr: false });
+const ProductTable = dynamic(() => import('./components/ProductTable'), { ssr: false });
+const ProductList = dynamic(() => import('./components/ProductList'), { ssr: false });
 
-const JoyOrderDashboardTemplate = () => {
+const JoyOrderDashboardTemplate = ({ children }) => {
     const [activeTab, setActiveTab] = React.useState('orders');
+
+    // Mover el estado a useEffect para evitar discrepancias en el renderizado inicial
+    React.useEffect(() => {
+        // Puedes inicializar el estado aquí si es necesario
+    }, []);
+
     const renderContent = () => {
         switch (activeTab) {
             case 'orders':
@@ -91,11 +98,18 @@ const JoyOrderDashboardTemplate = () => {
     };
 
     return (
-        <CssVarsProvider disableTransitionOnChange>
+        <CssVarsProvider theme={adminTheme} defaultMode="light">
             <CssBaseline />
-            <Box sx={{ display: 'flex', minHeight: '100dvh' }}>
-                <Header />
+            <Box
+                component="div"
+                sx={{
+                    display: 'flex',
+                    minHeight: '100dvh',
+                    width: '100%'
+                }}
+            >
                 <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+                <Header />
                 <Box
                     component="main"
                     className="MainContent"
@@ -113,6 +127,7 @@ const JoyOrderDashboardTemplate = () => {
                         minWidth: 0,
                         height: '100dvh',
                         gap: 1,
+                        backgroundColor: 'background.body',
                     }}
                 >
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -130,12 +145,13 @@ const JoyOrderDashboardTemplate = () => {
                             >
                                 <HomeRoundedIcon />
                             </Link>
-                            <Typography color="primary" sx={{ fontWeight: 500, fontSize: 12 }}>
+                            <Typography color="primary" fontWeight={500} fontSize={12}>
                                 {getBreadcrumbText()}
                             </Typography>
                         </Breadcrumbs>
                     </Box>
                     {renderContent()}
+                    {children}
                 </Box>
             </Box>
         </CssVarsProvider>

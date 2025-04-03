@@ -1,6 +1,8 @@
 import * as React from 'react';
 import Box from '@mui/joy/Box';
 import Avatar from '@mui/joy/Avatar';
+import DialogTitle from '@mui/joy/DialogTitle';
+import DialogContent from '@mui/joy/DialogContent';
 import Chip from '@mui/joy/Chip';
 import Divider from '@mui/joy/Divider';
 import FormControl from '@mui/joy/FormControl';
@@ -23,6 +25,8 @@ import Modal from '@mui/joy/Modal';
 import ModalDialog from '@mui/joy/ModalDialog';
 import ModalClose from '@mui/joy/ModalClose';
 import Button from '@mui/joy/Button';
+import Stack from '@mui/joy/Stack';
+import AddIcon from '@mui/icons-material/Add';
 
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import LabelIcon from '@mui/icons-material/Label';
@@ -71,7 +75,7 @@ const products = [
     },
 ];
 
-function RowMenu() {
+function RowMenu({ product, onEdit }) {
     return (
         <Dropdown>
             <MenuButton
@@ -81,11 +85,100 @@ function RowMenu() {
                 <MoreHorizRoundedIcon />
             </MenuButton>
             <Menu size="sm" sx={{ minWidth: 140 }}>
-                <MenuItem>Editar</MenuItem>
+                <MenuItem onClick={() => onEdit(product)}>Editar</MenuItem>
                 <Divider />
                 <MenuItem color="danger">Eliminar</MenuItem>
             </Menu>
         </Dropdown>
+    );
+}
+
+function ProductForm({ product, onClose, mode = 'add' }) {
+    return (
+        <Modal open={!!product} onClose={onClose}>
+            <ModalDialog>
+                <DialogTitle>{mode === 'add' ? 'Añadir nuevo producto' : 'Editar producto'}</DialogTitle>
+                <DialogContent>
+                    {mode === 'add' ? 'Complete los detalles del producto' : 'Modifique los detalles del producto'}
+                </DialogContent>
+                <form
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        onClose();
+                    }}
+                >
+                    <Stack spacing={2}>
+                        <FormControl>
+                            <FormLabel>ID del Producto</FormLabel>
+                            <Input
+                                autoFocus
+                                required
+                                value={product?.id || ''}
+                                disabled={mode === 'edit'}
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Nombre</FormLabel>
+                            <Input
+                                required
+                                value={product?.name || ''}
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Descripción</FormLabel>
+                            <Input
+                                required
+                                value={product?.description || ''}
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Precio</FormLabel>
+                            <Input
+                                type="number"
+                                required
+                                startDecorator="$"
+                                value={product?.price || ''}
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Stock</FormLabel>
+                            <Input
+                                type="number"
+                                required
+                                value={product?.stock || ''}
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Talla</FormLabel>
+                            <Select value={product?.size || ''}>
+                                {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                                    <Option key={size} value={size}>{size}</Option>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Categoría</FormLabel>
+                            <Select value={product?.category || ''}>
+                                {[...new Set(products.map(p => p.category))].map(category => (
+                                    <Option key={category} value={category}>{category}</Option>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Subcategoría</FormLabel>
+                            <Select value={product?.subcategory || ''}>
+                                {[...new Set(products.map(p => p.subcategory))].map(subcategory => (
+                                    <Option key={subcategory} value={subcategory}>{subcategory}</Option>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <Button type="submit">
+                            {mode === 'add' ? 'Añadir Producto' : 'Guardar Cambios'}
+                        </Button>
+                    </Stack>
+                </form>
+            </ModalDialog>
+        </Modal>
     );
 }
 
@@ -94,7 +187,9 @@ export default function ProductList() {
     const [sizeFilter, setSizeFilter] = React.useState('');
     const [categoryFilter, setCategoryFilter] = React.useState('');
     const [subcategoryFilter, setSubcategoryFilter] = React.useState('');
-    const [open, setOpen] = React.useState(false);
+    const [filterModalOpen, setFilterModalOpen] = React.useState(false);
+    const [formProduct, setFormProduct] = React.useState(null);
+    const [formMode, setFormMode] = React.useState('add');
 
     // Tallas estándar para el desplegable
     const standardSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
@@ -102,6 +197,29 @@ export default function ProductList() {
     // Obtener categorías y subcategorías únicas para los selects
     const categories = [...new Set(products.map(product => product.category))];
     const subcategories = [...new Set(products.map(product => product.subcategory))];
+
+    const handleAddProduct = () => {
+        setFormMode('add');
+        setFormProduct({
+            id: '',
+            name: '',
+            description: '',
+            price: '',
+            stock: '',
+            size: '',
+            category: '',
+            subcategory: ''
+        });
+    };
+
+    const handleEditProduct = (product) => {
+        setFormMode('edit');
+        setFormProduct({ ...product });
+    };
+
+    const handleCloseForm = () => {
+        setFormProduct(null);
+    };
 
     const filteredProducts = products.filter(product => {
         const matchesName = product.name.toLowerCase().includes(nameFilter.toLowerCase());
@@ -179,11 +297,20 @@ export default function ProductList() {
                     size="sm"
                     variant="outlined"
                     color="neutral"
-                    onClick={() => setOpen(true)}
+                    onClick={() => setFilterModalOpen(true)}
                 >
                     <FilterAltIcon />
                 </IconButton>
-                <Modal open={open} onClose={() => setOpen(false)}>
+                <Button
+                    size="sm"
+                    variant="solid"
+                    color="primary"
+                    startDecorator={<AddIcon />}
+                    onClick={handleAddProduct}
+                >
+                    Añadir
+                </Button>
+                <Modal open={filterModalOpen} onClose={() => setFilterModalOpen(false)}>
                     <ModalDialog aria-labelledby="filter-modal" layout="fullscreen">
                         <ModalClose />
                         <Typography id="filter-modal" level="h2">
@@ -192,13 +319,20 @@ export default function ProductList() {
                         <Divider sx={{ my: 2 }} />
                         <Sheet sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             {renderFilters()}
-                            <Button color="primary" onClick={() => setOpen(false)}>
+                            <Button color="primary" onClick={() => setFilterModalOpen(false)}>
                                 Aplicar filtros
                             </Button>
                         </Sheet>
                     </ModalDialog>
                 </Modal>
             </Sheet>
+
+            {/* Formulario para añadir/editar producto */}
+            <ProductForm
+                product={formProduct}
+                onClose={handleCloseForm}
+                mode={formMode}
+            />
 
             {filteredProducts.map((product) => (
                 <List key={product.id} size="sm" sx={{ '--ListItem-paddingX': 0 }}>
@@ -262,7 +396,7 @@ export default function ProductList() {
                             </div>
                         </ListItemContent>
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
-                            <RowMenu />
+                            <RowMenu product={product} onEdit={handleEditProduct} />
                         </Box>
                     </ListItem>
                     <ListDivider />

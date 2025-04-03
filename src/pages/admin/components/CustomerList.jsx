@@ -17,6 +17,14 @@ import Dropdown from '@mui/joy/Dropdown';
 import Input from '@mui/joy/Input';
 import FormControl from '@mui/joy/FormControl';
 import FormLabel from '@mui/joy/FormLabel';
+import Modal from '@mui/joy/Modal';
+import ModalDialog from '@mui/joy/ModalDialog';
+import DialogTitle from '@mui/joy/DialogTitle';
+import DialogContent from '@mui/joy/DialogContent';
+import Stack from '@mui/joy/Stack';
+import Button from '@mui/joy/Button';
+import Select from '@mui/joy/Select';
+import Option from '@mui/joy/Option';
 
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
@@ -50,37 +58,11 @@ const customers = [
     },
 ];
 
-function RowMenu({ customer, onToggleBan }) {
-    return (
-        <Dropdown>
-            <MenuButton
-                slots={{ root: IconButton }}
-                slotProps={{ root: { variant: 'plain', color: 'neutral', size: 'sm' } }}
-            >
-                <MoreHorizRoundedIcon />
-            </MenuButton>
-            <Menu size="sm" sx={{ minWidth: 140 }}>
-                <MenuItem>Editar</MenuItem>
-                {customer.banned ? (
-                    <MenuItem onClick={() => onToggleBan(customer.id, false)}>
-                        Desbanear
-                    </MenuItem>
-                ) : (
-                    <MenuItem onClick={() => onToggleBan(customer.id, true)}>
-                        Banear
-                    </MenuItem>
-                )}
-                <Divider />
-                <MenuItem color="danger">Eliminar</MenuItem>
-            </Menu>
-        </Dropdown>
-    );
-}
-
 export default function CustomerList() {
     const [customersData, setCustomersData] = React.useState(customers);
     const [nameFilter, setNameFilter] = React.useState('');
     const [emailFilter, setEmailFilter] = React.useState('');
+    const [editingCustomer, setEditingCustomer] = React.useState(null);
 
     const handleToggleBan = (customerId, banStatus) => {
         setCustomersData(prev => prev.map(customer =>
@@ -88,11 +70,130 @@ export default function CustomerList() {
         ));
     };
 
+    const handleEditCustomer = (customer) => {
+        setEditingCustomer(customer);
+    };
+
+    const handleSaveCustomer = (updatedCustomer) => {
+        setCustomersData(prev => prev.map(customer =>
+            customer.id === updatedCustomer.id ? updatedCustomer : customer
+        ));
+        setEditingCustomer(null);
+    };
+
     const filteredCustomers = customersData.filter(customer => {
         const matchesName = customer.name.toLowerCase().includes(nameFilter.toLowerCase());
         const matchesEmail = customer.email.toLowerCase().includes(emailFilter.toLowerCase());
         return matchesName && matchesEmail;
     });
+
+    function RowMenu({ customer, onToggleBan }) {
+        return (
+            <Dropdown>
+                <MenuButton
+                    slots={{ root: IconButton }}
+                    slotProps={{ root: { variant: 'plain', color: 'neutral', size: 'sm' } }}
+                >
+                    <MoreHorizRoundedIcon />
+                </MenuButton>
+                <Menu size="sm" sx={{ minWidth: 140 }}>
+                    <MenuItem onClick={() => handleEditCustomer(customer)}>Editar</MenuItem>
+                    {customer.banned ? (
+                        <MenuItem onClick={() => onToggleBan(customer.id, false)}>
+                            Desbanear
+                        </MenuItem>
+                    ) : (
+                        <MenuItem onClick={() => onToggleBan(customer.id, true)}>
+                            Banear
+                        </MenuItem>
+                    )}
+                    <Divider />
+                    <MenuItem color="danger">Eliminar</MenuItem>
+                </Menu>
+            </Dropdown>
+        );
+    }
+
+    function EditCustomerForm() {
+        const [formData, setFormData] = React.useState(editingCustomer || {
+            id: '',
+            email: '',
+            banned: false,
+            name: '',
+            avatar: ''
+        });
+
+        React.useEffect(() => {
+            if (editingCustomer) {
+                setFormData(editingCustomer);
+            }
+        }, [editingCustomer]);
+
+        const handleChange = (e) => {
+            const { name, value } = e.target;
+            setFormData(prev => ({ ...prev, [name]: value }));
+        };
+
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            handleSaveCustomer(formData);
+        };
+
+        if (!editingCustomer) return null;
+
+        return (
+            <Modal open={!!editingCustomer} onClose={() => setEditingCustomer(null)}>
+                <ModalDialog>
+                    <DialogTitle>Editar cliente</DialogTitle>
+                    <DialogContent>Modifique los detalles del cliente</DialogContent>
+                    <form onSubmit={handleSubmit}>
+                        <Stack spacing={2}>
+                            <FormControl>
+                                <FormLabel>ID</FormLabel>
+                                <Input
+                                    name="id"
+                                    value={formData.id}
+                                    disabled
+                                />
+                            </FormControl>
+                            <FormControl>
+                                <FormLabel>Nombre</FormLabel>
+                                <Input
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </FormControl>
+                            <FormControl>
+                                <FormLabel>Email</FormLabel>
+                                <Input
+                                    name="email"
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </FormControl>
+                            <FormControl>
+                                <FormLabel>Estado</FormLabel>
+                                <Select
+                                    value={formData.banned ? 'banned' : 'active'}
+                                    onChange={(e, value) => {
+                                        setFormData(prev => ({ ...prev, banned: value === 'banned' }));
+                                    }}
+                                >
+                                    <Option value="active">Activo</Option>
+                                    <Option value="banned">Baneado</Option>
+                                </Select>
+                            </FormControl>
+                            <Button type="submit">Guardar cambios</Button>
+                        </Stack>
+                    </form>
+                </ModalDialog>
+            </Modal>
+        );
+    }
 
     return (
         <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
@@ -118,6 +219,8 @@ export default function CustomerList() {
                     />
                 </FormControl>
             </Box>
+
+            <EditCustomerForm />
 
             {filteredCustomers.map((customer) => (
                 <List key={customer.id} size="sm" sx={{ '--ListItem-paddingX': 0 }}>
