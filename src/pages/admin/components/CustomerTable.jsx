@@ -25,6 +25,7 @@ import DialogContent from '@mui/joy/DialogContent';
 import Stack from '@mui/joy/Stack';
 import Select from '@mui/joy/Select';
 import Option from '@mui/joy/Option';
+import adminService from '../../../services/adminService';
 
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
@@ -35,66 +36,87 @@ import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 
-const customers = [
-    {
-        id: 'USR-001',
-        email: 'cliente1@example.com',
-        banned: false,
-        name: 'Juan Pérez',
-        avatar: '/static/images/avatar/1.jpg'
-    },
-    {
-        id: 'USR-002',
-        email: 'cliente2@example.com',
-        banned: true,
-        name: 'María García',
-        avatar: '/static/images/avatar/2.jpg'
-    },
-    {
-        id: 'USR-003',
-        email: 'cliente3@example.com',
-        banned: false,
-        name: 'Carlos López',
-        avatar: '/static/images/avatar/3.jpg'
-    },
-    {
-        id: 'USR-004',
-        email: 'cliente4@example.com',
-        banned: true,
-        name: 'Ana Martínez',
-        avatar: '/static/images/avatar/4.jpg'
-    },
-    {
-        id: 'USR-005',
-        email: 'cliente5@example.com',
-        banned: false,
-        name: 'Pedro Sánchez',
-        avatar: '/static/images/avatar/5.jpg'
-    },
-];
-
 export default function CustomerTable() {
     const [order, setOrder] = React.useState('desc');
     const [orderBy, setOrderBy] = React.useState('id');
     const [selected, setSelected] = React.useState([]);
-    const [customersData, setCustomersData] = React.useState(customers);
+    const [customersData, setCustomersData] = React.useState([]);
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState(null);
     const [nameFilter, setNameFilter] = React.useState('');
     const [emailFilter, setEmailFilter] = React.useState('');
     const [editingCustomer, setEditingCustomer] = React.useState(null);
 
-    const handleToggleBan = (customerId, banStatus) => {
-        setCustomersData(prev => prev.map(customer =>
-            customer.id === customerId ? { ...customer, banned: banStatus } : customer
-        ));
+    React.useEffect(() => {
+        const fetchClients = async () => {
+            try {
+                const clients = await adminService.getClients();
+                // Transformar los datos del backend al formato esperado por el frontend
+                const transformedClients = clients.map(client => ({
+                    id: `USR-${client.user_id.toString().padStart(3, '0')}`,
+                    userId: client.user_id,
+                    email: client.email,
+                    banned: client.banned,
+                    name: client.profile?.name || 'Sin nombre',
+                    avatar: client.profile?.avatar || '/static/images/avatar/default.jpg',
+                    ban_reason: client.ban_reason
+                }));
+                setCustomersData(transformedClients);
+                setLoading(false);
+            } catch (err) {
+                setError(err.message);
+                setLoading(false);
+            }
+        };
+
+        fetchClients();
+    }, []);
+
+    const handleToggleBan = async (customerId, banStatus) => {
+        try {
+            const customer = customersData.find(c => c.id === customerId);
+            if (banStatus) {
+                // Pide razón para banear
+                setEditingCustomer({
+                    ...customer,
+                    action: 'ban',
+                    showReasonModal: true
+                });
+            } else {
+                await adminService.unbanUser(customer.userId);
+                setCustomersData(prev => prev.map(c =>
+                    c.id === customerId ? { ...c, banned: false } : c
+                ));
+            }
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    const handleConfirmBan = async () => {
+        try {
+            const { userId, ban_reason } = editingCustomer;
+            await adminService.banUser(userId, ban_reason);
+            setCustomersData(prev => prev.map(c =>
+                c.userId === userId ? { ...c, banned: true, ban_reason } : c
+            ));
+            setEditingCustomer(null);
+        } catch (err) {
+            setError(err.message);
+        }
     };
 
     const handleEditCustomer = (customer) => {
-        setEditingCustomer(customer);
+        setEditingCustomer({
+            ...customer,
+            action: 'edit',
+            showEditModal: true
+        });
     };
 
     const handleSaveCustomer = (updatedCustomer) => {
-        setCustomersData(prev => prev.map(customer =>
-            customer.id === updatedCustomer.id ? updatedCustomer : customer
+        setCustomersData(prev => prev.map(c =>
+            c.id === updatedCustomer.id ? updatedCustomer : c
         ));
         setEditingCustomer(null);
     };
@@ -170,7 +192,11 @@ export default function CustomerTable() {
 
         const handleSubmit = (e) => {
             e.preventDefault();
-            handleSaveCustomer(formData);
+            if (editingCustomer.action === 'edit') {
+                handleSaveCustomer(formData);
+            } else if (editingCustomer.action === 'ban') {
+                handleConfirmBan();
+            }
         };
 
         if (!editingCustomer) return null;
@@ -178,56 +204,83 @@ export default function CustomerTable() {
         return (
             <Modal open={!!editingCustomer} onClose={() => setEditingCustomer(null)}>
                 <ModalDialog>
-                    <DialogTitle>Editar cliente</DialogTitle>
-                    <DialogContent>Modifique los detalles del cliente</DialogContent>
+                    <DialogTitle>
+                        {editingCustomer.action === 'edit' ? 'Editar cliente' : 'Banear cliente'}
+                    </DialogTitle>
+                    <DialogContent>
+                        {editingCustomer.action === 'edit'
+                            ? 'Modifique los detalles del cliente'
+                            : 'Ingrese la razón del baneo'}
+                    </DialogContent>
                     <form onSubmit={handleSubmit}>
                         <Stack spacing={2}>
-                            <FormControl>
-                                <FormLabel>ID</FormLabel>
-                                <Input
-                                    name="id"
-                                    value={formData.id}
-                                    disabled
-                                />
-                            </FormControl>
-                            <FormControl>
-                                <FormLabel>Nombre</FormLabel>
-                                <Input
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </FormControl>
-                            <FormControl>
-                                <FormLabel>Email</FormLabel>
-                                <Input
-                                    name="email"
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </FormControl>
-                            <FormControl>
-                                <FormLabel>Estado</FormLabel>
-                                <Select
-                                    value={formData.banned ? 'banned' : 'active'}
-                                    onChange={(e, value) => {
-                                        setFormData(prev => ({ ...prev, banned: value === 'banned' }));
-                                    }}
-                                >
-                                    <Option value="active">Activo</Option>
-                                    <Option value="banned">Baneado</Option>
-                                </Select>
-                            </FormControl>
-                            <Button type="submit">Guardar cambios</Button>
+                            {editingCustomer.action === 'edit' ? (
+                                <>
+                                    <FormControl>
+                                        <FormLabel>ID</FormLabel>
+                                        <Input
+                                            name="id"
+                                            value={formData.id}
+                                            disabled
+                                        />
+                                    </FormControl>
+                                    <FormControl>
+                                        <FormLabel>Nombre</FormLabel>
+                                        <Input
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </FormControl>
+                                    <FormControl>
+                                        <FormLabel>Email</FormLabel>
+                                        <Input
+                                            name="email"
+                                            type="email"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </FormControl>
+                                    <FormControl>
+                                        <FormLabel>Estado</FormLabel>
+                                        <Select
+                                            value={formData.banned ? 'banned' : 'active'}
+                                            onChange={(e, value) => {
+                                                setFormData(prev => ({ ...prev, banned: value === 'banned' }));
+                                            }}
+                                        >
+                                            <Option value="active">Activo</Option>
+                                            <Option value="banned">Baneado</Option>
+                                        </Select>
+                                    </FormControl>
+                                </>
+                            ) : (
+                                <FormControl>
+                                    <FormLabel>Razón del baneo</FormLabel>
+                                    <Input
+                                        name="ban_reason"
+                                        value={formData.ban_reason || ''}
+                                        onChange={handleChange}
+                                        required
+                                        multiline
+                                        minRows={3}
+                                    />
+                                </FormControl>
+                            )}
+                            <Button type="submit">
+                                {editingCustomer.action === 'edit' ? 'Guardar cambios' : 'Confirmar baneo'}
+                            </Button>
                         </Stack>
                     </form>
                 </ModalDialog>
             </Modal>
         );
     }
+
+    if (loading) return <Typography>Cargando clientes...</Typography>;
+    if (error) return <Typography color="danger">Error: {error}</Typography>;
 
     return (
         <React.Fragment>
@@ -266,7 +319,7 @@ export default function CustomerTable() {
                 </FormControl>
             </Box>
 
-            <EditCustomerForm />
+            {editingCustomer && <EditCustomerForm />}
 
             <Sheet
                 className="OrderTableContainer"
