@@ -1,5 +1,5 @@
 'use client';
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { AppBar, Toolbar, IconButton, InputBase, Drawer, List, ListItem, ListItemText, Collapse, Dialog, Paper } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
@@ -10,55 +10,28 @@ import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
     const [open, setOpen] = useState(false);
     const [openSubmenus, setOpenSubmenus] = useState({});
     const [searchOpen, setSearchOpen] = useState(false);
+    const [menuCategories, setMenuCategories] = useState([]);
     const isMobile = useMediaQuery('(max-width:768px)');
+    const router = useRouter();
 
-    const toggleDrawer = (state) => () => {
-        setOpen(state);
-    };
+    useEffect(() => {
+        fetch("http://localhost:5000/api/categories")
+            .then(res => res.json())
+            .then(data => setMenuCategories(data))
+            .catch(err => console.error("Error loading categories:", err));
+    }, []);
 
+    const toggleDrawer = (state) => () => setOpen(state);
     const toggleSubmenu = (index) => {
-        setOpenSubmenus(prev => ({
-            ...prev,
-            [index]: !prev[index]
-        }));
+        setOpenSubmenus(prev => ({ ...prev, [index]: !prev[index] }));
     };
-
-    const toggleSearch = () => {
-        setSearchOpen(!searchOpen);
-    };
-
-    const menuCategories = [
-        {
-            name: "ÚLTIMAS NOVEDADES",
-            color: "#FF0000",
-            subcategories: ["Nueva colección", "Descuentos especiales", "Edición limitada"]
-        },
-        {
-            name: "HOMBRE",
-            color: "#171717",
-            subcategories: ["Camisas", "Pantalones", "Trajes"]
-        },
-        {
-            name: "MUJER",
-            color: "#171717",
-            subcategories: ["Vestidos", "Faldas", "Blusas"]
-        },
-        {
-            name: "TEEN",
-            color: "#171717",
-            subcategories: ["Urbano", "Casual", "Deportivo"]
-        },
-        {
-            name: "ACCESORIOS",
-            color: "#171717",
-            subcategories: ["Cinturones", "Corbatas", "Pañuelos"]
-        },
-    ];
+    const toggleSearch = () => setSearchOpen(!searchOpen);
 
     return (
         <>
@@ -194,15 +167,15 @@ export default function Navbar() {
 
             {/* Sliding Menu */}
             <Drawer anchor="left" open={open} onClose={toggleDrawer(false)}
-                sx={{
-                width: isMobile ? '100%' : '500px',
-                height: isMobile ? '100%' : 'auto',
-                '& .MuiDrawer-paper': {
-                    width: isMobile ? '100%' : '500px',
-                    height: isMobile ? '100%' : '100%',
-                }
-            }}
-                >
+                    sx={{
+                        width: isMobile ? '100%' : '500px',
+                        height: isMobile ? '100%' : 'auto',
+                        '& .MuiDrawer-paper': {
+                            width: isMobile ? '100%' : '500px',
+                            height: isMobile ? '100%' : '100%',
+                        }
+                    }}
+            >
                 <div style={{width: '100%', height: '100%'}}>
                     {/* Menu Header with Icons */}
 
@@ -232,12 +205,12 @@ export default function Navbar() {
                         {menuCategories.map((category, index) => (
                             <div key={index}>
                                 <ListItem
-                                    button
                                     onClick={() => toggleSubmenu(index)}
                                     sx={{
                                         borderBottom: "1px solid #f0f0f0",
                                         color: category.color,
-                                        padding: "12px 16px"
+                                        padding: "12px 16px",
+                                        cursor: "pointer"
                                     }}
                                 >
                                     <ListItemText
@@ -253,18 +226,18 @@ export default function Navbar() {
                                     <List component="div" disablePadding>
                                         {category.subcategories.map((subcat, subIndex) => (
                                             <ListItem
-                                                button
                                                 key={subIndex}
                                                 sx={{
                                                     pl: 4,
                                                     borderBottom: "1px solid #f0f0f0",
                                                     backgroundColor: "#f9f9f9",
                                                     color: "#333",
-                                                    padding: "8px 16px 8px 32px"
+                                                    padding: "8px 16px 8px 32px",
+                                                    cursor: "pointer"
                                                 }}
                                             >
                                                 <ListItemText
-                                                    primary={subcat}
+                                                    primary={subcat.name}
                                                     primaryTypographyProps={{
                                                         style: {fontWeight: 400, fontSize: '0.95rem'}
                                                     }}
