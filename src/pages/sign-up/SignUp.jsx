@@ -1,21 +1,23 @@
 import * as React from 'react';
+import { registerUser } from '../../services/authService';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
 import CssBaseline from '@mui/material/CssBaseline';
-import Divider from '@mui/material/Divider';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import FormLabel from '@mui/material/FormLabel';
-import FormControl from '@mui/material/FormControl';
-import Link from '@mui/material/Link';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
+import Stepper from '@mui/material/Stepper';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
 import { styled } from '@mui/material/styles';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
 import AppTheme from '../shared-theme/AppTheme';
 import ColorModeSelect from '../shared-theme/ColorModeSelect';
-import { GoogleIcon, FacebookIcon, SitemarkIcon } from './components/CustomIcons';
+import { SitemarkIcon } from './components/CustomIcons';
+import RegistrationOptions from './components/RegistrationOptions';
+import AccountInfoStep from './components/AccountInfoStep';
+import PersonalInfoStep from './components/PersonalInfoStep';
+import ContactInfoStep from './components/ContactInfoStep';
 
 const Card = styled(MuiCard)(({ theme }) => ({
     display: 'flex',
@@ -59,63 +61,197 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
     },
 }));
 
+const steps = ['Cuenta', 'Información personal', 'Contacto'];
+
 export default function SignUp(props) {
+    const [showEmailForm, setShowEmailForm] = React.useState(false);
+    const [activeStep, setActiveStep] = React.useState(0);
+    const [formData, setFormData] = React.useState({
+        name: '',
+        lastName: '',
+        email: '',
+        password: '',
+        address: '',
+        phone: '',
+        avatar: '',
+        born_date: ''
+    });
+
+    // Validation error states
     const [emailError, setEmailError] = React.useState(false);
     const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
     const [passwordError, setPasswordError] = React.useState(false);
     const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
     const [nameError, setNameError] = React.useState(false);
     const [nameErrorMessage, setNameErrorMessage] = React.useState('');
+    const [lastNameError, setLastNameError] = React.useState(false);
+    const [lastNameErrorMessage, setLastNameErrorMessage] = React.useState('');
+    const [born_dateError, setBorn_dateError] = React.useState(false);
+    const [born_dateErrorMessage, setBorn_dateErrorMessage] = React.useState('');
+    const [addressError, setAddressError] = React.useState(false);
+    const [addressErrorMessage, setAddressErrorMessage] = React.useState('');
+    const [phoneError, setPhoneError] = React.useState(false);
+    const [phoneErrorMessage, setPhoneErrorMessage] = React.useState('');
 
-    const validateInputs = () => {
-        const email = document.getElementById('email');
-        const password = document.getElementById('password');
-        const name = document.getElementById('name');
+    // API communication states
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [submitError, setSubmitError] = React.useState('');
+    const [submitSuccess, setSubmitSuccess] = React.useState(false);
 
-        let isValid = true;
-
-        if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
-            setEmailError(true);
-            setEmailErrorMessage('Por favor ingresa un correo electrónico válido.');
-            isValid = false;
-        } else {
-            setEmailError(false);
-            setEmailErrorMessage('');
-        }
-
-        if (!password.value || password.value.length < 6) {
-            setPasswordError(true);
-            setPasswordErrorMessage('La contraseña debe tener al menos 6 caracteres.');
-            isValid = false;
-        } else {
-            setPasswordError(false);
-            setPasswordErrorMessage('');
-        }
-
-        if (!name.value || name.value.length < 1) {
-            setNameError(true);
-            setNameErrorMessage('El nombre es requerido.');
-            isValid = false;
-        } else {
-            setNameError(false);
-            setNameErrorMessage('');
-        }
-
-        return isValid;
+    const handleNext = () => {
+        setActiveStep(prevStep => prevStep + 1);
     };
 
-    const handleSubmit = (event) => {
-        if (nameError || emailError || passwordError) {
-            event.preventDefault();
-            return;
-        }
-        const data = new FormData(event.currentTarget);
-        console.log({
-            name: data.get('name'),
-            lastName: data.get('lastName'),
-            email: data.get('email'),
-            password: data.get('password'),
+    const handleBack = () => {
+        setActiveStep(prevStep => prevStep - 1);
+    };
+
+    const handleChange = (event) => {
+        const { name, value } = event.target;
+        setFormData({
+            ...formData,
+            [name]: value
         });
+    };
+
+    const validateCurrentStep = () => {
+        let isValid; // Declare isValid once at the function level
+
+        switch (activeStep) {
+            case 0: // Account info
+                const email = document.getElementById('email');
+                const password = document.getElementById('password');
+                isValid = true; // Just assign value, not redeclare
+
+                if (!email?.value || !/\S+@\S+\.\S+/.test(email.value)) {
+                    setEmailError(true);
+                    setEmailErrorMessage('Por favor ingresa un correo electrónico válido.');
+                    isValid = false;
+                } else {
+                    setEmailError(false);
+                    setEmailErrorMessage('');
+                }
+
+                if (!password?.value || password.value.length < 6) {
+                    setPasswordError(true);
+                    setPasswordErrorMessage('La contraseña debe tener al menos 6 caracteres.');
+                    isValid = false;
+                } else {
+                    setPasswordError(false);
+                    setPasswordErrorMessage('');
+                }
+                return isValid;
+
+            case 1: // Personal info
+                const name = document.getElementById('name');
+                const lastName = document.getElementById('lastName');
+                const born_date = document.getElementById('born_date');
+                isValid = true; // Just assign value, not redeclare
+
+                if (!name?.value || name.value.trim() === '') {
+                    setNameError(true);
+                    setNameErrorMessage('El nombre es requerido.');
+                    isValid = false;
+                } else {
+                    setNameError(false);
+                    setNameErrorMessage('');
+                }
+
+                if (!lastName?.value || lastName.value.trim() === '') {
+                    setLastNameError(true);
+                    setLastNameErrorMessage('El apellido es requerido.');
+                    isValid = false;
+                } else {
+                    setLastNameError(false);
+                    setLastNameErrorMessage('');
+                }
+
+                if (!born_date?.value) {
+                    setBorn_dateError(true);
+                    setBorn_dateErrorMessage('La fecha de nacimiento es requerida.');
+                    isValid = false;
+                } else {
+                    setBorn_dateError(false);
+                    setBorn_dateErrorMessage('');
+                }
+
+                return isValid;
+
+            case 2: // Contact info
+                const address = document.getElementById('address');
+                const phone = document.getElementById('phone');
+                isValid = true; // Just assign value, not redeclare
+
+                if (!address?.value || address.value.trim() === '') {
+                    setAddressError(true);
+                    setAddressErrorMessage('La dirección es requerida.');
+                    isValid = false;
+                } else {
+                    setAddressError(false);
+                    setAddressErrorMessage('');
+                }
+
+                if (!phone?.value || phone.value.trim() === '') {
+                    setPhoneError(true);
+                    setPhoneErrorMessage('El teléfono es requerido.');
+                    isValid = false;
+                } else {
+                    setPhoneError(false);
+                    setPhoneErrorMessage('');
+                }
+
+                return isValid;
+
+            default:
+                return true;
+        }
+    };
+
+    const handleStepSubmit = async (event) => {
+        event.preventDefault();
+        const isValid = validateCurrentStep();
+
+        if (isValid) {
+            if (activeStep === steps.length - 1) {
+                // Validar que todos los campos requeridos estén completos
+                if (!formData.name || !formData.lastName || !formData.email ||
+                    !formData.password || !formData.address || !formData.phone ||
+                    !formData.born_date) {
+                    setSubmitError('Por favor completa todos los campos requeridos.');
+                    return;
+                }
+
+
+                setIsSubmitting(true);
+                setSubmitError('');
+                setSubmitSuccess(false);
+
+                try {
+                    const response = await registerUser(formData);
+                    console.log('Usuario registrado exitosamente:', response);
+                    setSubmitSuccess(true);
+
+                    // Redirigir después del registro exitoso
+                    setTimeout(() => {
+                        window.location.href = '/sign-in-side/SignInSide';
+                    }, 2000);
+                } catch (error) {
+                    console.error('Error al registrar usuario:', error);
+                    setSubmitError(
+                        error.response?.data?.message ||
+                        'Ocurrió un error al registrar. Por favor, intenta nuevamente.'
+                    );
+                } finally {
+                    setIsSubmitting(false);
+                }
+            } else {
+                handleNext();
+            }
+        }
+    };
+
+    const handleSelectEmailRegistration = () => {
+        setShowEmailForm(true);
     };
 
     return (
@@ -132,100 +268,93 @@ export default function SignUp(props) {
                     >
                         Registrarse
                     </Typography>
-                    <Box
-                        component="form"
-                        onSubmit={handleSubmit}
-                        sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
-                    >
-                        <FormControl>
-                            <FormLabel htmlFor="name">Nombre completo</FormLabel>
-                            <TextField
-                                autoComplete="name"
-                                name="name"
-                                required
-                                fullWidth
-                                id="name"
-                                placeholder="Jon Snow"
-                                error={nameError}
-                                helperText={nameErrorMessage}
-                                color={nameError ? 'error' : 'primary'}
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel htmlFor="email">Correo electrónico</FormLabel>
-                            <TextField
-                                required
-                                fullWidth
-                                id="email"
-                                placeholder="tu@correo.com"
-                                name="email"
-                                autoComplete="email"
-                                variant="outlined"
-                                error={emailError}
-                                helperText={emailErrorMessage}
-                                color={passwordError ? 'error' : 'primary'}
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel htmlFor="password">Contraseña</FormLabel>
-                            <TextField
-                                required
-                                fullWidth
-                                name="password"
-                                placeholder="••••••"
-                                type="password"
-                                id="password"
-                                autoComplete="new-password"
-                                variant="outlined"
-                                error={passwordError}
-                                helperText={passwordErrorMessage}
-                                color={passwordError ? 'error' : 'primary'}
-                            />
-                        </FormControl>
-                        <FormControlLabel
-                            control={<Checkbox value="allowExtraEmails" color="primary" />}
-                            label="Quiero recibir actualizaciones por correo electrónico."
-                        />
-                        <Button
-                            type="submit"
-                            fullWidth
-                            variant="contained"
-                            onClick={validateInputs}
-                        >
-                            Registrarse
-                        </Button>
-                    </Box>
-                    <Divider>
-                        <Typography sx={{ color: 'text.secondary' }}>o</Typography>
-                    </Divider>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            onClick={() => alert('Registrarse con Google')}
-                            startIcon={<GoogleIcon />}
-                        >
-                            Registrarse con Google
-                        </Button>
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            onClick={() => alert('Registrarse con Facebook')}
-                            startIcon={<FacebookIcon />}
-                        >
-                            Registrarse con Facebook
-                        </Button>
-                        <Typography sx={{ textAlign: 'center' }}>
-                            ¿Ya tienes una cuenta?{' '}
-                            <Link
-                                href="/material-ui/getting-started/templates/sign-in/"
-                                variant="body2"
-                                sx={{ alignSelf: 'center' }}
+
+                    {!showEmailForm ? (
+                        <RegistrationOptions onSelectEmailRegistration={handleSelectEmailRegistration} />
+                    ) : (
+                        <>
+                            <Stepper activeStep={activeStep} sx={{ my: 3 }}>
+                                {steps.map((label) => (
+                                    <Step key={label}>
+                                        <StepLabel>{label}</StepLabel>
+                                    </Step>
+                                ))}
+                            </Stepper>
+
+                            <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                                Los campos marcados con * son obligatorios
+                            </Typography>
+
+                            <Box
+                                component="form"
+                                onSubmit={handleStepSubmit}
+                                sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
                             >
-                                Iniciar sesión
-                            </Link>
-                        </Typography>
-                    </Box>
+                                {activeStep === 0 && (
+                                    <AccountInfoStep
+                                        formData={formData}
+                                        onChange={handleChange}
+                                        emailError={emailError}
+                                        emailErrorMessage={emailErrorMessage}
+                                        passwordError={passwordError}
+                                        passwordErrorMessage={passwordErrorMessage}
+                                        required={true}
+                                    />
+                                )}
+
+                                {activeStep === 1 && (
+                                    <PersonalInfoStep
+                                        formData={formData}
+                                        onChange={handleChange}
+                                        nameError={nameError}
+                                        nameErrorMessage={nameErrorMessage}
+                                        lastNameError={lastNameError}
+                                        lastNameErrorMessage={lastNameErrorMessage}
+                                        born_dateError={born_dateError}
+                                        born_dateErrorMessage={born_dateErrorMessage}
+                                        onBack={handleBack}
+                                        required={true}
+                                    />
+                                )}
+
+                                {activeStep === 2 && (
+                                    <ContactInfoStep
+                                        formData={formData}
+                                        onChange={handleChange}
+                                        addressError={addressError}
+                                        addressErrorMessage={addressErrorMessage}
+                                        phoneError={phoneError}
+                                        phoneErrorMessage={phoneErrorMessage}
+                                        onBack={handleBack}
+                                        required={{
+                                            address: true,
+                                            phone: true,
+                                            avatar: false
+                                        }}
+                                    />
+                                )}
+
+                                {isSubmitting && (
+                                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                                        <CircularProgress size={24} />
+                                        <Typography sx={{ ml: 2 }}>Enviando información...</Typography>
+                                    </Box>
+                                )}
+
+                                {submitError && (
+                                    <Alert severity="error" sx={{ mt: 2 }}>
+                                        {submitError}
+                                    </Alert>
+                                )}
+
+                                {submitSuccess && (
+                                    <Alert severity="success" sx={{ mt: 2 }}>
+                                        ¡Registro exitoso! Redirigiendo a la página de inicio de sesión...
+                                    </Alert>
+                                )}
+                            </Box>
+                        </>
+                    )}
                 </Card>
             </SignUpContainer>
         </AppTheme>
