@@ -98,17 +98,19 @@ const ProgressBarCarousel = () => {
                         zIndex: currentSlide === index ? 1 : 0,
                     }}
                 >
-                    <Box
-                        component="img"
-                        src={slide.src}
-                        alt={slide.alt}
-                        sx={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            display: 'block'
-                        }}
-                    />
+                    <Box sx={{ width: '100%', position: 'relative', overflow: 'hidden' }}>
+                        <Box
+                            component="img"
+                            src={slide.src}
+                            alt={slide.alt}
+                            sx={{
+                                width: '100%',
+                                height: 'auto',
+                                objectFit: 'cover',
+                            }}
+                        />
+                    </Box>
+
                     <Box
                         sx={{
                             position: 'absolute',
