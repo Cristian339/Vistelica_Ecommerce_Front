@@ -25,6 +25,7 @@ import DialogContent from '@mui/joy/DialogContent';
 import Stack from '@mui/joy/Stack';
 import Select from '@mui/joy/Select';
 import Option from '@mui/joy/Option';
+import adminService from '../../../services/adminService';
 
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
@@ -34,67 +35,104 @@ import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
-
-const customers = [
-    {
-        id: 'USR-001',
-        email: 'cliente1@example.com',
-        banned: false,
-        name: 'Juan Pérez',
-        avatar: '/static/images/avatar/1.jpg'
-    },
-    {
-        id: 'USR-002',
-        email: 'cliente2@example.com',
-        banned: true,
-        name: 'María García',
-        avatar: '/static/images/avatar/2.jpg'
-    },
-    {
-        id: 'USR-003',
-        email: 'cliente3@example.com',
-        banned: false,
-        name: 'Carlos López',
-        avatar: '/static/images/avatar/3.jpg'
-    },
-    {
-        id: 'USR-004',
-        email: 'cliente4@example.com',
-        banned: true,
-        name: 'Ana Martínez',
-        avatar: '/static/images/avatar/4.jpg'
-    },
-    {
-        id: 'USR-005',
-        email: 'cliente5@example.com',
-        banned: false,
-        name: 'Pedro Sánchez',
-        avatar: '/static/images/avatar/5.jpg'
-    },
-];
+import {Textarea} from "@mui/joy";
 
 export default function CustomerTable() {
     const [order, setOrder] = React.useState('desc');
     const [orderBy, setOrderBy] = React.useState('id');
     const [selected, setSelected] = React.useState([]);
-    const [customersData, setCustomersData] = React.useState(customers);
+    const [customersData, setCustomersData] = React.useState([]);
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState(null);
     const [nameFilter, setNameFilter] = React.useState('');
     const [emailFilter, setEmailFilter] = React.useState('');
     const [editingCustomer, setEditingCustomer] = React.useState(null);
 
-    const handleToggleBan = (customerId, banStatus) => {
-        setCustomersData(prev => prev.map(customer =>
-            customer.id === customerId ? { ...customer, banned: banStatus } : customer
-        ));
+    React.useEffect(() => {
+        const fetchClients = async () => {
+            try {
+                const clients = await adminService.getClients();
+                // Transformar los datos del backend al formato esperado por el frontend
+                const transformedClients = clients.map(client => ({
+                    id: `USR-${client.user_id.toString().padStart(3, '0')}`,
+                    userId: client.user_id,
+                    name: client.name,
+                    email: client.email,
+                    banned: client.banned,
+                    avatar: client.profile?.avatar || '/static/images/avatar/default.jpg',
+                    ban_reason: client.ban_reason
+                }));
+                setCustomersData(transformedClients);
+                setLoading(false);
+            } catch (err) {
+                setError(err.message);
+                setLoading(false);
+            }
+        };
+
+        fetchClients();
+    }, []);
+
+    const handleToggleBan = async (customerId, shouldBan) => {
+        const customer = customersData.find(c => c.id === customerId);
+        if (!customer) return;
+
+        if (shouldBan) {
+            // Preparamos el objeto para el modal de baneo
+            setEditingCustomer({
+                ...customer,
+                action: 'ban',
+                showModal: true,
+                banReason: customer.ban_reason || '' // Usamos banReason en lugar de ban_reason
+            });
+        } else {
+            await adminService.unbanUser(customer.userId);
+            setCustomersData(prev => prev.map(c =>
+                c.id === customerId ? { ...c, banned: false, ban_reason: null } : c
+            ));
+        }
     };
 
+    const handleConfirmBan = async () => {
+        try {
+            // Accedemos a banReason en lugar de ban_reason
+            const { userId, banReason } = editingCustomer;
+
+            if (!banReason || banReason.trim().length < 5) {
+                setError('Por favor ingrese una razón válida (mínimo 5 caracteres)');
+                return;
+            }
+
+            await adminService.banUser(userId, banReason.trim());
+
+            setCustomersData(prev => prev.map(c =>
+                c.userId === userId ? {
+                    ...c,
+                    banned: true,
+                    ban_reason: banReason.trim()
+                } : c
+            ));
+
+            setEditingCustomer(null);
+            setError(null);
+
+        } catch (error) {
+            setError(error.message);
+        }
+    };
+
+
     const handleEditCustomer = (customer) => {
-        setEditingCustomer(customer);
+        setEditingCustomer({
+            ...customer,
+            action: 'edit',
+            showEditModal: true
+        });
     };
 
     const handleSaveCustomer = (updatedCustomer) => {
-        setCustomersData(prev => prev.map(customer =>
-            customer.id === updatedCustomer.id ? updatedCustomer : customer
+        setCustomersData(prev => prev.map(c =>
+            c.id === updatedCustomer.id ? updatedCustomer : c
         ));
         setEditingCustomer(null);
     };
@@ -149,85 +187,76 @@ export default function CustomerTable() {
     }
 
     function EditCustomerForm() {
-        const [formData, setFormData] = React.useState(editingCustomer || {
-            id: '',
-            email: '',
-            banned: false,
-            name: '',
-            avatar: ''
-        });
+        // Estado local para el formulario
+        const [banReason, setBanReason] = React.useState(
+            editingCustomer?.ban_reason || ''
+        );
 
-        React.useEffect(() => {
-            if (editingCustomer) {
-                setFormData(editingCustomer);
-            }
-        }, [editingCustomer]);
-
-        const handleChange = (e) => {
-            const { name, value } = e.target;
-            setFormData(prev => ({ ...prev, [name]: value }));
-        };
-
-        const handleSubmit = (e) => {
+        const handleSubmit = async (e) => {
             e.preventDefault();
-            handleSaveCustomer(formData);
-        };
 
-        if (!editingCustomer) return null;
+            // Validación directa
+            if (!banReason.trim() || banReason.trim().length < 5) {
+                setError('La razón debe tener al menos 5 caracteres');
+                return;
+            }
+
+            try {
+                // Pasamos directamente banReason al servicio
+                await adminService.banUser(editingCustomer.userId, banReason.trim());
+
+                // Actualizamos el estado global
+                setCustomersData(prev => prev.map(c =>
+                    c.userId === editingCustomer.userId ? {
+                        ...c,
+                        banned: true,
+                        ban_reason: banReason.trim()
+                    } : c
+                ));
+
+                // Cerramos el modal
+                setEditingCustomer(null);
+                setError(null);
+
+            } catch (err) {
+                setError(err.message);
+            }
+        };
 
         return (
             <Modal open={!!editingCustomer} onClose={() => setEditingCustomer(null)}>
                 <ModalDialog>
-                    <DialogTitle>Editar cliente</DialogTitle>
-                    <DialogContent>Modifique los detalles del cliente</DialogContent>
+                    <DialogTitle>Banear cliente</DialogTitle>
+                    <DialogContent>Ingrese la razón del baneo</DialogContent>
+
+                    {error && (
+                        <Typography color="danger" sx={{ mb: 2 }}>
+                            {error}
+                        </Typography>
+                    )}
+
                     <form onSubmit={handleSubmit}>
                         <Stack spacing={2}>
-                            <FormControl>
-                                <FormLabel>ID</FormLabel>
-                                <Input
-                                    name="id"
-                                    value={formData.id}
-                                    disabled
-                                />
-                            </FormControl>
-                            <FormControl>
-                                <FormLabel>Nombre</FormLabel>
-                                <Input
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleChange}
+                            <FormControl error={!!error}>
+                                <FormLabel>Razón del baneo *</FormLabel>
+                                <Textarea
+                                    value={banReason}
+                                    onChange={(e) => setBanReason(e.target.value)}
                                     required
+                                    minRows={3}
+                                    placeholder="Ej: Comportamiento inapropiado..."
                                 />
                             </FormControl>
-                            <FormControl>
-                                <FormLabel>Email</FormLabel>
-                                <Input
-                                    name="email"
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </FormControl>
-                            <FormControl>
-                                <FormLabel>Estado</FormLabel>
-                                <Select
-                                    value={formData.banned ? 'banned' : 'active'}
-                                    onChange={(e, value) => {
-                                        setFormData(prev => ({ ...prev, banned: value === 'banned' }));
-                                    }}
-                                >
-                                    <Option value="active">Activo</Option>
-                                    <Option value="banned">Baneado</Option>
-                                </Select>
-                            </FormControl>
-                            <Button type="submit">Guardar cambios</Button>
+                            <Button type="submit">Confirmar baneo</Button>
                         </Stack>
                     </form>
                 </ModalDialog>
             </Modal>
         );
     }
+
+    if (loading) return <Typography>Cargando clientes...</Typography>;
+    if (error) return <Typography color="danger">Error: {error}</Typography>;
 
     return (
         <React.Fragment>
@@ -266,7 +295,7 @@ export default function CustomerTable() {
                 </FormControl>
             </Box>
 
-            <EditCustomerForm />
+            {editingCustomer && <EditCustomerForm />}
 
             <Sheet
                 className="OrderTableContainer"

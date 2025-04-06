@@ -36,6 +36,7 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import BusinessIcon from '@mui/icons-material/Business';
 import PublicIcon from '@mui/icons-material/Public';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import adminService from "@/services/adminService";
 import PersonIcon from '@mui/icons-material/Person';
 
 const initialSuppliers = [
@@ -72,12 +73,40 @@ export default function SupplierTable() {
     const [order, setOrder] = React.useState('desc');
     const [orderBy, setOrderBy] = React.useState('id');
     const [selected, setSelected] = React.useState([]);
-    const [suppliersData, setSuppliersData] = React.useState(initialSuppliers);
+    const [suppliersData, setSuppliersData] = React.useState([]);
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState(null);
     const [nameFilter, setNameFilter] = React.useState('');
     const [emailFilter, setEmailFilter] = React.useState('');
     const [editingSupplier, setEditingSupplier] = React.useState(null);
     const [formMode, setFormMode] = React.useState('add');
     const [countries] = React.useState(['España', 'Alemania', 'Francia', 'Italia', 'Chile', 'Portugal', 'EE.UU.']);
+
+    // Cargar proveedores al montar el componente
+    React.useEffect(() => {
+        const fetchSuppliers = async () => {
+            try {
+                const suppliers = await adminService.getSuppliers();
+                const transformedSuppliers = suppliers.map(supplier => ({
+                    id: `SUP-${supplier.supplier_id.toString().padStart(3, '0')}`,
+                    supplierId: supplier.supplier_id,
+                    companyName: supplier.name,
+                    email: supplier.email,
+                    address: supplier.address,
+                    phone: supplier.phone,
+                    country: supplier.country,
+                    iban: supplier.IBAN
+                }));
+                setSuppliersData(transformedSuppliers);
+                setLoading(false);
+            } catch (err) {
+                setError(err.message);
+                setLoading(false);
+            }
+        };
+
+        fetchSuppliers();
+    }, []);
 
     const handleSort = (property) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -103,15 +132,78 @@ export default function SupplierTable() {
         setEditingSupplier({ ...supplier });
     };
 
-    const handleSaveSupplier = (updatedSupplier) => {
-        if (formMode === 'add') {
-            setSuppliersData(prev => [...prev, updatedSupplier]);
-        } else {
-            setSuppliersData(prev => prev.map(supplier =>
-                supplier.id === updatedSupplier.id ? updatedSupplier : supplier
-            ));
+    const handleSaveSupplier = async (updatedSupplier) => {
+        try {
+            if (formMode === 'add') {
+                const newSupplier = {
+                    name: updatedSupplier.companyName,
+                    email: updatedSupplier.email,
+                    address: updatedSupplier.address,
+                    phone: updatedSupplier.phone,
+                    country: updatedSupplier.country,
+                    IBAN: updatedSupplier.iban
+                };
+
+                const response = await adminService.createSupplier(newSupplier);
+
+                // Actualizar el estado con el nuevo proveedor
+                const addedSupplier = {
+                    ...updatedSupplier,
+                    supplierId: response.supplier_id,
+                    id: `SUP-${response.supplier_id.toString().padStart(3, '0')}`
+                };
+                setSuppliersData(prev => [...prev, addedSupplier]);
+            } else {
+                const updateData = {
+                    name: updatedSupplier.companyName,
+                    email: updatedSupplier.email,
+                    address: updatedSupplier.address,
+                    phone: updatedSupplier.phone,
+                    country: updatedSupplier.country,
+                    IBAN: updatedSupplier.iban
+                };
+
+                await adminService.updateSupplier(updatedSupplier.supplierId, updateData);
+
+                setSuppliersData(prev => prev.map(supplier =>
+                    supplier.id === updatedSupplier.id ? updatedSupplier : supplier
+                ));
+            }
+            setEditingSupplier(null);
+        } catch (err) {
+            setError(err.message || 'Error al guardar el proveedor');
         }
-        setEditingSupplier(null);
+    };
+
+    const handleDeleteSupplier = async (supplierId) => {
+        try {
+            const supplier = suppliersData.find(s => s.id === supplierId);
+            if (!supplier) return;
+
+            await adminService.deleteSupplier(supplier.supplierId);
+            setSuppliersData(prev => prev.filter(s => s.id !== supplierId));
+        } catch (err) {
+            setError(err.message || 'Error al eliminar el proveedor');
+        }
+    };
+
+    const handleSearchSuppliers = async (name) => {
+        try {
+            const results = await adminService.searchSuppliersByName(name);
+            const transformed = results.map(supplier => ({
+                id: `SUP-${supplier.supplier_id.toString().padStart(3, '0')}`,
+                supplierId: supplier.supplier_id,
+                companyName: supplier.name,
+                email: supplier.email,
+                address: supplier.address,
+                phone: supplier.phone,
+                country: supplier.country,
+                iban: supplier.IBAN
+            }));
+            setSuppliersData(transformed);
+        } catch (err) {
+            setError(err.message || 'Error en la búsqueda');
+        }
     };
 
     const filteredSuppliers = suppliersData.filter(supplier => {
@@ -142,7 +234,9 @@ export default function SupplierTable() {
                 <Menu size="sm" sx={{ minWidth: 140 }}>
                     <MenuItem onClick={() => handleEditSupplier(supplier)}>Editar</MenuItem>
                     <Divider />
-                    <MenuItem color="danger">Eliminar</MenuItem>
+                    <MenuItem color="danger" onClick={() => handleDeleteSupplier(supplier.id)}>
+                        Eliminar
+                    </MenuItem>
                 </Menu>
             </Dropdown>
         );
@@ -267,6 +361,9 @@ export default function SupplierTable() {
             </Modal>
         );
     }
+
+    if (loading) return <Typography>Cargando proveedores...</Typography>;
+    if (error) return <Typography color="danger">Error: {error}</Typography>;
 
     return (
         <React.Fragment>
