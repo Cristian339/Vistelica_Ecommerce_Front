@@ -144,9 +144,8 @@ export default function CustomerTable() {
     };
 
     const filteredCustomers = customersData.filter(customer => {
-        const matchesName = customer.name.toLowerCase().includes(nameFilter.toLowerCase());
         const matchesEmail = customer.email.toLowerCase().includes(emailFilter.toLowerCase());
-        return matchesName && matchesEmail;
+        return matchesEmail;
     });
 
     const sortedCustomers = [...filteredCustomers].sort((a, b) => {
@@ -169,7 +168,6 @@ export default function CustomerTable() {
                     <MoreHorizRoundedIcon />
                 </MenuButton>
                 <Menu size="sm" sx={{ minWidth: 140 }}>
-                    <MenuItem onClick={() => handleEditCustomer(customer)}>Editar</MenuItem>
                     {customer.banned ? (
                         <MenuItem onClick={() => onToggleBan(customer.id, false)}>
                             Desbanear

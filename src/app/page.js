@@ -4,14 +4,14 @@ import ImageCarousel from "@/pages/home/components/ImageCarousel";
 import Typography from "@mui/material/Typography";
 import {Container} from "@mui/material";
 import HomePage from "@/pages/home/Home";
-
+import AdminPage from "@/pages/admin/page";
   // Ruta del componente HomePage
 
 export default function Home() {
     return (
         <div >
 
-            <HomePage />
+            <AdminPage />
         </div>
     );
 }
