@@ -17,7 +17,7 @@ import { styled } from '@mui/material/styles';
 import ForgotPassword from './ForgotPassword';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from './CustomIcons';
 import { useRouter } from 'next/navigation';
-import Stack from "@mui/joy/Stack";
+import Stack from "@mui/material/Stack";
 
 const Card = styled(MuiCard)(({ theme }) => ({
     display: 'flex',
@@ -256,15 +256,33 @@ export default function SignInCard() {
                     Iniciar sesión con Facebook
                 </Button>
             </Box>
-            <Stack direction="row" spacing={2} justifyContent="center">
+            <Box sx={{ mt: 2, textAlign: 'center' }}>
                 <Link
-                    href="/about-us/AboutUs"
+                    href="/privacy-policy/PrivacyPolicy"
                     variant="body2"
                     sx={{ textDecoration: 'underline' }}
                 >
-                    Sobre Nosotros
+                    Ver Política de Privacidad (testing)
                 </Link>
-            </Stack>
+            </Box>
+            <Box sx={{ mt: 2, textAlign: 'center' }}>
+                <Stack direction="row" spacing={2} justifyContent="center">
+                    <Link
+                        href="/privacy-policy/PrivacyPolicy"
+                        variant="body2"
+                        sx={{ textDecoration: 'underline' }}
+                    >
+                        Ver Política de Privacidad
+                    </Link>
+                    <Link
+                        href="/about-us/AboutUs"
+                        variant="body2"
+                        sx={{ textDecoration: 'underline' }}
+                    >
+                        Sobre Nosotros
+                    </Link>
+                </Stack>
+            </Box>
         </Card>
     );
 }
