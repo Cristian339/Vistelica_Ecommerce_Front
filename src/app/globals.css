@@ -1,15 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Amethysta&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 
 
 :root {
   --background: #ffffff;
-  --foreground: #bebbbb;
+  --foreground: #000000;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #ffffff;
-    --foreground: #ffffff;
+    --foreground: #000000;
   }
 }
 

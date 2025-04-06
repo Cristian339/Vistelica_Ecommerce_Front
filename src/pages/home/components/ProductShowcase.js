@@ -1,43 +1,98 @@
 import React, { useState } from 'react';
+import {
+    Container,
+    Grid,
+    Card,
+    CardMedia,
+    CardContent,
+    Typography,
+    Box
+} from '@mui/material';
 
 const ProductCard = ({ product }) => {
     const [isHovered, setIsHovered] = useState(false);
 
     return (
-        <div
-            className="relative bg-white p-4 border border-gray-200 rounded-md transition-shadow duration-300 hover:shadow-lg"
+        <Card
+            sx={{
+                position: 'relative',
+                height: '400px',
+                transition: 'box-shadow 0.3s',
+                '&:hover': {
+                    boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
+                }
+            }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
+            elevation={isHovered ? 6 : 1}
         >
             {/* Contenedor de imagen con tamaño fijo */}
-            <div className="w-full h-96 flex items-center justify-center mb-2 overflow-hidden">
-                <div className="w-96 h-96 relative">
-                    <img
-                        src={product.imageUrl}
-                        alt={product.name}
-                        className="absolute inset-0 w-full h-full object-contain"
-                    />
-                </div>
-            </div>
-            <h3 className="text-sm font-medium text-gray-800">{product.name}</h3>
+            <Box sx={{
+                width: '100%',
+                height: '320px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                overflow: 'hidden',
+                position: 'relative'
+            }}>
+                <CardMedia
+                    component="img"
+                    image={product.imageUrl}
+                    alt={product.name}
+                    sx={{
+                        objectFit: 'contain',
+                        maxHeight: '100%',
+                        maxWidth: '100%'
+                    }}
+                />
+            </Box>
+
+            <CardContent sx={{ p: 2 }}>
+                <Typography variant="subtitle2" component="h3">
+                    {product.name}
+                </Typography>
+            </CardContent>
 
             {/* Info overlay que se muestra al pasar el ratón */}
             {isHovered && (
-                <div className="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-end p-4 rounded-md text-black transition-opacity duration-300">
-                    <p className="text-sm mb-1 text-black">Desde ${product.price}</p>
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        bgcolor: 'rgba(255, 255, 255, 0.9)',
+                        p: 2,
+                        transition: 'opacity 0.3s',
+                        borderBottomLeftRadius: 4,
+                        borderBottomRightRadius: 4
+                    }}
+                >
+                    <Typography variant="body2" fontWeight={500} gutterBottom>
+                        Desde ${product.price}
+                    </Typography>
+
                     {product.rating && (
-                        <div className="flex items-center mb-1 text-black">
-                            <span className="mr-1">★</span>
-                            <span>{product.rating}</span>
-                            <span className="text-xs ml-1">({product.reviews} reseñas)</span>
-                        </div>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                            <Typography component="span" color="warning.main" mr={0.5}>★</Typography>
+                            <Typography variant="body2" component="span">
+                                {product.rating}
+                            </Typography>
+                            <Typography variant="caption" component="span" color="text.secondary" ml={0.5}>
+                                ({product.reviews} reseñas)
+                            </Typography>
+                        </Box>
                     )}
+
                     {product.variants && (
-                        <p className="text-xs text-black">{product.variants} variantes</p>
+                        <Typography variant="caption" color="text.secondary">
+                            {product.variants} variantes
+                        </Typography>
                     )}
-                </div>
+                </Box>
             )}
-        </div>
+        </Card>
     );
 };
 
@@ -96,16 +151,20 @@ const ProductShowcase = () => {
     ];
 
     return (
-        <div className="container mx-auto p-4">
-            <h2 className="text-2xl font-bold mb-6">Nuevas Llegadas</h2>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+            <Typography variant="h5" component="h2" fontWeight={500} mb={3}>
+                Productos destacados
+            </Typography>
 
             {/* Contenedor de productos */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            <Grid container spacing={3}>
                 {products.map(product => (
-                    <ProductCard key={product.id} product={product} />
+                    <Grid item xs={6} md={4} key={product.id}>
+                        <ProductCard product={product} />
+                    </Grid>
                 ))}
-            </div>
-        </div>
+            </Grid>
+        </Container>
     );
 };
 
