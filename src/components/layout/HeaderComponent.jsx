@@ -37,31 +37,29 @@ export default function Navbar() {
         <>
             {/* Navbar */}
             <AppBar position="static" color="transparent" elevation={0} sx={{ backgroundColor: "white", padding: "8px 16px" }}>
-                <Toolbar sx={{display: 'flex', justifyContent: 'space-between', padding: '0 !important'}}>
-                    {/* Left section - Hamburger Menu and Logo */}
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center'
-                    }}>
-                        {/* Hamburger Menu */}
+                <Toolbar sx={{display: 'flex', alignItems: 'center', padding: '0 !important'}}>
+
+                {/* Left section - Hamburger Menu and Logo */}
+                    {/* Logo con hamburguesa alineado con flexbox */}
+                    <div style={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
                         <IconButton onClick={toggleDrawer(true)} sx={{color: "#171717"}}>
                             <MenuIcon fontSize="large"/>
                         </IconButton>
 
-                        {/* Logo - left aligned on desktop, not shown on mobile */}
                         {!isMobile && (
-                            <h1 className="text-xl font-bold"
+                            <h1
                                 style={{
                                     fontSize: "37px",
                                     color: "#171717",
                                     fontFamily: "'Amethysta', serif",
-                                    marginLeft: '40%', // Increased left padding/margin
-
-                                }}>
+                                    marginLeft: "16px"
+                                }}
+                            >
                                 VÍSTELICA
                             </h1>
                         )}
                     </div>
+
 
                     {/* Logo - centered on mobile only */}
                     {isMobile && (
