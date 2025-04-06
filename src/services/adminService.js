@@ -7,17 +7,162 @@ const getClients = async () => {
     return response.data;
 };
 
+const getSuppliers = async () => {
+    const response = await axios.get(`${API_URL}/suppliers`);
+    return response.data;
+};
+
+const getCategories = async () => {
+    const response = await axios.get(`${API_URL}/categories`);
+    return response.data;
+};
+
 const banUser = async (userId, reason) => {
-    await axios.post(`${API_URL}/admin/ban/${userId}`, { reason });
+    try {
+        // Validación adicional en el cliente
+        if (!reason) {
+            throw new Error('Debe incluir razon del baneo');
+        }
+
+        const response = await axios.post(`${API_URL}/admin/ban/${userId}`, {
+            reason: reason.trim()
+        }, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('Error banning user:', error);
+        throw new Error(error.response?.data?.message || 'Error al banear usuario');
+    }
 };
 
 const unbanUser = async (userId) => {
-    await axios.post(`${API_URL}/admin/unban/${userId}`);
+    try {
+        const response = await axios.post(`${API_URL}/admin/unban/${userId}`, {}, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unbanning user:', error.response?.data || error.message);
+        throw new Error(error.response?.data?.message || 'Failed to unban user');
+    }
 };
 
-// eslint-disable-next-line import/no-anonymous-default-export
+// Métodos para pedidos
+const getAllOrders = async () => {
+    const response = await axios.get(`${API_URL}/orders`);
+    return response.data;
+};
+
+const deleteOrder = async (orderId) => {
+    await axios.delete(`${API_URL}/orders/${orderId}`);
+};
+
+// Métodos para proveedores
+const createSupplier = async (supplierData) => {
+    const response = await axios.post(`${API_URL}/suppliers`, supplierData);
+    return response.data;
+};
+
+const updateSupplier = async (id, supplierData) => {
+    const response = await axios.put(`${API_URL}/suppliers/${id}`, supplierData);
+    return response.data;
+};
+
+const deleteSupplier = async (id) => {
+    await axios.delete(`${API_URL}/suppliers/${id}`);
+};
+
+const searchSuppliersByName = async (name) => {
+    const response = await axios.get(`${API_URL}/suppliers/search?name=${name}`);
+    return response.data;
+};
+
+const getAllProducts = async () => {
+    const response = await axios.get(`${API_URL}/products`);
+    return response.data;
+};
+
+const createProduct = async (productData) => {
+    const formData = new FormData();
+
+    // Agregar campos del producto al FormData
+    Object.keys(productData).forEach(key => {
+        if (key !== 'image') {
+            formData.append(key, productData[key]);
+        }
+    });
+
+    // Si hay imagen, agregarla
+    if (productData.image) {
+        formData.append('image', productData.image);
+    }
+
+    const response = await axios.post(`${API_URL}/products`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return response.data;
+};
+
+const updateProduct = async (id, productData) => {
+    const formData = new FormData();
+
+    Object.keys(productData).forEach(key => {
+        if (key !== 'image') {
+            formData.append(key, productData[key]);
+        }
+    });
+
+    if (productData.image) {
+        formData.append('image', productData.image);
+    }
+
+    const response = await axios.put(`${API_URL}/products/${id}`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return response.data;
+};
+
+const deleteProduct = async (id) => {
+    await axios.delete(`${API_URL}/products/${id}`);
+};
+
+const getProductById = async (id) => {
+    const response = await axios.get(`${API_URL}/products/${id}`);
+    return response.data;
+};
+
+const getProductsByCategory = async (categoryId, subcategoryId) => {
+    const response = await axios.get(`${API_URL}/products/category/${categoryId}/subcategory/${subcategoryId}`);
+    return response.data;
+};
+
 export default {
     getClients,
+    getSuppliers,
+    getCategories,
     banUser,
-    unbanUser
+    unbanUser,
+    getAllOrders,
+    deleteOrder,
+    createSupplier,
+    updateSupplier,
+    deleteSupplier,
+    searchSuppliersByName,
+    // Métodos de productos
+    getAllProducts,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    getProductById,
+    getProductsByCategory
 };

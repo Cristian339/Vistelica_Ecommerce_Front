@@ -1,4 +1,6 @@
 import * as React from 'react';
+// ... (otros imports se mantienen igual)
+import adminService from "@/services/adminService";
 import { ColorPaletteProp } from '@mui/joy/styles';
 import Avatar from '@mui/joy/Avatar';
 import Box from '@mui/joy/Box';
@@ -43,69 +45,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-
-const initialRows = [
-    {
-        id: 'INV-1234',
-        date: '3 Feb, 2023',
-        status: 'Reembolsado',
-        customer: {
-            initial: 'O',
-            name: 'Olivia Ryhe',
-            email: 'olivia@email.com',
-        },
-        shippingAddress: 'Calle Principal 123, Madrid, España',
-        paymentMethod: 'tarjeta'
-    },
-    {
-        id: 'INV-1233',
-        date: '3 Feb, 2023',
-        status: 'Pagado',
-        customer: {
-            initial: 'S',
-            name: 'Steve Hampton',
-            email: 'steve.hamp@email.com',
-        },
-        shippingAddress: 'Avenida Secundaria 456, Barcelona, España',
-        paymentMethod: 'bizum'
-    },
-    {
-        id: 'INV-1232',
-        date: '3 Feb, 2023',
-        status: 'Reembolsado',
-        customer: {
-            initial: 'C',
-            name: 'Ciaran Murray',
-            email: 'ciaran.murray@email.com',
-        },
-        shippingAddress: 'Plaza Central 789, Valencia, España',
-        paymentMethod: 'paypal'
-    },
-    {
-        id: 'INV-1231',
-        date: '4 Feb, 2023',
-        status: 'Reembolsado',
-        customer: {
-            initial: 'M',
-            name: 'Maria Macdonald',
-            email: 'maria.mc@email.com',
-        },
-        shippingAddress: 'Callejón 101, Sevilla, España',
-        paymentMethod: 'tarjeta'
-    },
-    {
-        id: 'INV-1230',
-        date: '5 Feb, 2023',
-        status: 'Cancelado',
-        customer: {
-            initial: 'C',
-            name: 'Charles Fulton',
-            email: 'fulton@email.com',
-        },
-        shippingAddress: 'Paseo Marítimo 202, Málaga, España',
-        paymentMethod: 'bizum'
-    },
-];
+import CircularProgress from '@mui/joy/CircularProgress';
 
 function descendingComparator(a, b, orderBy) {
     if (b[orderBy] < a[orderBy]) {
@@ -276,11 +216,55 @@ export default function OrderTable() {
     const [order, setOrder] = React.useState('desc');
     const [orderBy, setOrderBy] = React.useState('id');
     const [selected, setSelected] = React.useState([]);
-    const [rows, setRows] = React.useState(initialRows);
+    const [rows, setRows] = React.useState([]); // Cambiamos a array vacío inicial
     const [editingOrder, setEditingOrder] = React.useState(null);
     const [nameFilter, setNameFilter] = React.useState('');
     const [emailFilter, setEmailFilter] = React.useState('');
     const [dateFilter, setDateFilter] = React.useState('');
+
+    // Cargar pedidos al montar el componente
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [error, setError] = React.useState(null);
+
+    React.useEffect(() => {
+        const fetchOrders = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+                const orders = await adminService.getAllOrders();
+
+                if (!orders || !Array.isArray(orders)) {
+                    throw new Error('Formato de datos inválido');
+                }
+
+                const formattedOrders = orders.map(order => ({
+                    id: `INV-${order.order_id}`,
+                    date: new Date(order.created_at).toLocaleDateString('es-ES', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                    }),
+                    status: order.status || 'Desconocido',
+                    customer: {
+                        initial: order.client?.name?.charAt(0) || '?',
+                        name: order.client?.name || 'Cliente desconocido',
+                        email: order.client?.email || 'Email no disponible',
+                    },
+                    shippingAddress: order.client?.address || 'Dirección no especificada',
+                    paymentMethod: order.payment_method?.toLowerCase() || 'tarjeta'
+                }));
+
+                setRows(formattedOrders);
+            } catch (err) {
+                console.error('Error al cargar pedidos:', err);
+                setError(err.message || 'Error al cargar los pedidos');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchOrders();
+    }, []);
 
     const handleSort = (property) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -297,6 +281,20 @@ export default function OrderTable() {
             order.id === updatedOrder.id ? updatedOrder : order
         ));
         setEditingOrder(null);
+    };
+
+    // Nueva función para eliminar pedido
+    const handleDeleteOrder = async (orderId) => {
+        try {
+            // Extraer el ID numérico del formato INV-1234
+            const numericId = parseInt(orderId.split('-')[1]);
+            await adminService.deleteOrder(numericId);
+            // Actualizar el estado eliminando el pedido
+            setRows(prev => prev.filter(order => order.id !== orderId));
+        } catch (error) {
+            console.error('Error al eliminar pedido:', error);
+            alert('No se pudo eliminar el pedido');
+        }
     };
 
     const renderPaymentMethodIcon = (method) => {
@@ -319,6 +317,60 @@ export default function OrderTable() {
 
         return matchesName && matchesEmail && matchesDate;
     });
+
+    // Actualización del RowMenu para incluir eliminación
+    function RowMenu({ order, onEdit }) {
+        return (
+            <Dropdown>
+                <MenuButton
+                    slots={{ root: IconButton }}
+                    slotProps={{ root: { variant: 'plain', color: 'neutral', size: 'sm' } }}
+                >
+                    <MoreHorizRoundedIcon />
+                </MenuButton>
+                <Menu size="sm" sx={{ minWidth: 140 }}>
+                    <MenuItem onClick={() => onEdit(order)}>Editar</MenuItem>
+                    <Divider />
+                    <MenuItem
+                        color="danger"
+                        onClick={() => {
+                            handleDeleteOrder(order.id);
+                        }}
+                    >
+                        Eliminar
+                    </MenuItem>
+                </Menu>
+            </Dropdown>
+        );
+    }
+
+    if (isLoading) {
+        return (
+            <Box sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '300px'
+            }}>
+                <CircularProgress />
+                <Typography sx={{ ml: 2 }}>Cargando pedidos...</Typography>
+            </Box>
+        );
+    }
+
+    if (error) {
+        return (
+            <Box sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '300px',
+                color: 'danger.500'
+            }}>
+                <Typography color="danger">{error}</Typography>
+            </Box>
+        );
+    }
 
     return (
         <React.Fragment>
