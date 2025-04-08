@@ -16,20 +16,22 @@ const ProductCard = ({ product }) => {
         <Card
             sx={{
                 position: 'relative',
-                height: '400px',
+                height: '350px', // Reducido de 400px a 350px
+                maxWidth: '100%', // Asegura que no supere el ancho del contenedor
                 transition: 'box-shadow 0.3s',
                 '&:hover': {
                     boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
-                }
+                },
+                margin: '0 auto' // Centra la card en su contenedor
             }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             elevation={isHovered ? 6 : 1}
         >
-            {/* Contenedor de imagen con tamaño fijo */}
+            {/* Contenedor de imagen con tamaño reducido */}
             <Box sx={{
                 width: '100%',
-                height: '320px',
+                height: '240px', // Reducido de 320px a 270px
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -152,14 +154,14 @@ const ProductShowcase = () => {
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Typography variant="h5" component="h2" fontWeight={500} mb={3}>
+            <Typography variant="h5" component="h2" fontWeight={500} mb={3} sx={{ fontFamily: 'Amethysta, sans-serif' }}>
                 Productos destacados
             </Typography>
 
-            {/* Contenedor de productos */}
+            {/* Contenedor de productos con Grid modificado */}
             <Grid container spacing={3}>
                 {products.map(product => (
-                    <Grid item xs={6} md={4} key={product.id}>
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
                         <ProductCard product={product} />
                     </Grid>
                 ))}
