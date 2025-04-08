@@ -5,39 +5,95 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import Button from '@mui/material/Button';
-import { styled } from '@mui/material/styles';
+import { styled, keyframes } from '@mui/material/styles';
 import Divider from '@mui/material/Divider';
 import Grid from '@mui/material/Grid';
 import Avatar from '@mui/material/Avatar';
 import AppTheme from '../shared-theme/AppTheme';
 import ColorModeSelect from '../shared-theme/ColorModeSelect';
-import { SitemarkIcon } from '../sign-up/components/CustomIcons';
 import { useRouter } from 'next/navigation';
+import Fade from '@mui/material/Fade';
+import GroupsIcon from '@mui/icons-material/Groups';
+
+// Animación para el logo
+const fadeIn = keyframes`
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+`;
+
+const shimmer = keyframes`
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+`;
+
+const AnimatedLogo = styled(Typography)(({ theme }) => ({
+    fontFamily: "'Poppins', sans-serif",
+    fontWeight: 700,
+    fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', // Tamaño responsivo
+    background: `linear-gradient(90deg, #E4B002, #EAD8B1, #FFFFFF, #EAD8B1, #E4B002)`,
+    backgroundSize: '200% auto',
+    color: 'transparent',
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    animation: `${fadeIn} 1s ease-out, ${shimmer} 3s infinite linear`,
+    marginBottom: theme.spacing(1),
+    letterSpacing: '0.05em',
+    position: 'relative',
+    display: 'inline-block',
+    textAlign: 'center',
+    width: 'auto',
+    textShadow: '0 2px 4px rgba(35, 42, 46, 0.1)',
+}));
 
 const Card = styled(MuiCard)(({ theme }) => ({
     display: 'flex',
     flexDirection: 'column',
     alignSelf: 'center',
     width: '100%',
-    padding: theme.spacing(4),
-    gap: theme.spacing(2),
+    padding: theme.spacing(2), // Reducido para móviles
+    gap: theme.spacing(1.5),
     margin: 'auto',
-    boxShadow:
-        'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
+    borderRadius: '16px',
+    overflow: 'hidden',
+    position: 'relative',
     [theme.breakpoints.up('sm')]: {
         width: '800px',
+        padding: theme.spacing(4), // Volver al original en pantallas más grandes
+        gap: theme.spacing(2),
+    },
+    '&::after': {
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '5px',
+        background: `linear-gradient(90deg, #E4B002, #EAD8B1)`,
     },
     ...theme.applyStyles('dark', {
-        boxShadow:
-            'hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
     }),
 }));
 
 const AboutContainer = styled(Stack)(({ theme }) => ({
     height: 'calc((1 - var(--template-frame-height, 0)) * 100dvh)',
     minHeight: '100%',
-    padding: theme.spacing(2),
+    padding: theme.spacing(1), // Reducido para móviles
     [theme.breakpoints.up('sm')]: {
+        padding: theme.spacing(2),
+    },
+    [theme.breakpoints.up('md')]: {
         padding: theme.spacing(4),
     },
     '&::before': {
@@ -57,12 +113,30 @@ const AboutContainer = styled(Stack)(({ theme }) => ({
 }));
 
 const ScrollableContent = styled(Box)(({ theme }) => ({
-    maxHeight: '60vh',
+    maxHeight: '50vh', // Más pequeño en móviles
     overflowY: 'auto',
     padding: theme.spacing(2),
     marginBottom: theme.spacing(2),
     border: `1px solid ${theme.palette.divider}`,
     borderRadius: theme.shape.borderRadius,
+    '&::-webkit-scrollbar': {
+        width: '6px', // Más delgado para móviles
+    },
+    '&::-webkit-scrollbar-track': {
+        background: theme.palette.background.paper,
+        borderRadius: '6px',
+    },
+    '&::-webkit-scrollbar-thumb': {
+        background: '#E4B002',
+        borderRadius: '6px',
+    },
+    [theme.breakpoints.up('sm')]: {
+        maxHeight: '60vh',
+        padding: theme.spacing(3),
+        '&::-webkit-scrollbar': {
+            width: '8px',
+        },
+    },
 }));
 
 const TeamMemberCard = styled(Box)(({ theme }) => ({
@@ -70,15 +144,81 @@ const TeamMemberCard = styled(Box)(({ theme }) => ({
     flexDirection: 'column',
     alignItems: 'center',
     textAlign: 'center',
-    padding: theme.spacing(2),
-    marginBottom: theme.spacing(3),
+    padding: theme.spacing(2), // Reducido para móviles
+    marginBottom: theme.spacing(2),
+    borderRadius: '12px',
+    transition: 'transform 0.3s, box-shadow 0.3s',
+    background: theme.palette.background.paper,
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+    '&:hover': {
+        transform: 'translateY(-5px)',
+        boxShadow: '0 8px 20px rgba(228, 176, 2, 0.15)',
+    },
+    [theme.breakpoints.up('sm')]: {
+        padding: theme.spacing(3),
+        marginBottom: theme.spacing(3),
+    },
+    ...theme.applyStyles('dark', {
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+        '&:hover': {
+            boxShadow: '0 8px 24px rgba(228, 176, 2, 0.25)',
+        },
+    }),
 }));
 
 const LargeAvatar = styled(Avatar)(({ theme }) => ({
-    width: 150,
-    height: 150,
-    marginBottom: theme.spacing(2),
-    boxShadow: theme.shadows[3],
+    width: 100, // Más pequeño en móviles
+    height: 100,
+    marginBottom: theme.spacing(1.5),
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+    border: '3px solid #E4B002',
+    [theme.breakpoints.up('sm')]: {
+        width: 120,
+        height: 120,
+        marginBottom: theme.spacing(2),
+    },
+    [theme.breakpoints.up('md')]: {
+        width: 150,
+        height: 150,
+        border: '4px solid #E4B002',
+    },
+}));
+
+const SectionTitle = styled(Typography)(({ theme }) => ({
+    position: 'relative',
+    paddingLeft: theme.spacing(1.5),
+    fontSize: '1.15rem', // Ajustar tamaño en móviles
+    [theme.breakpoints.up('sm')]: {
+        fontSize: '1.25rem',
+    },
+    '&::before': {
+        content: '""',
+        position: 'absolute',
+        left: 0,
+        top: '50%',
+        transform: 'translateY(-50%)',
+        width: '4px',
+        height: '70%',
+        background: '#E4B002',
+        borderRadius: '4px',
+    },
+}));
+
+const fadeInUp = keyframes`
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+`;
+
+const AnimatedGrid = styled(Grid)(({ index }) => ({
+    animation: `${fadeInUp} 0.6s ease-out forwards`,
+    animationDelay: `${index * 0.2}s`,
+    opacity: 0,
 }));
 
 export default function AboutUs(props) {
@@ -90,134 +230,238 @@ export default function AboutUs(props) {
     return (
         <AppTheme {...props}>
             <CssBaseline enableColorScheme />
-            <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
+            <ColorModeSelect sx={{
+                position: 'fixed',
+                top: { xs: '0.5rem', sm: '1rem' },
+                right: { xs: '0.5rem', sm: '1rem' },
+                zIndex: 10
+            }} />
             <AboutContainer direction="column" justifyContent="space-between">
-                <Card variant="outlined">
-                    <SitemarkIcon />
-                    <Typography
-                        component="h1"
-                        variant="h4"
-                        sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)' }}
-                    >
-                        Sobre Nosotros
-                    </Typography>
+                <Fade in={true} timeout={800}>
+                    <Card variant="outlined">
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mb: { xs: 0.5, sm: 1 } }}>
+                            <AnimatedLogo variant="h1">Vistélica</AnimatedLogo>
+                        </Box>
 
-                    <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                        Conozca al equipo de desarrolladores detrás de Vistelica
-                    </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: { xs: 0.5, sm: 1 } }}>
+                            <GroupsIcon sx={{ color: '#E4B002', fontSize: { xs: 24, sm: 28 } }} />
+                            <Typography
+                                component="h1"
+                                variant="h4"
+                                sx={{
+                                    width: '100%',
+                                    fontSize: 'clamp(1.5rem, 6vw, 2.15rem)',
+                                    fontWeight: 600
+                                }}
+                            >
+                                Sobre Nosotros
+                            </Typography>
+                        </Box>
 
-                    <ScrollableContent>
-                        <Typography variant="h5" gutterBottom>
-                            Nuestro Proyecto
-                        </Typography>
-                        <Typography paragraph>
-                            Vistelica nació como proyecto final de nuestro grado superior en Desarrollo de Aplicaciones Multiplataforma.
-                            Nuestra visión fue crear una plataforma de e-commerce moderna y accesible que revolucionara la forma en
-                            que las familias compran ropa.
-                        </Typography>
-                        <Typography paragraph>
-                            Combinando nuestras habilidades en desarrollo web, diseño de interfaces y programación backend,
-                            hemos construido una solución tecnológica completa que ofrece una experiencia de usuario fluida
-                            y adaptada a las necesidades de cada cliente.
-                        </Typography>
-
-                        <Divider sx={{ my: 3 }} />
-
-                        <Typography variant="h5" gutterBottom>
-                            Tecnologías Utilizadas
-                        </Typography>
-                        <Typography paragraph>
-                            Para el desarrollo de Vistelica, hemos implementado un stack tecnológico moderno y escalable:
-                        </Typography>
-                        <ul>
-                            <li>
-                                <Typography>
-                                    <strong>Frontend:</strong> React, Next.js, Material UI y herramientas avanzadas de diseño responsivo.
-                                </Typography>
-                            </li>
-                            <li>
-                                <Typography>
-                                    <strong>Backend:</strong> Node.js con Express, gestión de autenticación segura y APIs REST.
-                                </Typography>
-                            </li>
-                            <li>
-                                <Typography>
-                                    <strong>Base de datos:</strong> MongoDB para almacenamiento flexible y eficiente de productos e información de usuarios.
-                                </Typography>
-                            </li>
-                        </ul>
-
-                        <Divider sx={{ my: 3 }} />
-
-                        <Typography variant="h5" gutterBottom align="center">
-                            Nuestro Equipo de Desarrollo
+                        <Typography
+                            variant="subtitle1"
+                            sx={{
+                                mb: { xs: 1, sm: 2 },
+                                fontStyle: 'italic',
+                                fontSize: { xs: '0.85rem', sm: '1rem' },
+                                color: theme => theme.palette.text.secondary
+                            }}
+                        >
+                            Conozca al equipo de desarrolladores detrás de Vistélica
                         </Typography>
 
-                        <Grid container spacing={3}>
-                            <Grid item xs={12} md={4}>
-                                <TeamMemberCard>
-                                    <LargeAvatar alt="Jesús Moreno Jiménez" />
-                                    <Typography variant="h6">Jesús Moreno Jiménez</Typography>
-                                    <Typography variant="subtitle1" color="primary" gutterBottom>Frontend Developer</Typography>
-                                    <Typography variant="body2">
-                                        Especialista en interfaces de usuario y experiencia de usuario. Ha liderado el desarrollo
-                                        del frontend con React y Material UI, creando componentes reutilizables y una arquitectura
-                                        frontend sólida y mantenible.
-                                    </Typography>
-                                </TeamMemberCard>
+                        <ScrollableContent>
+                            <SectionTitle variant="h5" gutterBottom>
+                                Nuestro Proyecto
+                            </SectionTitle>
+                            <Typography
+                                paragraph
+                                sx={{
+                                    fontSize: { xs: '0.9rem', sm: '1rem' },
+                                    mb: { xs: 1, sm: 2 }
+                                }}
+                            >
+                                Vistélica nació como proyecto final de nuestro grado superior en Desarrollo de Aplicaciones Multiplataforma.
+                                Nuestra visión fue crear una plataforma de e-commerce moderna y accesible que revolucionara la forma en
+                                que las familias compran ropa.
+                            </Typography>
+                            <Typography
+                                paragraph
+                                sx={{
+                                    fontSize: { xs: '0.9rem', sm: '1rem' },
+                                    mb: { xs: 1, sm: 2 }
+                                }}
+                            >
+                                Combinando nuestras habilidades en desarrollo web, diseño de interfaces y programación backend,
+                                hemos construido una solución tecnológica completa que ofrece una experiencia de usuario fluida
+                                y adaptada a las necesidades de cada cliente.
+                            </Typography>
+
+                            <Divider sx={{ my: { xs: 2, sm: 3 }, borderColor: 'rgba(228, 176, 2, 0.3)' }} />
+
+                            <SectionTitle variant="h5" gutterBottom>
+                                Tecnologías Utilizadas
+                            </SectionTitle>
+                            <Typography
+                                paragraph
+                                sx={{
+                                    fontSize: { xs: '0.9rem', sm: '1rem' },
+                                    mb: { xs: 1, sm: 2 }
+                                }}
+                            >
+                                Para el desarrollo de Vistélica, hemos implementado un stack tecnológico moderno y escalable:
+                            </Typography>
+                            <Box sx={{ pl: { xs: 1, sm: 2 } }}>
+                                <ul>
+                                    <li>
+                                        <Typography sx={{
+                                            mb: 1,
+                                            fontSize: { xs: '0.9rem', sm: '1rem' }
+                                        }}>
+                                            <Box component="span" sx={{ fontWeight: 600, color: '#E4B002' }}>Frontend:</Box> React, Next.js, Material UI y herramientas avanzadas de diseño responsivo.
+                                        </Typography>
+                                    </li>
+                                    <li>
+                                        <Typography sx={{
+                                            mb: 1,
+                                            fontSize: { xs: '0.9rem', sm: '1rem' }
+                                        }}>
+                                            <Box component="span" sx={{ fontWeight: 600, color: '#E4B002' }}>Backend:</Box> Node.js con Express, gestión de autenticación segura y APIs REST.
+                                        </Typography>
+                                    </li>
+                                    <li>
+                                        <Typography sx={{
+                                            mb: 1,
+                                            fontSize: { xs: '0.9rem', sm: '1rem' }
+                                        }}>
+                                            <Box component="span" sx={{ fontWeight: 600, color: '#E4B002' }}>Base de datos:</Box> MongoDB para almacenamiento flexible y eficiente de productos e información de usuarios.
+                                        </Typography>
+                                    </li>
+                                </ul>
+                            </Box>
+
+                            <Divider sx={{ my: { xs: 2, sm: 3 }, borderColor: 'rgba(228, 176, 2, 0.3)' }} />
+
+                            <Typography
+                                variant="h5"
+                                gutterBottom
+                                align="center"
+                                sx={{
+                                    fontWeight: 600,
+                                    fontSize: { xs: '1.15rem', sm: '1.5rem' },
+                                    color: '#232A2E',
+                                    position: 'relative',
+                                    '&::after': {
+                                        content: '""',
+                                        display: 'block',
+                                        width: { xs: '60px', sm: '80px' },
+                                        height: '3px',
+                                        background: '#E4B002',
+                                        margin: '8px auto',
+                                        borderRadius: '2px'
+                                    }
+                                }}
+                            >
+                                Nuestro Equipo de Desarrollo
+                            </Typography>
+
+                            <Grid container spacing={2} sx={{ mt: { xs: 1, sm: 2 } }}>
+                                {['Jesús Moreno Jiménez', 'Cristian Joel Vargas', 'Jesús Moreno Caballero'].map((name, index) => (
+                                    <AnimatedGrid item xs={12} sm={6} md={4} key={name} index={index}>
+                                        <TeamMemberCard>
+                                            <LargeAvatar alt={name} src={`/static/images/avatar/${index + 1}.jpg`} />
+                                            <Typography
+                                                variant="h6"
+                                                sx={{
+                                                    fontWeight: 600,
+                                                    fontSize: { xs: '1rem', sm: '1.25rem' },
+                                                    color: '#232A2E',
+                                                    mt: 1
+                                                }}
+                                            >
+                                                {name}
+                                            </Typography>
+                                            <Typography
+                                                variant="subtitle1"
+                                                sx={{
+                                                    color: '#E4B002',
+                                                    fontWeight: 500,
+                                                    fontSize: { xs: '0.85rem', sm: '1rem' },
+                                                    mb: 1
+                                                }}
+                                            >
+                                                {index === 0 ? 'Frontend Developer' :
+                                                    index === 1 ? 'Fullstack Developer' :
+                                                        'Backend Developer'}
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                                                    lineHeight: 1.5
+                                                }}
+                                            >
+                                                {index === 0 ?
+                                                    'Especialista en interfaces de usuario y experiencia de usuario. Ha liderado el desarrollo del frontend con React y Material UI, creando componentes reutilizables y una arquitectura frontend sólida y mantenible.' :
+                                                    index === 1 ?
+                                                        'Desarrollador versátil con foco en la integración de sistemas. Ha implementado el sistema de autenticación, gestión de estado y las conexiones entre el frontend y backend para crear una experiencia unificada.' :
+                                                        'Enfocado en la arquitectura del servidor y la base de datos. Ha diseñado la estructura de datos, implementado las APIs y garantizado el rendimiento y la seguridad del backend para proporcionar una plataforma fiable y escalable.'}
+                                            </Typography>
+                                        </TeamMemberCard>
+                                    </AnimatedGrid>
+                                ))}
                             </Grid>
-                            <Grid item xs={12} md={4}>
-                                <TeamMemberCard>
-                                    <LargeAvatar alt="Cristian Joel Vargas" />
-                                    <Typography variant="h6">Cristian Joel Vargas</Typography>
-                                    <Typography variant="subtitle1" color="primary" gutterBottom>Fullstack Developer</Typography>
-                                    <Typography variant="body2">
-                                        Desarrollador versátil con foco en la integración de sistemas. Ha implementado el sistema
-                                        de autenticación, gestión de estado y las conexiones entre el frontend y backend para
-                                        crear una experiencia unificada.
-                                    </Typography>
-                                </TeamMemberCard>
-                            </Grid>
-                            <Grid item xs={12} md={4}>
-                                <TeamMemberCard>
-                                    <LargeAvatar alt="Jesús Moreno Caballero" />
-                                    <Typography variant="h6">Jesús Moreno Caballero</Typography>
-                                    <Typography variant="subtitle1" color="primary" gutterBottom>Backend Developer</Typography>
-                                    <Typography variant="body2">
-                                        Enfocado en la arquitectura del servidor y la base de datos. Ha diseñado la estructura
-                                        de datos, implementado las APIs y garantizado el rendimiento y la seguridad del backend
-                                        para proporcionar una plataforma fiable y escalable.
-                                    </Typography>
-                                </TeamMemberCard>
-                            </Grid>
-                        </Grid>
 
-                        <Divider sx={{ my: 3 }} />
+                            <Divider sx={{ my: { xs: 2, sm: 3 }, borderColor: 'rgba(228, 176, 2, 0.3)' }} />
 
-                        <Typography variant="h5" gutterBottom>
-                            Objetivos del Proyecto
-                        </Typography>
-                        <Typography paragraph>
-                            El desarrollo de Vistelica nos ha permitido aplicar nuestros conocimientos en un caso real de negocio
-                            digital. Hemos enfrentado desafíos como la implementación de pagos seguros, la gestión eficiente del
-                            catálogo de productos y la optimización para dispositivos móviles.
-                        </Typography>
-                        <Typography paragraph>
-                            Este proyecto representa no solo nuestra capacidad técnica, sino también nuestra visión de cómo la
-                            tecnología puede transformar la experiencia de compra en línea, haciéndola más accesible, segura
-                            y adaptada a las necesidades del usuario moderno.
-                        </Typography>
-                    </ScrollableContent>
+                            <SectionTitle variant="h5" gutterBottom>
+                                Objetivos del Proyecto
+                            </SectionTitle>
+                            <Typography
+                                paragraph
+                                sx={{
+                                    fontSize: { xs: '0.9rem', sm: '1rem' },
+                                    mb: { xs: 1, sm: 2 }
+                                }}
+                            >
+                                El desarrollo de Vistélica nos ha permitido aplicar nuestros conocimientos en un caso real de negocio
+                                digital. Hemos enfrentado desafíos como la implementación de pagos seguros, la gestión eficiente del
+                                catálogo de productos y la optimización para dispositivos móviles.
+                            </Typography>
+                            <Typography
+                                paragraph
+                                sx={{
+                                    fontSize: { xs: '0.9rem', sm: '1rem' },
+                                    mb: { xs: 1, sm: 2 }
+                                }}
+                            >
+                                Este proyecto representa no solo nuestra capacidad técnica, sino también nuestra visión de cómo la
+                                tecnología puede transformar la experiencia de compra en línea, haciéndola más accesible, segura
+                                y adaptada a las necesidades del usuario moderno.
+                            </Typography>
+                        </ScrollableContent>
 
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleGoToLogin}
-                        sx={{ mt: 2 }}
-                    >
-                        Ir a Iniciar Sesión
-                    </Button>
-                </Card>
+                        <Button
+                            variant="contained"
+                            sx={{
+                                mt: { xs: 1, sm: 2 },
+                                py: { xs: 1, sm: 1.2 },
+                                fontWeight: 600,
+                                backgroundColor: '#E4B002',
+                                boxShadow: 2,
+                                '&:hover': {
+                                    backgroundColor: '#c99a02',
+                                    boxShadow: 4,
+                                    transform: 'translateY(-2px)',
+                                    transition: 'all 0.3s'
+                                }
+                            }}
+                            onClick={handleGoToLogin}
+                        >
+                            Ir a Iniciar Sesión
+                        </Button>
+                    </Card>
+                </Fade>
             </AboutContainer>
         </AppTheme>
     );
