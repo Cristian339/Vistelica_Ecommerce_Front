@@ -10,6 +10,7 @@ import FeaturedCategories from "@/pages/home/components/FeaturedCategories";
 import BannerSection from "@/pages/home/components/BannerSection";
 import FooterComponent from "@/components/layout/FooterComponent";
 import AutomaticCarousel from "@/pages/home/components/AutomaticCarousel";
+import ProductCarousel from "@/pages/home/components/ProductCarousel";
 
 const HomePage = () => {
     return (
@@ -25,7 +26,7 @@ const HomePage = () => {
             <div className="w-full mt-8">
                 <ProductShowcase/>
             </div>
-
+            <ProductCarousel/>
             {/* Centrar ValuesCard */}
             <div className="w-full mt-8">
                 <ValuesCard/>
