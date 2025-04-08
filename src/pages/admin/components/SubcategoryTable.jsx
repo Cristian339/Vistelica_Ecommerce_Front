@@ -31,120 +31,49 @@ import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import CategoryIcon from '@mui/icons-material/Category';
 import SearchIcon from '@mui/icons-material/Search';
-
-// Datos iniciales de subcategorías
-const initialSubcategories = [
-    { id: 'SUB-001', name: 'Camisetas', category: 'Ropa' },
-    { id: 'SUB-002', name: 'Pantalones', category: 'Ropa' },
-    { id: 'SUB-003', name: 'Teléfonos', category: 'Electrónica' },
-    { id: 'SUB-004', name: 'Computadoras', category: 'Electrónica' },
-    { id: 'SUB-005', name: 'Muebles', category: 'Hogar' },
-];
-
-// Lista de categorías disponibles
-const categories = ['Ropa', 'Electrónica', 'Hogar', 'Deportes', 'Juguetes'];
-
-function RowMenu({ subcategory, onEdit }) {
-    return (
-        <Dropdown>
-            <MenuButton
-                slots={{ root: IconButton }}
-                slotProps={{ root: { variant: 'plain', color: 'neutral', size: 'sm' } }}
-            >
-                <MoreHorizRoundedIcon />
-            </MenuButton>
-            <Menu size="sm" sx={{ minWidth: 140 }}>
-                <MenuItem onClick={() => onEdit(subcategory)}>Editar</MenuItem>
-                <Divider />
-                <MenuItem color="danger">Eliminar</MenuItem>
-            </Menu>
-        </Dropdown>
-    );
-}
-
-function SubcategoryForm({ subcategory, onClose, mode = 'add', onSave }) {
-    const [formData, setFormData] = React.useState(subcategory || {
-        id: '',
-        name: '',
-        category: ''
-    });
-
-    React.useEffect(() => {
-        if (subcategory) {
-            setFormData(subcategory);
-        }
-    }, [subcategory]);
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        onSave(formData);
-    };
-
-    return (
-        <Modal open={!!subcategory} onClose={onClose}>
-            <ModalDialog>
-                <DialogTitle>{mode === 'add' ? 'Añadir subcategoría' : 'Editar subcategoría'}</DialogTitle>
-                <DialogContent>
-                    {mode === 'add' ? 'Complete los detalles' : 'Modifique los detalles'}
-                </DialogContent>
-                <form onSubmit={handleSubmit}>
-                    <Stack spacing={2}>
-                        <FormControl>
-                            <FormLabel>ID</FormLabel>
-                            <Input
-                                name="id"
-                                value={formData.id}
-                                disabled={mode === 'edit'}
-                                required
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Nombre</FormLabel>
-                            <Input
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                required
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Categoría</FormLabel>
-                            <Select
-                                value={formData.category}
-                                onChange={(e, value) => {
-                                    setFormData(prev => ({ ...prev, category: value }));
-                                }}
-                                required
-                            >
-                                {categories.map(category => (
-                                    <Option key={category} value={category}>{category}</Option>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <Button type="submit">
-                            {mode === 'add' ? 'Añadir' : 'Guardar cambios'}
-                        </Button>
-                    </Stack>
-                </form>
-            </ModalDialog>
-        </Modal>
-    );
-}
+import adminService from '../../../services/adminService';
 
 export default function SubcategoryTable() {
     const [order, setOrder] = React.useState('desc');
     const [orderBy, setOrderBy] = React.useState('id');
     const [selected, setSelected] = React.useState([]);
-    const [subcategories, setSubcategories] = React.useState(initialSubcategories);
-    const [editingSubcategory, setEditingSubcategory] = React.useState(null);
-    const [formMode, setFormMode] = React.useState('add');
+    const [subcategoriesData, setSubcategoriesData] = React.useState([]);
+    const [categoriesData, setCategoriesData] = React.useState([]);
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState(null);
     const [nameFilter, setNameFilter] = React.useState('');
     const [categoryFilter, setCategoryFilter] = React.useState('');
+    const [editingSubcategory, setEditingSubcategory] = React.useState(null);
+    const [formMode, setFormMode] = React.useState('add');
+
+    // Cargar datos al montar el componente
+    React.useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const categories = await adminService.getCategories();
+                setCategoriesData(categories);
+
+                // Extraer y transformar todas las subcategorías
+                const allSubcategories = categories.flatMap(category =>
+                    category.subcategories.map(subcat => ({
+                        id: `SUB-${subcat.subcategory_id.toString().padStart(3, '0')}`,
+                        subcategoryId: subcat.subcategory_id,
+                        name: subcat.name,
+                        category: category.name,
+                        categoryId: category.category_id
+                    }))
+                );
+
+                setSubcategoriesData(allSubcategories);
+                setLoading(false);
+            } catch (err) {
+                setError(err.message);
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     const handleSort = (property) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -155,29 +84,96 @@ export default function SubcategoryTable() {
     const handleAddSubcategory = () => {
         setFormMode('add');
         setEditingSubcategory({
-            id: `SUB-${(subcategories.length + 1).toString().padStart(3, '0')}`,
+            id: `SUB-${(subcategoriesData.length + 1).toString().padStart(3, '0')}`,
             name: '',
-            category: ''
+            category: '',
+            categoryId: null
         });
     };
 
     const handleEditSubcategory = (subcategory) => {
         setFormMode('edit');
-        setEditingSubcategory(subcategory);
+        setEditingSubcategory({ ...subcategory });
     };
 
-    const handleSaveSubcategory = (updatedSubcategory) => {
-        if (formMode === 'add') {
-            setSubcategories(prev => [...prev, updatedSubcategory]);
-        } else {
-            setSubcategories(prev => prev.map(item =>
-                item.id === updatedSubcategory.id ? updatedSubcategory : item
-            ));
+    const handleSaveSubcategory = async (updatedSubcategory) => {
+        try {
+            if (formMode === 'add') {
+                // En una API real, aquí harías el POST a /categories/{categoryId}/subcategories
+                // Como no tenemos API para subcategorías individuales, simulamos la actualización
+                const newSubcategory = {
+                    ...updatedSubcategory,
+                    subcategoryId: Math.max(...subcategoriesData.map(s => s.subcategoryId), 0) + 1,
+                    id: `SUB-${(Math.max(...subcategoriesData.map(s => s.subcategoryId), 0) + 1).toString().padStart(3, '0')}`
+                };
+
+                setSubcategoriesData(prev => [...prev, newSubcategory]);
+
+                // Actualizar también las categorías para mantener consistencia
+                setCategoriesData(prev => prev.map(cat =>
+                    cat.category_id === updatedSubcategory.categoryId
+                        ? {
+                            ...cat,
+                            subcategories: [
+                                ...cat.subcategories,
+                                {
+                                    subcategory_id: newSubcategory.subcategoryId,
+                                    name: newSubcategory.name
+                                }
+                            ]
+                        }
+                        : cat
+                ));
+            } else {
+                // Simular actualización
+                setSubcategoriesData(prev => prev.map(subcat =>
+                    subcat.id === updatedSubcategory.id ? updatedSubcategory : subcat
+                ));
+
+                // Actualizar también las categorías
+                setCategoriesData(prev => prev.map(cat =>
+                    cat.category_id === updatedSubcategory.categoryId
+                        ? {
+                            ...cat,
+                            subcategories: cat.subcategories.map(sc =>
+                                sc.subcategory_id === updatedSubcategory.subcategoryId
+                                    ? { ...sc, name: updatedSubcategory.name }
+                                    : sc
+                            )
+                        }
+                        : cat
+                ));
+            }
+            setEditingSubcategory(null);
+        } catch (err) {
+            setError(err.message);
         }
-        setEditingSubcategory(null);
     };
 
-    const filteredSubcategories = subcategories.filter(subcategory => {
+    const handleDeleteSubcategory = async (subcategoryId) => {
+        try {
+            const subcategory = subcategoriesData.find(s => s.id === subcategoryId);
+
+            // Simular eliminación
+            setSubcategoriesData(prev => prev.filter(s => s.id !== subcategoryId));
+
+            // Actualizar también las categorías
+            setCategoriesData(prev => prev.map(cat =>
+                cat.category_id === subcategory.categoryId
+                    ? {
+                        ...cat,
+                        subcategories: cat.subcategories.filter(
+                            sc => sc.subcategory_id !== subcategory.subcategoryId
+                        )
+                    }
+                    : cat
+            ));
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    const filteredSubcategories = subcategoriesData.filter(subcategory => {
         const matchesName = subcategory.name.toLowerCase().includes(nameFilter.toLowerCase());
         const matchesCategory = categoryFilter ? subcategory.category === categoryFilter : true;
         return matchesName && matchesCategory;
@@ -192,6 +188,114 @@ export default function SubcategoryTable() {
         }
         return 0;
     });
+
+    function RowMenu({ subcategory }) {
+        return (
+            <Dropdown>
+                <MenuButton
+                    slots={{ root: IconButton }}
+                    slotProps={{ root: { variant: 'plain', color: 'neutral', size: 'sm' } }}
+                >
+                    <MoreHorizRoundedIcon />
+                </MenuButton>
+                <Menu size="sm" sx={{ minWidth: 140 }}>
+                    <MenuItem onClick={() => handleEditSubcategory(subcategory)}>Editar</MenuItem>
+                    <Divider />
+                    <MenuItem color="danger" onClick={() => handleDeleteSubcategory(subcategory.id)}>
+                        Eliminar
+                    </MenuItem>
+                </Menu>
+            </Dropdown>
+        );
+    }
+
+    function SubcategoryForm() {
+        const [formData, setFormData] = React.useState(editingSubcategory || {
+            id: '',
+            name: '',
+            category: '',
+            categoryId: null
+        });
+
+        React.useEffect(() => {
+            if (editingSubcategory) {
+                setFormData(editingSubcategory);
+            }
+        }, [editingSubcategory]);
+
+        const handleChange = (e) => {
+            const { name, value } = e.target;
+            setFormData(prev => ({ ...prev, [name]: value }));
+        };
+
+        const handleCategoryChange = (e, value) => {
+            const selectedCategory = categoriesData.find(cat => cat.name === value);
+            setFormData(prev => ({
+                ...prev,
+                category: value,
+                categoryId: selectedCategory ? selectedCategory.category_id : null
+            }));
+        };
+
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            handleSaveSubcategory(formData);
+        };
+
+        if (!editingSubcategory) return null;
+
+        return (
+            <Modal open={!!editingSubcategory} onClose={() => setEditingSubcategory(null)}>
+                <ModalDialog>
+                    <DialogTitle>{formMode === 'add' ? 'Añadir subcategoría' : 'Editar subcategoría'}</DialogTitle>
+                    <DialogContent>
+                        {formMode === 'add' ? 'Complete los detalles' : 'Modifique los detalles'}
+                    </DialogContent>
+                    <form onSubmit={handleSubmit}>
+                        <Stack spacing={2}>
+                            <FormControl>
+                                <FormLabel>ID</FormLabel>
+                                <Input
+                                    name="id"
+                                    value={formData.id}
+                                    disabled
+                                />
+                            </FormControl>
+                            <FormControl>
+                                <FormLabel>Nombre</FormLabel>
+                                <Input
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </FormControl>
+                            <FormControl>
+                                <FormLabel>Categoría</FormLabel>
+                                <Select
+                                    value={formData.category}
+                                    onChange={handleCategoryChange}
+                                    required
+                                >
+                                    {categoriesData.map(category => (
+                                        <Option key={category.category_id} value={category.name}>
+                                            {category.name}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                            <Button type="submit">
+                                {formMode === 'add' ? 'Añadir' : 'Guardar cambios'}
+                            </Button>
+                        </Stack>
+                    </form>
+                </ModalDialog>
+            </Modal>
+        );
+    }
+
+    if (loading) return <Typography>Cargando subcategorías...</Typography>;
+    if (error) return <Typography color="danger">Error: {error}</Typography>;
 
     return (
         <React.Fragment>
@@ -228,7 +332,7 @@ export default function SubcategoryTable() {
                         onChange={(e, value) => setCategoryFilter(value)}
                     >
                         <Option value="">Todas</Option>
-                        {categories.map(category => (
+                        {[...new Set(categoriesData.map(cat => cat.name))].map(category => (
                             <Option key={category} value={category}>{category}</Option>
                         ))}
                     </Select>
@@ -246,12 +350,7 @@ export default function SubcategoryTable() {
                 </Button>
             </Box>
 
-            <SubcategoryForm
-                subcategory={editingSubcategory}
-                onClose={() => setEditingSubcategory(null)}
-                mode={formMode}
-                onSave={handleSaveSubcategory}
-            />
+            <SubcategoryForm />
 
             <Sheet
                 className="OrderTableContainer"
@@ -283,16 +382,16 @@ export default function SubcategoryTable() {
                             <Checkbox
                                 size="sm"
                                 indeterminate={
-                                    selected.length > 0 && selected.length !== subcategories.length
+                                    selected.length > 0 && selected.length !== subcategoriesData.length
                                 }
-                                checked={selected.length === subcategories.length}
+                                checked={selected.length === subcategoriesData.length}
                                 onChange={(event) => {
                                     setSelected(
-                                        event.target.checked ? subcategories.map((row) => row.id) : [],
+                                        event.target.checked ? subcategoriesData.map((row) => row.id) : [],
                                     );
                                 }}
                                 color={
-                                    selected.length > 0 || selected.length === subcategories.length
+                                    selected.length > 0 || selected.length === subcategoriesData.length
                                         ? 'primary'
                                         : undefined
                                 }
@@ -388,7 +487,7 @@ export default function SubcategoryTable() {
                             </td>
                             <td>
                                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                    <RowMenu subcategory={subcategory} onEdit={handleEditSubcategory} />
+                                    <RowMenu subcategory={subcategory} />
                                 </Box>
                             </td>
                         </tr>
@@ -396,47 +495,6 @@ export default function SubcategoryTable() {
                     </tbody>
                 </Table>
             </Sheet>
-            <Box
-                className="Pagination-laptopUp"
-                sx={{
-                    pt: 2,
-                    gap: 1,
-                    [`& .${iconButtonClasses.root}`]: { borderRadius: '50%' },
-                    display: {
-                        xs: 'none',
-                        md: 'flex',
-                    },
-                }}
-            >
-                <Button
-                    size="sm"
-                    variant="outlined"
-                    color="neutral"
-                    startDecorator={<KeyboardArrowLeftIcon />}
-                >
-                    Anterior
-                </Button>
-                <Box sx={{ flex: 1 }} />
-                {['1', '2', '3', '…', '8', '9', '10'].map((page) => (
-                    <IconButton
-                        key={page}
-                        size="sm"
-                        variant={Number(page) ? 'outlined' : 'plain'}
-                        color="neutral"
-                    >
-                        {page}
-                    </IconButton>
-                ))}
-                <Box sx={{ flex: 1 }} />
-                <Button
-                    size="sm"
-                    variant="outlined"
-                    color="neutral"
-                    endDecorator={<KeyboardArrowRightIcon />}
-                >
-                    Siguiente
-                </Button>
-            </Box>
         </React.Fragment>
     );
 }

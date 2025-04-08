@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { registerUser } from '../../services/authService';
+import {registerUser, checkEmailAvailability, checkPhoneAvailability} from '../../services/authService';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
 import Typography from '@mui/material/Typography';
@@ -8,18 +8,18 @@ import MuiCard from '@mui/material/Card';
 import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
-import { styled } from '@mui/material/styles';
+import {styled} from '@mui/material/styles';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
 import AppTheme from '../shared-theme/AppTheme';
 import ColorModeSelect from '../shared-theme/ColorModeSelect';
-import { SitemarkIcon } from './components/CustomIcons';
+import {SitemarkIcon} from './components/CustomIcons';
 import RegistrationOptions from './components/RegistrationOptions';
 import AccountInfoStep from './components/AccountInfoStep';
 import PersonalInfoStep from './components/PersonalInfoStep';
 import ContactInfoStep from './components/ContactInfoStep';
 
-const Card = styled(MuiCard)(({ theme }) => ({
+const Card = styled(MuiCard)(({theme}) => ({
     display: 'flex',
     flexDirection: 'column',
     alignSelf: 'center',
@@ -38,7 +38,7 @@ const Card = styled(MuiCard)(({ theme }) => ({
     }),
 }));
 
-const SignUpContainer = styled(Stack)(({ theme }) => ({
+const SignUpContainer = styled(Stack)(({theme}) => ({
     height: 'calc((1 - var(--template-frame-height, 0)) * 100dvh)',
     minHeight: '100%',
     padding: theme.spacing(2),
@@ -107,29 +107,45 @@ export default function SignUp(props) {
     };
 
     const handleChange = (event) => {
-        const { name, value } = event.target;
+        const {name, value} = event.target;
         setFormData({
             ...formData,
             [name]: value
         });
     };
 
-    const validateCurrentStep = () => {
-        let isValid; // Declare isValid once at the function level
+    const validateCurrentStep = async () => {
+        let isValid;
 
         switch (activeStep) {
             case 0: // Account info
                 const email = document.getElementById('email');
                 const password = document.getElementById('password');
-                isValid = true; // Just assign value, not redeclare
+                isValid = true;
 
                 if (!email?.value || !/\S+@\S+\.\S+/.test(email.value)) {
                     setEmailError(true);
                     setEmailErrorMessage('Por favor ingresa un correo electrónico válido.');
                     isValid = false;
                 } else {
-                    setEmailError(false);
-                    setEmailErrorMessage('');
+                    try {
+                        // Check if email is already registered
+                        const emailResult = await checkEmailAvailability(email.value);
+
+                        if (!emailResult.available) {
+                            setEmailError(true);
+                            setEmailErrorMessage(emailResult.message || 'Este correo ya está registrado.');
+                            isValid = false;
+                        } else {
+                            setEmailError(false);
+                            setEmailErrorMessage('');
+                        }
+                    } catch (error) {
+                        console.error('Error verificando email:', error);
+                        setEmailError(true);
+                        setEmailErrorMessage('Error al verificar disponibilidad del correo.');
+                        isValid = false;
+                    }
                 }
 
                 if (!password?.value || password.value.length < 6) {
@@ -146,7 +162,7 @@ export default function SignUp(props) {
                 const name = document.getElementById('name');
                 const lastName = document.getElementById('lastName');
                 const born_date = document.getElementById('born_date');
-                isValid = true; // Just assign value, not redeclare
+                isValid = true;
 
                 if (!name?.value || name.value.trim() === '') {
                     setNameError(true);
@@ -180,7 +196,7 @@ export default function SignUp(props) {
             case 2: // Contact info
                 const address = document.getElementById('address');
                 const phone = document.getElementById('phone');
-                isValid = true; // Just assign value, not redeclare
+                isValid = true;
 
                 if (!address?.value || address.value.trim() === '') {
                     setAddressError(true);
@@ -196,8 +212,24 @@ export default function SignUp(props) {
                     setPhoneErrorMessage('El teléfono es requerido.');
                     isValid = false;
                 } else {
-                    setPhoneError(false);
-                    setPhoneErrorMessage('');
+                    try {
+                        // Check if phone is already registered
+                        const phoneResult = await checkPhoneAvailability(phone.value);
+
+                        if (!phoneResult.available) {
+                            setPhoneError(true);
+                            setPhoneErrorMessage(phoneResult.message || 'Este número ya está registrado.');
+                            isValid = false;
+                        } else {
+                            setPhoneError(false);
+                            setPhoneErrorMessage('');
+                        }
+                    } catch (error) {
+                        console.error('Error verificando teléfono:', error);
+                        setPhoneError(true);
+                        setPhoneErrorMessage('Error al verificar disponibilidad del teléfono.');
+                        isValid = false;
+                    }
                 }
 
                 return isValid;
@@ -209,7 +241,7 @@ export default function SignUp(props) {
 
     const handleStepSubmit = async (event) => {
         event.preventDefault();
-        const isValid = validateCurrentStep();
+        const isValid = await validateCurrentStep(); // Add await here
 
         if (isValid) {
             if (activeStep === steps.length - 1) {
@@ -220,7 +252,6 @@ export default function SignUp(props) {
                     setSubmitError('Por favor completa todos los campos requeridos.');
                     return;
                 }
-
 
                 setIsSubmitting(true);
                 setSubmitError('');
@@ -256,24 +287,24 @@ export default function SignUp(props) {
 
     return (
         <AppTheme {...props}>
-            <CssBaseline enableColorScheme />
-            <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
+            <CssBaseline enableColorScheme/>
+            <ColorModeSelect sx={{position: 'fixed', top: '1rem', right: '1rem'}}/>
             <SignUpContainer direction="column" justifyContent="space-between">
                 <Card variant="outlined">
-                    <SitemarkIcon />
+                    <SitemarkIcon/>
                     <Typography
                         component="h1"
                         variant="h4"
-                        sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)' }}
+                        sx={{width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)'}}
                     >
                         Registrarse
                     </Typography>
 
                     {!showEmailForm ? (
-                        <RegistrationOptions onSelectEmailRegistration={handleSelectEmailRegistration} />
+                        <RegistrationOptions onSelectEmailRegistration={handleSelectEmailRegistration}/>
                     ) : (
                         <>
-                            <Stepper activeStep={activeStep} sx={{ my: 3 }}>
+                            <Stepper activeStep={activeStep} sx={{my: 3}}>
                                 {steps.map((label) => (
                                     <Step key={label}>
                                         <StepLabel>{label}</StepLabel>
@@ -281,14 +312,14 @@ export default function SignUp(props) {
                                 ))}
                             </Stepper>
 
-                            <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                            <Typography variant="subtitle2" sx={{mb: 2}}>
                                 Los campos marcados con * son obligatorios
                             </Typography>
 
                             <Box
                                 component="form"
                                 onSubmit={handleStepSubmit}
-                                sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
+                                sx={{display: 'flex', flexDirection: 'column', gap: 2}}
                             >
                                 {activeStep === 0 && (
                                     <AccountInfoStep
@@ -335,20 +366,20 @@ export default function SignUp(props) {
                                 )}
 
                                 {isSubmitting && (
-                                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                                        <CircularProgress size={24} />
-                                        <Typography sx={{ ml: 2 }}>Enviando información...</Typography>
+                                    <Box sx={{display: 'flex', justifyContent: 'center', mt: 2}}>
+                                        <CircularProgress size={24}/>
+                                        <Typography sx={{ml: 2}}>Enviando información...</Typography>
                                     </Box>
                                 )}
 
                                 {submitError && (
-                                    <Alert severity="error" sx={{ mt: 2 }}>
+                                    <Alert severity="error" sx={{mt: 2}}>
                                         {submitError}
                                     </Alert>
                                 )}
 
                                 {submitSuccess && (
-                                    <Alert severity="success" sx={{ mt: 2 }}>
+                                    <Alert severity="success" sx={{mt: 2}}>
                                         ¡Registro exitoso! Redirigiendo a la página de inicio de sesión...
                                     </Alert>
                                 )}

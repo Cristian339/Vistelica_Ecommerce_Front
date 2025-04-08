@@ -8,8 +8,6 @@ import FormControl from '@mui/joy/FormControl';
 import FormLabel from '@mui/joy/FormLabel';
 import Link from '@mui/joy/Link';
 import Input from '@mui/joy/Input';
-import Select from '@mui/joy/Select';
-import Option from '@mui/joy/Option';
 import Table from '@mui/joy/Table';
 import Sheet from '@mui/joy/Sheet';
 import Checkbox from '@mui/joy/Checkbox';
@@ -24,6 +22,8 @@ import ModalDialog from '@mui/joy/ModalDialog';
 import DialogTitle from '@mui/joy/DialogTitle';
 import DialogContent from '@mui/joy/DialogContent';
 import Stack from '@mui/joy/Stack';
+import Select from '@mui/joy/Select';
+import Option from '@mui/joy/Option';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
@@ -32,178 +32,42 @@ import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import CategoryIcon from '@mui/icons-material/Category';
 import ListIcon from '@mui/icons-material/List';
 import SearchIcon from '@mui/icons-material/Search';
+import adminService from '../../../services/adminService';
 
-// Datos iniciales de categorías
-const initialCategories = [
-    {
-        id: 'CAT-001',
-        name: 'Ropa',
-        subcategories: ['Camisetas', 'Pantalones', 'Chaquetas']
-    },
-    {
-        id: 'CAT-002',
-        name: 'Electrónica',
-        subcategories: ['Teléfonos', 'Computadoras', 'Accesorios']
-    },
-    {
-        id: 'CAT-003',
-        name: 'Hogar',
-        subcategories: ['Muebles', 'Decoración', 'Cocina']
-    },
-    {
-        id: 'CAT-004',
-        name: 'Deportes',
-        subcategories: ['Fútbol', 'Baloncesto', 'Running']
-    },
-    {
-        id: 'CAT-005',
-        name: 'Juguetes',
-        subcategories: ['Educativos', 'Figuras', 'Juegos de mesa']
-    }
-];
-
-// Componente para el menú de fila
-function RowMenu({ category, onEdit }) {
-    return (
-        <Dropdown>
-            <MenuButton
-                slots={{ root: IconButton }}
-                slotProps={{ root: { variant: 'plain', color: 'neutral', size: 'sm' } }}
-            >
-                <MoreHorizRoundedIcon />
-            </MenuButton>
-            <Menu size="sm" sx={{ minWidth: 140 }}>
-                <MenuItem onClick={() => onEdit(category)}>Editar</MenuItem>
-                <Divider />
-                <MenuItem color="danger">Eliminar</MenuItem>
-            </Menu>
-        </Dropdown>
-    );
-}
-
-// Componente para el formulario de categoría
-function CategoryForm({ category, onClose, mode = 'add', onSave }) {
-    const [formData, setFormData] = React.useState(category || {
-        id: '',
-        name: '',
-        subcategories: []
-    });
-    const [newSubcategory, setNewSubcategory] = React.useState('');
-
-    React.useEffect(() => {
-        if (category) {
-            setFormData(category);
-        }
-    }, [category]);
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleAddSubcategory = () => {
-        if (newSubcategory.trim() && !formData.subcategories.includes(newSubcategory.trim())) {
-            setFormData(prev => ({
-                ...prev,
-                subcategories: [...prev.subcategories, newSubcategory.trim()]
-            }));
-            setNewSubcategory('');
-        }
-    };
-
-    const handleRemoveSubcategory = (subcatToRemove) => {
-        setFormData(prev => ({
-            ...prev,
-            subcategories: prev.subcategories.filter(subcat => subcat !== subcatToRemove)
-        }));
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        onSave(formData);
-        onClose();
-    };
-
-    return (
-        <Modal open={!!category} onClose={onClose}>
-            <ModalDialog>
-                <DialogTitle>{mode === 'add' ? 'Añadir nueva categoría' : 'Editar categoría'}</DialogTitle>
-                <DialogContent>
-                    {mode === 'add' ? 'Complete los detalles de la categoría' : 'Modifique los detalles de la categoría'}
-                </DialogContent>
-                <form onSubmit={handleSubmit}>
-                    <Stack spacing={2}>
-                        <FormControl>
-                            <FormLabel>ID</FormLabel>
-                            <Input
-                                name="id"
-                                value={formData.id}
-                                onChange={handleChange}
-                                required
-                                disabled={mode === 'edit'}
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Nombre</FormLabel>
-                            <Input
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                required
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Subcategorías</FormLabel>
-                            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                                <Input
-                                    value={newSubcategory}
-                                    onChange={(e) => setNewSubcategory(e.target.value)}
-                                    placeholder="Añadir subcategoría"
-                                    sx={{ flex: 1 }}
-                                />
-                                <Button onClick={handleAddSubcategory}>Añadir</Button>
-                            </Box>
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                {formData.subcategories.map((subcat) => (
-                                    <Chip
-                                        key={subcat}
-                                        variant="soft"
-                                        color="neutral"
-                                        endDecorator={
-                                            <IconButton
-                                                size="sm"
-                                                variant="plain"
-                                                color="neutral"
-                                                onClick={() => handleRemoveSubcategory(subcat)}
-                                            >
-                                                ✕
-                                            </IconButton>
-                                        }
-                                    >
-                                        {subcat}
-                                    </Chip>
-                                ))}
-                            </Box>
-                        </FormControl>
-                        <Button type="submit">
-                            {mode === 'add' ? 'Añadir Categoría' : 'Guardar Cambios'}
-                        </Button>
-                    </Stack>
-                </form>
-            </ModalDialog>
-        </Modal>
-    );
-}
-
-// Componente principal de la tabla de categorías
 export default function CategoryTable() {
     const [order, setOrder] = React.useState('desc');
     const [orderBy, setOrderBy] = React.useState('id');
     const [selected, setSelected] = React.useState([]);
+    const [categoriesData, setCategoriesData] = React.useState([]);
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState(null);
     const [nameFilter, setNameFilter] = React.useState('');
-    const [categories, setCategories] = React.useState(initialCategories);
-    const [formCategory, setFormCategory] = React.useState(null);
+    const [editingCategory, setEditingCategory] = React.useState(null);
     const [formMode, setFormMode] = React.useState('add');
+    const [newSubcategory, setNewSubcategory] = React.useState('');
+
+    React.useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const categories = await adminService.getCategories();
+                // Transformar los datos del backend al formato esperado por el frontend
+                const transformedCategories = categories.map(category => ({
+                    id: `CAT-${category.category_id.toString().padStart(3, '0')}`,
+                    categoryId: category.category_id,
+                    name: category.name,
+                    subcategories: category.subcategories.map(sc => sc.name),
+                    rawSubcategories: category.subcategories // Mantenemos los datos originales
+                }));
+                setCategoriesData(transformedCategories);
+                setLoading(false);
+            } catch (err) {
+                setError(err.message);
+                setLoading(false);
+            }
+        };
+
+        fetchCategories();
+    }, []);
 
     const handleSort = (property) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -213,8 +77,8 @@ export default function CategoryTable() {
 
     const handleAddCategory = () => {
         setFormMode('add');
-        setFormCategory({
-            id: `CAT-${(categories.length + 1).toString().padStart(3, '0')}`,
+        setEditingCategory({
+            id: `CAT-${(categoriesData.length + 1).toString().padStart(3, '0')}`,
             name: '',
             subcategories: []
         });
@@ -222,21 +86,59 @@ export default function CategoryTable() {
 
     const handleEditCategory = (category) => {
         setFormMode('edit');
-        setFormCategory({ ...category });
+        setEditingCategory({
+            ...category,
+            subcategories: [...category.subcategories] // Copia de las subcategorías
+        });
     };
 
-    const handleSaveCategory = (updatedCategory) => {
-        if (formMode === 'add') {
-            setCategories(prev => [...prev, updatedCategory]);
-        } else {
-            setCategories(prev => prev.map(cat =>
-                cat.id === updatedCategory.id ? updatedCategory : cat
-            ));
+    const handleSaveCategory = async (updatedCategory) => {
+        try {
+            if (formMode === 'add') {
+                // Lógica para añadir nueva categoría
+                const response = await axios.post(`${API_URL}/categories`, {
+                    name: updatedCategory.name,
+                    subcategories: updatedCategory.subcategories.map(name => ({ name }))
+                });
+
+                const newCategory = {
+                    ...updatedCategory,
+                    categoryId: response.data.category_id,
+                    id: `CAT-${response.data.category_id.toString().padStart(3, '0')}`,
+                    rawSubcategories: updatedCategory.subcategories.map(name => ({ name }))
+                };
+                setCategoriesData(prev => [...prev, newCategory]);
+            } else {
+                // Lógica para actualizar categoría existente
+                await axios.put(`${API_URL}/categories/${updatedCategory.categoryId}`, {
+                    name: updatedCategory.name,
+                    subcategories: updatedCategory.subcategories.map(name => ({ name }))
+                });
+
+                setCategoriesData(prev => prev.map(cat =>
+                    cat.id === updatedCategory.id ? {
+                        ...updatedCategory,
+                        rawSubcategories: updatedCategory.subcategories.map(name => ({ name }))
+                    } : cat
+                ));
+            }
+            setEditingCategory(null);
+        } catch (err) {
+            setError(err.message);
         }
-        setFormCategory(null);
     };
 
-    const filteredCategories = categories.filter(category => {
+    const handleDeleteCategory = async (categoryId) => {
+        try {
+            const category = categoriesData.find(c => c.id === categoryId);
+            await axios.delete(`${API_URL}/categories/${category.categoryId}`);
+            setCategoriesData(prev => prev.filter(c => c.id !== categoryId));
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    const filteredCategories = categoriesData.filter(category => {
         const matchesName = category.name.toLowerCase().includes(nameFilter.toLowerCase());
         return matchesName;
     });
@@ -250,6 +152,140 @@ export default function CategoryTable() {
         }
         return 0;
     });
+
+    function RowMenu({ category }) {
+        return (
+            <Dropdown>
+                <MenuButton
+                    slots={{ root: IconButton }}
+                    slotProps={{ root: { variant: 'plain', color: 'neutral', size: 'sm' } }}
+                >
+                    <MoreHorizRoundedIcon />
+                </MenuButton>
+                <Menu size="sm" sx={{ minWidth: 140 }}>
+                    <MenuItem onClick={() => handleEditCategory(category)}>Editar</MenuItem>
+                    <Divider />
+                    <MenuItem color="danger" onClick={() => handleDeleteCategory(category.id)}>
+                        Eliminar
+                    </MenuItem>
+                </Menu>
+            </Dropdown>
+        );
+    }
+
+    function CategoryForm() {
+        const [formData, setFormData] = React.useState(editingCategory || {
+            id: '',
+            name: '',
+            subcategories: []
+        });
+
+        React.useEffect(() => {
+            if (editingCategory) {
+                setFormData(editingCategory);
+            }
+        }, [editingCategory]);
+
+        const handleChange = (e) => {
+            const { name, value } = e.target;
+            setFormData(prev => ({ ...prev, [name]: value }));
+        };
+
+        const handleAddSubcategory = () => {
+            if (newSubcategory.trim() && !formData.subcategories.includes(newSubcategory.trim())) {
+                setFormData(prev => ({
+                    ...prev,
+                    subcategories: [...prev.subcategories, newSubcategory.trim()]
+                }));
+                setNewSubcategory('');
+            }
+        };
+
+        const handleRemoveSubcategory = (subcatToRemove) => {
+            setFormData(prev => ({
+                ...prev,
+                subcategories: prev.subcategories.filter(subcat => subcat !== subcatToRemove)
+            }));
+        };
+
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            handleSaveCategory(formData);
+        };
+
+        if (!editingCategory) return null;
+
+        return (
+            <Modal open={!!editingCategory} onClose={() => setEditingCategory(null)}>
+                <ModalDialog>
+                    <DialogTitle>{formMode === 'add' ? 'Añadir nueva categoría' : 'Editar categoría'}</DialogTitle>
+                    <DialogContent>
+                        {formMode === 'add' ? 'Complete los detalles de la categoría' : 'Modifique los detalles de la categoría'}
+                    </DialogContent>
+                    <form onSubmit={handleSubmit}>
+                        <Stack spacing={2}>
+                            <FormControl>
+                                <FormLabel>ID</FormLabel>
+                                <Input
+                                    name="id"
+                                    value={formData.id}
+                                    disabled
+                                />
+                            </FormControl>
+                            <FormControl>
+                                <FormLabel>Nombre</FormLabel>
+                                <Input
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </FormControl>
+                            <FormControl>
+                                <FormLabel>Subcategorías</FormLabel>
+                                <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                                    <Input
+                                        value={newSubcategory}
+                                        onChange={(e) => setNewSubcategory(e.target.value)}
+                                        placeholder="Añadir subcategoría"
+                                        sx={{ flex: 1 }}
+                                    />
+                                    <Button onClick={handleAddSubcategory}>Añadir</Button>
+                                </Box>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                    {formData.subcategories.map((subcat) => (
+                                        <Chip
+                                            key={subcat}
+                                            variant="soft"
+                                            color="neutral"
+                                            endDecorator={
+                                                <IconButton
+                                                    size="sm"
+                                                    variant="plain"
+                                                    color="neutral"
+                                                    onClick={() => handleRemoveSubcategory(subcat)}
+                                                >
+                                                    ✕
+                                                </IconButton>
+                                            }
+                                        >
+                                            {subcat}
+                                        </Chip>
+                                    ))}
+                                </Box>
+                            </FormControl>
+                            <Button type="submit">
+                                {formMode === 'add' ? 'Añadir Categoría' : 'Guardar Cambios'}
+                            </Button>
+                        </Stack>
+                    </form>
+                </ModalDialog>
+            </Modal>
+        );
+    }
+
+    if (loading) return <Typography>Cargando categorías...</Typography>;
+    if (error) return <Typography color="danger">Error: {error}</Typography>;
 
     return (
         <React.Fragment>
@@ -276,7 +312,6 @@ export default function CategoryTable() {
                         onChange={(e) => setNameFilter(e.target.value)}
                     />
                 </FormControl>
-
                 <Button
                     size="sm"
                     variant="solid"
@@ -289,13 +324,7 @@ export default function CategoryTable() {
                 </Button>
             </Box>
 
-            {/* Formulario para añadir/editar categoría */}
-            <CategoryForm
-                category={formCategory}
-                onClose={() => setFormCategory(null)}
-                mode={formMode}
-                onSave={handleSaveCategory}
-            />
+            <CategoryForm />
 
             <Sheet
                 className="OrderTableContainer"
@@ -327,16 +356,16 @@ export default function CategoryTable() {
                             <Checkbox
                                 size="sm"
                                 indeterminate={
-                                    selected.length > 0 && selected.length !== categories.length
+                                    selected.length > 0 && selected.length !== categoriesData.length
                                 }
-                                checked={selected.length === categories.length}
+                                checked={selected.length === categoriesData.length}
                                 onChange={(event) => {
                                     setSelected(
-                                        event.target.checked ? categories.map((row) => row.id) : [],
+                                        event.target.checked ? categoriesData.map((row) => row.id) : [],
                                     );
                                 }}
                                 color={
-                                    selected.length > 0 || selected.length === categories.length
+                                    selected.length > 0 || selected.length === categoriesData.length
                                         ? 'primary'
                                         : undefined
                                 }
@@ -427,7 +456,7 @@ export default function CategoryTable() {
                             </td>
                             <td>
                                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                    <RowMenu category={category} onEdit={handleEditCategory} />
+                                    <RowMenu category={category} />
                                 </Box>
                             </td>
                         </tr>
@@ -435,47 +464,6 @@ export default function CategoryTable() {
                     </tbody>
                 </Table>
             </Sheet>
-            <Box
-                className="Pagination-laptopUp"
-                sx={{
-                    pt: 2,
-                    gap: 1,
-                    [`& .${iconButtonClasses.root}`]: { borderRadius: '50%' },
-                    display: {
-                        xs: 'none',
-                        md: 'flex',
-                    },
-                }}
-            >
-                <Button
-                    size="sm"
-                    variant="outlined"
-                    color="neutral"
-                    startDecorator={<KeyboardArrowLeftIcon />}
-                >
-                    Anterior
-                </Button>
-                <Box sx={{ flex: 1 }} />
-                {['1', '2', '3', '…', '8', '9', '10'].map((page) => (
-                    <IconButton
-                        key={page}
-                        size="sm"
-                        variant={Number(page) ? 'outlined' : 'plain'}
-                        color="neutral"
-                    >
-                        {page}
-                    </IconButton>
-                ))}
-                <Box sx={{ flex: 1 }} />
-                <Button
-                    size="sm"
-                    variant="outlined"
-                    color="neutral"
-                    endDecorator={<KeyboardArrowRightIcon />}
-                >
-                    Siguiente
-                </Button>
-            </Box>
         </React.Fragment>
     );
 }
