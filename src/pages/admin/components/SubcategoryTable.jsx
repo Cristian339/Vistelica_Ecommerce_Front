@@ -26,10 +26,7 @@ import DialogContent from '@mui/joy/DialogContent';
 import Stack from '@mui/joy/Stack';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
-import CategoryIcon from '@mui/icons-material/Category';
 import SearchIcon from '@mui/icons-material/Search';
 import adminService from '../../../services/adminService';
 
@@ -50,6 +47,7 @@ export default function SubcategoryTable() {
     React.useEffect(() => {
         const fetchData = async () => {
             try {
+                setLoading(true);
                 const categories = await adminService.getCategories();
                 setCategoriesData(categories);
 
@@ -59,6 +57,7 @@ export default function SubcategoryTable() {
                         id: `SUB-${subcat.subcategory_id.toString().padStart(3, '0')}`,
                         subcategoryId: subcat.subcategory_id,
                         name: subcat.name,
+                        discard: subcat.discard,
                         category: category.name,
                         categoryId: category.category_id
                     }))
@@ -99,50 +98,50 @@ export default function SubcategoryTable() {
     const handleSaveSubcategory = async (updatedSubcategory) => {
         try {
             if (formMode === 'add') {
-                // En una API real, aquí harías el POST a /categories/{categoryId}/subcategories
-                // Como no tenemos API para subcategorías individuales, simulamos la actualización
-                const newSubcategory = {
-                    ...updatedSubcategory,
-                    subcategoryId: Math.max(...subcategoriesData.map(s => s.subcategoryId), 0) + 1,
-                    id: `SUB-${(Math.max(...subcategoriesData.map(s => s.subcategoryId), 0) + 1).toString().padStart(3, '0')}`
-                };
+                // Crear nueva subcategoría
+                const newSubcategory = await adminService.createSubcategory(
+                    updatedSubcategory.name,
+                    updatedSubcategory.categoryId
+                );
 
-                setSubcategoriesData(prev => [...prev, newSubcategory]);
+                // Refrescar datos
+                const refreshedCategories = await adminService.getCategories();
+                const allSubcategories = refreshedCategories.flatMap(category =>
+                    category.subcategories.map(subcat => ({
+                        id: `SUB-${subcat.subcategory_id.toString().padStart(3, '0')}`,
+                        subcategoryId: subcat.subcategory_id,
+                        name: subcat.name,
+                        discard: subcat.discard,
+                        category: category.name,
+                        categoryId: category.category_id
+                    }))
+                );
 
-                // Actualizar también las categorías para mantener consistencia
-                setCategoriesData(prev => prev.map(cat =>
-                    cat.category_id === updatedSubcategory.categoryId
-                        ? {
-                            ...cat,
-                            subcategories: [
-                                ...cat.subcategories,
-                                {
-                                    subcategory_id: newSubcategory.subcategoryId,
-                                    name: newSubcategory.name
-                                }
-                            ]
-                        }
-                        : cat
-                ));
+                setSubcategoriesData(allSubcategories);
+                setCategoriesData(refreshedCategories);
             } else {
-                // Simular actualización
-                setSubcategoriesData(prev => prev.map(subcat =>
-                    subcat.id === updatedSubcategory.id ? updatedSubcategory : subcat
-                ));
+                // Actualizar subcategoría existente
+                await adminService.updateSubcategory(
+                    updatedSubcategory.subcategoryId,
+                    updatedSubcategory.name,
+                    updatedSubcategory.categoryId
+                );
 
-                // Actualizar también las categorías
-                setCategoriesData(prev => prev.map(cat =>
-                    cat.category_id === updatedSubcategory.categoryId
-                        ? {
-                            ...cat,
-                            subcategories: cat.subcategories.map(sc =>
-                                sc.subcategory_id === updatedSubcategory.subcategoryId
-                                    ? { ...sc, name: updatedSubcategory.name }
-                                    : sc
-                            )
-                        }
-                        : cat
-                ));
+                // Refrescar datos
+                const refreshedCategories = await adminService.getCategories();
+                const allSubcategories = refreshedCategories.flatMap(category =>
+                    category.subcategories.map(subcat => ({
+                        id: `SUB-${subcat.subcategory_id.toString().padStart(3, '0')}`,
+                        subcategoryId: subcat.subcategory_id,
+                        name: subcat.name,
+                        discard: subcat.discard,
+                        category: category.name,
+                        categoryId: category.category_id
+                    }))
+                );
+
+                setSubcategoriesData(allSubcategories);
+                setCategoriesData(refreshedCategories);
             }
             setEditingSubcategory(null);
         } catch (err) {
@@ -153,20 +152,11 @@ export default function SubcategoryTable() {
     const handleDeleteSubcategory = async (subcategoryId) => {
         try {
             const subcategory = subcategoriesData.find(s => s.id === subcategoryId);
+            await adminService.toggleDiscardSubcategory(subcategory.subcategoryId);
 
-            // Simular eliminación
-            setSubcategoriesData(prev => prev.filter(s => s.id !== subcategoryId));
-
-            // Actualizar también las categorías
-            setCategoriesData(prev => prev.map(cat =>
-                cat.category_id === subcategory.categoryId
-                    ? {
-                        ...cat,
-                        subcategories: cat.subcategories.filter(
-                            sc => sc.subcategory_id !== subcategory.subcategoryId
-                        )
-                    }
-                    : cat
+            // Actualizar estado local
+            setSubcategoriesData(prev => prev.map(subcat =>
+                subcat.id === subcategoryId ? { ...subcat, discard: !subcat.discard } : subcat
             ));
         } catch (err) {
             setError(err.message);
@@ -200,9 +190,8 @@ export default function SubcategoryTable() {
                 </MenuButton>
                 <Menu size="sm" sx={{ minWidth: 140 }}>
                     <MenuItem onClick={() => handleEditSubcategory(subcategory)}>Editar</MenuItem>
-                    <Divider />
-                    <MenuItem color="danger" onClick={() => handleDeleteSubcategory(subcategory.id)}>
-                        Eliminar
+                    <MenuItem onClick={() => handleDeleteSubcategory(subcategory.id)}>
+                        {subcategory.discard ? 'Activar' : 'Desactivar'}
                     </MenuItem>
                 </Menu>
             </Dropdown>
@@ -452,6 +441,7 @@ export default function SubcategoryTable() {
                                 Categoría
                             </Link>
                         </th>
+                        <th style={{ width: 100, padding: '12px 6px' }}>Estado</th>
                         <th style={{ width: 80, padding: '12px 6px' }}></th>
                     </tr>
                     </thead>
@@ -483,6 +473,15 @@ export default function SubcategoryTable() {
                             <td>
                                 <Chip variant="soft" size="sm">
                                     {subcategory.category}
+                                </Chip>
+                            </td>
+                            <td>
+                                <Chip
+                                    size="sm"
+                                    variant="soft"
+                                    color={subcategory.discard ? 'danger' : 'success'}
+                                >
+                                    {subcategory.discard ? 'Inactivo' : 'Activo'}
                                 </Chip>
                             </td>
                             <td>

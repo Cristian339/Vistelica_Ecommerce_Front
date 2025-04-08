@@ -34,6 +34,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ImageIcon from '@mui/icons-material/Image';
+import UndoIcon from '@mui/icons-material/Undo';
 
 export default function ProductTable() {
     const [products, setProducts] = React.useState([]);
@@ -89,6 +90,7 @@ export default function ProductTable() {
 
     const handleCreateProduct = async (productData) => {
         try {
+            console.log('Datos a enviar:', productData); // Verifica que subcategory_id es correcto
             const newProduct = await adminService.createProduct(productData);
             setProducts(prev => [...prev, newProduct]);
             setIsCreateModalOpen(false);
@@ -124,6 +126,32 @@ export default function ProductTable() {
         product.name.toLowerCase().includes(nameFilter.toLowerCase())
     );
 
+
+    const handleToggleDiscard = async (productId) => {
+        try {
+            const updatedProduct = await adminService.toggleDiscardProduct(productId);
+
+            // Verifica que las relaciones vengan en la respuesta
+            if (!updatedProduct.category || !updatedProduct.subcategory) {
+                // Si no vienen, obtén el producto completo nuevamente
+                const fullProduct = await adminService.getProductById(productId);
+                updatedProduct.category = fullProduct.category;
+                updatedProduct.subcategory = fullProduct.subcategory;
+            }
+
+            setProducts(prev => prev.map(p =>
+                p.product_id === updatedProduct.product_id ? {
+                    ...updatedProduct,
+                    category: updatedProduct.category || p.category,
+                    subcategory: updatedProduct.subcategory || p.subcategory
+                } : p
+            ));
+        } catch (error) {
+            setError(error.message);
+        }
+    };
+
+    // Modifica el RowMenu para usar discard en lugar de delete
     function RowMenu({ product }) {
         return (
             <Dropdown>
@@ -137,8 +165,19 @@ export default function ProductTable() {
                     <MenuItem onClick={() => setEditingProduct(product)}>
                         <EditIcon sx={{ mr: 1 }} /> Editar
                     </MenuItem>
-                    <MenuItem color="danger" onClick={() => handleDeleteProduct(product.product_id)}>
-                        <DeleteIcon sx={{ mr: 1 }} /> Eliminar
+                    <MenuItem
+                        color={product.discard ? "success" : "danger"}
+                        onClick={() => handleToggleDiscard(product.product_id)}
+                    >
+                        {product.discard ? (
+                            <>
+                                <UndoIcon sx={{ mr: 1 }} /> Recuperar
+                            </>
+                        ) : (
+                            <>
+                                <DeleteIcon sx={{ mr: 1 }} /> Descartar
+                            </>
+                        )}
                     </MenuItem>
                 </Menu>
             </Dropdown>
@@ -147,6 +186,7 @@ export default function ProductTable() {
 
     function ProductForm({ product, onSubmit, onCancel }) {
         const [formData, setFormData] = React.useState({
+            product_id: product?.product_id || undefined,
             name: product?.name || '',
             description: product?.description || '',
             price: product?.price || 0,
@@ -154,8 +194,7 @@ export default function ProductTable() {
             size: product?.size || '',
             discount_percentage: product?.discount_percentage || null,
             category_id: product?.category?.category_id || '',
-            subcategory_id: product?.subcategory?.subcategory_id || '',
-            image: null
+            subcategory_id: product?.subcategory?.subcategory_id || ''
         });
 
         const [availableSubcategories, setAvailableSubcategories] = React.useState([]);
@@ -398,77 +437,40 @@ export default function ProductTable() {
                 <Table hoverRow>
                     <thead>
                     <tr>
-                        <th style={{ width: 50 }}>
-                            <Checkbox
-                                size="sm"
-                                checked={selected.length === products.length}
-                                onChange={(e) => {
-                                    setSelected(e.target.checked ? products.map(p => p.product_id) : []);
-                                }}
-                            />
-                        </th>
-                        <th>Imagen</th>
+                        <th>ID</th>
                         <th>Nombre</th>
                         <th>Precio</th>
                         <th>Stock</th>
                         <th>Categoría</th>
                         <th>Subcategoría</th>
-                        <th style={{ width: 100 }}>Acciones</th>
+                        <th>Acciones</th>
                     </tr>
                     </thead>
                     <tbody>
                     {filteredProducts.map((product) => (
                         <tr key={product.product_id}>
-                            <td>
-                                <Checkbox
-                                    size="sm"
-                                    checked={selected.includes(product.product_id)}
-                                    onChange={(e) => {
-                                        setSelected(prev =>
-                                            e.target.checked
-                                                ? [...prev, product.product_id]
-                                                : prev.filter(id => id !== product.product_id)
-                                        );
-                                    }}
-                                />
-                            </td>
-                            <td>
-                                <Avatar src={product.image_url} size="sm" />
-                            </td>
+                            <td>{product.product_id}</td>
                             <td>
                                 <Typography fontWeight="lg">{product.name}</Typography>
                                 <Typography level="body-xs">{product.description.substring(0, 50)}...</Typography>
                             </td>
                             <td>
-                                <Typography>
-                                    ${product.price}
-                                    {product.discount_percentage && (
-                                        <Typography level="body-xs" color="success">
-                                            {product.discount_percentage}%
-                                        </Typography>
-                                    )}
-                                </Typography>
+                                ${product.price}
+                                {product.discount_percentage && (
+                                    <Typography level="body-xs" color="success">
+                                        {product.discount_percentage}%
+                                    </Typography>
+                                )}
                             </td>
                             <td>
-                                <Chip
-                                    color={product.stock_quantity > 0 ? 'success' : 'danger'}
-                                    size="sm"
-                                >
+                                <Chip color={product.stock_quantity > 0 ? 'success' : 'danger'} size="sm">
                                     {product.stock_quantity}
                                 </Chip>
                             </td>
+                            <td>{product.category?.name}</td>
+                            <td>{product.subcategory?.name}</td>
                             <td>
-                                <Typography level="body-sm">
-                                    {product.category?.name}
-                                </Typography>
-                            </td>
-                            <td>
-                                <Typography level="body-sm">
-                                    {product.subcategory?.name}
-                                </Typography>
-                            </td>
-                            <td>
-                                <RowMenu product={product} />
+                                <RowMenu product={product}/>
                             </td>
                         </tr>
                     ))}
