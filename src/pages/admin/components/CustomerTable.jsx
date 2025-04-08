@@ -3,6 +3,7 @@ import { ColorPaletteProp } from '@mui/joy/styles';
 import Avatar from '@mui/joy/Avatar';
 import Box from '@mui/joy/Box';
 import Button from '@mui/joy/Button';
+import EditIcon from '@mui/icons-material/Edit';
 import Chip from '@mui/joy/Chip';
 import Divider from '@mui/joy/Divider';
 import FormControl from '@mui/joy/FormControl';
@@ -35,7 +36,7 @@ import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
-import {Textarea} from "@mui/joy";
+import { Textarea } from "@mui/joy";
 
 export default function CustomerTable() {
     const [order, setOrder] = React.useState('desc');
@@ -56,7 +57,7 @@ export default function CustomerTable() {
                 const transformedClients = clients.map(client => ({
                     id: `USR-${client.user_id.toString().padStart(3, '0')}`,
                     userId: client.user_id,
-                    name: client.name,
+                    name: client.profile?.name ? `${client.profile.name} ${client.profile.lastName || ''}`.trim() : 'Sin nombre',
                     email: client.email,
                     banned: client.banned,
                     avatar: client.profile?.avatar || '/static/images/avatar/default.jpg',
@@ -78,24 +79,26 @@ export default function CustomerTable() {
         if (!customer) return;
 
         if (shouldBan) {
-            // Preparamos el objeto para el modal de baneo
             setEditingCustomer({
                 ...customer,
                 action: 'ban',
                 showModal: true,
-                banReason: customer.ban_reason || '' // Usamos banReason en lugar de ban_reason
+                banReason: customer.ban_reason || ''
             });
         } else {
-            await adminService.unbanUser(customer.userId);
-            setCustomersData(prev => prev.map(c =>
-                c.id === customerId ? { ...c, banned: false, ban_reason: null } : c
-            ));
+            try {
+                await adminService.unbanUser(customer.userId);
+                setCustomersData(prev => prev.map(c =>
+                    c.id === customerId ? { ...c, banned: false, ban_reason: null } : c
+                ));
+            } catch (error) {
+                setError(error.message);
+            }
         }
     };
 
     const handleConfirmBan = async () => {
         try {
-            // Accedemos a banReason en lugar de ban_reason
             const { userId, banReason } = editingCustomer;
 
             if (!banReason || banReason.trim().length < 5) {
@@ -121,20 +124,12 @@ export default function CustomerTable() {
         }
     };
 
-
     const handleEditCustomer = (customer) => {
         setEditingCustomer({
             ...customer,
             action: 'edit',
             showEditModal: true
         });
-    };
-
-    const handleSaveCustomer = (updatedCustomer) => {
-        setCustomersData(prev => prev.map(c =>
-            c.id === updatedCustomer.id ? updatedCustomer : c
-        ));
-        setEditingCustomer(null);
     };
 
     const handleSort = (property) => {
@@ -144,8 +139,9 @@ export default function CustomerTable() {
     };
 
     const filteredCustomers = customersData.filter(customer => {
+        const matchesName = customer.name.toLowerCase().includes(nameFilter.toLowerCase());
         const matchesEmail = customer.email.toLowerCase().includes(emailFilter.toLowerCase());
-        return matchesEmail;
+        return matchesName && matchesEmail;
     });
 
     const sortedCustomers = [...filteredCustomers].sort((a, b) => {
@@ -170,22 +166,20 @@ export default function CustomerTable() {
                 <Menu size="sm" sx={{ minWidth: 140 }}>
                     {customer.banned ? (
                         <MenuItem onClick={() => onToggleBan(customer.id, false)}>
-                            Desbanear
+                            <CheckRoundedIcon sx={{ mr: 1 }} /> Desbanear
                         </MenuItem>
                     ) : (
                         <MenuItem onClick={() => onToggleBan(customer.id, true)}>
-                            Banear
+                            <BlockIcon sx={{ mr: 1 }} /> Banear
                         </MenuItem>
                     )}
                     <Divider />
-                    <MenuItem color="danger">Eliminar</MenuItem>
                 </Menu>
             </Dropdown>
         );
     }
 
     function EditCustomerForm() {
-        // Estado local para el formulario
         const [banReason, setBanReason] = React.useState(
             editingCustomer?.ban_reason || ''
         );
@@ -193,17 +187,14 @@ export default function CustomerTable() {
         const handleSubmit = async (e) => {
             e.preventDefault();
 
-            // Validación directa
             if (!banReason.trim() || banReason.trim().length < 5) {
                 setError('La razón debe tener al menos 5 caracteres');
                 return;
             }
 
             try {
-                // Pasamos directamente banReason al servicio
                 await adminService.banUser(editingCustomer.userId, banReason.trim());
 
-                // Actualizamos el estado global
                 setCustomersData(prev => prev.map(c =>
                     c.userId === editingCustomer.userId ? {
                         ...c,
@@ -212,7 +203,6 @@ export default function CustomerTable() {
                     } : c
                 ));
 
-                // Cerramos el modal
                 setEditingCustomer(null);
                 setError(null);
 
@@ -224,8 +214,10 @@ export default function CustomerTable() {
         return (
             <Modal open={!!editingCustomer} onClose={() => setEditingCustomer(null)}>
                 <ModalDialog>
-                    <DialogTitle>Banear cliente</DialogTitle>
-                    <DialogContent>Ingrese la razón del baneo</DialogContent>
+                    <DialogTitle>{editingCustomer?.banned ? 'Editar baneo' : 'Banear cliente'}</DialogTitle>
+                    <DialogContent>
+                        {editingCustomer?.banned ? 'Edite la razón del baneo' : 'Ingrese la razón del baneo'}
+                    </DialogContent>
 
                     {error && (
                         <Typography color="danger" sx={{ mb: 2 }}>
@@ -245,7 +237,13 @@ export default function CustomerTable() {
                                     placeholder="Ej: Comportamiento inapropiado..."
                                 />
                             </FormControl>
-                            <Button type="submit">Confirmar baneo</Button>
+                            <Button type="submit">Confirmar</Button>
+                            <Button
+                                variant="outlined"
+                                onClick={() => setEditingCustomer(null)}
+                            >
+                                Cancelar
+                            </Button>
                         </Stack>
                     </form>
                 </ModalDialog>
