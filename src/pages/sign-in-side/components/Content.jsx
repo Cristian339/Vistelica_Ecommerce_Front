@@ -6,29 +6,30 @@ import AutoFixHighRoundedIcon from '@mui/icons-material/AutoFixHighRounded';
 import ConstructionRoundedIcon from '@mui/icons-material/ConstructionRounded';
 import SettingsSuggestRoundedIcon from '@mui/icons-material/SettingsSuggestRounded';
 import ThumbUpAltRoundedIcon from '@mui/icons-material/ThumbUpAltRounded';
-import { SitemarkIcon } from './CustomIcons';
+import { useTheme } from '@mui/material/styles';
+import { vistelicaColors } from '../../shared-theme/vistelicaColors';
 
 const items = [
     {
-        icon: <SettingsSuggestRoundedIcon sx={{ color: 'text.secondary' }} />,
+        icon: <SettingsSuggestRoundedIcon sx={{ color: vistelicaColors.primary }} />,
         title: 'Estilo adaptable',
         description:
             'Nuestra ropa se ajusta sin esfuerzo a tu estilo de vida, brindando comodidad y versatilidad en cada ocasión.\n.',
     },
     {
-        icon: <ConstructionRoundedIcon sx={{ color: 'text.secondary' }} />,
+        icon: <ConstructionRoundedIcon sx={{ color: vistelicaColors.primary }} />,
         title: 'Diseño duradero',
         description:
             'Disfruta de prendas que resisten el paso del tiempo, combinando calidad y resistencia en cada detalle.',
     },
     {
-        icon: <ThumbUpAltRoundedIcon sx={{ color: 'text.secondary' }} />,
+        icon: <ThumbUpAltRoundedIcon sx={{ color: vistelicaColors.primary }} />,
         title: 'Comodidad excepcional',
         description:
             'Siente la diferencia con tejidos suaves y cortes ergonómicos que se adaptan perfectamente a ti.',
     },
     {
-        icon: <AutoFixHighRoundedIcon sx={{ color: 'text.secondary' }} />,
+        icon: <AutoFixHighRoundedIcon sx={{ color: vistelicaColors.primary }} />,
         title: 'Moda innovadora',
         description:
             'Descubre diseños modernos que marcan tendencia, pensados para expresar tu personalidad única.',
@@ -36,21 +37,61 @@ const items = [
 ];
 
 export default function Content() {
+    const theme = useTheme();
+
     return (
         <Stack
-            sx={{ flexDirection: 'column', alignSelf: 'center', gap: 4, maxWidth: 450 }}
+            sx={{
+                flexDirection: 'column',
+                alignSelf: 'center',
+                gap: 4,
+                maxWidth: 450,
+                padding: 2
+            }}
         >
-            <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-                <SitemarkIcon />
+            <Box sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
+                <Typography
+                    variant="h4"
+                    sx={{
+                        color: vistelicaColors.primary,
+                        fontWeight: 700,
+                        letterSpacing: 1,
+                        textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
+                    }}
+                >
+                    Vistélica
+                </Typography>
             </Box>
             {items.map((item, index) => (
                 <Stack key={index} direction="row" sx={{ gap: 2 }}>
-                    {item.icon}
+                    <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 40,
+                        height: 40,
+                        borderRadius: '50%',
+                    }}>
+                        {item.icon}
+                    </Box>
                     <div>
-                        <Typography gutterBottom sx={{ fontWeight: 'medium' }}>
+                        <Typography
+                            gutterBottom
+                            sx={{
+                                fontWeight: 600,
+                                color: vistelicaColors.secondary
+                            }}
+                        >
                             {item.title}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                color: theme.palette.mode === 'dark' ?
+                                    vistelicaColors.quaternary :
+                                    vistelicaColors.tertiary,
+                            }}
+                        >
                             {item.description}
                         </Typography>
                     </div>
