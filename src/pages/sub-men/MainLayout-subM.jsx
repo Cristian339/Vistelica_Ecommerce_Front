@@ -1,8 +1,13 @@
 'use client'
 import React from 'react';
 import Carousel from './components/Carousel';
-import ClothingCategories from './components/sub-ca';
+import ClothingCategories from './components/ClothingCategories';
 import Navbar from "@/components/layout/HeaderComponent";
+import CollectionPreview from "@/pages/sub-men/components/CollectionPreview";
+import StylesShowcase from "@/pages/sub-men/components/StylesShowcase";
+import BannerSection from "@/pages/home/components/BannerSection";
+import SuggestedItemsCarousel from "@/pages/sub-men/components/SuggestedItemsCarousel";
+import FooterComponent from "@/components/layout/FooterComponent";
 
 const MainLayoutSubM = () => {
     const styles = {
@@ -32,6 +37,15 @@ const MainLayoutSubM = () => {
             <Navbar />
             <Carousel />
             <ClothingCategories />
+            <CollectionPreview />
+            <StylesShowcase />
+            <div style={{marginBottom: '16px'}}>
+                <BannerSection/>
+            </div>
+
+
+            <SuggestedItemsCarousel/>
+            <FooterComponent />
         </div>
     );
 };
