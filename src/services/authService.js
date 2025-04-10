@@ -12,6 +12,30 @@ export const registerUser = async (userData) => {
     }
 };
 
+export const getCurrentUser = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) return null;
+
+        const response = await axios.post(`${API_URL}/user`, {}, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error obteniendo usuario:", error);
+        localStorage.removeItem('token'); // Limpiamos token si hay error
+        return null;
+    }
+};
+
+
+export const isAdmin = async () => {
+    const user = await getCurrentUser();
+    return user?.role === 0;
+};
+
 export const loginUser = async (credentials) => {
     try {
         const response = await axios.post(`${API_URL}/login`, credentials);

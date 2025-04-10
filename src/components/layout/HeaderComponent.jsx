@@ -11,6 +11,8 @@ import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useRouter } from 'next/navigation';
+import { isAdmin } from '@/services/authService';
+
 
 export default function Navbar() {
     const [open, setOpen] = useState(false);
@@ -26,6 +28,18 @@ export default function Navbar() {
             .then(data => setMenuCategories(data))
             .catch(err => console.error("Error loading categories:", err));
     }, []);
+
+
+    const handleLogoClick = async () => {
+        try {
+            const rol = await isAdmin();
+            if (rol) {
+                router.push('/admin/page');
+            }
+        } catch (error) {
+            console.error("Error verificando permisos:", error);
+        }
+    };
 
     const toggleDrawer = (state) => () => setOpen(state);
     const toggleSubmenu = (index) => {
@@ -54,6 +68,7 @@ export default function Navbar() {
                                     fontFamily: "'Amethysta', serif",
                                     marginLeft: "16px"
                                 }}
+                                onClick={handleLogoClick}
                             >
                                 VÍSTELICA
                             </h1>
@@ -70,7 +85,9 @@ export default function Navbar() {
                                 fontFamily: "'Amethysta', serif",
                                 textAlign: 'center',
                                 flex: 1
-                            }}>
+                            }}
+                            onClick={handleLogoClick}
+                        >
                             VÍSTELICA
                         </h1>
                     )}
