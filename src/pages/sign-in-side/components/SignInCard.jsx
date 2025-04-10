@@ -132,7 +132,7 @@ export default function SignInCard() {
 
             // Redirect after successful login
             setTimeout(() => {
-                router.push('/dashboard');
+                router.push('/home/Home');
             }, 1000);
 
         } catch (error) {
@@ -326,6 +326,7 @@ export default function SignInCard() {
                     >
                         Inicio de sesión exitoso, redirigiendo...
                     </Alert>
+
                 )}
 
                 <Typography sx={{textAlign: 'center'}}>
