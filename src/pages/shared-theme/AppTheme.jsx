@@ -7,6 +7,7 @@ import { feedbackCustomizations } from './customizations/feedback';
 import { navigationCustomizations } from './customizations/navigation';
 import { surfacesCustomizations } from './customizations/surfaces';
 import { colorSchemes, typography, shadows, shape } from './themePrimitives';
+import { vistelicaColors } from './vistelicaColors';
 
 export default function AppTheme(props) {
     const { children, disableCustomTheme, themeComponents } = props;
@@ -19,7 +20,47 @@ export default function AppTheme(props) {
                     colorSchemeSelector: 'data-mui-color-scheme',
                     cssVarPrefix: 'template',
                 },
-                colorSchemes, // Recently added in v6 for building light & dark mode app, see https://mui.com/material-ui/customization/palette/#color-schemes
+                colorSchemes: {
+                    ...colorSchemes,
+                    light: {
+                        ...colorSchemes.light,
+                        palette: {
+                            ...colorSchemes.light.palette,
+                            primary: {
+                                main: vistelicaColors.primary,
+                                light: vistelicaColors.primaryLight,
+                                dark: vistelicaColors.primaryDark,
+                                contrastText: vistelicaColors.tertiary,
+                            },
+                            secondary: {
+                                main: vistelicaColors.secondary,
+                                contrastText: vistelicaColors.tertiary,
+                            },
+                            vistelica: {
+                                ...vistelicaColors
+                            }
+                        }
+                    },
+                    dark: {
+                        ...colorSchemes.dark,
+                        palette: {
+                            ...colorSchemes.dark.palette,
+                            primary: {
+                                main: vistelicaColors.primary,
+                                light: vistelicaColors.primaryLight,
+                                dark: vistelicaColors.primaryDark,
+                                contrastText: vistelicaColors.tertiary,
+                            },
+                            secondary: {
+                                main: vistelicaColors.secondary,
+                                contrastText: vistelicaColors.tertiary,
+                            },
+                            vistelica: {
+                                ...vistelicaColors
+                            }
+                        }
+                    }
+                },
                 typography,
                 shadows,
                 shape,
