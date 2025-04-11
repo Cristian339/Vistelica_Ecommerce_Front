@@ -362,7 +362,7 @@ export default function AboutUs(props) {
                                 sx={{
                                     fontWeight: 600,
                                     fontSize: { xs: '1.15rem', sm: '1.5rem' },
-                                    color: theme.palette.text.primary,
+                                    color: vistelicaColors.primary,
                                     fontFamily: typography.h5.fontFamily,
                                     position: 'relative',
                                     '&::after': {
@@ -372,7 +372,7 @@ export default function AboutUs(props) {
                                         height: '3px',
                                         background: vistelicaColors.primary,
                                         margin: '8px auto',
-                                        borderRadius: '2px'
+                                        borderRadius: '2px',
                                     }
                                 }}
                             >
