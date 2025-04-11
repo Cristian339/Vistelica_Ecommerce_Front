@@ -18,52 +18,74 @@ import RegistrationOptions from './components/RegistrationOptions';
 import AccountInfoStep from './components/AccountInfoStep';
 import PersonalInfoStep from './components/PersonalInfoStep';
 import ContactInfoStep from './components/ContactInfoStep';
+import { useColorScheme } from '@mui/material/styles';
+import { vistelicaColors } from '../shared-theme/vistelicaColors';
 
-const Card = styled(MuiCard)(({theme}) => ({
-    display: 'flex',
-    flexDirection: 'column',
-    alignSelf: 'center',
-    width: '100%',
-    padding: theme.spacing(4),
-    gap: theme.spacing(2),
-    margin: 'auto',
-    boxShadow:
-        'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
-    [theme.breakpoints.up('sm')]: {
-        width: '450px',
-    },
-    ...theme.applyStyles('dark', {
-        boxShadow:
-            'hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px',
-    }),
-}));
+const Card = styled(MuiCard)(() => {
+    const { mode } = useColorScheme();
 
-const SignUpContainer = styled(Stack)(({theme}) => ({
-    height: 'calc((1 - var(--template-frame-height, 0)) * 100dvh)',
-    minHeight: '100%',
-    padding: theme.spacing(2),
-    [theme.breakpoints.up('sm')]: {
-        padding: theme.spacing(4),
-    },
-    '&::before': {
-        content: '""',
-        display: 'block',
-        position: 'absolute',
-        zIndex: -1,
-        inset: 0,
-        backgroundImage:
-            'radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))',
-        backgroundRepeat: 'no-repeat',
-        ...theme.applyStyles('dark', {
-            backgroundImage:
-                'radial-gradient(at 50% 50%, hsla(210, 100%, 16%, 0.5), hsl(220, 30%, 5%))',
-        }),
-    },
-}));
+    return {
+        display: 'flex',
+        flexDirection: 'column',
+        alignSelf: 'center',
+        width: '100%',
+        padding: '32px',
+        gap: '16px',
+        margin: 'auto',
+        backgroundColor: mode === 'dark'
+            ? vistelicaColors.cardBackground.dark
+            : vistelicaColors.cardBackground.light,
+        boxShadow: mode === 'dark'
+            ? vistelicaColors.cardShadow.dark
+            : vistelicaColors.cardShadow.light,
+        borderRadius: '16px',
+        position: 'relative',
+        overflow: 'hidden',
+        '&::after': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '5px',
+            background: `linear-gradient(90deg, ${vistelicaColors.primary}, ${vistelicaColors.quaternary})`,
+        },
+        '@media (min-width: 600px)': {
+            width: '450px',
+        },
+    };
+});
+
+const SignUpContainer = styled(Stack)(() => {
+    const { mode } = useColorScheme();
+
+    return {
+        height: 'calc((1 - var(--template-frame-height, 0)) * 100dvh)',
+        minHeight: '100%',
+        padding: '16px',
+        '@media (min-width: 600px)': {
+            padding: '32px',
+        },
+        '&::before': {
+            content: '""',
+            display: 'block',
+            position: 'absolute',
+            zIndex: -1,
+            inset: 0,
+            backgroundImage: mode === 'dark'
+                ? vistelicaColors.background.dark
+                : vistelicaColors.background.light,
+            backgroundRepeat: 'no-repeat',
+        }
+    };
+});
 
 const steps = ['Cuenta', 'Información personal', 'Contacto'];
 
 export default function SignUp(props) {
+    const { mode } = useColorScheme();
+    console.log("Estado del tema en SignUp:", mode);
+
     const [showEmailForm, setShowEmailForm] = React.useState(false);
     const [activeStep, setActiveStep] = React.useState(0);
     const [formData, setFormData] = React.useState({
@@ -241,7 +263,7 @@ export default function SignUp(props) {
 
     const handleStepSubmit = async (event) => {
         event.preventDefault();
-        const isValid = await validateCurrentStep(); // Add await here
+        const isValid = await validateCurrentStep();
 
         if (isValid) {
             if (activeStep === steps.length - 1) {
@@ -291,11 +313,41 @@ export default function SignUp(props) {
             <ColorModeSelect sx={{position: 'fixed', top: '1rem', right: '1rem'}}/>
             <SignUpContainer direction="column" justifyContent="space-between">
                 <Card variant="outlined">
-                    <SitemarkIcon/>
+                    <Box sx={{
+                        display: {xs: 'flex', md: 'none'},
+                        justifyContent: 'center',
+                        mb: 2
+                    }}>
+                        <SitemarkIcon sx={{ color: vistelicaColors.primary }}/>
+
+                    </Box>
                     <Typography
                         component="h1"
                         variant="h4"
-                        sx={{width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)'}}
+                        sx={{
+                            width: '100%',
+                            fontSize: 'clamp(2rem, 10vw, 2.15rem)',
+                            fontWeight: 400,
+                            color: vistelicaColors.primary,
+                            textAlign: 'center',
+                            mb: 1,
+                            textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
+                        }}
+                    >
+                        Vistélica
+                    </Typography>
+                    <Typography
+                        component="h1"
+                        variant="h4"
+                        sx={{
+                            width: '100%',
+                            fontSize: 'clamp(2rem, 10vw, 2.15rem)',
+                            fontWeight: 400,
+                            color: vistelicaColors.primaryDark,
+                            textAlign: 'center',
+                            mb: 2,
+                            textShadow: '0px 0px 1px rgba(0,0,0,0.1)'
+                        }}
                     >
                         Registrarse
                     </Typography>
@@ -304,7 +356,18 @@ export default function SignUp(props) {
                         <RegistrationOptions onSelectEmailRegistration={handleSelectEmailRegistration}/>
                     ) : (
                         <>
-                            <Stepper activeStep={activeStep} sx={{my: 3}}>
+                            <Stepper
+                                activeStep={activeStep}
+                                sx={{
+                                    my: 3,
+                                    '& .MuiStepIcon-root.Mui-active': {
+                                        color: vistelicaColors.primary,
+                                    },
+                                    '& .MuiStepIcon-root.Mui-completed': {
+                                        color: vistelicaColors.primary,
+                                    }
+                                }}
+                            >
                                 {steps.map((label) => (
                                     <Step key={label}>
                                         <StepLabel>{label}</StepLabel>
@@ -312,7 +375,15 @@ export default function SignUp(props) {
                                 ))}
                             </Stepper>
 
-                            <Typography variant="subtitle2" sx={{mb: 2}}>
+                            <Typography
+                                variant="subtitle2"
+                                sx={{
+                                    mb: 2,
+                                    color: mode === 'dark' ?
+                                        vistelicaColors.tertiary :
+                                        vistelicaColors.primary
+                                }}
+                            >
                                 Los campos marcados con * son obligatorios
                             </Typography>
 
@@ -367,8 +438,15 @@ export default function SignUp(props) {
 
                                 {isSubmitting && (
                                     <Box sx={{display: 'flex', justifyContent: 'center', mt: 2}}>
-                                        <CircularProgress size={24}/>
-                                        <Typography sx={{ml: 2}}>Enviando información...</Typography>
+                                        <CircularProgress size={24} sx={{ color: vistelicaColors.primary }}/>
+                                        <Typography sx={{
+                                            ml: 2,
+                                            color: mode === 'dark' ?
+                                                vistelicaColors.quaternary :
+                                                vistelicaColors.secondary
+                                        }}>
+                                            Enviando información...
+                                        </Typography>
                                     </Box>
                                 )}
 
@@ -379,7 +457,15 @@ export default function SignUp(props) {
                                 )}
 
                                 {submitSuccess && (
-                                    <Alert severity="success" sx={{mt: 2}}>
+                                    <Alert
+                                        severity="success"
+                                        sx={{
+                                            mt: 2,
+                                            '& .MuiAlert-icon': {
+                                                color: vistelicaColors.primary
+                                            }
+                                        }}
+                                    >
                                         ¡Registro exitoso! Redirigiendo a la página de inicio de sesión...
                                     </Alert>
                                 )}

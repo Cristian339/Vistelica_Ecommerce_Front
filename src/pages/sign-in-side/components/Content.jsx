@@ -6,7 +6,7 @@ import AutoFixHighRoundedIcon from '@mui/icons-material/AutoFixHighRounded';
 import ConstructionRoundedIcon from '@mui/icons-material/ConstructionRounded';
 import SettingsSuggestRoundedIcon from '@mui/icons-material/SettingsSuggestRounded';
 import ThumbUpAltRoundedIcon from '@mui/icons-material/ThumbUpAltRounded';
-import { useTheme } from '@mui/material/styles';
+import { useColorScheme } from '@mui/material/styles';
 import { vistelicaColors } from '../../shared-theme/vistelicaColors';
 
 const items = [
@@ -37,7 +37,8 @@ const items = [
 ];
 
 export default function Content() {
-    const theme = useTheme();
+    const { mode } = useColorScheme();
+    console.log("Estado del tema en Content:", mode);
 
     return (
         <Stack
@@ -79,7 +80,9 @@ export default function Content() {
                             gutterBottom
                             sx={{
                                 fontWeight: 600,
-                                color: vistelicaColors.secondary
+                                color: mode === 'dark' ?
+                                    vistelicaColors.primaryDark :
+                                    vistelicaColors.primaryDark,
                             }}
                         >
                             {item.title}
@@ -87,9 +90,9 @@ export default function Content() {
                         <Typography
                             variant="body2"
                             sx={{
-                                color: theme.palette.mode === 'dark' ?
-                                    vistelicaColors.quaternary :
-                                    vistelicaColors.tertiary,
+                                color: mode === 'dark' ?
+                                    vistelicaColors.tertiary :
+                                    vistelicaColors.secondary,
                             }}
                         >
                             {item.description}

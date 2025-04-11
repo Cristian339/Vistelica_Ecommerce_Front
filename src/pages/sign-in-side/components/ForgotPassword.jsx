@@ -7,11 +7,12 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import OutlinedInput from '@mui/material/OutlinedInput';
-import { useTheme } from '@mui/material/styles';
+import { useColorScheme } from '@mui/material/styles';
 import { vistelicaColors } from '../../shared-theme/vistelicaColors';
 
 export default function ForgotPassword({ open, handleClose }) {
-    const theme = useTheme();
+    const { mode } = useColorScheme();
+    console.log("Estado del tema en ForgotPassword:", mode);
 
     return (
         <Dialog
@@ -42,9 +43,9 @@ export default function ForgotPassword({ open, handleClose }) {
                 sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}
             >
                 <DialogContentText sx={{
-                    color: theme.palette.mode === 'dark' ?
-                        vistelicaColors.quaternary :
-                        vistelicaColors.tertiary,
+                    color: mode === 'dark' ?
+                        vistelicaColors.tertiary :
+                        vistelicaColors.secondary,
                 }}>
                     Introduce la dirección de correo electrónico de tu cuenta y te enviaremos un enlace para
                     restablecer tu contraseña.
@@ -89,7 +90,7 @@ export default function ForgotPassword({ open, handleClose }) {
                     type="submit"
                     sx={{
                         backgroundColor: vistelicaColors.primary,
-                        color: theme.palette.mode === 'dark' ?
+                        color: mode === 'dark' ?
                             vistelicaColors.secondary :
                             vistelicaColors.tertiary,
                         fontWeight: 600,
