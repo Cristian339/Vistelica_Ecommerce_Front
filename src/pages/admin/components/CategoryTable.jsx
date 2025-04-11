@@ -22,12 +22,8 @@ import ModalDialog from '@mui/joy/ModalDialog';
 import DialogTitle from '@mui/joy/DialogTitle';
 import DialogContent from '@mui/joy/DialogContent';
 import Stack from '@mui/joy/Stack';
-import Select from '@mui/joy/Select';
-import Option from '@mui/joy/Option';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import CategoryIcon from '@mui/icons-material/Category';
 import ListIcon from '@mui/icons-material/List';
@@ -44,19 +40,17 @@ export default function CategoryTable() {
     const [nameFilter, setNameFilter] = React.useState('');
     const [editingCategory, setEditingCategory] = React.useState(null);
     const [formMode, setFormMode] = React.useState('add');
-    const [newSubcategory, setNewSubcategory] = React.useState('');
 
     React.useEffect(() => {
         const fetchCategories = async () => {
             try {
                 const categories = await adminService.getCategories();
-                // Transformar los datos del backend al formato esperado por el frontend
                 const transformedCategories = categories.map(category => ({
                     id: `CAT-${category.category_id.toString().padStart(3, '0')}`,
                     categoryId: category.category_id,
                     name: category.name,
-                    subcategories: category.subcategories.map(sc => sc.name),
-                    rawSubcategories: category.subcategories // Mantenemos los datos originales
+                    discard: category.discard,
+                    subcategories: category.subcategories || []
                 }));
                 setCategoriesData(transformedCategories);
                 setLoading(false);
@@ -80,46 +74,43 @@ export default function CategoryTable() {
         setEditingCategory({
             id: `CAT-${(categoriesData.length + 1).toString().padStart(3, '0')}`,
             name: '',
-            subcategories: []
         });
     };
 
     const handleEditCategory = (category) => {
         setFormMode('edit');
         setEditingCategory({
-            ...category,
-            subcategories: [...category.subcategories] // Copia de las subcategorías
+            ...category
         });
     };
 
     const handleSaveCategory = async (updatedCategory) => {
         try {
             if (formMode === 'add') {
-                // Lógica para añadir nueva categoría
-                const response = await axios.post(`${API_URL}/categories`, {
-                    name: updatedCategory.name,
-                    subcategories: updatedCategory.subcategories.map(name => ({ name }))
-                });
+                const newCategory = await adminService.createCategory(updatedCategory.name);
 
-                const newCategory = {
-                    ...updatedCategory,
-                    categoryId: response.data.category_id,
-                    id: `CAT-${response.data.category_id.toString().padStart(3, '0')}`,
-                    rawSubcategories: updatedCategory.subcategories.map(name => ({ name }))
-                };
-                setCategoriesData(prev => [...prev, newCategory]);
+                // Refrescar datos
+                const refreshedCategories = await adminService.getCategories();
+                const transformed = refreshedCategories.map(cat => ({
+                    id: `CAT-${cat.category_id.toString().padStart(3, '0')}`,
+                    categoryId: cat.category_id,
+                    name: cat.name,
+                    discard: cat.discard,
+                    subcategories: cat.subcategories || []
+                }));
+
+                setCategoriesData(transformed);
             } else {
-                // Lógica para actualizar categoría existente
-                await axios.put(`${API_URL}/categories/${updatedCategory.categoryId}`, {
-                    name: updatedCategory.name,
-                    subcategories: updatedCategory.subcategories.map(name => ({ name }))
-                });
+                await adminService.updateCategory(
+                    updatedCategory.categoryId,
+                    updatedCategory.name
+                );
 
+                // Actualizar estado local
                 setCategoriesData(prev => prev.map(cat =>
-                    cat.id === updatedCategory.id ? {
-                        ...updatedCategory,
-                        rawSubcategories: updatedCategory.subcategories.map(name => ({ name }))
-                    } : cat
+                    cat.categoryId === updatedCategory.categoryId
+                        ? { ...cat, name: updatedCategory.name }
+                        : cat
                 ));
             }
             setEditingCategory(null);
@@ -131,8 +122,22 @@ export default function CategoryTable() {
     const handleDeleteCategory = async (categoryId) => {
         try {
             const category = categoriesData.find(c => c.id === categoryId);
-            await axios.delete(`${API_URL}/categories/${category.categoryId}`);
+            await adminService.deleteCategory(category.categoryId);
             setCategoriesData(prev => prev.filter(c => c.id !== categoryId));
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    const handleToggleDiscard = async (categoryId) => {
+        try {
+            const category = categoriesData.find(c => c.id === categoryId);
+            await adminService.toggleDiscardCategory(category.categoryId);
+
+            // Actualizar estado local
+            setCategoriesData(prev => prev.map(cat =>
+                cat.id === categoryId ? { ...cat, discard: !cat.discard } : cat
+            ));
         } catch (err) {
             setError(err.message);
         }
@@ -164,6 +169,9 @@ export default function CategoryTable() {
                 </MenuButton>
                 <Menu size="sm" sx={{ minWidth: 140 }}>
                     <MenuItem onClick={() => handleEditCategory(category)}>Editar</MenuItem>
+                    <MenuItem onClick={() => handleToggleDiscard(category.id)}>
+                        {category.discard ? 'Activar' : 'Desactivar'}
+                    </MenuItem>
                     <Divider />
                     <MenuItem color="danger" onClick={() => handleDeleteCategory(category.id)}>
                         Eliminar
@@ -177,7 +185,6 @@ export default function CategoryTable() {
         const [formData, setFormData] = React.useState(editingCategory || {
             id: '',
             name: '',
-            subcategories: []
         });
 
         React.useEffect(() => {
@@ -189,23 +196,6 @@ export default function CategoryTable() {
         const handleChange = (e) => {
             const { name, value } = e.target;
             setFormData(prev => ({ ...prev, [name]: value }));
-        };
-
-        const handleAddSubcategory = () => {
-            if (newSubcategory.trim() && !formData.subcategories.includes(newSubcategory.trim())) {
-                setFormData(prev => ({
-                    ...prev,
-                    subcategories: [...prev.subcategories, newSubcategory.trim()]
-                }));
-                setNewSubcategory('');
-            }
-        };
-
-        const handleRemoveSubcategory = (subcatToRemove) => {
-            setFormData(prev => ({
-                ...prev,
-                subcategories: prev.subcategories.filter(subcat => subcat !== subcatToRemove)
-            }));
         };
 
         const handleSubmit = (e) => {
@@ -240,39 +230,6 @@ export default function CategoryTable() {
                                     onChange={handleChange}
                                     required
                                 />
-                            </FormControl>
-                            <FormControl>
-                                <FormLabel>Subcategorías</FormLabel>
-                                <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                                    <Input
-                                        value={newSubcategory}
-                                        onChange={(e) => setNewSubcategory(e.target.value)}
-                                        placeholder="Añadir subcategoría"
-                                        sx={{ flex: 1 }}
-                                    />
-                                    <Button onClick={handleAddSubcategory}>Añadir</Button>
-                                </Box>
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                    {formData.subcategories.map((subcat) => (
-                                        <Chip
-                                            key={subcat}
-                                            variant="soft"
-                                            color="neutral"
-                                            endDecorator={
-                                                <IconButton
-                                                    size="sm"
-                                                    variant="plain"
-                                                    color="neutral"
-                                                    onClick={() => handleRemoveSubcategory(subcat)}
-                                                >
-                                                    ✕
-                                                </IconButton>
-                                            }
-                                        >
-                                            {subcat}
-                                        </Chip>
-                                    ))}
-                                </Box>
                             </FormControl>
                             <Button type="submit">
                                 {formMode === 'add' ? 'Añadir Categoría' : 'Guardar Cambios'}
@@ -417,6 +374,7 @@ export default function CategoryTable() {
                                 <span>Subcategorías</span>
                             </Box>
                         </th>
+                        <th style={{ width: 80, padding: '12px 6px' }}>Estado</th>
                         <th style={{ width: 80, padding: '12px 6px' }}></th>
                     </tr>
                     </thead>
@@ -448,11 +406,25 @@ export default function CategoryTable() {
                             <td>
                                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                                     {category.subcategories.map((subcat) => (
-                                        <Chip key={subcat} size="sm" variant="outlined">
-                                            {subcat}
+                                        <Chip key={subcat.subcategory_id} size="sm" variant="outlined">
+                                            {subcat.name}
                                         </Chip>
                                     ))}
+                                    {category.subcategories.length === 0 && (
+                                        <Typography level="body-xs" color="neutral">
+                                            Sin subcategorías
+                                        </Typography>
+                                    )}
                                 </Box>
+                            </td>
+                            <td>
+                                <Chip
+                                    size="sm"
+                                    variant="soft"
+                                    color={category.discard ? 'danger' : 'success'}
+                                >
+                                    {category.discard ? 'Inactivo' : 'Activo'}
+                                </Chip>
                             </td>
                             <td>
                                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
