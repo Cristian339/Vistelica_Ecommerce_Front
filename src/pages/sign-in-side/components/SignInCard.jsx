@@ -469,6 +469,16 @@ export default function SignInCard() {
                             >
                                 Sobre Nosotros
                             </StyledLink>
+                            <StyledLink
+                                href="/privacy-policy/PrivacyPolicy"
+                                variant="body2"
+                                sx={{
+                                    textDecoration: 'underline',
+                                    fontWeight: 600
+                                }}
+                            >
+                                Terminos y condiciones
+                            </StyledLink>
                         </Stack>
                     </Card>
                 </Grid>

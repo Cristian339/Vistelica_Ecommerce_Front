@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import Button from '@mui/material/Button';
-import { styled, keyframes } from '@mui/material/styles';
+import { styled, keyframes, useTheme } from '@mui/material/styles';
 import Divider from '@mui/material/Divider';
 import Grid from '@mui/material/Grid';
 import Avatar from '@mui/material/Avatar';
@@ -14,6 +14,8 @@ import ColorModeSelect from '../shared-theme/ColorModeSelect';
 import { useRouter } from 'next/navigation';
 import Fade from '@mui/material/Fade';
 import GroupsIcon from '@mui/icons-material/Groups';
+import { vistelicaColors } from '../shared-theme/vistelicaColors';
+import { typography } from '../shared-theme/themePrimitives';
 
 // Animación para el logo
 const fadeIn = keyframes`
@@ -37,10 +39,10 @@ const shimmer = keyframes`
 `;
 
 const AnimatedLogo = styled(Typography)(({ theme }) => ({
-    fontFamily: "'Poppins', sans-serif",
+    fontFamily: typography.h1.fontFamily,
     fontWeight: 700,
-    fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', // Tamaño responsivo
-    background: `linear-gradient(90deg, #E4B002, #EAD8B1, #FFFFFF, #EAD8B1, #E4B002)`,
+    fontSize: 'clamp(1.8rem, 5vw, 2.5rem)',
+    background: `linear-gradient(90deg, ${vistelicaColors.primary}, ${vistelicaColors.quaternary}, ${vistelicaColors.tertiary}, ${vistelicaColors.quaternary}, ${vistelicaColors.primary})`,
     backgroundSize: '200% auto',
     color: 'transparent',
     WebkitBackgroundClip: 'text',
@@ -60,7 +62,7 @@ const Card = styled(MuiCard)(({ theme }) => ({
     flexDirection: 'column',
     alignSelf: 'center',
     width: '100%',
-    padding: theme.spacing(2), // Reducido para móviles
+    padding: theme.spacing(2),
     gap: theme.spacing(1.5),
     margin: 'auto',
     boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
@@ -69,7 +71,7 @@ const Card = styled(MuiCard)(({ theme }) => ({
     position: 'relative',
     [theme.breakpoints.up('sm')]: {
         width: '800px',
-        padding: theme.spacing(4), // Volver al original en pantallas más grandes
+        padding: theme.spacing(4),
         gap: theme.spacing(2),
     },
     '&::after': {
@@ -79,7 +81,7 @@ const Card = styled(MuiCard)(({ theme }) => ({
         left: 0,
         width: '100%',
         height: '5px',
-        background: `linear-gradient(90deg, #E4B002, #EAD8B1)`,
+        background: `linear-gradient(90deg, ${vistelicaColors.primary}, ${vistelicaColors.quaternary})`,
     },
     ...theme.applyStyles('dark', {
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
@@ -89,7 +91,7 @@ const Card = styled(MuiCard)(({ theme }) => ({
 const AboutContainer = styled(Stack)(({ theme }) => ({
     height: 'calc((1 - var(--template-frame-height, 0)) * 100dvh)',
     minHeight: '100%',
-    padding: theme.spacing(1), // Reducido para móviles
+    padding: theme.spacing(1),
     [theme.breakpoints.up('sm')]: {
         padding: theme.spacing(2),
     },
@@ -113,21 +115,22 @@ const AboutContainer = styled(Stack)(({ theme }) => ({
 }));
 
 const ScrollableContent = styled(Box)(({ theme }) => ({
-    maxHeight: '50vh', // Más pequeño en móviles
+    maxHeight: '50vh',
     overflowY: 'auto',
     padding: theme.spacing(2),
     marginBottom: theme.spacing(2),
     border: `1px solid ${theme.palette.divider}`,
     borderRadius: theme.shape.borderRadius,
+    fontFamily: typography.fontFamily,
     '&::-webkit-scrollbar': {
-        width: '6px', // Más delgado para móviles
+        width: '6px',
     },
     '&::-webkit-scrollbar-track': {
         background: theme.palette.background.paper,
         borderRadius: '6px',
     },
     '&::-webkit-scrollbar-thumb': {
-        background: '#E4B002',
+        background: vistelicaColors.primary,
         borderRadius: '6px',
     },
     [theme.breakpoints.up('sm')]: {
@@ -144,7 +147,7 @@ const TeamMemberCard = styled(Box)(({ theme }) => ({
     flexDirection: 'column',
     alignItems: 'center',
     textAlign: 'center',
-    padding: theme.spacing(2), // Reducido para móviles
+    padding: theme.spacing(2),
     marginBottom: theme.spacing(2),
     borderRadius: '12px',
     transition: 'transform 0.3s, box-shadow 0.3s',
@@ -152,7 +155,7 @@ const TeamMemberCard = styled(Box)(({ theme }) => ({
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
     '&:hover': {
         transform: 'translateY(-5px)',
-        boxShadow: '0 8px 20px rgba(228, 176, 2, 0.15)',
+        boxShadow: `0 8px 20px rgba(${theme.palette.mode === 'dark' ? '228, 176, 2, 0.25' : '228, 176, 2, 0.15'})`,
     },
     [theme.breakpoints.up('sm')]: {
         padding: theme.spacing(3),
@@ -167,11 +170,11 @@ const TeamMemberCard = styled(Box)(({ theme }) => ({
 }));
 
 const LargeAvatar = styled(Avatar)(({ theme }) => ({
-    width: 100, // Más pequeño en móviles
+    width: 100,
     height: 100,
     marginBottom: theme.spacing(1.5),
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-    border: '3px solid #E4B002',
+    border: `3px solid ${vistelicaColors.primary}`,
     [theme.breakpoints.up('sm')]: {
         width: 120,
         height: 120,
@@ -180,14 +183,15 @@ const LargeAvatar = styled(Avatar)(({ theme }) => ({
     [theme.breakpoints.up('md')]: {
         width: 150,
         height: 150,
-        border: '4px solid #E4B002',
+        border: `4px solid ${vistelicaColors.primary}`,
     },
 }));
 
 const SectionTitle = styled(Typography)(({ theme }) => ({
     position: 'relative',
     paddingLeft: theme.spacing(1.5),
-    fontSize: '1.15rem', // Ajustar tamaño en móviles
+    fontSize: '1.15rem',
+    fontFamily: typography.h5.fontFamily,
     [theme.breakpoints.up('sm')]: {
         fontSize: '1.25rem',
     },
@@ -199,7 +203,7 @@ const SectionTitle = styled(Typography)(({ theme }) => ({
         transform: 'translateY(-50%)',
         width: '4px',
         height: '70%',
-        background: '#E4B002',
+        background: vistelicaColors.primary,
         borderRadius: '4px',
     },
 }));
@@ -223,6 +227,8 @@ const AnimatedGrid = styled(Grid)(({ index }) => ({
 
 export default function AboutUs(props) {
     const router = useRouter();
+    const theme = useTheme();
+
     const handleGoToLogin = () => {
         router.push('/sign-in-side/SignInSide');
     };
@@ -244,14 +250,15 @@ export default function AboutUs(props) {
                         </Box>
 
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: { xs: 0.5, sm: 1 } }}>
-                            <GroupsIcon sx={{ color: '#E4B002', fontSize: { xs: 24, sm: 28 } }} />
+                            <GroupsIcon sx={{ color: vistelicaColors.primary, fontSize: { xs: 24, sm: 28 } }} />
                             <Typography
                                 component="h1"
                                 variant="h4"
                                 sx={{
                                     width: '100%',
                                     fontSize: 'clamp(1.5rem, 6vw, 2.15rem)',
-                                    fontWeight: 600
+                                    fontWeight: 600,
+                                    fontFamily: typography.h4.fontFamily
                                 }}
                             >
                                 Sobre Nosotros
@@ -264,7 +271,7 @@ export default function AboutUs(props) {
                                 mb: { xs: 1, sm: 2 },
                                 fontStyle: 'italic',
                                 fontSize: { xs: '0.85rem', sm: '1rem' },
-                                color: theme => theme.palette.text.secondary
+                                fontFamily: typography.fontFamily
                             }}
                         >
                             Conozca al equipo de desarrolladores detrás de Vistélica
@@ -278,7 +285,8 @@ export default function AboutUs(props) {
                                 paragraph
                                 sx={{
                                     fontSize: { xs: '0.9rem', sm: '1rem' },
-                                    mb: { xs: 1, sm: 2 }
+                                    mb: { xs: 1, sm: 2 },
+                                    fontFamily: typography.fontFamily
                                 }}
                             >
                                 Vistélica nació como proyecto final de nuestro grado superior en Desarrollo de Aplicaciones Multiplataforma.
@@ -289,7 +297,8 @@ export default function AboutUs(props) {
                                 paragraph
                                 sx={{
                                     fontSize: { xs: '0.9rem', sm: '1rem' },
-                                    mb: { xs: 1, sm: 2 }
+                                    mb: { xs: 1, sm: 2 },
+                                    fontFamily: typography.fontFamily
                                 }}
                             >
                                 Combinando nuestras habilidades en desarrollo web, diseño de interfaces y programación backend,
@@ -297,7 +306,7 @@ export default function AboutUs(props) {
                                 y adaptada a las necesidades de cada cliente.
                             </Typography>
 
-                            <Divider sx={{ my: { xs: 2, sm: 3 }, borderColor: 'rgba(228, 176, 2, 0.3)' }} />
+                            <Divider sx={{ my: { xs: 2, sm: 3 }, borderColor: `rgba(${theme.palette.mode === 'dark' ? '228, 176, 2, 0.4' : '228, 176, 2, 0.3'})` }} />
 
                             <SectionTitle variant="h5" gutterBottom>
                                 Tecnologías Utilizadas
@@ -306,7 +315,8 @@ export default function AboutUs(props) {
                                 paragraph
                                 sx={{
                                     fontSize: { xs: '0.9rem', sm: '1rem' },
-                                    mb: { xs: 1, sm: 2 }
+                                    mb: { xs: 1, sm: 2 },
+                                    fontFamily: typography.fontFamily
                                 }}
                             >
                                 Para el desarrollo de Vistélica, hemos implementado un stack tecnológico moderno y escalable:
@@ -316,31 +326,34 @@ export default function AboutUs(props) {
                                     <li>
                                         <Typography sx={{
                                             mb: 1,
-                                            fontSize: { xs: '0.9rem', sm: '1rem' }
+                                            fontSize: { xs: '0.9rem', sm: '1rem' },
+                                            fontFamily: typography.fontFamily
                                         }}>
-                                            <Box component="span" sx={{ fontWeight: 600, color: '#E4B002' }}>Frontend:</Box> React, Next.js, Material UI y herramientas avanzadas de diseño responsivo.
+                                            <Box component="span" sx={{ fontWeight: 600, color: vistelicaColors.primary }}>Frontend:</Box> React, Next.js, Material UI y herramientas avanzadas de diseño responsivo.
                                         </Typography>
                                     </li>
                                     <li>
                                         <Typography sx={{
                                             mb: 1,
-                                            fontSize: { xs: '0.9rem', sm: '1rem' }
+                                            fontSize: { xs: '0.9rem', sm: '1rem' },
+                                            fontFamily: typography.fontFamily
                                         }}>
-                                            <Box component="span" sx={{ fontWeight: 600, color: '#E4B002' }}>Backend:</Box> Node.js con Express, gestión de autenticación segura y APIs REST.
+                                            <Box component="span" sx={{ fontWeight: 600, color: vistelicaColors.primary }}>Backend:</Box> Node.js con Express, gestión de autenticación segura y APIs REST.
                                         </Typography>
                                     </li>
                                     <li>
                                         <Typography sx={{
                                             mb: 1,
-                                            fontSize: { xs: '0.9rem', sm: '1rem' }
+                                            fontSize: { xs: '0.9rem', sm: '1rem' },
+                                            fontFamily: typography.fontFamily
                                         }}>
-                                            <Box component="span" sx={{ fontWeight: 600, color: '#E4B002' }}>Base de datos:</Box> MongoDB para almacenamiento flexible y eficiente de productos e información de usuarios.
+                                            <Box component="span" sx={{ fontWeight: 600, color: vistelicaColors.primary }}>Base de datos:</Box> MongoDB para almacenamiento flexible y eficiente de productos e información de usuarios.
                                         </Typography>
                                     </li>
                                 </ul>
                             </Box>
 
-                            <Divider sx={{ my: { xs: 2, sm: 3 }, borderColor: 'rgba(228, 176, 2, 0.3)' }} />
+                            <Divider sx={{ my: { xs: 2, sm: 3 }, borderColor: `rgba(${theme.palette.mode === 'dark' ? '228, 176, 2, 0.4' : '228, 176, 2, 0.3'})` }} />
 
                             <Typography
                                 variant="h5"
@@ -349,14 +362,15 @@ export default function AboutUs(props) {
                                 sx={{
                                     fontWeight: 600,
                                     fontSize: { xs: '1.15rem', sm: '1.5rem' },
-                                    color: '#232A2E',
+                                    color: theme.palette.text.primary,
+                                    fontFamily: typography.h5.fontFamily,
                                     position: 'relative',
                                     '&::after': {
                                         content: '""',
                                         display: 'block',
                                         width: { xs: '60px', sm: '80px' },
                                         height: '3px',
-                                        background: '#E4B002',
+                                        background: vistelicaColors.primary,
                                         margin: '8px auto',
                                         borderRadius: '2px'
                                     }
@@ -375,7 +389,8 @@ export default function AboutUs(props) {
                                                 sx={{
                                                     fontWeight: 600,
                                                     fontSize: { xs: '1rem', sm: '1.25rem' },
-                                                    color: '#232A2E',
+                                                    color: theme.palette.text.primary,
+                                                    fontFamily: typography.h6.fontFamily,
                                                     mt: 1
                                                 }}
                                             >
@@ -384,9 +399,10 @@ export default function AboutUs(props) {
                                             <Typography
                                                 variant="subtitle1"
                                                 sx={{
-                                                    color: '#E4B002',
+                                                    color: vistelicaColors.primary,
                                                     fontWeight: 500,
                                                     fontSize: { xs: '0.85rem', sm: '1rem' },
+                                                    fontFamily: typography.subtitle1.fontFamily,
                                                     mb: 1
                                                 }}
                                             >
@@ -398,7 +414,9 @@ export default function AboutUs(props) {
                                                 variant="body2"
                                                 sx={{
                                                     fontSize: { xs: '0.8rem', sm: '0.875rem' },
-                                                    lineHeight: 1.5
+                                                    lineHeight: 1.5,
+                                                    fontFamily: typography.body2.fontFamily,
+                                                    color: vistelicaColors.secondary,
                                                 }}
                                             >
                                                 {index === 0 ?
@@ -412,7 +430,7 @@ export default function AboutUs(props) {
                                 ))}
                             </Grid>
 
-                            <Divider sx={{ my: { xs: 2, sm: 3 }, borderColor: 'rgba(228, 176, 2, 0.3)' }} />
+                            <Divider sx={{ my: { xs: 2, sm: 3 }, borderColor: `rgba(${theme.palette.mode === 'dark' ? '228, 176, 2, 0.4' : '228, 176, 2, 0.3'})` }} />
 
                             <SectionTitle variant="h5" gutterBottom>
                                 Objetivos del Proyecto
@@ -421,7 +439,8 @@ export default function AboutUs(props) {
                                 paragraph
                                 sx={{
                                     fontSize: { xs: '0.9rem', sm: '1rem' },
-                                    mb: { xs: 1, sm: 2 }
+                                    mb: { xs: 1, sm: 2 },
+                                    fontFamily: typography.fontFamily
                                 }}
                             >
                                 El desarrollo de Vistélica nos ha permitido aplicar nuestros conocimientos en un caso real de negocio
@@ -432,7 +451,9 @@ export default function AboutUs(props) {
                                 paragraph
                                 sx={{
                                     fontSize: { xs: '0.9rem', sm: '1rem' },
-                                    mb: { xs: 1, sm: 2 }
+                                    mb: { xs: 1, sm: 2 },
+                                    fontFamily: typography.fontFamily
+
                                 }}
                             >
                                 Este proyecto representa no solo nuestra capacidad técnica, sino también nuestra visión de cómo la
@@ -447,10 +468,11 @@ export default function AboutUs(props) {
                                 mt: { xs: 1, sm: 2 },
                                 py: { xs: 1, sm: 1.2 },
                                 fontWeight: 600,
-                                backgroundColor: '#E4B002',
+                                fontFamily: typography.fontFamily,
+                                backgroundColor: vistelicaColors.primary,
                                 boxShadow: 2,
                                 '&:hover': {
-                                    backgroundColor: '#c99a02',
+                                    backgroundColor: vistelicaColors.primaryDark,
                                     boxShadow: 4,
                                     transform: 'translateY(-2px)',
                                     transition: 'all 0.3s'
