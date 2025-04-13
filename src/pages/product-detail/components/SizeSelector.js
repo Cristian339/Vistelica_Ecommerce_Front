@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Button, Typography, Grid, Box } from '@mui/material';
+import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 
 const SizeSelector = ({ sizes }) => {
     const [selectedSize, setSelectedSize] = useState(null);
@@ -21,10 +22,22 @@ const SizeSelector = ({ sizes }) => {
                                 minWidth: '32px',
                                 minHeight: '32px',
                                 p: 0,
-                                borderColor: selectedSize === size ? 'primary.main' : 'divider',
-                                bgcolor: selectedSize === size ? 'primary.light' : 'background.paper',
+                                // Estado normal
+                                color: vistelicaColors.primary, // Texto dorado
+                                borderColor: vistelicaColors.primary, // Borde dorado
+                                backgroundColor: vistelicaColors.tertiary, // Fondo blanco
+                                // Estado seleccionado
+                                ...(selectedSize === size && {
+                                    color: vistelicaColors.tertiary, // Texto blanco
+                                    backgroundColor: vistelicaColors.primary, // Fondo dorado
+                                    borderColor: vistelicaColors.primary, // Borde dorado
+                                }),
+                                // Hover
                                 '&:hover': {
-                                    borderColor: 'primary.main'
+                                    borderColor: vistelicaColors.primaryDark, // Borde dorado oscuro
+                                    backgroundColor: selectedSize === size
+                                        ? vistelicaColors.primaryDark // Si está seleccionado, fondo dorado oscuro al hover
+                                        : 'rgba(228, 176, 2, 0.08)' // Si no está seleccionado, fondo muy claro
                                 }
                             }}
                             onClick={() => setSelectedSize(size)}
@@ -34,11 +47,6 @@ const SizeSelector = ({ sizes }) => {
                     </Grid>
                 ))}
             </Grid>
-            <Typography variant="caption" sx={{ fontSize: '0.7rem', display: 'block', mt: 0.5 }}>
-        <span style={{ textDecoration: 'underline', color: 'primary.main', cursor: 'pointer' }}>
-          Guía de tallas
-        </span>
-            </Typography>
         </Box>
     );
 };
