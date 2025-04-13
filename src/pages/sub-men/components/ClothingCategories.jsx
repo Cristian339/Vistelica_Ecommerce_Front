@@ -1,16 +1,44 @@
-'use client'
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import categoryService from '@/services/categoryService'; // Ajusta el path si es diferente
 
 const ClothingCategories = () => {
-    // Categorías de ropa como en la imagen
-    const categories = [
-        { name: 'CAMISETAS', image: 'https://images.unsplash.com/photo-1417325384643-aac51acc9e5d?q=75&fm=jpg&w=400&fit=max' },
-        { name: 'JEANS', image: 'https://images.unsplash.com/photo-1417325384643-aac51acc9e5d?q=75&fm=jpg&w=400&fit=max' },
-        { name: 'SUDADERAS', image: 'https://images.unsplash.com/photo-1417325384643-aac51acc9e5d?q=75&fm=jpg&w=400&fit=max' },
-        { name: 'BERMUDAS', image: 'https://images.unsplash.com/photo-1417325384643-aac51acc9e5d?q=75&fm=jpg&w=400&fit=max' },
-        { name: 'CAMISAS', image: 'https://images.unsplash.com/photo-1417325384643-aac51acc9e5d?q=75&fm=jpg&w=400&fit=max' },
-        { name: 'BAÑADORES', image: 'https://images.unsplash.com/photo-1417325384643-aac51acc9e5d?q=75&fm=jpg&w=400&fit=max' }
-    ];
+    const [subcategories, setSubcategories] = useState([]);
+
+    useEffect(() => {
+        const loadSubcategories = async () => {
+            try {
+                const categories = await categoryService.fetchCategories();
+
+                const hombreCategory = categories.find(
+                    (cat) => cat.name.toLowerCase() === 'hombre'
+                );
+
+                if (hombreCategory && hombreCategory.subcategories) {
+                    const visibles = hombreCategory.subcategories.filter(
+                        (sub) => !sub.discard
+                    );
+                    setSubcategories(visibles);
+                }
+            } catch (error) {
+                console.error('Error al cargar subcategorías de Hombre:', error);
+            }
+        };
+
+        loadSubcategories();
+    }, []);
+
+    // Mapa de imágenes (usa URLs reales si las tienes)
+    const imageMap = {
+        'Camisetas': 'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb',
+        'Polo': 'https://images.unsplash.com/photo-1562158070-7bfc3b5ad9a5',
+        'Pantalones': 'https://images.unsplash.com/photo-1587385789090-871c6de24d0e',
+        'Bermudas': 'https://images.unsplash.com/photo-1624378441939-1c2f1c4a0a14',
+        'Chandal': 'https://images.unsplash.com/photo-1585081895257-4e6e7e472d99',
+        'Sudaderas': 'https://images.unsplash.com/photo-1520975979642-45d3f32cc7cd',
+
+    };
 
     const styles = {
         container: {
@@ -26,7 +54,8 @@ const ClothingCategories = () => {
             width: 'calc(16.666% - 4px)',
             height: '300px',
             margin: '2px',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            cursor: 'pointer'
         },
         image: {
             width: '100%',
@@ -57,11 +86,15 @@ const ClothingCategories = () => {
 
     return (
         <div style={styles.container}>
-            {categories.map((category, index) => (
-                <div key={index} style={styles.categoryItem}>
-                    <img src={category.image} alt={category.name} style={styles.image} />
+            {subcategories.map((subcat) => (
+                <div key={subcat.subcategory_id} style={styles.categoryItem}>
+                    <img
+                        src={imageMap[subcat.name] || `https://via.placeholder.com/300x300?text=${subcat.name}`}
+                        alt={subcat.name}
+                        style={styles.image}
+                    />
                     <div style={styles.overlay}>
-                        <span style={styles.categoryName}>{category.name}</span>
+                        <span style={styles.categoryName}>{subcat.name}</span>
                     </div>
                 </div>
             ))}

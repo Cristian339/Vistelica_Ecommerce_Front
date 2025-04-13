@@ -12,7 +12,7 @@ import ExpandMore from "@mui/icons-material/ExpandMore";
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useRouter } from 'next/navigation';
 import { isAdmin } from '@/services/authService';
-
+import  categoryService  from '@/services/categoryService';
 
 export default function Navbar() {
     const [open, setOpen] = useState(false);
@@ -23,10 +23,17 @@ export default function Navbar() {
     const router = useRouter();
 
     useEffect(() => {
-        fetch("http://localhost:5000/api/categories")
-            .then(res => res.json())
-            .then(data => setMenuCategories(data))
-            .catch(err => console.error("Error loading categories:", err));
+        // Usando el servicio de categorías con axios
+        const loadCategories = async () => {
+            try {
+                const categories = await categoryService.fetchCategories();
+                setMenuCategories(categories);
+            } catch (error) {
+                console.error("Error loading categories:", error);
+            }
+        };
+
+        loadCategories();
     }, []);
 
 
@@ -35,6 +42,8 @@ export default function Navbar() {
             const rol = await isAdmin();
             if (rol) {
                 router.push('/admin/page');
+            } else {
+                router.push('/');
             }
         } catch (error) {
             console.error("Error verificando permisos:", error);
@@ -53,7 +62,7 @@ export default function Navbar() {
             <AppBar position="static" color="transparent" elevation={0} sx={{ backgroundColor: "white", padding: "8px 16px" }}>
                 <Toolbar sx={{display: 'flex', alignItems: 'center', padding: '0 !important'}}>
 
-                {/* Left section - Hamburger Menu and Logo */}
+                    {/* Left section - Hamburger Menu and Logo */}
                     {/* Logo con hamburguesa alineado con flexbox */}
                     <div style={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
                         <IconButton onClick={toggleDrawer(true)} sx={{color: "#171717"}}>
@@ -101,7 +110,10 @@ export default function Navbar() {
 
                         {!isMobile && (
                             <>
-                                <IconButton sx={{color: "#171717"}}>
+                                <IconButton
+                                    sx={{color: "#171717"}}
+                                    onClick={() => router.push('/account')}
+                                >
                                     <AccountCircleIcon sx={{fontSize: "34px"}}/>
                                 </IconButton>
                                 <IconButton sx={{color: "#171717"}}>
@@ -193,7 +205,6 @@ export default function Navbar() {
             >
                 <div style={{width: '100%', height: '100%'}}>
                     {/* Menu Header with Icons */}
-
 
                     {/* Close Button */}
                     <div className="p-4">
