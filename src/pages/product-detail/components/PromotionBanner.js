@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Paper, Typography, Box } from '@mui/material';
+import {vistelicaColors} from "@/pages/shared-theme/vistelicaColors";
 
 const PromotionBanner = ({ offer, price }) => {
     return (
@@ -11,8 +12,8 @@ const PromotionBanner = ({ offer, price }) => {
                 sx={{
                     p: 1.5,
                     borderLeft: '3px solid',
-                    borderColor: 'secondary.main',
-                    backgroundColor: 'background.paper'
+                    borderColor: vistelicaColors.primary,
+                    backgroundColor: vistelicaColors.primaryLight
                 }}
             >
                 <Typography variant="body2" sx={{ fontSize: '0.85rem', fontWeight: 'medium' }}>

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { styled, useTheme } from '@mui/material/styles';
+import {vistelicaColors} from "@/pages/shared-theme/vistelicaColors";
 import {
     Grid,
     Typography,
@@ -26,6 +27,16 @@ const ProductDetailContainer = styled('div')(({ theme }) => ({
 }));
 
 const CompactDetailBox = styled(Box)(({ theme }) => ({
+    fontFamily: "'Amethysta', serif", // Asegura que herede la fuente
+    '& .MuiTypography-root': { // Aplica a todos los Typography
+        fontFamily: "'Amethysta', serif !important",
+    },
+    '& .MuiButton-root': { // Aplica a los botones
+        fontFamily: "'Amethysta', serif !important",
+    },
+    '& .MuiChip-label': { // Aplica a los chips
+        fontFamily: "'Amethysta', serif !important",
+    },
     '& .MuiTypography-h4': {
         fontSize: '1.3rem',
         fontWeight: 600,
@@ -39,10 +50,6 @@ const CompactDetailBox = styled(Box)(({ theme }) => ({
             fontSize: '1.6rem'
         }
     },
-    '& .MuiButton-root': {
-        padding: theme.spacing(1),
-        fontSize: '0.875rem'
-    }
 }));
 
 const ProductDetail = ({ product }) => {
@@ -65,7 +72,7 @@ const ProductDetail = ({ product }) => {
 
     return (
         <ProductDetailContainer>
-            <Grid container alignItems="flex-start">
+            <Grid container alignItems="flex-start" color={vistelicaColors.background}>
                 {/* Galería - Ocupa más espacio */}
                 <Grid item xs={12} md={7} lg={8}>
                     <Box sx={{ height: '100%' }}> {/* Añade este Box */}
@@ -86,18 +93,15 @@ const ProductDetail = ({ product }) => {
                             {product.name}
                         </Typography>
 
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                            Ref.: {product.reference}
-                        </Typography>
 
                         <Typography variant="h3" sx={{
-                            color: 'primary.main',
+                            color: vistelicaColors.primary,
                             my: 1
                         }}>
                             {product.price}€
                         </Typography>
 
-                        <Chip label="Disponible" color="secondary" size="small" sx={{ mb: 1 }} />
+                        <Chip label="Disponible" size="small" sx={{ mb: 1, background: vistelicaColors.info, color: vistelicaColors.tertiary }} />
 
                         <Divider sx={{ my: 2 }} />
 
@@ -120,15 +124,19 @@ const ProductDetail = ({ product }) => {
                                 variant="contained"
                                 color="primary"
                                 size="medium"
-                                sx={{ flex: 1, maxWidth: 500 }}
+                                sx={{ flex: 1, maxWidth: 500 , background: vistelicaColors.primary}}
                             >
                                 Añadir al carrito
                             </Button>
                             <Button
                                 variant="outlined"
-                                color="primary"
                                 size="medium"
-                                sx={{ flex: 1, maxWidth: 500 }}
+                                sx={{
+                                    flex: 1,
+                                    maxWidth: 500,
+                                    color: vistelicaColors.primaryDark, // Color del texto
+                                    borderColor: vistelicaColors.primaryDark, // Color del borde
+                                }}
                             >
                                 Comprar
                             </Button>
