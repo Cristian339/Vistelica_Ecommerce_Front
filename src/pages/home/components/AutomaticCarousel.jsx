@@ -7,7 +7,8 @@ import {
     CardMedia,
     CardContent,
     useMediaQuery,
-    useTheme
+    useTheme,
+    GlobalStyles // Importamos GlobalStyles
 } from '@mui/material';
 
 // Componente para un slide individual del carrusel
@@ -272,23 +273,33 @@ const AutomaticCarouselWithScrollbar = () => {
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
+            {/* Definimos los estilos globales para ocultar la barra de desplazamiento */}
+            <GlobalStyles
+                styles={{
+                    '.hide-carousel-scrollbar::-webkit-scrollbar': {
+                        display: 'none'
+                    },
+                    '.hide-carousel-scrollbar': {
+                        msOverflowStyle: 'none',
+                        scrollbarWidth: 'none'
+                    }
+                }}
+            />
+
             <Typography variant="h5" component="h2" fontWeight={500} mb={3} sx={{ fontFamily: 'Amethysta, sans-serif' }}>
                 Tendencias actuales
             </Typography>
 
             <Box
                 ref={scrollContainerRef}
+                className="hide-carousel-scrollbar"
                 sx={{
                     display: 'flex',
                     width: '100%',
                     overflowX: 'auto',
                     scrollBehavior: 'smooth',
-                    pb: 2,
-                    '&::-webkit-scrollbar': {
-                        display: 'none'
-                    },
-                    msOverflowStyle: 'none',
-                    scrollbarWidth: 'none'
+                    pb: 2
+                    // Eliminamos el pseudo-elemento problemático de aquí
                 }}
             >
                 {carouselProducts.map((product, index) => (
@@ -299,7 +310,7 @@ const AutomaticCarouselWithScrollbar = () => {
                 ))}
             </Box>
 
-            {/* Barra de desplazamiento personalizada estilo minimalista como en la imagen */}
+            {/* Barra de desplazamiento personalizada estilo minimalista */}
             <Box
                 sx={{
                     position: 'relative',
@@ -309,7 +320,7 @@ const AutomaticCarouselWithScrollbar = () => {
                     mt: 1,
                     mb: 2,
                     cursor: 'pointer',
-                    background: 'rgba(158, 158, 158, 0.3)', // Fondo gris claro similar a la imagen
+                    background: 'rgba(158, 158, 158, 0.3)'
                 }}
                 onClick={handleScrollbarClick}
             >

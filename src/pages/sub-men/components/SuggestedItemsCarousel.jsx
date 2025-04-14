@@ -2,6 +2,7 @@
 import React, { useState, useRef } from 'react';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { GlobalStyles } from '@mui/material'; // Importamos GlobalStyles
 
 const SuggestedItemsCarousel = () => {
     const [currentSlide, setCurrentSlide] = useState(0);
@@ -145,11 +146,7 @@ const SuggestedItemsCarousel = () => {
             msOverflowStyle: 'none', // IE
             gap: '1px',
         },
-        carouselTrackScrollbar: {
-            '::-webkit-scrollbar': {
-                display: 'none',
-            },
-        },
+        // Eliminamos carouselTrackScrollbar que causaba el problema
         productCard: {
             flex: '0 0 25%',
             minWidth: '25%',
@@ -225,58 +222,73 @@ const SuggestedItemsCarousel = () => {
     };
 
     return (
-        <div style={styles.container}>
-            <div style={styles.header}>
-                <div style={styles.title}>
-                    <span style={styles.arrow}>→</span>
-                    TE PUEDE INTERESAR
-                </div>
-            </div>
+        <>
+            {/* Definimos los estilos globales para ocultar la scrollbar */}
+            <GlobalStyles
+                styles={{
+                    '.hide-scrollbar::-webkit-scrollbar': {
+                        display: 'none'
+                    },
+                    '.hide-scrollbar': {
+                        msOverflowStyle: 'none',
+                        scrollbarWidth: 'none'
+                    }
+                }}
+            />
 
-            <div style={styles.carouselContainer}>
-                <div
-                    ref={carouselRef}
-                    style={{...styles.carouselTrack, ...styles.carouselTrackScrollbar}}
-                >
-                    {suggestedItems.map((item) => (
-                        <div key={item.id} style={styles.productCard}>
-                            {item.tag && <div style={styles.tagLabel}>{item.tag}</div>}
-                            <img
-                                src={item.image}
-                                alt={item.name}
-                                style={styles.productImage}
-                            />
-                            <div style={styles.productInfo}>
-                                <h3 style={styles.productName}>{item.name}</h3>
-                                <div style={styles.priceContainer}>
-                                    <span style={styles.salePrice}>{item.salePrice}</span>
-                                    {item.originalPrice !== item.salePrice && (
-                                        <span style={styles.originalPrice}>{item.originalPrice}</span>
-                                    )}
+            <div style={styles.container}>
+                <div style={styles.header}>
+                    <div style={styles.title}>
+                        <span style={styles.arrow}>→</span>
+                        TE PUEDE INTERESAR
+                    </div>
+                </div>
+
+                <div style={styles.carouselContainer}>
+                    <div
+                        ref={carouselRef}
+                        className="hide-scrollbar"
+                        style={styles.carouselTrack}
+                    >
+                        {suggestedItems.map((item) => (
+                            <div key={item.id} style={styles.productCard}>
+                                {item.tag && <div style={styles.tagLabel}>{item.tag}</div>}
+                                <img
+                                    src={item.image}
+                                    alt={item.name}
+                                    style={styles.productImage}
+                                />
+                                <div style={styles.productInfo}>
+                                    <h3 style={styles.productName}>{item.name}</h3>
+                                    <div style={styles.priceContainer}>
+                                        <span style={styles.salePrice}>{item.salePrice}</span>
+                                        {item.originalPrice !== item.salePrice && (
+                                            <span style={styles.originalPrice}>{item.originalPrice}</span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
+
+                    <button
+                        onClick={prevSlide}
+                        style={{...styles.navButton, ...styles.prevButton}}
+                        aria-label="Anterior"
+                    >
+                        <ArrowBackIcon/>
+                    </button>
+
+                    <button
+                        onClick={nextSlide}
+                        style={{...styles.navButton, ...styles.nextButton}}
+                        aria-label="Siguiente"
+                    >
+                        <ArrowForwardIcon/>
+                    </button>
                 </div>
-
-                <button
-                    onClick={prevSlide}
-                    style={{...styles.navButton, ...styles.prevButton}}
-                    aria-label="Anterior"
-                >
-                    <ArrowBackIcon/>
-                </button>
-
-                <button
-                    onClick={nextSlide}
-                    style={{...styles.navButton, ...styles.nextButton}}
-                    aria-label="Siguiente"
-                >
-                    <ArrowForwardIcon/>
-                </button>
-
             </div>
-        </div>
+        </>
     );
 };
 
