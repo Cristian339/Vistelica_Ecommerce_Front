@@ -118,7 +118,7 @@ const SuggestedItemsCarousel = () => {
             justifyContent: 'flex-start',
             alignItems: 'center',
             padding: '20px 10px',
-            backgroundColor: '#000',
+            backgroundColor: '#E4B002',
             color: '#fff',
         },
         title: {

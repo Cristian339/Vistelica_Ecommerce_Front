@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import categoryService from '@/services/categoryService'; // Ajusta el path si es diferente
+import Grid from '@mui/material/Grid';
+import categoryService from '@/services/categoryService';
 
 const ClothingCategories = () => {
     const [subcategories, setSubcategories] = useState([]);
@@ -29,76 +30,69 @@ const ClothingCategories = () => {
         loadSubcategories();
     }, []);
 
-    // Mapa de imágenes (usa URLs reales si las tienes)
     const imageMap = {
         'Camisetas': 'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb',
-        'Polo': 'https://images.unsplash.com/photo-1562158070-7bfc3b5ad9a5',
-        'Pantalones': 'https://images.unsplash.com/photo-1587385789090-871c6de24d0e',
-        'Bermudas': 'https://images.unsplash.com/photo-1624378441939-1c2f1c4a0a14',
-        'Chandal': 'https://images.unsplash.com/photo-1585081895257-4e6e7e472d99',
-        'Sudaderas': 'https://images.unsplash.com/photo-1520975979642-45d3f32cc7cd',
-
-    };
-
-    const styles = {
-        container: {
-            width: '100%',
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'space-between',
-            backgroundColor: '#ffffff',
-            padding: '20px 0'
-        },
-        categoryItem: {
-            position: 'relative',
-            width: 'calc(16.666% - 4px)',
-            height: '300px',
-            margin: '2px',
-            overflow: 'hidden',
-            cursor: 'pointer'
-        },
-        image: {
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            transition: 'transform 0.3s ease'
-        },
-        overlay: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: 'rgba(0, 0, 0, 0.2)'
-        },
-        categoryName: {
-            color: '#ffffff',
-            fontSize: '24px',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            textTransform: 'uppercase',
-            textShadow: '1px 1px 3px rgba(0, 0, 0, 0.7)'
-        }
+        'Polo': 'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb',
+        'Pantalones': 'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb',
+        'Bermudas': 'https://images.unsplash.com/photo-1417325384643-aac51acc9e5d?q=75&fm=jpg&w=200&fit=max',
+        'Chandal': 'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb',
+        'Sudaderas': 'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb',
     };
 
     return (
-        <div style={styles.container}>
+        <Grid container spacing={1} sx={{ backgroundColor: '#ffffff', padding: '20px 0' }}>
             {subcategories.map((subcat) => (
-                <div key={subcat.subcategory_id} style={styles.categoryItem}>
-                    <img
-                        src={imageMap[subcat.name] || `https://via.placeholder.com/300x300?text=${subcat.name}`}
-                        alt={subcat.name}
-                        style={styles.image}
-                    />
-                    <div style={styles.overlay}>
-                        <span style={styles.categoryName}>{subcat.name}</span>
+                <Grid
+                    item
+                    key={subcat.subcategory_id}
+                    xs={12} // 1 por fila en móvil
+                    sm={6}  // 2 por fila en pantallas pequeñas (>600px)
+                    md={4}  // 3 por fila en pantallas medianas (>900px)
+                    lg={2}  // 6 por fila en pantallas grandes (>1200px)
+                >
+                    <div style={{
+                        position: 'relative',
+                        width: '100%',
+                        height: '180px',
+                        overflow: 'hidden',
+                        cursor: 'pointer'
+                    }}>
+                        <img
+                            src={imageMap[subcat.name] || `https://via.placeholder.com/300x300?text=${subcat.name}`}
+                            alt={subcat.name}
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                transition: 'transform 0.3s ease'
+                            }}
+                        />
+                        <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            backgroundColor: 'rgba(0, 0, 0, 0.2)'
+                        }}>
+                            <span style={{
+                                color: '#ffffff',
+                                fontSize: '24px',
+                                fontWeight: 'bold',
+                                textAlign: 'center',
+                                textTransform: 'uppercase',
+                                textShadow: '1px 1px 3px rgba(0, 0, 0, 0.7)'
+                            }}>
+                                {subcat.name}
+                            </span>
+                        </div>
                     </div>
-                </div>
+                </Grid>
             ))}
-        </div>
+        </Grid>
     );
 };
 

@@ -65,7 +65,7 @@ const Carousel = () => {
     const styles = {
         pageWrapper: {
             width: '100vw',
-            height: '100vh',
+            height: '70vh',
             margin: 0,
             padding: 0,
             boxSizing: 'border-box',
