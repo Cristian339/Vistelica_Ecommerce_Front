@@ -1,5 +1,7 @@
 import React from 'react';
 import ProductDetail from './components/ProductDetail';
+import productService from "@/services/productService";
+
 
 const product = {
     name: "AMERICANA NAPOLI TWILL VERDE",

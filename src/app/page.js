@@ -6,13 +6,14 @@ import {Container} from "@mui/material";
 import HomePage from "@/pages/home/Home";
 import AdminPage from "@/pages/admin/page";
 import ProductDetail from "@/pages/product-detail/page";
+import CartPage from "@/pages/cart/page";
   // Ruta del componente HomePage
 
 export default function Home() {
     return (
         <div >
 
-            <ProductDetail/>
+            <CartPage/>
         </div>
     );
 }
