@@ -2,9 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Box, Typography, Button, Fade, Grid, Divider, Chip, IconButton } from '@mui/material';
+import { Box, Typography, Button, Fade, Grid, Divider, Chip, IconButton, GlobalStyles, Tooltip } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CloseIcon from '@mui/icons-material/Close';
+import ViewModuleIcon from '@mui/icons-material/ViewModule';  // Para vista de 4 productos
+import ViewComfyIcon from '@mui/icons-material/ViewComfy';    // Para vista de 2 productos
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 
@@ -31,9 +33,11 @@ const ProductList = () => {
     const [products, setProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [subcategories, setSubcategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [showFilters, setShowFilters] = useState(!isMobile);
     const [sortOption, setSortOption] = useState('relevancia');
+    const [gridView, setGridView] = useState('grid4'); // Estado para la vista de cuadrícula
     const [filters, setFilters] = useState({
         brands: [],
         colors: [],
@@ -43,12 +47,48 @@ const ProductList = () => {
     });
     const [loading, setLoading] = useState(true);
 
-    // Cargar categorías
+    // Función para cambiar la vista de cuadrícula
+    const toggleGridView = () => {
+        setGridView(gridView === 'grid4' ? 'grid2' : 'grid4');
+    };
+
+    // Función para abrir el sidebar en móvil
+    const openSidebar = () => {
+        document.documentElement.style.setProperty('--SideNavigation-slideIn', '1');
+        setShowFilters(true);
+    };
+
+    // Función para cerrar el sidebar en móvil
+    const closeSidebar = () => {
+        document.documentElement.style.setProperty('--SideNavigation-slideIn', '0');
+        if (isMobile) setShowFilters(false);
+    };
+
+    // Efecto para controlar la visibilidad en cambios de viewport
+    useEffect(() => {
+        setShowFilters(!isMobile);
+    }, [isMobile]);
+
+    // Cargar categorías y subcategorías
     useEffect(() => {
         const fetchCategories = async () => {
             try {
                 const data = await categoryService.getAllWithSubcategories();
                 setCategories(data);
+
+                // Extraer todas las subcategorías para facilitar la búsqueda
+                const allSubcats = [];
+                data.forEach(category => {
+                    if (category.subcategories && category.subcategories.length > 0) {
+                        allSubcats.push(...category.subcategories.map(subcat => ({
+                            ...subcat,
+                            parentCategory: category.name,
+                            parentSlug: category.slug,
+                            gender: category.gender
+                        })));
+                    }
+                });
+                setSubcategories(allSubcats);
             } catch (err) {
                 console.error('Error al cargar categorías:', err);
             }
@@ -72,28 +112,44 @@ const ProductList = () => {
                 }
 
                 if (category && category !== 'todos') {
-                    filteredData = filteredData.filter(p =>
-                        p.category.toLowerCase() === category.toLowerCase()
-                    );
+                    // Verificar si es una categoría principal o subcategoría
+                    const isMainCategory = categories.some(c => c.slug === category);
+                    const isSubCategory = subcategories.some(s => s.slug === category);
 
-                    // Encontrar la categoría seleccionada para mostrar su nombre
-                    if (categories.length > 0) {
-                        const found = categories.find(c =>
-                            c.slug === category ||
-                            c.subcategories.some(s => s.slug === category)
+                    if (isMainCategory) {
+                        // Si es categoría principal, incluir productos de sus subcategorías también
+                        const categoryObj = categories.find(c => c.slug === category);
+                        const subcatSlugs = categoryObj?.subcategories?.map(s => s.slug) || [];
+
+                        filteredData = filteredData.filter(p =>
+                            p.category.toLowerCase() === category.toLowerCase() ||
+                            subcatSlugs.includes(p.category.toLowerCase())
                         );
 
-                        if (found) {
-                            if (found.slug === category) {
-                                setSelectedCategory(found);
-                            } else {
-                                const subcat = found.subcategories.find(s => s.slug === category);
-                                if (subcat) setSelectedCategory(subcat);
-                            }
-                        }
+                        setSelectedCategory(categoryObj);
+                    }
+                    else if (isSubCategory) {
+                        // Si es subcategoría, filtrar solo por ella
+                        filteredData = filteredData.filter(p =>
+                            p.category.toLowerCase() === category.toLowerCase()
+                        );
+
+                        const subcatObj = subcategories.find(s => s.slug === category);
+                        setSelectedCategory({
+                            ...subcatObj,
+                            isSubcategory: true
+                        });
+                    }
+                    else {
+                        // Filtro genérico si no se identifica claramente
+                        filteredData = filteredData.filter(p =>
+                            p.category.toLowerCase() === category.toLowerCase()
+                        );
+
+                        setSelectedCategory({ name: `Categoría: ${category}` });
                     }
                 } else {
-                    setSelectedCategory({ name: 'Todos los productos' });
+                    setSelectedCategory({ name: gender ? `${gender.charAt(0).toUpperCase() + gender.slice(1)}` : 'Todos los productos' });
                 }
 
                 setProducts(filteredData);
@@ -105,9 +161,8 @@ const ProductList = () => {
             }
         };
 
-        // Ya no es necesario verificar router.isReady en App Router
         fetchProducts();
-    }, [gender, category, categories]);
+    }, [gender, category, categories, subcategories]);
 
     // Aplicar filtros a los productos
     useEffect(() => {
@@ -166,63 +221,81 @@ const ProductList = () => {
         );
     };
 
+    // Obtener un título más informativo para la página
+    const getPageTitle = () => {
+        if (selectedCategory) {
+            if (selectedCategory.isSubcategory) {
+                const parentCategory = categories.find(c =>
+                    c.subcategories?.some(s => s._id === selectedCategory._id)
+                );
+                return (
+                    <>
+                        {selectedCategory.name}
+                        {parentCategory && (
+                            <Typography variant="subtitle1" color="text.secondary">
+                                {parentCategory.name}
+                            </Typography>
+                        )}
+                    </>
+                );
+            }
+            return selectedCategory.name;
+        }
+        return gender ? `${gender.charAt(0).toUpperCase() + gender.slice(1)}` : 'Productos';
+    };
+
     return (
-        <Box sx={{
-            maxWidth: '1400px',
-            margin: '0 auto',
-            px: { xs: 2, sm: 3, md: 4 },
-            py: 4
-        }}>
-            <Grid container spacing={3}>
-                {/* Sidebar con filtros */}
-                <Grid item xs={12} md={3}>
-                    <Fade in={showFilters}>
-                        <Box sx={{
-                            display: showFilters ? 'block' : 'none',
-                            position: { xs: 'fixed', md: 'static' },
-                            top: 0,
-                            left: 0,
-                            width: { xs: '100%', sm: '300px', md: '100%' },
-                            height: { xs: '100vh', md: 'auto' },
-                            backgroundColor: 'background.paper',
-                            zIndex: 1000,
-                            p: { xs: 2, md: 0 },
-                            boxShadow: { xs: 24, md: 0 },
-                            overflowY: 'auto'
-                        }}>
-                            {isMobile && (
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                    <Typography variant="h6">Filtros</Typography>
-                                    <IconButton onClick={() => setShowFilters(false)}>
-                                        <CloseIcon />
-                                    </IconButton>
-                                </Box>
-                            )}
+        <>
+            <GlobalStyles
+                styles={(theme) => ({
+                    ':root': {
+                        '--Sidebar-width': '300px',
+                        '--SideNavigation-slideIn': '0',
+                    },
+                })}
+            />
 
-                            <FilterSidebar
-                                filters={filters}
-                                setFilters={setFilters}
-                                categories={categories}
-                                selectedGender={gender}
-                            />
-
-                            {hasActiveFilters() && (
-                                <Button
-                                    variant="outlined"
-                                    color="primary"
-                                    fullWidth
-                                    onClick={resetFilters}
-                                    sx={{ mt: 2 }}
-                                >
-                                    Limpiar filtros
-                                </Button>
-                            )}
-                        </Box>
-                    </Fade>
-                </Grid>
+            <Box sx={{
+                maxWidth: '100%',
+                margin: '0 auto',
+                py: 4,
+                display: 'flex',
+                position: 'relative'
+            }}>
+                {/* Contenedor para el sidebar con filtros */}
+                <Box
+                    sx={{
+                        position: { xs: 'static', md: 'relative' },
+                        width: { md: showFilters ? 'var(--Sidebar-width)' : '0px' },
+                        flexShrink: 0,
+                        overflow: 'hidden',
+                        transition: 'width 0.3s ease-in-out',
+                    }}
+                >
+                    <FilterSidebar
+                        filters={filters}
+                        setFilters={setFilters}
+                        categories={categories}
+                        subcategories={subcategories}
+                        selectedGender={gender}
+                        currentCategory={category}
+                        showFilters={showFilters}
+                        setShowFilters={setShowFilters}
+                        closeSidebar={closeSidebar}
+                    />
+                </Box>
 
                 {/* Contenido principal */}
-                <Grid item xs={12} md={showFilters ? 9 : 12}>
+                <Box
+                    component="main"
+                    sx={{
+                        flexGrow: 1,
+                        width: { xs: '100%', md: '100%' },
+                        ml: { xs: 0 },
+                        transition: 'margin-left 0.3s',
+                        px: { xs: 2, sm: 3, md: 4 },
+                    }}
+                >
                     {/* Encabezado y controles */}
                     <Box sx={{
                         display: 'flex',
@@ -233,7 +306,7 @@ const ProductList = () => {
                     }}>
                         <Box>
                             <Typography variant="h4" component="h1" fontWeight="bold">
-                                {selectedCategory?.name || 'Productos'}
+                                {getPageTitle()}
                                 <Box component="span" sx={{ color: 'text.secondary', ml: 1 }}>
                                     ({filteredProducts.length})
                                 </Box>
@@ -312,13 +385,35 @@ const ProductList = () => {
                             mt: { xs: 2, sm: 0 },
                             width: { xs: '100%', sm: 'auto' }
                         }}>
+                            {/* Botón de vista de productos */}
+                            <Tooltip title={gridView === 'grid4' ? "Ver 2 por fila" : "Ver 4 por fila"}>
+                                <IconButton
+                                    onClick={toggleGridView}
+                                    color="primary"
+                                    size="large"
+                                    sx={{
+                                        border: '1px solid rgba(0,0,0,0.12)',
+                                        borderRadius: '8px',
+                                        p: 1
+                                    }}
+                                >
+                                    {gridView === 'grid4' ? <ViewComfyIcon fontSize="medium" /> : <ViewModuleIcon fontSize="medium" />}
+                                </IconButton>
+                            </Tooltip>
+
                             <Button
-                                startIcon={showFilters ? <CloseIcon /> : <FilterListIcon />}
-                                onClick={() => setShowFilters(!showFilters)}
+                                startIcon={<FilterListIcon />}
+                                onClick={() => {
+                                    if (isMobile) {
+                                        openSidebar();
+                                    } else {
+                                        setShowFilters(!showFilters);
+                                    }
+                                }}
                                 color="inherit"
                                 sx={{ display: { xs: 'flex', md: 'none' }, minWidth: 'auto' }}
                             >
-                                {showFilters ? 'Ocultar filtros' : 'Filtros'}
+                                Filtros
                             </Button>
 
                             <Button
@@ -340,12 +435,26 @@ const ProductList = () => {
                         <Box sx={{ textAlign: 'center', py: 6 }}>
                             <Typography>Cargando productos...</Typography>
                         </Box>
+                    ) : filteredProducts.length > 0 ? (
+                        <ProductGrid products={filteredProducts} gridView={gridView} />
                     ) : (
-                        <ProductGrid products={filteredProducts} />
+                        <Box sx={{ textAlign: 'center', py: 6 }}>
+                            <Typography>No se encontraron productos con los filtros seleccionados</Typography>
+                            {hasActiveFilters() && (
+                                <Button
+                                    variant="outlined"
+                                    color="primary"
+                                    onClick={resetFilters}
+                                    sx={{ mt: 2 }}
+                                >
+                                    Limpiar filtros
+                                </Button>
+                            )}
+                        </Box>
                     )}
-                </Grid>
-            </Grid>
-        </Box>
+                </Box>
+            </Box>
+        </>
     );
 };
 
