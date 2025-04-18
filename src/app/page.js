@@ -6,11 +6,9 @@ import HomePage from "@/pages/home/Home"; // Importación correcta
 export default function Home() {
     return (
         <div>
-{/*            <Navbar />
+            <Navbar />
             <ProductList />
-            <FooterComponent />*/}
-
-            <HomePage/>
+            <FooterComponent />
         </div>
     );
 }
