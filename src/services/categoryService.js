@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api'; // Ajusta según tu configuración
+const API_URL = 'http://localhost:5000/api';
 
-// Obtener todas las categorías
+// Obtener todas las categorías con subcategorías anidadas
 const fetchCategories = async () => {
     try {
         const response = await axios.get(`${API_URL}/categories`);
@@ -35,7 +35,7 @@ const createCategory = async (name) => {
     }
 };
 
-// Actualizar una categoría existente
+// Actualizar una categoría
 const updateCategory = async (categoryId, name) => {
     try {
         const response = await axios.put(`${API_URL}/categories/${categoryId}`, { name });
@@ -46,7 +46,7 @@ const updateCategory = async (categoryId, name) => {
     }
 };
 
-// Eliminar una categoría
+// Eliminar una categoría (si existe esta funcionalidad)
 const deleteCategory = async (categoryId) => {
     try {
         await axios.delete(`${API_URL}/categories/${categoryId}`);
@@ -56,13 +56,13 @@ const deleteCategory = async (categoryId) => {
     }
 };
 
-// Cambiar el estado de descartado de una categoría
+// Cambiar el estado "descartado" de una categoría
 const toggleDiscardCategory = async (categoryId) => {
     try {
         const response = await axios.patch(`${API_URL}/categories/${categoryId}/toggle-discard`);
         return response.data;
     } catch (error) {
-        console.error(`Error al cambiar estado de descarte para categoría ${categoryId}:`, error);
+        console.error(`Error al descartar la categoría con ID ${categoryId}:`, error);
         throw error;
     }
 };
@@ -73,15 +73,19 @@ const getSubcategoriesByCategory = async (categoryId) => {
         const response = await axios.get(`${API_URL}/categories/${categoryId}/subcategories`);
         return response.data;
     } catch (error) {
-        console.error(`Error al obtener subcategorías para categoría ${categoryId}:`, error);
+        console.error(`Error al obtener subcategorías para la categoría ${categoryId}:`, error);
         throw error;
     }
 };
 
-// Crear una nueva subcategoría
-const createSubcategory = async (name, categoryId) => {
+// Crear subcategoría
+const createSubcategory = async (name, category_id, image_url_sub = '') => {
     try {
-        const response = await axios.post(`${API_URL}/subcategories`, { name, categoryId });
+        const response = await axios.post(`${API_URL}/subcategories`, {
+            name,
+            category_id,
+            image_url_sub
+        });
         return response.data;
     } catch (error) {
         console.error("Error al crear la subcategoría:", error);
@@ -89,10 +93,14 @@ const createSubcategory = async (name, categoryId) => {
     }
 };
 
-// Actualizar una subcategoría existente
-const updateSubcategory = async (subcategoryId, name, categoryId) => {
+// Actualizar subcategoría
+const updateSubcategory = async (subcategoryId, name, category_id, image_url_sub = '') => {
     try {
-        const response = await axios.put(`${API_URL}/subcategories/${subcategoryId}`, { name, categoryId });
+        const response = await axios.put(`${API_URL}/subcategories/${subcategoryId}`, {
+            name,
+            category_id,
+            image_url_sub
+        });
         return response.data;
     } catch (error) {
         console.error(`Error al actualizar la subcategoría con ID ${subcategoryId}:`, error);
@@ -100,13 +108,24 @@ const updateSubcategory = async (subcategoryId, name, categoryId) => {
     }
 };
 
-// Cambiar el estado de descartado de una subcategoría
+// Cambiar estado de descarte de subcategoría
 const toggleDiscardSubcategory = async (subcategoryId) => {
     try {
         const response = await axios.patch(`${API_URL}/subcategories/${subcategoryId}/toggle-discard`);
         return response.data;
     } catch (error) {
-        console.error(`Error al cambiar estado de descarte para subcategoría ${subcategoryId}:`, error);
+        console.error(`Error al descartar la subcategoría con ID ${subcategoryId}:`, error);
+        throw error;
+    }
+};
+
+// Obtener subcategoría por ID
+const fetchSubcategoryById = async (subcategoryId) => {
+    try {
+        const response = await axios.get(`${API_URL}/subcategories/${subcategoryId}`);
+        return response.data;
+    } catch (error) {
+        console.error(`Error al cargar la subcategoría con ID ${subcategoryId}:`, error);
         throw error;
     }
 };
@@ -121,5 +140,6 @@ export default {
     getSubcategoriesByCategory,
     createSubcategory,
     updateSubcategory,
-    toggleDiscardSubcategory
+    toggleDiscardSubcategory,
+    fetchSubcategoryById
 };
