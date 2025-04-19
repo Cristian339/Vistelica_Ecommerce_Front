@@ -13,6 +13,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useRouter } from 'next/navigation';
 import { isAdmin } from '@/services/authService';
 import  categoryService  from '@/services/categoryService';
+import Link from 'next/link';
 
 export default function Navbar() {
     const [open, setOpen] = useState(false);
@@ -21,6 +22,7 @@ export default function Navbar() {
     const [menuCategories, setMenuCategories] = useState([]);
     const isMobile = useMediaQuery('(max-width:768px)');
     const router = useRouter();
+
 
     useEffect(() => {
         // Usando el servicio de categorías con axios
@@ -47,6 +49,20 @@ export default function Navbar() {
             }
         } catch (error) {
             console.error("Error verificando permisos:", error);
+        }
+    };
+    const handleAccountClick = async () => {
+        try {
+            const rol = await isAdmin();
+            if (!rol) {
+                alert("Debes iniciar sesión para acceder a tu cuenta.");
+                router.push('/sign-up/SignUp');
+            } else {
+                router.push('/account/AccountLayout');
+            }
+        } catch (error) {
+            console.error("Error al verificar el login:", error);
+            alert("Ocurrió un error. Intenta nuevamente.");
         }
     };
 
@@ -110,12 +126,10 @@ export default function Navbar() {
 
                         {!isMobile && (
                             <>
-                                <IconButton
-                                    sx={{color: "#171717"}}
-                                    onClick={() => router.push('/account')}
-                                >
-                                    <AccountCircleIcon sx={{fontSize: "34px"}}/>
+                                <IconButton sx={{ color: "#171717" }} onClick={handleAccountClick}>
+                                    <AccountCircleIcon sx={{ fontSize: "34px" }} />
                                 </IconButton>
+
                                 <IconButton sx={{color: "#171717"}}>
                                     <FavoriteBorderIcon sx={{fontSize: "34px"}}/>
                                 </IconButton>

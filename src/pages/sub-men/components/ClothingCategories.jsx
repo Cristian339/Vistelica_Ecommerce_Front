@@ -16,7 +16,7 @@ const ClothingCategories = () => {
                     (cat) => cat.name.toLowerCase() === 'hombre'
                 );
 
-                if (hombreCategory && hombreCategory.subcategories) {
+                if (hombreCategory?.subcategories) {
                     const visibles = hombreCategory.subcategories.filter(
                         (sub) => !sub.discard
                     );
@@ -30,25 +30,16 @@ const ClothingCategories = () => {
         loadSubcategories();
     }, []);
 
-    const imageMap = {
-        'Camisetas': 'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb',
-        'Polo': 'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb',
-        'Pantalones': 'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb',
-        'Bermudas': 'https://images.unsplash.com/photo-1417325384643-aac51acc9e5d?q=75&fm=jpg&w=200&fit=max',
-        'Chandal': 'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb',
-        'Sudaderas': 'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb',
-    };
-
     return (
         <Grid container spacing={1} sx={{ backgroundColor: '#ffffff', padding: '20px 0' }}>
             {subcategories.map((subcat) => (
                 <Grid
                     item
                     key={subcat.subcategory_id}
-                    xs={12} // 1 por fila en móvil
-                    sm={6}  // 2 por fila en pantallas pequeñas (>600px)
-                    md={4}  // 3 por fila en pantallas medianas (>900px)
-                    lg={2}  // 6 por fila en pantallas grandes (>1200px)
+                    xs={12}
+                    sm={6}
+                    md={4}
+                    lg={2}
                 >
                     <div style={{
                         position: 'relative',
@@ -58,7 +49,7 @@ const ClothingCategories = () => {
                         cursor: 'pointer'
                     }}>
                         <img
-                            src={imageMap[subcat.name] || `https://via.placeholder.com/300x300?text=${subcat.name}`}
+                            src={subcat.image_url_sub}
                             alt={subcat.name}
                             style={{
                                 width: '100%',

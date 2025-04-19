@@ -9,6 +9,8 @@ import ProductDetail from "@/pages/product-detail/page";
 import MainLayoutSubM from "@/pages/sub-men/MainLayout-subM";
 import App from "@/pages/product-detail/page";
 import CartPage from "@/pages/cart/page";
+
+import AccountLayout from "@/pages/account/AccountLayout";
   // Ruta del componente HomePage
 
 export default function Home() {
