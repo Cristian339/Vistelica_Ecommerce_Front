@@ -24,8 +24,6 @@ const ShippingInfo = () => {
                 <AccordionDetails sx={{ p: 1 }}>
                     <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
                         <span style={{ fontWeight: 'bold', color: 'primary.main' }}>Envío Gratuito</span> en pedidos +50€.
-                        <br />
-                        Entrega en 2-3 días laborables.
                     </Typography>
                 </AccordionDetails>
             </Accordion>
