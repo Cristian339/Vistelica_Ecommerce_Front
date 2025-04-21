@@ -55,7 +55,6 @@ export default function Navbar() {
         try {
             const rol = await isAdmin();
             if (!rol) {
-                alert("Debes iniciar sesión para acceder a tu cuenta.");
                 router.push('/sign-up/SignUp');
             } else {
                 router.push('/account/AccountLayout');
