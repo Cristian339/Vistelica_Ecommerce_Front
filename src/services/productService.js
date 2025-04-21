@@ -4,22 +4,11 @@ import axios from 'axios';
 // URL base para las peticiones API
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-
-export const getProductById = async (productId) => {
-    try {
-        const response = await axios.get(`${API_URL}/products/${productId}`);
-        return response.data;
-    } catch (error) {
-        console.error("Error al obtener el producto:", error);
-        throw error;
-    }
-};
-
 /**
  * Obtiene todos los productos desde el servidor
  * @returns {Promise<Array>} Lista de productos
  */
-const getAll = async () => {
+export const getAll = async () => {
     try {
         const response = await axios.get(`${API_URL}/products`);
         return response.data;
@@ -37,7 +26,7 @@ const getAll = async () => {
  * @param {string} id - ID del producto
  * @returns {Promise<Object>} Datos del producto
  */
-const getById = async (id) => {
+export const getById = async (id) => {
     try {
         const response = await axios.get(`${API_URL}/products/${id}`);
         return response.data;
@@ -50,56 +39,15 @@ const getById = async (id) => {
     }
 };
 
-export const getSizesByProductName = async (productName) => {
-    try {
-        const response = await axios.get(`${API_URL}/products/${encodeURIComponent(productName)}/sizes`);
-        return response.data.sizes;
-    } catch (error) {
-        console.error("Error al obtener tallas por nombre de producto:", error);
-        throw error;
-    }
-};
-
-export const getColorsByProductAndSize = async (productName, size) => {
+/**
+ * Obtiene las reseñas de un producto por su nombre
+ * @param {number} productId - Nombre del producto
+ * @returns {Promise<Array>} Lista de reseñas
+ */
+export const getReviewsByProductName = async (productId) => {
     try {
         const response = await axios.get(
-            `${API_URL}/products/${encodeURIComponent(productName)}/${encodeURIComponent(size)}/colors`
-        );
-        return response.data.colors;
-    } catch (error) {
-        console.error("Error al obtener colores por producto y talla:", error);
-        throw error;
-    }
-};
-
-export const getProductByNameSizeAndColor = async (productName, size, color) => {
-    try {
-        const response = await axios.get(
-            `${API_URL}/products/${encodeURIComponent(productName)}/${encodeURIComponent(size)}/${encodeURIComponent(color)}`
-        );
-        return response.data;
-    } catch (error) {
-        console.error("Error al obtener producto por nombre, talla y color:", error);
-        throw error;
-    }
-};
-
-export const getProductVariantsByName = async (productName) => {
-    try {
-        const response = await axios.get(
-            `${API_URL}/products/${encodeURIComponent(productName)}/variants`
-        );
-        return response.data;
-    } catch (error) {
-        console.error("Error al obtener variantes de producto:", error);
-        throw error;
-    }
-};
-
-export const getReviewsByProductName = async (productName) => {
-    try {
-        const response = await axios.get(
-            `${API_URL}/reviews/product/name/${encodeURIComponent(productName)}`
+            `${API_URL}/reviews/product/${productId}`
         );
         return response.data;
     } catch (error) {
@@ -108,13 +56,25 @@ export const getReviewsByProductName = async (productName) => {
     }
 };
 
+export const getReviewsByProductId = async (productId) => {
+    try {
+        const response = await axios.get(
+            `${API_URL}/reviews/product/${productId}`
+        );
+        // Ajustamos para devolver solo el array de reseñas (response.data.data)
+        return response.data.data || [];
+    } catch (error) {
+        console.error("Error al obtener reseñas por ID de producto:", error);
+        throw error;
+    }
+};
+
+
+
+// Exportamos las funciones como un objeto para mantener compatibilidad
 export default {
-    getProductById,
-    getSizesByProductName,
-    getColorsByProductAndSize,
-    getProductByNameSizeAndColor,
-    getProductVariantsByName,
-    getReviewsByProductName,
     getAll,
-    getById
+    getById,
+    getReviewsByProductId,  // Cambiado de getReviewsByProductName
+    getReviewsByProductName // Mantenemos por compatibilidad si es necesario
 };

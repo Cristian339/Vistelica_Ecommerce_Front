@@ -1,6 +1,5 @@
 "use client";
-
-import React, { useState, useEffect } from 'react'; // Añadimos useEffect
+import React, { useState, useEffect } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import {vistelicaColors} from "@/pages/shared-theme/vistelicaColors";
 import {
@@ -8,10 +7,9 @@ import {
     Typography,
     Divider,
     Button,
-    Chip,
     Box,
     IconButton,
-    CircularProgress // Para el loading
+    CircularProgress
 } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -33,14 +31,14 @@ const ProductDetailContainer = styled('div')(({ theme }) => ({
 }));
 
 const CompactDetailBox = styled(Box)(({ theme }) => ({
-    fontFamily: "'Amethysta', serif", // Asegura que herede la fuente
-    '& .MuiTypography-root': { // Aplica a todos los Typography
+    fontFamily: "'Amethysta', serif",
+    '& .MuiTypography-root': {
         fontFamily: "'Amethysta', serif !important",
     },
-    '& .MuiButton-root': { // Aplica a los botones
+    '& .MuiButton-root': {
         fontFamily: "'Amethysta', serif !important",
     },
-    '& .MuiChip-label': { // Aplica a los chips
+    '& .MuiChip-label': {
         fontFamily: "'Amethysta', serif !important",
     },
     '& .MuiTypography-h4': {
@@ -59,14 +57,14 @@ const CompactDetailBox = styled(Box)(({ theme }) => ({
 }));
 
 const ProductDetail = ({
-                            product,
-                            availableSizes,
-                            availableColors,
-                            selectedSize,
-                            selectedColor,
-                            onSizeChange,
-                            onColorChange
-                        }) => {
+                           product,
+                           availableSizes,
+                           availableColors,
+                           selectedSize,
+                           selectedColor,
+                           onSizeChange,
+                           onColorChange
+                       }) => {
     const theme = useTheme();
     const [isFavorite, setIsFavorite] = useState(false);
     const [reviews, setReviews] = useState([]);
@@ -77,7 +75,8 @@ const ProductDetail = ({
         const fetchReviews = async () => {
             try {
                 setLoadingReviews(true);
-                const reviewsData = await productService.getReviewsByProductName(product.name);
+                // Cambiamos para usar getReviewsByProductId con el product_id
+                const reviewsData = await productService.getReviewsByProductId(product?.product_id);
                 setReviews(reviewsData);
             } catch (error) {
                 console.error("Error fetching reviews:", error);
@@ -87,17 +86,17 @@ const ProductDetail = ({
             }
         };
 
-        if (product?.name) {
+        if (product?.product_id) {  // Cambiado de product?.name
             fetchReviews();
         }
-    }, [product?.name]);
+    }, [product?.product_id]);
 
     return (
         <ProductDetailContainer>
             <Grid container alignItems="flex-start" color={vistelicaColors.background}>
                 {/* Galería */}
                 <Grid item xs={12} md={7} lg={8}>
-                    <ProductGallery images={product.images || []} />
+                    <ProductGallery images={[product.image_url]} />
                 </Grid>
 
                 {/* Detalles compactos */}
@@ -118,7 +117,6 @@ const ProductDetail = ({
                                 {product.name}
                             </Typography>
 
-                            {/* Icono de corazón */}
                             <IconButton
                                 aria-label="Añadir a lista de deseos"
                                 onClick={() => setIsFavorite(!isFavorite)}
@@ -143,18 +141,28 @@ const ProductDetail = ({
                             my: 1
                         }}>
                             {product.price}€
+                            {product.discount_percentage !== "0.00" && (
+                                <span style={{
+                                    fontSize: '0.8rem',
+                                    color: 'gray',
+                                    textDecoration: 'line-through',
+                                    marginLeft: '8px'
+                                }}>
+                                    {(parseFloat(product.price) / (1 - parseFloat(product.discount_percentage) / 100)).toFixed(2)}€
+                                </span>
+                            )}
                         </Typography>
 
                         <Divider sx={{ my: 2 }} />
 
-                        {/* Selector de tallas actualizado */}
+                        {/* Selector de tallas */}
                         <SizeSelector
                             sizes={availableSizes}
                             selectedSize={selectedSize}
                             onSizeChange={onSizeChange}
                         />
 
-                        {/* Nuevo selector de colores */}
+                        {/* Selector de colores */}
                         <ColorSelector
                             colors={availableColors}
                             selectedColor={selectedColor}
@@ -174,6 +182,14 @@ const ProductDetail = ({
                                 color="primary"
                                 size="medium"
                                 sx={{ flex: 1, maxWidth: 650 , background: vistelicaColors.primary}}
+                                onClick={() => {
+                                    console.log('Añadir al carrito:', {
+                                        productId: product.product_id,
+                                        size: selectedSize,
+                                        color: selectedColor,
+                                        quantity: 1
+                                    });
+                                }}
                             >
                                 Añadir al carrito <ShoppingCartIcon />
                             </Button>
@@ -183,8 +199,8 @@ const ProductDetail = ({
                                 sx={{
                                     flex: 1,
                                     maxWidth: 350,
-                                    color: vistelicaColors.primaryDark, // Color del texto
-                                    borderColor: vistelicaColors.primaryDark, // Color del borde
+                                    color: vistelicaColors.primaryDark,
+                                    borderColor: vistelicaColors.primaryDark,
                                 }}
                             >
                                 Compartir <ShareIcon />

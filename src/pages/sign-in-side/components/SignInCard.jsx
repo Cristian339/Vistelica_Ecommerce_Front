@@ -191,7 +191,7 @@ export default function SignInCard() {
 
             // Redirect after successful login
             setTimeout(() => {
-                router.push('/dashboard');
+                router.push('/product-detail/page');
             }, 1000);
 
         } catch (error) {
@@ -384,9 +384,9 @@ export default function SignInCard() {
                             )}
 
                             {loginError && (
-                                <Alert severity="error">
+                                <Adashboardlert severity="error">
                                     {loginError}
-                                </Alert>
+                                </Adashboardlert>
                             )}
 
                             {loginSuccess && (

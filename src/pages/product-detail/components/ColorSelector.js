@@ -1,4 +1,3 @@
-// ColorSelector.js
 "use client";
 
 import React from 'react';
@@ -19,7 +18,10 @@ const ColorSelector = ({ colors, selectedColor, onColorChange }) => {
             PURPLE: '#800080',
             BROWN: '#a52a2a',
             GRAY: '#808080',
-            PINK: '#ffc0cb'
+            PINK: '#ffc0cb',
+            BEIGE: '#f5f5dc',
+            GOLD: '#ffd700',
+            SILVER: '#c0c0c0'
         };
         return colorMap[color] || '#cccccc';
     };
