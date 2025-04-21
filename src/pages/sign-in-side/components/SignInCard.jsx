@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from 'react';
 import { loginUser } from '../../../services/authService';
 import Box from '@mui/material/Box';
@@ -23,6 +25,7 @@ import { vistelicaColors } from '../../shared-theme/vistelicaColors';
 import { useColorScheme } from '@mui/material/styles';
 import ColorModeSelect from '../../shared-theme/ColorModeSelect';
 import Content from './Content';
+import TermsAndConditions from "../../terms-conditions/TermsConditions";
 
 // Contenedor para pantalla completa
 const FullScreenContainer = styled(Box)(({ theme }) => {
@@ -154,6 +157,9 @@ export default function SignInCard() {
     const [open, setOpen] = React.useState(false);
     const router = useRouter();
 
+    // Estado para el modal de Términos y Condiciones
+    const [openTerms, setOpenTerms] = React.useState(false);
+
     // States for tracking login process
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [loginError, setLoginError] = React.useState('');
@@ -165,6 +171,20 @@ export default function SignInCard() {
 
     const handleClose = () => {
         setOpen(false);
+    };
+
+    // Funciones para manejar el modal de Términos y Condiciones
+    const handleOpenTerms = () => {
+        setOpenTerms(true);
+    };
+
+    const handleCloseTerms = () => {
+        setOpenTerms(false);
+    };
+
+    const handleAcceptTerms = () => {
+        console.log('Términos y condiciones aceptados');
+        handleCloseTerms();
     };
 
     const handleSubmit = async (event) => {
@@ -470,6 +490,17 @@ export default function SignInCard() {
                                 Sobre Nosotros
                             </StyledLink>
                             <StyledLink
+                                component="button"
+                                onClick={handleOpenTerms}
+                                variant="body2"
+                                sx={{
+                                    textDecoration: 'underline',
+                                    fontWeight: 600
+                                }}
+                            >
+                                Términos y condiciones
+                            </StyledLink>
+                            <StyledLink
                                 href="/privacy-policy/PrivacyPolicy"
                                 variant="body2"
                                 sx={{
@@ -477,7 +508,7 @@ export default function SignInCard() {
                                     fontWeight: 600
                                 }}
                             >
-                                Terminos y condiciones
+                                Política de privacidad
                             </StyledLink>
                         </Stack>
                     </Card>
@@ -497,6 +528,13 @@ export default function SignInCard() {
                     <Content />
                 </Grid>
             </Grid>
+
+            {/* Modal de Términos y Condiciones */}
+            <TermsAndConditions
+                open={openTerms}
+                handleClose={handleCloseTerms}
+                handleAccept={handleAcceptTerms}
+            />
         </FullScreenContainer>
     );
 }
