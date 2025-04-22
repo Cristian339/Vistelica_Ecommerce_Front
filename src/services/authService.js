@@ -1,4 +1,11 @@
 import axios from 'axios';
+import {
+    getAuth,
+    signInWithPopup,
+    getAdditionalUserInfo,
+    signOut
+} from "firebase/auth";
+import { auth, googleProvider, facebookProvider } from "./firebase";
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -64,14 +71,6 @@ export const loginUser = async (credentials) => {
     } catch (error) {
         throw error;
     }
-};
-
-/**
- * Cierra la sesión del usuario actual
- * @returns {void}
- */
-export const logout = () => {
-    localStorage.removeItem('token');
 };
 
 /**
@@ -194,5 +193,105 @@ export const resetPassword = async (token, code, newPassword) => {
         } else {
             throw new Error("Ha ocurrido un error al restablecer la contraseña. Inténtalo más tarde.");
         }
+    }
+};
+
+/**
+ * Inicia sesión con Google
+ * @returns {Promise} - Información del usuario, token e información adicional
+ */
+export const signInWithGoogle = async () => {
+    try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const additionalInfo = getAdditionalUserInfo(result);
+        const token = await result.user.getIdToken();
+
+        localStorage.setItem('firebaseToken', token);
+
+        return {
+            user: result.user,
+            token,
+            isNewUser: additionalInfo?.isNewUser || false,
+            profile: additionalInfo?.profile || {}
+        };
+    } catch (error) {
+        console.error("Error en login con Google:", error.code, error.message);
+        throw error;
+    }
+};
+
+/**
+ * Inicia sesión con Facebook
+ * @returns {Promise} - Información del usuario, token e información adicional
+ */
+export const signInWithFacebook = async () => {
+    try {
+        const result = await signInWithPopup(auth, facebookProvider);
+        const additionalInfo = getAdditionalUserInfo(result);
+        const token = await result.user.getIdToken();
+
+        localStorage.setItem('firebaseToken', token);
+
+        return {
+            user: result.user,
+            token,
+            isNewUser: additionalInfo?.isNewUser || false,
+            profile: additionalInfo?.profile || {}
+        };
+    } catch (error) {
+        console.error("Error en login con Facebook:", error.code, error.message);
+        throw error;
+    }
+};
+
+/**
+ * Cierra la sesión del usuario actual
+ * @returns {Promise<void>}
+ */
+export const logout = async () => {
+    try {
+        localStorage.removeItem('token');
+        localStorage.removeItem('firebaseToken');
+
+        // Cerrar sesión en Firebase si hay una sesión activa
+        if (auth.currentUser) {
+            await signOut(auth);
+        }
+    } catch (error) {
+        console.error("Error al cerrar sesión:", error);
+        throw error;
+    }
+};
+
+/**
+ * Registra un usuario de proveedor social en el backend
+ * @param {Object} userData - Datos del usuario autenticado con proveedor social
+ * @returns {Promise} - Respuesta del servidor
+ */
+export const registerSocialUser = async (userData) => {
+    try {
+        // Usar la instancia ya importada de auth
+        const currentUser = auth.currentUser;
+
+        if (!currentUser) {
+            throw new Error('No hay usuario autenticado');
+        }
+
+        const firebaseToken = await currentUser.getIdToken();
+
+        const response = await axios.post(`${API_URL}/social-auth`, userData, {
+            headers: {
+                'Authorization': `Bearer ${firebaseToken}`
+            }
+        });
+
+        if (response.data.token) {
+            localStorage.setItem('token', response.data.token);
+        }
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al registrar usuario social:", error);
+        throw error;
     }
 };

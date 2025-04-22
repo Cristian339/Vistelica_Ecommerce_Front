@@ -1,7 +1,17 @@
 "use client";
+// Importaciones de servicios
+import {
+    loginUser,
+    registerSocialUser,
+    signInWithGoogle,
+    signInWithFacebook
+} from '../../../services/authService';
 
+// Importaciones de React y hooks
 import * as React from 'react';
-import { loginUser } from '../../../services/authService';
+import { useRouter } from 'next/navigation';
+
+// Importaciones de componentes de Material-UI
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import MuiCard from '@mui/material/Card';
@@ -15,17 +25,20 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
+import Grid from '@mui/material/Grid';
 import { styled, useTheme } from '@mui/material/styles';
+import { useColorScheme } from '@mui/material/styles';
+
+// Importaciones de componentes personalizados
 import ForgotPassword from './ForgotPassword';
 import { GoogleIcon, FacebookIcon } from './CustomIcons';
-import { useRouter } from 'next/navigation';
-import Stack from "@mui/joy/Stack";
-import Grid from '@mui/material/Grid';
 import { vistelicaColors } from '../../shared-theme/vistelicaColors';
-import { useColorScheme } from '@mui/material/styles';
 import ColorModeSelect from '../../shared-theme/ColorModeSelect';
 import Content from './Content';
 import TermsAndConditions from "../../terms-conditions/TermsConditions";
+
+// Importaciones de Joy UI
+import Stack from "@mui/joy/Stack";
 
 // Contenedor para pantalla completa
 const FullScreenContainer = styled(Box)(({ theme }) => {
@@ -252,6 +265,94 @@ export default function SignInCard() {
         return isValid;
     };
 
+// Función para inicio de sesión con Google
+    const handleGoogleSignIn = async () => {
+        try {
+            setIsSubmitting(true);
+            setLoginError('');
+
+            // 1. Autenticar con Firebase
+            const result = await signInWithGoogle();
+            console.log('Login con Google exitoso:', result);
+
+            // 2. Preparar datos del usuario para el backend
+            const userData = {
+                name: result.user.displayName,
+                email: result.user.email,
+                photoURL: result.user.photoURL,
+                uid: result.user.uid,
+                provider: 'google',
+                isNewUser: result.isNewUser
+            };
+
+            // 3. Registrar en el backend usando el servicio
+            const backendResponse = await registerSocialUser(userData);
+            console.log('Usuario registrado en backend:', backendResponse);
+
+            setLoginSuccess(true);
+
+            // 4. Redirección según tipo de usuario
+            if (result.isNewUser) {
+                setTimeout(() => router.push('/complete-profile'), 1000);
+            } else {
+                setTimeout(() => router.push('/dashboard'), 1000);
+            }
+        } catch (error) {
+            console.error('Error al iniciar sesión con Google:', error);
+
+            if (error.code === 'auth/popup-closed-by-user') {
+                setLoginError('Has cerrado la ventana de inicio de sesión.');
+            } else {
+                setLoginError('No se pudo iniciar sesión con Google. Por favor, inténtalo de nuevo.');
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleFacebookSignIn = async () => {
+        try {
+            setIsSubmitting(true);
+            setLoginError('');
+
+            // 1. Autenticar con Firebase
+            const result = await signInWithFacebook();
+            console.log('Login con Facebook exitoso:', result);
+
+            // 2. Extraer datos relevantes del perfil
+            const userData = {
+                name: result.user.displayName,
+                email: result.user.email,
+                photoURL: result.user.photoURL,
+                uid: result.user.uid,
+                provider: 'facebook',
+                isNewUser: result.isNewUser,
+                profile: result.profile
+            };
+
+            // 3. Registrar en el backend
+            await registerSocialUser(userData);
+            setLoginSuccess(true);
+
+            // 4. Redirección según tipo de usuario
+            if (result.isNewUser) {
+                setTimeout(() => router.push('/complete-profile'), 1000);
+            } else {
+                setTimeout(() => router.push('/dashboard'), 1000);
+            }
+        } catch (error) {
+            console.error('Error al iniciar sesión con Facebook:', error);
+
+            if (error.code === 'auth/popup-closed-by-user') {
+                setLoginError('Has cerrado la ventana de inicio de sesión.');
+            } else {
+                setLoginError('No se pudo iniciar sesión con Facebook. Por favor, inténtalo de nuevo.');
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
         <FullScreenContainer>
             {/* Selector de modo con posición fija */}
@@ -441,7 +542,8 @@ export default function SignInCard() {
                             <Button
                                 fullWidth
                                 variant="outlined"
-                                onClick={() => alert('Iniciar sesión con Google')}
+                                onClick={handleGoogleSignIn}
+                                disabled={isSubmitting}
                                 startIcon={<GoogleIcon/>}
                                 sx={{
                                     borderColor: vistelicaColors.primary,
@@ -454,19 +556,18 @@ export default function SignInCard() {
                                     }
                                 }}
                             >
-                                Iniciar sesión con Google
+                                {isSubmitting ? "Conectando..." : "Iniciar sesión con Google"}
                             </Button>
 
                             <Button
                                 fullWidth
                                 variant="outlined"
-                                onClick={() => alert('Iniciar sesión con Facebook')}
+                                onClick={handleFacebookSignIn}
+                                disabled={isSubmitting}
                                 startIcon={<FacebookIcon/>}
                                 sx={{
                                     borderColor: vistelicaColors.primary,
-                                    color: mode === 'dark'
-                                        ? vistelicaColors.tertiary
-                                        : vistelicaColors.secondary,
+                                    color: mode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
                                     fontWeight: 600,
                                     '&:hover': {
                                         borderColor: vistelicaColors.primary,
@@ -475,7 +576,7 @@ export default function SignInCard() {
                                     }
                                 }}
                             >
-                                Iniciar sesión con Facebook
+                                {isSubmitting ? "Conectando..." : "Iniciar sesión con Facebook"}
                             </Button>
                         </Box>
                         <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
