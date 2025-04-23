@@ -30,7 +30,7 @@ export default function CartSummary() {
                     mb: 2
                 }}>
                     <Typography sx={{fontFamily: "'Amethysta', serif"}}>Subtotal</Typography>
-                    <Typography sx={{fontFamily: "'Amethysta', serif"}}>69.95€</Typography>
+                    <Typography sx={{fontFamily: "'Amethysta', serif"}}>19.99€</Typography>
                 </Box>
 
                 <Box sx={{
@@ -52,7 +52,7 @@ export default function CartSummary() {
                 mb: 3
             }}>
                 <Typography variant="h6" sx={{ fontWeight: 'bold',fontFamily: "'Amethysta', serif" }}>TOTAL</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', fontFamily: "'Amethysta', serif" }}>68.95€</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', fontFamily: "'Amethysta', serif" }}>24,18€</Typography>
             </Box>
 
             <Button

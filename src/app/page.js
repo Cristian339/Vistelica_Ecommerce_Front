@@ -7,7 +7,10 @@ import HomePage from "@/pages/home/Home";
 import AdminPage from "@/pages/admin/page";
 import ProductDetail from "@/pages/product-detail/page";
 import ProductList from "@/pages/product-list/productList";
-  // Ruta del componente HomePage
+import MainLayoutSubM from "@/pages/sub-men/MainLayout-subM";
+import App from "@/pages/product-detail/page";
+import CartPage from "@/pages/cart/page";
+
 
 export default function Home() {
     return (
@@ -23,5 +26,5 @@ export default function Home() {
             <ProductList />
             <FooterComponent />
         </div>
-*
-* */
+    );
+} */

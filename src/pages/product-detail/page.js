@@ -1,28 +1,76 @@
-import React from 'react';
+"use client";
+import React, { useEffect, useState } from 'react';
 import ProductDetail from './components/ProductDetail';
 import productService from "@/services/productService";
 
+function App({ params }) {
+    const [product, setProduct] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [selectedSize, setSelectedSize] = useState(null);
+    const [selectedColor, setSelectedColor] = useState(null);
 
-const product = {
-    name: "AMERICANA NAPOLI TWILL VERDE",
-    reference: "798025056_VER",
-    price: "68.95",
-    sizes: ["XS", "S", "M", "L", "X", "XL"],
-    images: [
-        'https://www.alvaromoreno.com/dw/image/v2/BGHK_PRD/on/demandware.static/-/Sites-amoreno_master_catalog/default/dw9880b7e5/images/hi-res/V25/Trajes/Traje_Napoli_Twill_769125056-356_VER/769125056_VER_1.jpg?sw=965&sh=1287',
-        '/products/769125056_VER_8.jpg',
-        '/products/798025056_VER_1.jpg',
-        '/products/any_other_image.jpg'
+    useEffect(() => {
+        const productId = '1';
 
-    ],
-    description: "Americana con un corte más relajado y con cuello y solapa ligeramente más ancho. Cierre central mediante dos botones, bolsillo de golf en el pecho, tres bolsillos de solapa en la cintura con una pequeña inclinación y punta con botones decorativas. Interior forrado.",
-    composition: "100% Lana. Lavar a mano o en seco. No usar lejía. Planchar a baja temperatura."
-};
+        const fetchProductData = async () => {
+            try {
+                // Obtener el producto por ID
+                const productData = await productService.getById(productId);
+                setProduct(productData);
 
-function App() {
+                // Seleccionar primera talla y color disponibles
+                if (productData.size?.length > 0) {
+                    setSelectedSize(productData.size[0]);
+                }
+                if (productData.colors?.length > 0) {
+                    setSelectedColor(productData.colors[0]);
+                }
+
+                setLoading(false);
+            } catch (err) {
+                console.error("Error fetching product:", err);
+                setError(err.message || "Error al cargar el producto");
+                setLoading(false);
+            }
+        };
+
+        fetchProductData();
+    }, ['1']);
+
+    // Función para manejar cambio de talla
+    const handleSizeChange = (size) => {
+        setSelectedSize(size);
+    };
+
+    // Función para manejar cambio de color
+    const handleColorChange = (color) => {
+        setSelectedColor(color);
+    };
+
+    if (loading) {
+        return <div>Cargando producto...</div>;
+    }
+
+    if (error) {
+        return <div>Error: {error}</div>;
+    }
+
+    if (!product) {
+        return <div>No se encontró el producto</div>;
+    }
+
     return (
         <div>
-            <ProductDetail product={product} />
+            <ProductDetail
+                product={product}
+                availableSizes={product.size || []}
+                availableColors={product.colors || []}
+                selectedSize={selectedSize}
+                selectedColor={selectedColor}
+                onSizeChange={handleSizeChange}
+                onColorChange={handleColorChange}
+            />
         </div>
     );
 }

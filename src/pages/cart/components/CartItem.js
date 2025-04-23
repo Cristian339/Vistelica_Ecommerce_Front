@@ -20,7 +20,7 @@ export default function CartItem() {
             {/* Imagen del producto */}
             <Avatar
                 variant="square"
-                src="https://www.alvaromoreno.com/dw/image/v2/BGHK_PRD/on/demandware.static/-/Sites-amoreno_master_catalog/default/dw51187420/images/hi-res/V25/Trajes/Traje_Napoli_Twill_769125056-356_VER/769125056_VER_2.jpg?sw=965&sh=1287"
+                src="https://res.cloudinary.com/dhyv4dpk2/image/upload/v1744976244/vistelica/productos/Hombre/Camisas/kmoglt9i8wj6fwuclcng.jpg"
                 sx={{
                     width: 80,
                     height: 80,
@@ -34,7 +34,7 @@ export default function CartItem() {
                 flexGrow: 1,
                 fontFamily: "'Amethysta', serif"
             }}>
-                AMERICANA NAPOLI TWIL VERDE
+                Camisa manga corta bordado
             </Typography>
 
             {/* Controles */}
