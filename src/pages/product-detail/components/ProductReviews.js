@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState } from 'react';
 import {
     Box,
@@ -9,22 +8,31 @@ import {
     Rating,
     Button,
     Grid,
-    Modal,
-    TextField,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
-    IconButton
+    IconButton,
+    Snackbar,
+    Alert
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import productService from '@/services/productService';
+import TextField from "@mui/material/TextField";
+import {getCurrentUser} from "@/services/authService";
 
-const ProductReviews = ({ reviews = [] }) => {
+const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
     const [openModal, setOpenModal] = useState(false);
     const [reviewText, setReviewText] = useState('');
     const [rating, setRating] = useState(0);
     const [submitting, setSubmitting] = useState(false);
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: '',
+        severity: 'success'
+    });
+
 
     const calculateStats = () => {
         if (reviews.length === 0) {
@@ -64,6 +72,15 @@ const ProductReviews = ({ reviews = [] }) => {
     const ratingStats = calculateStats();
 
     const handleOpenModal = () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setSnackbar({
+                open: true,
+                message: 'Debes iniciar sesión para dejar una reseña',
+                severity: 'warning'
+            });
+            return;
+        }
         setOpenModal(true);
     };
 
@@ -76,20 +93,34 @@ const ProductReviews = ({ reviews = [] }) => {
     const handleSubmitReview = async () => {
         setSubmitting(true);
         try {
-            // Aquí iría la llamada a la API para enviar la reseña
-            console.log('Enviando reseña:', { rating, reviewText });
-            // Simulamos un retraso de red
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            const user = await getCurrentUser();
+            await productService.createProductReview(productId, rating, reviewText,user.user_id);
 
-            // En una implementación real, aquí actualizarías las reviews
-            // con la nueva reseña recibida del backend
+            setSnackbar({
+                open: true,
+                message: 'Reseña enviada con éxito',
+                severity: 'success'
+            });
 
             handleCloseModal();
+
+            if (onReviewAdded) {
+                onReviewAdded();
+            }
         } catch (error) {
             console.error('Error al enviar la reseña:', error);
+            setSnackbar({
+                open: true,
+                message: error.response?.data?.message || error.message || 'Error al enviar la reseña',
+                severity: 'error'
+            });
         } finally {
             setSubmitting(false);
         }
+    };
+
+    const handleCloseSnackbar = () => {
+        setSnackbar(prev => ({ ...prev, open: false }));
     };
 
     const formatDate = (dateString) => {

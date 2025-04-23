@@ -71,11 +71,10 @@ const ProductDetail = ({
     const [loadingReviews, setLoadingReviews] = useState(true);
     const [errorReviews, setErrorReviews] = useState(null);
 
-    useEffect(() => {
+
         const fetchReviews = async () => {
             try {
                 setLoadingReviews(true);
-                // Cambiamos para usar getReviewsByProductId con el product_id
                 const reviewsData = await productService.getReviewsByProductId(product?.product_id);
                 setReviews(reviewsData);
             } catch (error) {
@@ -86,10 +85,15 @@ const ProductDetail = ({
             }
         };
 
-        if (product?.product_id) {  // Cambiado de product?.name
+        const handleReviewAdded = () => {
             fetchReviews();
-        }
-    }, [product?.product_id]);
+        };
+
+        useEffect(() => {
+            if (product?.product_id) {
+                fetchReviews();
+            }
+        }, [product?.product_id]);
 
     return (
         <ProductDetailContainer>
@@ -102,6 +106,7 @@ const ProductDetail = ({
                 {/* Detalles compactos */}
                 <Grid item xs={12} md={5} lg={4}>
                     <CompactDetailBox sx={{
+                        minWidth: '700px',
                         position: 'sticky',
                         top: theme.spacing(2),
                         paddingLeft: { md: 2 },
@@ -221,7 +226,11 @@ const ProductDetail = ({
                             {errorReviews}
                         </Typography>
                     ) : (
-                        <ProductReviews reviews={reviews} />
+                        <ProductReviews
+                            reviews={reviews}
+                            productId={product.product_id}
+                            onReviewAdded={handleReviewAdded}
+                        />
                     )}
                 </Grid>
             </Grid>

@@ -31,6 +31,7 @@ const ProductGallery = ({ images }) => {
             maxWidth: isMobile ? '100%' : '500px', // Reducido de 600px a 500px para mejor proporción
             margin: '0 auto',
             minHeight: '500px', // Altura mínima para evitar saltos de layout
+            minWidth: '550px',
             [theme.breakpoints.down('sm')]: {
                 minHeight: '400px' // Altura menor en móviles
             }

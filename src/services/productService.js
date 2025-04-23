@@ -69,12 +69,39 @@ export const getReviewsByProductId = async (productId) => {
     }
 };
 
+export const createProductReview = async (productId, rating, reviewText, userid) => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Debes iniciar sesión para dejar una reseña');
+        }
 
+        const response = await axios.post(
+            `${API_URL}/review`,
+            {
+                user_id: userid,
+                product_id: productId,
+                rating,
+                review_text: reviewText
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error al crear reseña:", error);
+        throw error;
+    }
+};
 
 // Exportamos las funciones como un objeto para mantener compatibilidad
 export default {
     getAll,
     getById,
-    getReviewsByProductId,  // Cambiado de getReviewsByProductName
-    getReviewsByProductName // Mantenemos por compatibilidad si es necesario
+    getReviewsByProductId,
+    getReviewsByProductName,
+    createProductReview
 };

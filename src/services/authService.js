@@ -42,6 +42,8 @@ export const loginUser = async (credentials) => {
 
         if (response.data.token) {
             localStorage.setItem('token', response.data.token);
+            localStorage.removeItem('sessionId'); // Limpiar sessionId de guest
+            localStorage.removeItem('sessionInitialized'); // Permitir reinicialización si needed
         }
 
         return response.data;

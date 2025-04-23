@@ -191,7 +191,7 @@ export default function SignInCard() {
 
             // Redirect after successful login
             setTimeout(() => {
-                router.push('/product-detail/page');
+                router.push('/home/Home');
             }, 1000);
 
         } catch (error) {
