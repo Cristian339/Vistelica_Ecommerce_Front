@@ -40,7 +40,7 @@ const SidebarMenu = ({ username }) => {
             <Divider sx={{ mb: 2 }} />
 
             <List disablePadding>
-                <ListItem button selected sx={{ mb: 1, borderRadius: 1 }} onClick={() => handleNavigation('/account/AcountInfo')}>
+                <ListItem button selected sx={{ mb: 1, borderRadius: 1 }} onClick={() => handleNavigation('/account/AccountLayout')}>
                     <ListItemIcon sx={{ minWidth: 40 }}>
                         <PersonOutlineIcon />
                     </ListItemIcon>
