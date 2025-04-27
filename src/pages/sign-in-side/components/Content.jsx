@@ -14,7 +14,7 @@ const items = [
         icon: <SettingsSuggestRoundedIcon sx={{ color: vistelicaColors.primary }} />,
         title: 'Estilo adaptable',
         description:
-            'Nuestra ropa se ajusta sin esfuerzo a tu estilo de vida, brindando comodidad y versatilidad en cada ocasión.\n.',
+            'Nuestra ropa se ajusta sin esfuerzo a tu estilo de vida, brindando comodidad y versatilidad en cada ocasión.\n',
     },
     {
         icon: <ConstructionRoundedIcon sx={{ color: vistelicaColors.primary }} />,

@@ -1,6 +1,5 @@
 "use client";
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import {vistelicaColors} from "@/pages/shared-theme/vistelicaColors";
 import {
@@ -8,16 +7,21 @@ import {
     Typography,
     Divider,
     Button,
-    Chip,
-    Box
+    Box,
+    IconButton,
+    CircularProgress
 } from '@mui/material';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import ProductGallery from './ProductGallery';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import ShareIcon from '@mui/icons-material/Share';
 import SizeSelector from './SizeSelector';
+import ColorSelector from './ColorSelector';
 import ProductInfo from './ProductInfo';
-import PromotionBanner from './PromotionBanner';
 import ShippingInfo from './ShippingInfo';
-import CompositionCare from './CompositionCare';
 import ProductReviews from './ProductReviews';
+import productService from '@/services/productService';
 
 const ProductDetailContainer = styled('div')(({ theme }) => ({
     padding: theme.spacing(2),
@@ -27,14 +31,14 @@ const ProductDetailContainer = styled('div')(({ theme }) => ({
 }));
 
 const CompactDetailBox = styled(Box)(({ theme }) => ({
-    fontFamily: "'Amethysta', serif", // Asegura que herede la fuente
-    '& .MuiTypography-root': { // Aplica a todos los Typography
+    fontFamily: "'Amethysta', serif",
+    '& .MuiTypography-root': {
         fontFamily: "'Amethysta', serif !important",
     },
-    '& .MuiButton-root': { // Aplica a los botones
+    '& .MuiButton-root': {
         fontFamily: "'Amethysta', serif !important",
     },
-    '& .MuiChip-label': { // Aplica a los chips
+    '& .MuiChip-label': {
         fontFamily: "'Amethysta', serif !important",
     },
     '& .MuiTypography-h4': {
@@ -52,64 +56,122 @@ const CompactDetailBox = styled(Box)(({ theme }) => ({
     },
 }));
 
-const ProductDetail = ({ product }) => {
+const ProductDetail = ({
+                           product,
+                           availableSizes,
+                           availableColors,
+                           selectedSize,
+                           selectedColor,
+                           onSizeChange,
+                           onColorChange
+                       }) => {
     const theme = useTheme();
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [reviews, setReviews] = useState([]);
+    const [loadingReviews, setLoadingReviews] = useState(true);
+    const [errorReviews, setErrorReviews] = useState(null);
 
-    const reviews = [
-        {
-            user: "Ana Pérez",
-            rating: 5,
-            comment: "El producto es exactamente como se muestra en las fotos. La talla es perfecta y la calidad excelente.",
-            date: "15/03/2023"
-        },
-        {
-            user: "Carlos Ruiz",
-            rating: 4,
-            comment: "Muy contento con la compra, aunque la talla viene un poco justa. Recomendaría tallar una talla más.",
-            date: "02/02/2023"
-        }
-    ];
+
+        const fetchReviews = async () => {
+            try {
+                setLoadingReviews(true);
+                const reviewsData = await productService.getReviewsByProductId(product?.product_id);
+                setReviews(reviewsData);
+            } catch (error) {
+                console.error("Error fetching reviews:", error);
+                setErrorReviews(error.message || "Error al cargar las reseñas");
+            } finally {
+                setLoadingReviews(false);
+            }
+        };
+
+        const handleReviewAdded = () => {
+            fetchReviews();
+        };
+
+        useEffect(() => {
+            if (product?.product_id) {
+                fetchReviews();
+            }
+        }, [product?.product_id]);
 
     return (
         <ProductDetailContainer>
             <Grid container alignItems="flex-start" color={vistelicaColors.background}>
-                {/* Galería - Ocupa más espacio */}
+                {/* Galería */}
                 <Grid item xs={12} md={7} lg={8}>
-                    <Box sx={{ height: '100%' }}> {/* Añade este Box */}
-                        <ProductGallery images={product.images} />
-                    </Box>
+                    <ProductGallery images={[product.image_url]} />
                 </Grid>
 
                 {/* Detalles compactos */}
                 <Grid item xs={12} md={5} lg={4}>
                     <CompactDetailBox sx={{
+                        minWidth: '700px',
                         position: 'sticky',
                         top: theme.spacing(2),
                         paddingLeft: { md: 2 },
-                        maxHeight: { md: '100vh' }, // Limita la altura máxima
-                        overflowY: 'auto' // Añade scroll si es necesario
+                        maxHeight: { md: '100vh' },
+                        overflowY: 'auto'
                     }}>
-                        <Typography variant="h4" component="h1" gutterBottom>
-                            {product.name}
-                        </Typography>
+                        <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between'
+                        }}>
+                            <Typography variant="h4" component="h1" gutterBottom>
+                                {product.name}
+                            </Typography>
 
+                            <IconButton
+                                aria-label="Añadir a lista de deseos"
+                                onClick={() => setIsFavorite(!isFavorite)}
+                                sx={{
+                                    padding: '8px',
+                                    color: isFavorite ? 'black' : 'inherit',
+                                    '&:hover': {
+                                        color: isFavorite ? 'black' : vistelicaColors.primary
+                                    }
+                                }}
+                            >
+                                {isFavorite ? (
+                                    <FavoriteIcon fontSize="medium" />
+                                ) : (
+                                    <FavoriteBorderIcon fontSize="medium" />
+                                )}
+                            </IconButton>
+                        </Box>
 
                         <Typography variant="h3" sx={{
                             color: vistelicaColors.primary,
                             my: 1
                         }}>
                             {product.price}€
+                            {product.discount_percentage !== "0.00" && (
+                                <span style={{
+                                    fontSize: '0.8rem',
+                                    color: 'gray',
+                                    textDecoration: 'line-through',
+                                    marginLeft: '8px'
+                                }}>
+                                    {(parseFloat(product.price) / (1 - parseFloat(product.discount_percentage) / 100)).toFixed(2)}€
+                                </span>
+                            )}
                         </Typography>
-
-                        <Chip label="Disponible" size="small" sx={{ mb: 1, background: vistelicaColors.info, color: vistelicaColors.tertiary }} />
 
                         <Divider sx={{ my: 2 }} />
 
-                        <SizeSelector sizes={product.sizes} />
+                        {/* Selector de tallas */}
+                        <SizeSelector
+                            sizes={availableSizes}
+                            selectedSize={selectedSize}
+                            onSizeChange={onSizeChange}
+                        />
 
-                        <PromotionBanner
-                            offer="TRAJE + CAMISA + CORBATA + PAÑUELO"
-                            price="148,95€"
+                        {/* Selector de colores */}
+                        <ColorSelector
+                            colors={availableColors}
+                            selectedColor={selectedColor}
+                            onColorChange={onColorChange}
                         />
 
                         <ProductInfo description={product.description} sx={{maxWidth: 90}}/>
@@ -124,31 +186,52 @@ const ProductDetail = ({ product }) => {
                                 variant="contained"
                                 color="primary"
                                 size="medium"
-                                sx={{ flex: 1, maxWidth: 500 , background: vistelicaColors.primary}}
+                                sx={{ flex: 1, maxWidth: 650 , background: vistelicaColors.primary}}
+                                onClick={() => {
+                                    console.log('Añadir al carrito:', {
+                                        productId: product.product_id,
+                                        size: selectedSize,
+                                        color: selectedColor,
+                                        quantity: 1
+                                    });
+                                }}
                             >
-                                Añadir al carrito
+                                Añadir al carrito <ShoppingCartIcon />
                             </Button>
                             <Button
                                 variant="outlined"
                                 size="medium"
                                 sx={{
                                     flex: 1,
-                                    maxWidth: 500,
-                                    color: vistelicaColors.primaryDark, // Color del texto
-                                    borderColor: vistelicaColors.primaryDark, // Color del borde
+                                    maxWidth: 350,
+                                    color: vistelicaColors.primaryDark,
+                                    borderColor: vistelicaColors.primaryDark,
                                 }}
                             >
-                                Comprar
+                                Compartir <ShareIcon />
                             </Button>
                         </Box>
 
                         <ShippingInfo />
-                        <CompositionCare composition={product.composition} />
                     </CompactDetailBox>
                 </Grid>
 
                 <Grid item xs={12} sx={{ mt: { xs: 2, md: 0 } , width: '100%'}}>
-                    <ProductReviews reviews={reviews} />
+                    {loadingReviews ? (
+                        <Box display="flex" justifyContent="center" py={4}>
+                            <CircularProgress />
+                        </Box>
+                    ) : errorReviews ? (
+                        <Typography color="error" textAlign="center" py={2}>
+                            {errorReviews}
+                        </Typography>
+                    ) : (
+                        <ProductReviews
+                            reviews={reviews}
+                            productId={product.product_id}
+                            onReviewAdded={handleReviewAdded}
+                        />
+                    )}
                 </Grid>
             </Grid>
         </ProductDetailContainer>

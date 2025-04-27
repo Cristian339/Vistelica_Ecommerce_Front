@@ -1,12 +1,11 @@
+// SizeSelector.js actualizado
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button, Typography, Grid, Box } from '@mui/material';
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 
-const SizeSelector = ({ sizes }) => {
-    const [selectedSize, setSelectedSize] = useState(null);
-
+const SizeSelector = ({ sizes, selectedSize, onSizeChange }) => {
     return (
         <Box mb={2}>
             <Typography variant="subtitle2" gutterBottom sx={{ fontSize: '0.85rem' }}>
@@ -22,25 +21,22 @@ const SizeSelector = ({ sizes }) => {
                                 minWidth: '32px',
                                 minHeight: '32px',
                                 p: 0,
-                                // Estado normal
-                                color: vistelicaColors.primary, // Texto dorado
-                                borderColor: vistelicaColors.primary, // Borde dorado
-                                backgroundColor: vistelicaColors.tertiary, // Fondo blanco
-                                // Estado seleccionado
+                                color: vistelicaColors.primary,
+                                borderColor: vistelicaColors.primary,
+                                backgroundColor: vistelicaColors.tertiary,
                                 ...(selectedSize === size && {
-                                    color: vistelicaColors.tertiary, // Texto blanco
-                                    backgroundColor: vistelicaColors.primary, // Fondo dorado
-                                    borderColor: vistelicaColors.primary, // Borde dorado
+                                    color: vistelicaColors.tertiary,
+                                    backgroundColor: vistelicaColors.primary,
+                                    borderColor: vistelicaColors.primary,
                                 }),
-                                // Hover
                                 '&:hover': {
-                                    borderColor: vistelicaColors.primaryDark, // Borde dorado oscuro
+                                    borderColor: vistelicaColors.primaryDark,
                                     backgroundColor: selectedSize === size
-                                        ? vistelicaColors.primaryDark // Si está seleccionado, fondo dorado oscuro al hover
-                                        : 'rgba(228, 176, 2, 0.08)' // Si no está seleccionado, fondo muy claro
+                                        ? vistelicaColors.primaryDark
+                                        : 'rgba(228, 176, 2, 0.08)'
                                 }
                             }}
-                            onClick={() => setSelectedSize(size)}
+                            onClick={() => onSizeChange(size)}
                         >
                             {size}
                         </Button>
