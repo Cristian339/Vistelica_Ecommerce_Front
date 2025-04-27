@@ -13,6 +13,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useRouter } from 'next/navigation';
 import { isAdmin } from '@/services/authService';
 import  categoryService  from '@/services/categoryService';
+import { getToken } from '@/services/authService';
 import Link from 'next/link';
 
 export default function Navbar() {
@@ -53,9 +54,9 @@ export default function Navbar() {
     };
     const handleAccountClick = async () => {
         try {
-            const rol = await isAdmin();
-            if (!rol) {
-                router.push('/sign-up/SignUp');
+            const token = getToken();
+            if (!token) {
+                router.push('/sign-in-side/Sign-in-side');
             } else {
                 router.push('/account/AccountLayout');
             }

@@ -10,24 +10,25 @@ import {
 } from '@mui/material';
 import { getUserProfile } from '@/services/profileService'; // Asegúrate de que la ruta sea correcta
 
-const AccountInfo = ({ userId }) => {
-    const [userData, setUserData] = useState(null);
-    const [loading, setLoading] = useState(true);
+const AccountInfo = ({ userData }) => {
+    const [loading, setLoading] = useState(!userData);
 
     useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const data = await getUserProfile(userId);
-                setUserData(data);
-            } catch (error) {
-                console.error("Error al obtener el perfil:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+        if (!userData) {
+            const fetchProfile = async () => {
+                try {
+                    const data = await getUserProfile();
+                    setUserData(data);
+                } catch (error) {
+                    console.error("Error al obtener el perfil:", error);
+                } finally {
+                    setLoading(false);
+                }
+            };
 
-        fetchProfile();
-    }, [userId]);
+            fetchProfile();
+        }
+    }, [userData]);
 
     if (loading) return <CircularProgress />;
 
