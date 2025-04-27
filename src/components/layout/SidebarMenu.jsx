@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/router';
 import {
     Typography,
     Divider,
@@ -25,6 +26,12 @@ import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
 
 const SidebarMenu = ({ username }) => {
+    const router = useRouter();
+
+    const handleNavigation = (path) => {
+        router.push(path);  // Navegar a la ruta proporcionada
+    };
+
     return (
         <Paper elevation={0} sx={{ border: '1px solid #e0e0e0', p: 2, height: '100%' }}>
             <Typography variant="h5" component="h1" fontWeight="500" sx={{ mb: 3 }}>
@@ -33,14 +40,14 @@ const SidebarMenu = ({ username }) => {
             <Divider sx={{ mb: 2 }} />
 
             <List disablePadding>
-                <ListItem button selected sx={{ mb: 1, borderRadius: 1 }}>
+                <ListItem button selected sx={{ mb: 1, borderRadius: 1 }} onClick={() => handleNavigation('/account/AcountInfo')}>
                     <ListItemIcon sx={{ minWidth: 40 }}>
                         <PersonOutlineIcon />
                     </ListItemIcon>
                     <ListItemText primary="Mi cuenta" primaryTypographyProps={{ fontWeight: 500 }} />
                 </ListItem>
 
-                <ListItem button sx={{ mb: 1, borderRadius: 1 }}>
+                <ListItem button sx={{ mb: 1, borderRadius: 1 }} onClick={() => handleNavigation('/account/AccountInfoEditable')}>
                     <ListItemIcon sx={{ minWidth: 40 }}>
                         <EditIcon />
                     </ListItemIcon>

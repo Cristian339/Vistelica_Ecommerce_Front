@@ -17,4 +17,19 @@ export const getUserProfile = async () => {
         throw error; // Asegúrate de manejar el error en el componente
     }
 };
-
+// Modificar perfil del usuario
+export const updateUserProfile = async (profileData) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.put(`${API_URL}/profile`, profileData, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        return response.data; // Devuelve el perfil actualizado
+    } catch (error) {
+        console.error('Error updating user profile:', error.response || error);
+        throw error;
+    }
+};

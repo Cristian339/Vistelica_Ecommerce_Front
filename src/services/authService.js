@@ -299,7 +299,25 @@ export const registerSocialUser = async (userData) => {
 };
 export const getToken = () => {
     if (typeof window !== 'undefined') {
-        return localStorage.getItem('token');
+        const token = localStorage.getItem('token');
+        if (!token) return null;
+
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1])); // Decodifica la parte del payload del JWT
+            const currentTime = Math.floor(Date.now() / 1000); // tiempo actual en segundos
+
+            if (payload.exp && payload.exp < currentTime) {
+                // El token ha expirado
+                localStorage.removeItem('token'); // Borra el token viejo
+                return null;
+            }
+
+            return token;
+        } catch (error) {
+            console.error('Error decoding token:', error);
+            localStorage.removeItem('token'); // Si falla la decodificación, lo borramos
+            return null;
+        }
     }
     return null;
 };
