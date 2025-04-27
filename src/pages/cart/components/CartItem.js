@@ -5,8 +5,13 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-export default function CartItem() {
-    const [quantity, setQuantity] = useState(1);
+export default function CartItem({ item = {} }) {
+    const [quantity, setQuantity] = useState(item.quantity || 1);
+
+    // Usar la imageUrl del producto si está disponible o una imagen placeholder
+    const imageUrl = item.imageUrl || item.image || '/images/placeholder-product.jpg';
+    const productName = item.name || 'Producto';
+    const productPrice = item.price || 0;
 
     return (
         <Box sx={{
@@ -15,12 +20,13 @@ export default function CartItem() {
             py: 2,
             borderBottom: '1px solid #eee',
             gap: 3,
-            minWidth: 1000
+            minWidth: { xs: '100%', md: 1000 }
         }}>
             {/* Imagen del producto */}
             <Avatar
                 variant="square"
-                src="https://www.alvaromoreno.com/dw/image/v2/BGHK_PRD/on/demandware.static/-/Sites-amoreno_master_catalog/default/dw51187420/images/hi-res/V25/Trajes/Traje_Napoli_Twill_769125056-356_VER/769125056_VER_2.jpg?sw=965&sh=1287"
+                src={imageUrl}
+                alt={productName}
                 sx={{
                     width: 80,
                     height: 80,
@@ -29,13 +35,18 @@ export default function CartItem() {
             />
 
             {/* Nombre del producto */}
-            <Typography variant="body1" sx={{
-                fontWeight: 500,
-                flexGrow: 1,
-                fontFamily: "'Amethysta', serif"
-            }}>
-                AMERICANA NAPOLI TWIL VERDE
-            </Typography>
+            <Box sx={{ flexGrow: 1 }}>
+                <Typography variant="body1" sx={{
+                    fontWeight: 500,
+                    fontFamily: "'Amethysta', serif"
+                }}>
+                    {productName}
+                </Typography>
+
+                <Typography variant="body2" color="primary" fontWeight="bold">
+                    {parseFloat(productPrice).toFixed(2)}€
+                </Typography>
+            </Box>
 
             {/* Controles */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

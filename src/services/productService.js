@@ -38,9 +38,67 @@ const getById = async (id) => {
     }
 };
 
+/**
+ * Obtiene productos filtrados por categoría y subcategoría
+ * @param {string} categoryId - ID de la categoría
+ * @param {string} subcategoryId - ID de la subcategoría
+ * @returns {Promise<Array>} Lista de productos filtrados
+ */
+const getByCategoryAndSubcategory = async (categoryId, subcategoryId) => {
+    try {
+        const response = await axios.get(`${API_URL}/products/category/${categoryId}/subcategory/${subcategoryId}`);
+        return response.data;
+    } catch (error) {
+        console.error(`Error al obtener productos por categoría ${categoryId} y subcategoría ${subcategoryId}:`, error);
+        throw new Error(
+            error.response?.data?.message ||
+            'No se pudieron cargar los productos para esta categoría y subcategoría.'
+        );
+    }
+};
+
+/**
+ * Obtiene todas las imágenes principales de los productos
+ * @returns {Promise<Array>} Lista de imágenes principales con sus IDs de producto
+ */
+const getMainProductImages = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/products/images/main`);
+        console.log("Respuesta de imágenes principales:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener imágenes principales de productos:', error);
+        throw new Error(
+            error.response?.data?.message ||
+            'No se pudieron cargar las imágenes de los productos.'
+        );
+    }
+};
+
+/**
+ * Obtiene la imagen principal de un producto específico
+ * @param {string} productId - ID del producto
+ * @returns {Promise<Object>} Datos de la imagen principal
+ */
+const getMainImageByProductId = async (productId) => {
+    try {
+        const response = await axios.get(`${API_URL}/products/${productId}/image/main`);
+        return response.data;
+    } catch (error) {
+        console.error(`Error al obtener imagen principal del producto ${productId}:`, error);
+        throw new Error(
+            error.response?.data?.message ||
+            'No se pudo cargar la imagen del producto.'
+        );
+    }
+};
+
 const productService = {
     getAll,
-    getById
+    getById,
+    getByCategoryAndSubcategory,
+    getMainProductImages,
+    getMainImageByProductId
 };
 
 export default productService;

@@ -1,25 +1,77 @@
-import React from 'react';
+"use client";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router'; // o usa useParams si estás con React Router
 import ProductDetail from './components/ProductDetail';
 import productService from "@/services/productService";
+import { Box, CircularProgress, Typography } from '@mui/material';
 
+function ProductDetailPage() {
+    const router = useRouter();
+    const { productId } = router.query; // Obtiene el ID del producto de la URL
 
-const product = {
-    name: "AMERICANA NAPOLI TWILL VERDE",
-    reference: "798025056_VER",
-    price: "68.95",
-    sizes: ["XS", "S", "M", "L", "X", "XL"],
-    images: [
-        'https://www.alvaromoreno.com/dw/image/v2/BGHK_PRD/on/demandware.static/-/Sites-amoreno_master_catalog/default/dw9880b7e5/images/hi-res/V25/Trajes/Traje_Napoli_Twill_769125056-356_VER/769125056_VER_1.jpg?sw=965&sh=1287',
-        '/products/769125056_VER_8.jpg',
-        '/products/798025056_VER_1.jpg',
-        '/products/any_other_image.jpg'
+    const [product, setProduct] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    ],
-    description: "Americana con un corte más relajado y con cuello y solapa ligeramente más ancho. Cierre central mediante dos botones, bolsillo de golf en el pecho, tres bolsillos de solapa en la cintura con una pequeña inclinación y punta con botones decorativas. Interior forrado.",
-    composition: "100% Lana. Lavar a mano o en seco. No usar lejía. Planchar a baja temperatura."
-};
+    useEffect(() => {
+        const fetchProductData = async () => {
+            if (!productId) return;
 
-function App() {
+            try {
+                setLoading(true);
+
+                // 1. Obtener los detalles del producto
+                const productData = await productService.getById(productId);
+
+                // 2. Obtener la imagen principal del producto
+                const imageData = await productService.getMainImageByProductId(productId);
+
+                // 3. Combinar los datos y formatearlos para el componente ProductDetail
+                const formattedProduct = {
+                    ...productData,
+                    images: imageData ? [imageData.image_url] : ['/images/placeholder-product.jpg']
+                };
+
+                console.log("Producto cargado:", formattedProduct);
+                setProduct(formattedProduct);
+            } catch (err) {
+                console.error("Error al cargar el producto:", err);
+                setError(err.message || "No se pudo cargar el producto");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProductData();
+    }, [productId]);
+
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (error) {
+        return (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography color="error">{error}</Typography>
+                <Typography sx={{ mt: 2 }}>
+                    No se pudo cargar la información del producto.
+                </Typography>
+            </Box>
+        );
+    }
+
+    if (!product) {
+        return (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography>Producto no encontrado</Typography>
+            </Box>
+        );
+    }
+
     return (
         <div>
             <ProductDetail product={product} />
@@ -27,4 +79,4 @@ function App() {
     );
 }
 
-export default App;
+export default ProductDetailPage;

@@ -4,8 +4,10 @@ import Link from 'next/link';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 
-// Estilos
-const ProductCardContainer = styled(Box)(({ theme, largeView }) => ({
+// Corrección de estilos para eliminar la advertencia de largeView
+const ProductCardContainer = styled(Box, {
+    shouldForwardProp: (prop) => prop !== 'largeView'
+})(({ theme, largeView }) => ({
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
@@ -25,7 +27,9 @@ const ProductCardContainer = styled(Box)(({ theme, largeView }) => ({
     }
 }));
 
-const ImageContainer = styled(Box)(({ largeView }) => ({
+const ImageContainer = styled(Box, {
+    shouldForwardProp: (prop) => prop !== 'largeView'
+})(({ largeView }) => ({
     position: 'relative',
     width: '100%',
     paddingTop: largeView ? '100%' : '133%', // Más cuadrado en vista grande
@@ -33,15 +37,18 @@ const ImageContainer = styled(Box)(({ largeView }) => ({
     borderRadius: '8px 8px 0 0',
 }));
 
-const ProductImage = styled('img')({
+const ProductImage = styled('img', {
+    shouldForwardProp: (prop) => prop !== 'largeView'
+})(({ largeView }) => ({
     position: 'absolute',
     top: 0,
     left: 0,
     width: '100%',
     height: '100%',
-    objectFit: 'cover',
+    objectFit: largeView ? 'cover' : 'contain',
     transition: 'transform 0.5s ease',
-});
+    backgroundColor: largeView ? 'transparent' : '#f9f9f9', // Fondo solo para contain
+}));
 
 const FavoriteButton = styled(IconButton)(({ theme }) => ({
     position: 'absolute',
@@ -62,12 +69,21 @@ const FavoriteButton = styled(IconButton)(({ theme }) => ({
 
 const ProductCard = ({ product, largeView = false }) => {
     const [isFavorite, setIsFavorite] = useState(false);
+    const [imageError, setImageError] = useState(false);
 
     const toggleFavorite = (e) => {
         e.preventDefault();
         e.stopPropagation();
         setIsFavorite(!isFavorite);
     };
+
+    // Usar imageUrl como fuente principal de imagen
+    const imageUrl = !imageError ?
+        (product.imageUrl || product.images?.[0] || '/images/placeholder-product.jpg') :
+        '/images/placeholder-product.jpg';
+
+    // ID del producto para el enlace - usar cualquier formato disponible
+    const productId = product.product_id || product._id || '';
 
     return (
         <ProductCardContainer largeView={largeView}>
@@ -81,13 +97,15 @@ const ProductCard = ({ product, largeView = false }) => {
                 {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
             </FavoriteButton>
 
-            <Link href={`/product/${product._id}`} passHref style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Link href={`/product/${productId}`} passHref style={{ textDecoration: 'none', color: 'inherit' }}>
                 <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <ImageContainer largeView={largeView}>
                         <ProductImage
-                            src={product.images?.[0] || 'https://www.alvaromoreno.com/dw/image/v2/BGHK_PRD/on/demandware.static/-/Sites-amoreno_master_catalog/default/dw647db2f4/images/hi-res/I24/Hombre/Camisas/Polera_Denim_1115224017/AZU/1115224017_AZU_2.jpg?sw=965&sh=1287'}
-                            alt={product.name}
+                            src={imageUrl}
+                            alt={product.name || 'Producto'}
                             className="product-image"
+                            onError={() => setImageError(true)}
+                            largeView={largeView}
                         />
                     </ImageContainer>
 
@@ -96,7 +114,7 @@ const ProductCard = ({ product, largeView = false }) => {
                             variant={largeView ? "subtitle1" : "subtitle2"}
                             color="text.secondary"
                         >
-                            {product.brand}
+                            {product.brand || ''}
                         </Typography>
                         <Typography
                             variant={largeView ? "h5" : "h6"}
@@ -112,7 +130,7 @@ const ProductCard = ({ product, largeView = false }) => {
                                 WebkitBoxOrient: 'vertical'
                             }}
                         >
-                            {product.name}
+                            {product.name || 'Producto sin nombre'}
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                             <Rating
