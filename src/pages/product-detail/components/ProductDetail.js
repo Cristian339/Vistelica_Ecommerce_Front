@@ -1,7 +1,7 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import { styled, useTheme } from '@mui/material/styles';
-import {vistelicaColors} from "@/pages/shared-theme/vistelicaColors";
+import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 import {
     Grid,
     Typography,
@@ -9,7 +9,9 @@ import {
     Button,
     Box,
     IconButton,
-    CircularProgress
+    CircularProgress,
+    Snackbar,
+    Alert
 } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -21,7 +23,9 @@ import ColorSelector from './ColorSelector';
 import ProductInfo from './ProductInfo';
 import ShippingInfo from './ShippingInfo';
 import ProductReviews from './ProductReviews';
-import productService from '@/services/productService';
+import wishlistService from '@/services/wishlistService';
+import { getCurrentUser } from '@/services/authService';
+import { useRouter } from 'next/navigation';
 
 const ProductDetailContainer = styled('div')(({ theme }) => ({
     padding: theme.spacing(2),
@@ -63,47 +67,90 @@ const ProductDetail = ({
                            selectedSize,
                            selectedColor,
                            onSizeChange,
-                           onColorChange
+                           onColorChange,
+                           onAddToCart,
+                           addingToCart
                        }) => {
     const theme = useTheme();
+    const router = useRouter();
     const [isFavorite, setIsFavorite] = useState(false);
-    const [reviews, setReviews] = useState([]);
-    const [loadingReviews, setLoadingReviews] = useState(true);
-    const [errorReviews, setErrorReviews] = useState(null);
+    const [loadingWishlist, setLoadingWishlist] = useState(false);
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: '',
+        severity: 'success'
+    });
 
-
-        const fetchReviews = async () => {
+    // Verificar si el producto está en la wishlist al cargar el componente
+    useEffect(() => {
+        const checkWishlistStatus = async () => {
             try {
-                setLoadingReviews(true);
-                const reviewsData = await productService.getReviewsByProductId(product?.product_id);
-                setReviews(reviewsData);
+                const user = await getCurrentUser();
+                if (!user) return;
+
+                setLoadingWishlist(true);
+                const isInWishlist = await wishlistService.isInWishlist(product.product_id);
+                setIsFavorite(isInWishlist);
             } catch (error) {
-                console.error("Error fetching reviews:", error);
-                setErrorReviews(error.message || "Error al cargar las reseñas");
+                console.error("Error al verificar wishlist:", error);
             } finally {
-                setLoadingReviews(false);
+                setLoadingWishlist(false);
             }
         };
 
-        const handleReviewAdded = () => {
-            fetchReviews();
-        };
+        checkWishlistStatus();
+    }, [product.product_id]);
 
-        useEffect(() => {
-            if (product?.product_id) {
-                fetchReviews();
+    const handleToggleWishlist = async () => {
+        try {
+            const user = await getCurrentUser();
+            if (!user) {
+                router.push('/sign-in-side');
+                return;
             }
-        }, [product?.product_id]);
+
+            setLoadingWishlist(true);
+
+            if (isFavorite) {
+                await wishlistService.removeFromWishlist(product.product_id);
+                setSnackbar({
+                    open: true,
+                    message: 'Producto eliminado de tu lista de deseos',
+                    severity: 'info'
+                });
+            } else {
+                await wishlistService.addToWishlist(product.product_id);
+                setSnackbar({
+                    open: true,
+                    message: 'Producto añadido a tu lista de deseos',
+                    severity: 'success'
+                });
+            }
+
+            setIsFavorite(!isFavorite);
+        } catch (error) {
+            console.error("Error al actualizar la lista de deseos:", error);
+            setSnackbar({
+                open: true,
+                message: 'Error al actualizar la lista de deseos',
+                severity: 'error'
+            });
+        } finally {
+            setLoadingWishlist(false);
+        }
+    };
+
+    const handleCloseSnackbar = () => {
+        setSnackbar(prev => ({...prev, open: false}));
+    };
 
     return (
         <ProductDetailContainer>
             <Grid container alignItems="flex-start" color={vistelicaColors.background}>
-                {/* Galería */}
                 <Grid item xs={12} md={7} lg={8}>
                     <ProductGallery images={[product.image_url]} />
                 </Grid>
 
-                {/* Detalles compactos */}
                 <Grid item xs={12} md={5} lg={4}>
                     <CompactDetailBox sx={{
                         minWidth: '700px',
@@ -123,17 +170,20 @@ const ProductDetail = ({
                             </Typography>
 
                             <IconButton
-                                aria-label="Añadir a lista de deseos"
-                                onClick={() => setIsFavorite(!isFavorite)}
+                                aria-label={isFavorite ? "Quitar de lista de deseos" : "Añadir a lista de deseos"}
+                                onClick={handleToggleWishlist}
+                                disabled={loadingWishlist}
                                 sx={{
                                     padding: '8px',
-                                    color: isFavorite ? 'black' : 'inherit',
+                                    color: isFavorite ? vistelicaColors.primary : 'inherit',
                                     '&:hover': {
-                                        color: isFavorite ? 'black' : vistelicaColors.primary
+                                        color: vistelicaColors.primary
                                     }
                                 }}
                             >
-                                {isFavorite ? (
+                                {loadingWishlist ? (
+                                    <CircularProgress size={24} />
+                                ) : isFavorite ? (
                                     <FavoriteIcon fontSize="medium" />
                                 ) : (
                                     <FavoriteBorderIcon fontSize="medium" />
@@ -160,14 +210,12 @@ const ProductDetail = ({
 
                         <Divider sx={{ my: 2 }} />
 
-                        {/* Selector de tallas */}
                         <SizeSelector
                             sizes={availableSizes}
                             selectedSize={selectedSize}
                             onSizeChange={onSizeChange}
                         />
 
-                        {/* Selector de colores */}
                         <ColorSelector
                             colors={availableColors}
                             selectedColor={selectedColor}
@@ -186,17 +234,22 @@ const ProductDetail = ({
                                 variant="contained"
                                 color="primary"
                                 size="medium"
-                                sx={{ flex: 1, maxWidth: 650 , background: vistelicaColors.primary}}
-                                onClick={() => {
-                                    console.log('Añadir al carrito:', {
-                                        productId: product.product_id,
-                                        size: selectedSize,
-                                        color: selectedColor,
-                                        quantity: 1
-                                    });
+                                sx={{
+                                    flex: 1,
+                                    maxWidth: 650,
+                                    backgroundColor: vistelicaColors.primary,
+                                    '&:hover': {
+                                        backgroundColor: vistelicaColors.primaryDark
+                                    },
+                                    '&:disabled': {
+                                        backgroundColor: '#e0e0e0'
+                                    }
                                 }}
+                                onClick={onAddToCart}
+                                disabled={addingToCart}
+                                startIcon={addingToCart ? <CircularProgress size={20} color="inherit" /> : <ShoppingCartIcon />}
                             >
-                                Añadir al carrito <ShoppingCartIcon />
+                                {addingToCart ? 'Añadiendo...' : 'Añadir al carrito'}
                             </Button>
                             <Button
                                 variant="outlined"
@@ -215,25 +268,22 @@ const ProductDetail = ({
                         <ShippingInfo />
                     </CompactDetailBox>
                 </Grid>
-
-                <Grid item xs={12} sx={{ mt: { xs: 2, md: 0 } , width: '100%'}}>
-                    {loadingReviews ? (
-                        <Box display="flex" justifyContent="center" py={4}>
-                            <CircularProgress />
-                        </Box>
-                    ) : errorReviews ? (
-                        <Typography color="error" textAlign="center" py={2}>
-                            {errorReviews}
-                        </Typography>
-                    ) : (
-                        <ProductReviews
-                            reviews={reviews}
-                            productId={product.product_id}
-                            onReviewAdded={handleReviewAdded}
-                        />
-                    )}
-                </Grid>
             </Grid>
+
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={3000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert
+                    onClose={handleCloseSnackbar}
+                    severity={snackbar.severity}
+                    sx={{ width: '100%' }}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </ProductDetailContainer>
     );
 };

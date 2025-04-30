@@ -67,6 +67,24 @@ export default function Navbar() {
         }
     };
 
+    const handleCart = async () => {
+        try{
+            router.push('/cart/page');
+        }catch (error) {
+            console.error("Error al verificar el login:", error);
+            alert("Ocurrió un error. Intenta nuevamente.");
+        }
+    }
+
+    const handlewishlist = async () => {
+        try{
+            router.push('/wishlist/page');
+        }catch (error) {
+            console.error("Error al verificar el login:", error);
+            alert("Ocurrió un error. Intenta nuevamente.");
+        }
+    }
+
     const handleAccountClick = async () => {
         try {
             const token = getToken();
@@ -161,7 +179,7 @@ export default function Navbar() {
                                 </IconButton>
 
                                 <IconButton sx={{color: "#171717"}}>
-                                    <FavoriteBorderIcon sx={{fontSize: "34px"}}/>
+                                    <FavoriteBorderIcon sx={{fontSize: "34px"}} onClick={handlewishlist}/>
                                 </IconButton>
                             </>
                         )}
@@ -169,7 +187,7 @@ export default function Navbar() {
                         {/* Shopping Bag - Both Mobile & Desktop */}
                         <div style={{position: "relative", display: "flex", alignItems: "center"}}>
                             <IconButton sx={{color: "#171717"}}>
-                                <ShoppingBagIcon sx={{fontSize: "34px"}}/>
+                                <ShoppingBagIcon sx={{fontSize: "34px"}} onClick={handleCart}/>
                             </IconButton>
                             <span style={{
                                 position: "absolute",
