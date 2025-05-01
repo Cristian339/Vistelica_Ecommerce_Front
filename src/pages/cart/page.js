@@ -1,10 +1,86 @@
-"use client";
+'use client';
 import { Container, Grid, Typography } from '@mui/material';
 import CartList from './components/CartList';
 import CartSummary from './components/CartSummary';
 import Navbar from "@/components/layout/HeaderComponent";
+import { useEffect, useState } from 'react';
+import cartService from '@/services/cartService';
+import { getCurrentUser } from '@/services/authService';
+import EmptyCart from './components/EmptyCart';
+import { useRouter } from 'next/navigation';
 
 export default function CartPage() {
+    const [cart, setCart] = useState(null);
+    const [cartItems, setCartItems] = useState([]);
+    const [total, setTotal] = useState({ totalPrice: 0, itemCount: 0 });
+    const [loading, setLoading] = useState(true);
+    const router = useRouter();
+
+    useEffect(() => {
+        const initializeCart = async () => {
+            try {
+                setLoading(true);
+                const user = await getCurrentUser();
+                const sessionId = cartService.getSessionId();
+
+                let currentCart = null;
+
+                if (user && sessionId) {
+                    currentCart = await cartService.handleCartMergeOnAuth();
+                } else {
+                    currentCart = user
+                        ? await cartService.getCart(user.user_id)
+                        : await cartService.getCart(null, sessionId);
+                }
+
+                if (currentCart) {
+                    setCart(currentCart);
+                    const items = currentCart.orderDetails || [];
+                    setCartItems(items);
+
+                    const calculatedTotal = items.reduce((sum, item) => {
+                        return sum + (parseFloat(item.price) * item.quantity);
+                    }, 0);
+
+                    setTotal({
+                        totalPrice: calculatedTotal,
+                        itemCount: items.length
+                    });
+                }
+            } catch (error) {
+                console.error("Error al cargar el carrito:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        initializeCart();
+    }, []);
+
+    const handleCheckout = () => {
+        const isGuest = !getCurrentUser() && cartService.getSessionId();
+        if (isGuest) {
+            router.push('/sign-in-side');
+        } else {
+            router.push('/checkout');
+        }
+    };
+
+    if (loading) {
+        return (
+            <>
+                <Navbar />
+                <Container maxWidth="xl" disableGutters sx={{ my: 4, px: { xs: 2, md: 4 } }}>
+                    <Typography>Cargando carrito...</Typography>
+                </Container>
+            </>
+        );
+    }
+
+    if (!cart || cartItems.length === 0) {
+        return <EmptyCart />;
+    }
+
     return (
         <>
             <Navbar />
@@ -20,14 +96,23 @@ export default function CartPage() {
                 </Typography>
 
                 <Grid container spacing={4}>
-                    {/* Columna izquierda - Lista de productos (70% del espacio) */}
                     <Grid item xs={12} md={8}>
-                        <CartList />
+                        <CartList
+                            cartItems={cartItems}
+                            setCartItems={setCartItems}
+                            setTotal={setTotal}
+                            userId={cart.user?.user_id}
+                            sessionId={cart.session_id}
+                        />
                     </Grid>
 
-                    {/* Columna derecha - Resumen (30% del espacio) */}
                     <Grid item xs={12} md={4}>
-                        <CartSummary />
+                        <CartSummary
+                            totalPrice={total.totalPrice}
+                            itemCount={total.itemCount}
+                            isGuest={!cart.user && cart.session_id}
+                            onCheckout={handleCheckout}
+                        />
                     </Grid>
                 </Grid>
             </Container>

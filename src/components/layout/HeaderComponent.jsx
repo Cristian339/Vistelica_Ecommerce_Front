@@ -60,7 +60,7 @@ export default function Navbar() {
             if (rol) {
                 router.push('/admin/page');
             } else {
-                router.push('/');
+                router.push('/home/Home');
             }
         } catch (error) {
             console.error("Error verificando permisos:", error);

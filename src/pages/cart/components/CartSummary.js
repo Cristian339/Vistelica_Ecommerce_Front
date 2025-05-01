@@ -1,9 +1,15 @@
-"use client";
-import { Box, Typography, Button, Divider } from '@mui/material';
-import {vistelicaColors} from "@/pages/shared-theme/vistelicaColors";
+'use client';
+import {Box, Typography, Button, Divider, Tooltip} from '@mui/material';
+import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 
+export default function CartSummary({
+                                        totalPrice = 0,
+                                        itemCount = 0,
+                                        isGuest = false,
+                                        onCheckout
+                                    }) {
+    const safeTotalPrice = typeof totalPrice === 'number' ? totalPrice : 0;
 
-export default function CartSummary() {
     return (
         <Box sx={{
             position: 'sticky',
@@ -29,17 +35,12 @@ export default function CartSummary() {
                     justifyContent: 'space-between',
                     mb: 2
                 }}>
-                    <Typography sx={{fontFamily: "'Amethysta', serif"}}>Subtotal</Typography>
-                    <Typography sx={{fontFamily: "'Amethysta', serif"}}>19.99€</Typography>
-                </Box>
-
-                <Box sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    mb: 2
-                }}>
-                    <Typography>Envío</Typography>
-                    <Typography sx={{ color: 'green' }}>GRATIS</Typography>
+                    <Typography sx={{fontFamily: "'Amethysta', serif"}}>
+                        Subtotal ({itemCount} {itemCount === 1 ? 'artículo' : 'artículos'})
+                    </Typography>
+                    <Typography sx={{fontFamily: "'Amethysta', serif"}}>
+                        {safeTotalPrice.toFixed(2)}€
+                    </Typography>
                 </Box>
             </Box>
 
@@ -51,24 +52,40 @@ export default function CartSummary() {
                 alignItems: 'center',
                 mb: 3
             }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold',fontFamily: "'Amethysta', serif" }}>TOTAL</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', fontFamily: "'Amethysta', serif" }}>24,18€</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 'bold',fontFamily: "'Amethysta', serif" }}>
+                    TOTAL
+                </Typography>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', fontFamily: "'Amethysta', serif" }}>
+                    {safeTotalPrice.toFixed(2)}€
+                </Typography>
             </Box>
 
-            <Button
-                fullWidth
-                variant="contained"
-                sx={{
-                    py: 1.5,
-                    backgroundColor: vistelicaColors.primary,
-                    '&:hover': { backgroundColor: vistelicaColors.primaryDark },
-                    fontWeight: 'bold',
-                    mb: 2,
-                    fontFamily: "'Amethysta', serif",
-                }}
+            <Tooltip
+                title={isGuest ? "Para finalizar compra inicie sesión o regístrese" : ""}
+                placement="top"
+                arrow
             >
-                FINALIZAR COMPRA
-            </Button>
+        <span>
+          <Button
+              fullWidth
+              variant="contained"
+              disabled={isGuest || itemCount === 0}
+              onClick={onCheckout}
+              sx={{
+                  py: 1.5,
+                  backgroundColor: isGuest || itemCount === 0 ? '#e0e0e0' : vistelicaColors.primary,
+                  '&:hover': {
+                      backgroundColor: isGuest || itemCount === 0 ? '#e0e0e0' : vistelicaColors.primaryDark
+                  },
+                  fontWeight: 'bold',
+                  mb: 2,
+                  fontFamily: "'Amethysta', serif"
+              }}
+          >
+            {isGuest ? 'INICIAR SESIÓN PARA COMPRAR' : 'FINALIZAR COMPRA'}
+          </Button>
+        </span>
+            </Tooltip>
 
             <Typography sx={{
                 textAlign: 'center',

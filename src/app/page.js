@@ -6,13 +6,15 @@ import {Container} from "@mui/material";
 import HomePage from "@/pages/home/Home";
 import AdminPage from "@/pages/admin/page";
 import ProductDetail from "@/pages/product-detail/page";
-import ProductList from "@/pages/product-list/productList";
+import MainLayoutSubM from "@/pages/sub-men/MainLayout-subM";
+import App from "@/pages/product-detail/page";
+import CartPage from "@/pages/cart/page";
   // Ruta del componente HomePage
 
 export default function Home() {
     return (
         <div>
-            <SignInSide />
+            <ProductDetail/>
         </div>
     );
 }

@@ -1,6 +1,6 @@
 // src/services/wishlistService.js
 import axios from 'axios';
-import { getCurrentUser } from '@/services/authService';
+import {getCurrentUser, getToken} from '@/services/authService';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -12,23 +12,6 @@ const handleError = (error, defaultMessage) => {
 };
 
 const wishlistService = {
-    /**
-     * Obtiene la lista de deseos de un usuario
-     * @param {number} userId - ID del usuario
-     * @returns {Promise<Array>} - Lista de productos en la wishlist
-     */
-    async getWishlist(userId) {
-        try {
-            const response = await axios.get(`${API_URL}/wishlist/user/${userId}`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            return response.data;
-        } catch (error) {
-            return handleError(error, 'Error al obtener la lista de deseos');
-        }
-    },
 
     /**
      * Añade un producto a la lista de deseos
@@ -141,7 +124,68 @@ const wishlistService = {
         } catch (error) {
             return handleError(error, 'Error al alternar producto en la lista de deseos');
         }
-    }
+    },
+    /**
+     * Verifica si un producto está en la wishlist del usuario
+     * @param {number} productId - ID del producto
+     * @returns {Promise<boolean>} - true si está en la wishlist
+     */
+    async checkProductInWishlist(productId) {
+        try {
+            const token = getToken();
+            if (!token) return false;
+
+            const response = await axios.get(`${API_URL}/wishlist/check/${productId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            return response.data.isInWishlist;
+        } catch (error) {
+            console.error('Error checking product in wishlist:', error);
+            return false;
+        }
+    },
+
+
+    /**
+     * Obtiene la lista de deseos de un usuario
+     * @param {number} userId - ID del usuario
+     * @returns {Promise<Array>} - Lista de productos en la wishlist
+     */
+    async getWishlistUser(userId) {
+        try {
+            const response = await axios.get(`${API_URL}/wishlist/user/${userId}`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            return response.data;
+        } catch (error) {
+            return handleError(error, 'Error al obtener la lista de deseos');
+        }
+    },
+
+    /**
+     * Obtiene la wishlist completa del usuario
+     * @returns {Promise<Array>} - Lista de productos en la wishlist
+     */
+    async getWishlist() {
+        try {
+            const token = getToken();
+            if (!token) return [];
+
+            const response = await axios.get(`${API_URL}/wishlist`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error getting wishlist:', error);
+            return [];
+        }
+    },
 };
 
 export default wishlistService;

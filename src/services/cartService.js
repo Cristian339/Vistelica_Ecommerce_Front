@@ -1,4 +1,3 @@
-// src/services/cartService.js
 import axios from 'axios';
 import { getCurrentUser } from '@/services/authService';
 

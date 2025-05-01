@@ -9,9 +9,7 @@ import {
     Button,
     Box,
     IconButton,
-    CircularProgress,
-    Snackbar,
-    Alert
+    CircularProgress
 } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -24,8 +22,7 @@ import ProductInfo from './ProductInfo';
 import ShippingInfo from './ShippingInfo';
 import ProductReviews from './ProductReviews';
 import wishlistService from '@/services/wishlistService';
-import { getCurrentUser } from '@/services/authService';
-import { useRouter } from 'next/navigation';
+import { getToken } from '@/services/authService';
 
 const ProductDetailContainer = styled('div')(({ theme }) => ({
     padding: theme.spacing(2),
@@ -72,83 +69,79 @@ const ProductDetail = ({
                            addingToCart
                        }) => {
     const theme = useTheme();
-    const router = useRouter();
     const [isFavorite, setIsFavorite] = useState(false);
     const [loadingWishlist, setLoadingWishlist] = useState(false);
-    const [snackbar, setSnackbar] = useState({
-        open: false,
-        message: '',
-        severity: 'success'
-    });
+    const [initialized, setInitialized] = useState(false);
 
     // Verificar si el producto está en la wishlist al cargar el componente
     useEffect(() => {
+        let isMounted = true;
+
         const checkWishlistStatus = async () => {
             try {
-                const user = await getCurrentUser();
-                if (!user) return;
-
                 setLoadingWishlist(true);
-                const isInWishlist = await wishlistService.isInWishlist(product.product_id);
-                setIsFavorite(isInWishlist);
+                // Primero intentamos con el endpoint específico
+                const inWishlist = await wishlistService.checkProductInWishlist(product.product_id);
+
+                // Si falla, obtenemos toda la wishlist y verificamos manualmente
+                if (inWishlist === null || inWishlist === undefined) {
+                    const wishlist = await wishlistService.getWishlist();
+                    console.log(wishlist);
+                    const found = wishlist.some(item => item.product_id === product.product_id);
+                    if (isMounted) setIsFavorite(found);
+                } else {
+                    if (isMounted) setIsFavorite(inWishlist);
+                }
             } catch (error) {
-                console.error("Error al verificar wishlist:", error);
+                console.error('Error verificando wishlist:', error);
             } finally {
-                setLoadingWishlist(false);
+                if (isMounted) {
+                    setLoadingWishlist(false);
+                    setInitialized(true);
+                }
             }
         };
 
         checkWishlistStatus();
+
+        return () => {
+            isMounted = false;
+        };
     }, [product.product_id]);
 
-    const handleToggleWishlist = async () => {
+    const handleToggleFavorite = async () => {
+        const token = getToken();
+        if (!token) {
+            // Redirigir a login o mostrar modal
+            console.log('Usuario no autenticado');
+            return;
+        }
+
         try {
-            const user = await getCurrentUser();
-            if (!user) {
-                router.push('/sign-in-side');
-                return;
-            }
-
             setLoadingWishlist(true);
-
             if (isFavorite) {
                 await wishlistService.removeFromWishlist(product.product_id);
-                setSnackbar({
-                    open: true,
-                    message: 'Producto eliminado de tu lista de deseos',
-                    severity: 'info'
-                });
             } else {
                 await wishlistService.addToWishlist(product.product_id);
-                setSnackbar({
-                    open: true,
-                    message: 'Producto añadido a tu lista de deseos',
-                    severity: 'success'
-                });
             }
-
             setIsFavorite(!isFavorite);
         } catch (error) {
-            console.error("Error al actualizar la lista de deseos:", error);
-            setSnackbar({
-                open: true,
-                message: 'Error al actualizar la lista de deseos',
-                severity: 'error'
-            });
+            console.error('Error actualizando wishlist:', error);
         } finally {
             setLoadingWishlist(false);
         }
     };
 
-    const handleCloseSnackbar = () => {
-        setSnackbar(prev => ({...prev, open: false}));
-    };
+    if (!initialized) {
+        return <CircularProgress />;
+    }
+
 
     return (
         <ProductDetailContainer>
             <Grid container alignItems="flex-start" color={vistelicaColors.background}>
                 <Grid item xs={12} md={7} lg={8}>
-                    <ProductGallery images={[product.image_url]} />
+                    <ProductGallery productId={product.product_id} />
                 </Grid>
 
                 <Grid item xs={12} md={5} lg={4}>
@@ -170,14 +163,13 @@ const ProductDetail = ({
                             </Typography>
 
                             <IconButton
-                                aria-label={isFavorite ? "Quitar de lista de deseos" : "Añadir a lista de deseos"}
-                                onClick={handleToggleWishlist}
+                                aria-label={isFavorite ? "Eliminar de favoritos" : "Añadir a favoritos"}
+                                onClick={handleToggleFavorite}
                                 disabled={loadingWishlist}
                                 sx={{
-                                    padding: '8px',
-                                    color: isFavorite ? vistelicaColors.primary : 'inherit',
+                                    color: isFavorite ? 'red' : 'inherit',
                                     '&:hover': {
-                                        color: vistelicaColors.primary
+                                        color: isFavorite ? 'darkred' : 'primary.main'
                                     }
                                 }}
                             >
@@ -203,7 +195,7 @@ const ProductDetail = ({
                                     textDecoration: 'line-through',
                                     marginLeft: '8px'
                                 }}>
-                                    {(parseFloat(product.price) / (1 - parseFloat(product.discount_percentage) / 100)).toFixed(2)}€
+                                    {(parseFloat(product.price) / (1 - parseFloat(product.discount_percentage) / 100).toFixed(2))}€
                                 </span>
                             )}
                         </Typography>
@@ -269,21 +261,6 @@ const ProductDetail = ({
                     </CompactDetailBox>
                 </Grid>
             </Grid>
-
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={3000}
-                onClose={handleCloseSnackbar}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            >
-                <Alert
-                    onClose={handleCloseSnackbar}
-                    severity={snackbar.severity}
-                    sx={{ width: '100%' }}
-                >
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
         </ProductDetailContainer>
     );
 };
