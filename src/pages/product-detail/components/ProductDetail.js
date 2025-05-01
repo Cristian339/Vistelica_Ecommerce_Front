@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import productService from '@/services/productService'
 import ProductGallery from './ProductGallery';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ShareIcon from '@mui/icons-material/Share';
@@ -72,6 +73,9 @@ const ProductDetail = ({
     const [isFavorite, setIsFavorite] = useState(false);
     const [loadingWishlist, setLoadingWishlist] = useState(false);
     const [initialized, setInitialized] = useState(false);
+    const [reviews, setReviews] = useState([]);
+    const [loadingReviews, setLoadingReviews] = useState(true);
+    const [errorReviews, setErrorReviews] = useState(null);
 
     // Verificar si el producto está en la wishlist al cargar el componente
     useEffect(() => {
@@ -108,6 +112,29 @@ const ProductDetail = ({
             isMounted = false;
         };
     }, [product.product_id]);
+
+    const fetchReviews = async () => {
+        try {
+            setLoadingReviews(true);
+            const reviewsData = await productService.getReviewsByProductId(product?.product_id);
+            setReviews(reviewsData);
+        } catch (error) {
+            console.error("Error fetching reviews:", error);
+            setErrorReviews(error.message || "Error al cargar las reseñas");
+        } finally {
+            setLoadingReviews(false);
+        }
+    };
+
+    const handleReviewAdded = () => {
+        fetchReviews();
+    };
+
+    useEffect(() => {
+        if (product?.product_id) {
+            fetchReviews();
+        }
+    }, [product?.product_id]);
 
     const handleToggleFavorite = async () => {
         const token = getToken();
@@ -259,6 +286,24 @@ const ProductDetail = ({
 
                         <ShippingInfo />
                     </CompactDetailBox>
+                </Grid>
+
+                <Grid item xs={12} sx={{ mt: { xs: 2, md: 0 } , width: '100%'}}>
+                    {loadingReviews ? (
+                        <Box display="flex" justifyContent="center" py={4}>
+                            <CircularProgress />
+                        </Box>
+                    ) : errorReviews ? (
+                        <Typography color="error" textAlign="center" py={2}>
+                            {errorReviews}
+                        </Typography>
+                    ) : (
+                        <ProductReviews
+                            reviews={reviews}
+                            productId={product.product_id}
+                            onReviewAdded={handleReviewAdded}
+                        />
+                    )}
                 </Grid>
             </Grid>
         </ProductDetailContainer>

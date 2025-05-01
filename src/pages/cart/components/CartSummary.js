@@ -1,14 +1,51 @@
 'use client';
 import {Box, Typography, Button, Divider, Tooltip} from '@mui/material';
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import cartService from '@/services/cartService';
+import { getCurrentUser } from '@/services/authService';
 
 export default function CartSummary({
                                         totalPrice = 0,
                                         itemCount = 0,
-                                        isGuest = false,
                                         onCheckout
                                     }) {
+    const router = useRouter();
     const safeTotalPrice = typeof totalPrice === 'number' ? totalPrice : 0;
+
+    // Verificar si el usuario está autenticado
+    const isAuthenticated = localStorage.getItem('token');
+    const sessionId = cartService.getSessionId();
+
+    // Efecto para fusionar carritos al montar el componente si hay ambos (token y sessionId)
+    useEffect(() => {
+        console.log(isAuthenticated);
+        console.log(sessionId);
+        const mergeCartsIfNeeded = async () => {
+            if (isAuthenticated && sessionId) {
+                try {
+                    await cartService.handleCartMergeOnAuth();
+                } catch (error) {
+                    console.error('Error merging carts:', error);
+                }
+            }
+        };
+
+        mergeCartsIfNeeded();
+    }, [isAuthenticated, sessionId]);
+
+    const handleCheckoutClick = () => {
+        if (!isAuthenticated) {
+            // Redirigir a login si no está autenticado
+            router.push('/sign-in-side/Sign-in-side');
+        } else {
+            // Llamar a la función onCheckout si está autenticado
+            if (onCheckout) {
+                onCheckout();
+            }
+        }
+    };
 
     return (
         <Box sx={{
@@ -61,30 +98,30 @@ export default function CartSummary({
             </Box>
 
             <Tooltip
-                title={isGuest ? "Para finalizar compra inicie sesión o regístrese" : ""}
+                title={!isAuthenticated ? "Para finalizar compra inicie sesión o regístrese" : ""}
                 placement="top"
                 arrow
             >
-        <span>
-          <Button
-              fullWidth
-              variant="contained"
-              disabled={isGuest || itemCount === 0}
-              onClick={onCheckout}
-              sx={{
-                  py: 1.5,
-                  backgroundColor: isGuest || itemCount === 0 ? '#e0e0e0' : vistelicaColors.primary,
-                  '&:hover': {
-                      backgroundColor: isGuest || itemCount === 0 ? '#e0e0e0' : vistelicaColors.primaryDark
-                  },
-                  fontWeight: 'bold',
-                  mb: 2,
-                  fontFamily: "'Amethysta', serif"
-              }}
-          >
-            {isGuest ? 'INICIAR SESIÓN PARA COMPRAR' : 'FINALIZAR COMPRA'}
-          </Button>
-        </span>
+                <span>
+                    <Button
+                        fullWidth
+                        variant="contained"
+                        disabled={itemCount === 0}
+                        onClick={handleCheckoutClick}
+                        sx={{
+                            py: 1.5,
+                            backgroundColor: itemCount === 0 ? '#e0e0e0' : vistelicaColors.primary,
+                            '&:hover': {
+                                backgroundColor: itemCount === 0 ? '#e0e0e0' : vistelicaColors.primaryDark
+                            },
+                            fontWeight: 'bold',
+                            mb: 2,
+                            fontFamily: "'Amethysta', serif"
+                        }}
+                    >
+                        {!isAuthenticated ? 'INICIAR SESIÓN PARA COMPRAR' : 'FINALIZAR COMPRA'}
+                    </Button>
+                </span>
             </Tooltip>
 
             <Typography sx={{
