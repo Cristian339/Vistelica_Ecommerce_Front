@@ -60,12 +60,30 @@ export default function Navbar() {
             if (rol) {
                 router.push('/admin/page');
             } else {
-                router.push('/');
+                router.push('/home/Home');
             }
         } catch (error) {
             console.error("Error verificando permisos:", error);
         }
     };
+
+    const handleCart = async () => {
+        try{
+            router.push('/cart/page');
+        }catch (error) {
+            console.error("Error al verificar el login:", error);
+            alert("Ocurrió un error. Intenta nuevamente.");
+        }
+    }
+
+    const handlewishlist = async () => {
+        try{
+            router.push('/wishlist/page');
+        }catch (error) {
+            console.error("Error al verificar el login:", error);
+            alert("Ocurrió un error. Intenta nuevamente.");
+        }
+    }
 
     const handleAccountClick = async () => {
         try {
@@ -170,7 +188,7 @@ export default function Navbar() {
                                     <AccountCircleIcon sx={{ fontSize: "34px" }} />
                                 </IconButton>
 
-                                <IconButton sx={{color: "#171717"}} onClick={handleFavoritesClick}>
+                                <IconButton sx={{color: "#171717"}}>
                                     <FavoriteBorderIcon sx={{fontSize: "34px"}}/>
                                 </IconButton>
                             </>
@@ -179,7 +197,7 @@ export default function Navbar() {
                         {/* Shopping Bag - Both Mobile & Desktop */}
                         <div style={{position: "relative", display: "flex", alignItems: "center"}}>
                             <IconButton sx={{color: "#171717"}}>
-                                <ShoppingBagIcon sx={{fontSize: "34px"}}/>
+                                <ShoppingBagIcon sx={{fontSize: "34px"}} onClick={handleCart}/>
                             </IconButton>
                             <span style={{
                                 position: "absolute",

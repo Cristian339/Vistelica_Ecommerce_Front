@@ -94,6 +94,24 @@ const getMainImageByProductId = async (productId) => {
 };
 
 /**
+ * Obtiene todas las imágenes de un producto específico por su ID
+ * @param {string} productId - ID del producto
+ * @returns {Promise<Array>} Lista de todas las imágenes del producto
+ */
+const getAllImagesByProductId = async (productId) => {
+    try {
+        const response = await axios.get(`${API_URL}/products/${productId}/images`);
+        return response.data;
+    } catch (error) {
+        console.error(`Error al obtener imágenes del producto ${productId}:`, error);
+        throw new Error(
+            error.response?.data?.message ||
+            'No se pudieron cargar las imágenes del producto.'
+        );
+    }
+};
+
+/**
  * Obtiene las reseñas de un producto por su nombre
  * @param {number} productId - Nombre del producto
  * @returns {Promise<Array>} Lista de reseñas
@@ -157,6 +175,7 @@ const productService = {
     getByCategoryAndSubcategory,
     getMainProductImages,
     getMainImageByProductId,
+    getAllImagesByProductId,
     getReviewsByProductId,
     getReviewsByProductName,
     createProductReview
