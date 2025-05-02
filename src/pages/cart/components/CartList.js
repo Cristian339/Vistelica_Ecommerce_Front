@@ -21,7 +21,6 @@ export default function CartList({ cartItems, setCartItems, setTotal, userId, se
         <Box sx={{
             border: '1px solid #e0e0e0',
             borderRadius: 2,
-            width: 1100,
             p: 3,
             backgroundColor: 'white'
         }}>
