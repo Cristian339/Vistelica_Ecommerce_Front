@@ -12,14 +12,8 @@ export const COLORS = [
 ];
 
 export const BRANDS = [
-    { id: 'nike', label: 'Nike' },
-    { id: 'adidas', label: 'Adidas' },
-    { id: 'puma', label: 'Puma' },
-    { id: 'reebok', label: 'Reebok' },
-    { id: 'new-balance', label: 'New Balance' },
-    { id: 'converse', label: 'Converse' },
-    { id: 'vans', label: 'Vans' },
-    { id: 'zara', label: 'Zara' },
-    { id: 'h&m', label: 'H&M' },
-    { id: 'mango', label: 'Mango' }
+    { id: '`puma`', name: 'Puma' },
+    { id: 'bershka', name: 'Bershka' },
+    { id: 'alvaro Moreno', name: 'Álvaro Moreno' },
+    { id: 'mango', name: 'Mango' }
 ];

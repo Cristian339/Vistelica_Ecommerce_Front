@@ -12,7 +12,7 @@ import ProductList from "@/pages/product-list/productList";
 export default function Home() {
     return (
         <div>
-            <SignInSide />
+            <HomePage />
         </div>
     );
 }

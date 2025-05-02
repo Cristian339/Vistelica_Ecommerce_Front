@@ -81,6 +81,16 @@ export default function Navbar() {
         }
     };
 
+    const handleFavoritesClick = () => {
+        try {
+            // Ruta correcta basada en la estructura de archivos
+            router.push('/wish-list/Wishlist');
+        } catch (error) {
+            console.error("Error al acceder a favoritos:", error);
+            alert("Ocurrió un error. Intenta nuevamente.");
+        }
+    };
+
     const toggleDrawer = (state) => () => setOpen(state);
 
     const toggleSubmenu = (index) => {
@@ -160,7 +170,7 @@ export default function Navbar() {
                                     <AccountCircleIcon sx={{ fontSize: "34px" }} />
                                 </IconButton>
 
-                                <IconButton sx={{color: "#171717"}}>
+                                <IconButton sx={{color: "#171717"}} onClick={handleFavoritesClick}>
                                     <FavoriteBorderIcon sx={{fontSize: "34px"}}/>
                                 </IconButton>
                             </>

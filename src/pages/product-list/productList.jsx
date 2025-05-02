@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState,useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Box, Typography, Button, Divider, Chip, IconButton, GlobalStyles, Tooltip, Breadcrumbs, Link as MuiLink, CircularProgress } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -15,6 +15,7 @@ import Link from 'next/link';
 import HeaderComponent from '@/components/layout/HeaderComponent';
 
 // Servicios y utilidades
+import wishService from '@/services/wishService';
 import productService from '@/services/productService';
 import categoryService from '@/services/categoryService';
 import { sortProducts } from './components/SortUtils';
@@ -57,6 +58,11 @@ const ProductList = () => {
     });
     const [loading, setLoading] = useState(true);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
+    const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [sessionId, setSessionId] = useState(null);
+
+
 
     // Función para cambiar la vista de cuadrícula
     const toggleGridView = () => {
@@ -138,6 +144,97 @@ const ProductList = () => {
             return [];
         }
     };
+
+// Función para manejar agregar a favoritos
+    const handleAddToWishlist = useCallback(async (product) => {
+        console.log("Función handleAddToWishlist llamada con:", product);
+
+        if (isAuthenticated) {
+            // Usuario autenticado: guardar en DB
+            try {
+                await wishService.addToWishlist(product.id || product.product_id);
+                setToast({
+                    open: true,
+                    message: 'Producto añadido a favoritos',
+                    severity: 'success'
+                });
+            } catch (error) {
+                console.error("Error al añadir a favoritos:", error);
+                setToast({
+                    open: true,
+                    message: 'Error al añadir a favoritos',
+                    severity: 'error'
+                });
+            }
+        } else {
+            // Usuario no autenticado: guardar en localStorage
+            const localWishlist = JSON.parse(localStorage.getItem('vistelica_wishlist') || '[]');
+
+            // Verificar si ya existe el producto en favoritos
+            const productId = product.id || product.product_id;
+            const exists = localWishlist.some(item => (item.id || item.product_id) === productId);
+
+            if (!exists) {
+                // Guardar solo la información necesaria
+                const wishlistItem = {
+                    id: productId,
+                    product_id: productId, // Para compatibilidad
+                    name: product.name,
+                    image_url: product.image_url || product.imageUrl,
+                    price: product.price
+                };
+
+                // Añadir a la lista y guardar en localStorage con el sessionId
+                localWishlist.push(wishlistItem);
+                localStorage.setItem('vistelica_wishlist', JSON.stringify(localWishlist));
+                localStorage.setItem('wishlist_sessionId', sessionId);
+
+                console.log("Producto guardado en localStorage:", wishlistItem);
+
+                // Mostrar toast de confirmación
+                setToast({
+                    open: true,
+                    message: 'Producto añadido a favoritos',
+                    severity: 'success'
+                });
+            } else {
+                // Producto ya en favoritos
+                setToast({
+                    open: true,
+                    message: 'Este producto ya está en tus favoritos',
+                    severity: 'info'
+                });
+            }
+        }
+    }, [isAuthenticated, sessionId]);
+
+    // Verificar autenticación al cargar la página
+    useEffect(() => {
+        const initializeUserSession = () => {
+            // Verificar si existe un token (usuario autenticado)
+            const token = localStorage.getItem('token');
+            setIsAuthenticated(!!token);
+
+            // Para usuarios no autenticados, gestionar sessionId
+            if (!token) {
+                let sessionId = localStorage.getItem('sessionId');
+
+                if (!sessionId) {
+                    // Generar nuevo sessionId si no existe
+                    sessionId = typeof crypto !== 'undefined' && crypto.randomUUID
+                        ? crypto.randomUUID()
+                        : ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+                            (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4)).toString(16)
+                        );
+                    localStorage.setItem('sessionId', sessionId);
+                }
+
+                setSessionId(sessionId);
+            }
+        };
+
+        initializeUserSession();
+    }, []);
 
     // Actualizar las subcategorías cuando cambia la categoría seleccionada
     useEffect(() => {
@@ -450,7 +547,7 @@ const ProductList = () => {
                 <Box
                     sx={{
                         position: { xs: 'fixed', md: 'sticky' },
-                        top: { xs: 0, md: '64px' }, // Ajustar según la altura de tu navbar
+                        top: { xs: 0, md: '64px' },
                         left: { xs: showFilters ? 0 : '-100%', md: 0 },
                         height: { xs: '100vh', md: 'calc(100vh - 64px)' },
                         width: { xs: '270px', md: showFilters ? 'var(--Sidebar-width)' : '0px' },
@@ -477,7 +574,6 @@ const ProductList = () => {
                         setShowFilters={setShowFilters}
                         closeSidebar={closeSidebar}
                         onSubcategorySelect={(subcatId) => {
-                            // Manejar selección de subcategoría en el filtro lateral
                             if (filters.subcategories.includes(subcatId)) {
                                 setFilters(prev => ({
                                     ...prev,
@@ -514,7 +610,7 @@ const ProductList = () => {
                         </Typography>
                     </Box>
 
-                    {/* Encabezado y controles - NUEVA ESTRUCTURA */}
+                    {/* Encabezado y controles */}
                     <Box sx={{
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -523,7 +619,7 @@ const ProductList = () => {
                         mb: 3,
                         gap: 2
                     }}>
-                        {/* Breadcrumb movido aquí */}
+                        {/* Breadcrumb */}
                         <Box sx={{ flex: 1 }}>
                             <Breadcrumbs aria-label="breadcrumb">
                                 <MuiLink
@@ -564,16 +660,15 @@ const ProductList = () => {
                             justifyContent: { xs: 'flex-end', md: 'flex-end' },
                             minWidth: { xs: 'auto', md: '320px' }
                         }}>
-                            {/* Botón de vista de productos */}
                             <Tooltip title={gridView === 'grid4' ? "Ver 2 por fila" : "Ver 4 por fila"}>
                                 <IconButton
                                     onClick={toggleGridView}
-                                    color="primary"
                                     size="large"
                                     sx={{
                                         border: '1px solid rgba(0,0,0,0.12)',
                                         borderRadius: '8px',
-                                        p: 1
+                                        p: 1,
+                                        color: vistelicaColors.primary
                                     }}
                                 >
                                     {gridView === 'grid4' ? <ViewComfyIcon fontSize="medium" /> : <ViewModuleIcon fontSize="medium" />}
@@ -702,7 +797,11 @@ const ProductList = () => {
                             <Typography>Cargando productos...</Typography>
                         </Box>
                     ) : filteredProducts.length > 0 ? (
-                        <ProductGrid products={filteredProducts} gridView={gridView} />
+                        <ProductGrid
+                            products={filteredProducts}
+                            gridView={gridView}
+                            onAddToWishlist={handleAddToWishlist}
+                        />
                     ) : (
                         <Box sx={{ textAlign: 'center', py: 6 }}>
                             <Typography>No se encontraron productos con los filtros seleccionados</Typography>
@@ -720,6 +819,22 @@ const ProductList = () => {
                     )}
                 </Box>
             </Box>
+
+            {/* Toast de confirmación */}
+            <Snackbar
+                open={toast.open}
+                autoHideDuration={4000}
+                onClose={() => setToast(prev => ({ ...prev, open: false }))}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert
+                    onClose={() => setToast(prev => ({ ...prev, open: false }))}
+                    severity={toast.severity}
+                    sx={{ width: '100%' }}
+                >
+                    {toast.message}
+                </Alert>
+            </Snackbar>
         </>
     );
 };
