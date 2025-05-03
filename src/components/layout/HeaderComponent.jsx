@@ -31,6 +31,20 @@ export default function Navbar() {
             try {
                 const categories = await categoryService.fetchCategories();
                 setMenuCategories(categories);
+
+                // Comprobar selección guardada para sincronizar el sidebar
+                const selectedCategory = localStorage.getItem('selectedCategory');
+                if (selectedCategory) {
+                    // Encuentra el índice de la categoría seleccionada
+                    const categoryIndex = categories.findIndex(
+                        cat => cat.name.toLowerCase() === selectedCategory.toLowerCase()
+                    );
+
+                    if (categoryIndex >= 0) {
+                        // Abre el submenú correspondiente
+                        setOpenSubmenus(prev => ({...prev, [categoryIndex]: true}));
+                    }
+                }
             } catch (error) {
                 console.error("Error loading categories:", error);
             }
@@ -46,12 +60,31 @@ export default function Navbar() {
             if (rol) {
                 router.push('/admin/page');
             } else {
-                router.push('/');
+                router.push('/home/Home');
             }
         } catch (error) {
             console.error("Error verificando permisos:", error);
         }
     };
+
+    const handleCart = async () => {
+        try{
+            router.push('/cart/page');
+        }catch (error) {
+            console.error("Error al verificar el login:", error);
+            alert("Ocurrió un error. Intenta nuevamente.");
+        }
+    }
+
+    const handlewishlist = async () => {
+        try{
+            router.push('/wishlist/page');
+        }catch (error) {
+            console.error("Error al verificar el login:", error);
+            alert("Ocurrió un error. Intenta nuevamente.");
+        }
+    }
+
     const handleAccountClick = async () => {
         try {
             const token = getToken();
@@ -67,10 +100,25 @@ export default function Navbar() {
     };
 
     const toggleDrawer = (state) => () => setOpen(state);
+
     const toggleSubmenu = (index) => {
         setOpenSubmenus(prev => ({ ...prev, [index]: !prev[index] }));
     };
+
     const toggleSearch = () => setSearchOpen(!searchOpen);
+
+    // Función para manejar clics en subcategorías y redirigir a la lista de productos
+    const handleSubcategoryClick = (category, subcat) => {
+        // Guardar en localStorage para mantener sincronizado el estado
+        localStorage.setItem('selectedCategory', category.name.toLowerCase());
+        localStorage.setItem('selectedSubcategory', subcat.subcategory_id.toString());
+
+        // Ruta correcta usando la estructura de páginas de Next.js
+        router.push(`/product-list/productList?category=${encodeURIComponent(category.name.toLowerCase())}&subcategory=${subcat.subcategory_id}&name=${encodeURIComponent(subcat.name)}`);
+
+        // Cerrar el drawer después de seleccionar
+        toggleDrawer(false)();
+    };
 
     return (
         <>
@@ -131,7 +179,7 @@ export default function Navbar() {
                                 </IconButton>
 
                                 <IconButton sx={{color: "#171717"}}>
-                                    <FavoriteBorderIcon sx={{fontSize: "34px"}}/>
+                                    <FavoriteBorderIcon sx={{fontSize: "34px"}} onClick={handlewishlist}/>
                                 </IconButton>
                             </>
                         )}
@@ -139,7 +187,7 @@ export default function Navbar() {
                         {/* Shopping Bag - Both Mobile & Desktop */}
                         <div style={{position: "relative", display: "flex", alignItems: "center"}}>
                             <IconButton sx={{color: "#171717"}}>
-                                <ShoppingBagIcon sx={{fontSize: "34px"}}/>
+                                <ShoppingBagIcon sx={{fontSize: "34px"}} onClick={handleCart}/>
                             </IconButton>
                             <span style={{
                                 position: "absolute",
@@ -267,13 +315,17 @@ export default function Navbar() {
                                         {category.subcategories.map((subcat, subIndex) => (
                                             <ListItem
                                                 key={subIndex}
+                                                onClick={() => handleSubcategoryClick(category, subcat)}
                                                 sx={{
                                                     pl: 4,
                                                     borderBottom: "1px solid #f0f0f0",
                                                     backgroundColor: "#f9f9f9",
                                                     color: "#333",
                                                     padding: "8px 16px 8px 32px",
-                                                    cursor: "pointer"
+                                                    cursor: "pointer",
+                                                    '&:hover': {
+                                                        backgroundColor: "#f0f0f0"
+                                                    }
                                                 }}
                                             >
                                                 <ListItemText

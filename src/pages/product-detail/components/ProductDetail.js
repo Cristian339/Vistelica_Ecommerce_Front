@@ -1,7 +1,7 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import { styled, useTheme } from '@mui/material/styles';
-import {vistelicaColors} from "@/pages/shared-theme/vistelicaColors";
+import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 import {
     Grid,
     Typography,
@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import productService from '@/services/productService'
 import ProductGallery from './ProductGallery';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ShareIcon from '@mui/icons-material/Share';
@@ -21,7 +22,8 @@ import ColorSelector from './ColorSelector';
 import ProductInfo from './ProductInfo';
 import ShippingInfo from './ShippingInfo';
 import ProductReviews from './ProductReviews';
-import productService from '@/services/productService';
+import wishlistService from '@/services/wishlistService';
+import { getToken } from '@/services/authService';
 
 const ProductDetailContainer = styled('div')(({ theme }) => ({
     padding: theme.spacing(2),
@@ -63,50 +65,115 @@ const ProductDetail = ({
                            selectedSize,
                            selectedColor,
                            onSizeChange,
-                           onColorChange
+                           onColorChange,
+                           onAddToCart,
+                           addingToCart
                        }) => {
     const theme = useTheme();
     const [isFavorite, setIsFavorite] = useState(false);
+    const [loadingWishlist, setLoadingWishlist] = useState(false);
+    const [initialized, setInitialized] = useState(false);
     const [reviews, setReviews] = useState([]);
     const [loadingReviews, setLoadingReviews] = useState(true);
     const [errorReviews, setErrorReviews] = useState(null);
 
+    // Verificar si el producto está en la wishlist al cargar el componente
+    useEffect(() => {
+        let isMounted = true;
 
-        const fetchReviews = async () => {
+        const checkWishlistStatus = async () => {
             try {
-                setLoadingReviews(true);
-                const reviewsData = await productService.getReviewsByProductId(product?.product_id);
-                setReviews(reviewsData);
+                setLoadingWishlist(true);
+                // Primero intentamos con el endpoint específico
+                const inWishlist = await wishlistService.checkProductInWishlist(product.product_id);
+
+                // Si falla, obtenemos toda la wishlist y verificamos manualmente
+                if (inWishlist === null || inWishlist === undefined) {
+                    const wishlist = await wishlistService.getWishlist();
+                    console.log(wishlist);
+                    const found = wishlist.some(item => item.product_id === product.product_id);
+                    if (isMounted) setIsFavorite(found);
+                } else {
+                    if (isMounted) setIsFavorite(inWishlist);
+                }
             } catch (error) {
-                console.error("Error fetching reviews:", error);
-                setErrorReviews(error.message || "Error al cargar las reseñas");
+                console.error('Error verificando wishlist:', error);
             } finally {
-                setLoadingReviews(false);
+                if (isMounted) {
+                    setLoadingWishlist(false);
+                    setInitialized(true);
+                }
             }
         };
 
-        const handleReviewAdded = () => {
+        checkWishlistStatus();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [product.product_id]);
+
+    const fetchReviews = async () => {
+        try {
+            setLoadingReviews(true);
+            const reviewsData = await productService.getReviewsByProductId(product?.product_id);
+            setReviews(reviewsData);
+        } catch (error) {
+            console.error("Error fetching reviews:", error);
+            setErrorReviews(error.message || "Error al cargar las reseñas");
+        } finally {
+            setLoadingReviews(false);
+        }
+    };
+
+    const handleReviewAdded = () => {
+        fetchReviews();
+    };
+
+    useEffect(() => {
+        if (product?.product_id) {
             fetchReviews();
-        };
+        }
+    }, [product?.product_id]);
 
-        useEffect(() => {
-            if (product?.product_id) {
-                fetchReviews();
+    const handleToggleFavorite = async () => {
+        const token = getToken();
+        if (!token) {
+            // Redirigir a login o mostrar modal
+            console.log('Usuario no autenticado');
+            return;
+        }
+
+        try {
+            setLoadingWishlist(true);
+            if (isFavorite) {
+                await wishlistService.removeFromWishlist(product.product_id);
+            } else {
+                await wishlistService.addToWishlist(product.product_id);
             }
-        }, [product?.product_id]);
+            setIsFavorite(!isFavorite);
+        } catch (error) {
+            console.error('Error actualizando wishlist:', error);
+        } finally {
+            setLoadingWishlist(false);
+        }
+    };
+
+    if (!initialized) {
+        return <CircularProgress />;
+    }
+
 
     return (
         <ProductDetailContainer>
             <Grid container alignItems="flex-start" color={vistelicaColors.background}>
-                {/* Galería */}
                 <Grid item xs={12} md={7} lg={8}>
-                    <ProductGallery images={[product.image_url]} />
+                    <ProductGallery productId={product.product_id} />
                 </Grid>
 
-                {/* Detalles compactos */}
                 <Grid item xs={12} md={5} lg={4}>
                     <CompactDetailBox sx={{
-                        minWidth: '700px',
+                        width: 800, // Evita problemas de desbordamiento
                         position: 'sticky',
                         top: theme.spacing(2),
                         paddingLeft: { md: 2 },
@@ -123,17 +190,19 @@ const ProductDetail = ({
                             </Typography>
 
                             <IconButton
-                                aria-label="Añadir a lista de deseos"
-                                onClick={() => setIsFavorite(!isFavorite)}
+                                aria-label={isFavorite ? "Eliminar de favoritos" : "Añadir a favoritos"}
+                                onClick={handleToggleFavorite}
+                                disabled={loadingWishlist}
                                 sx={{
-                                    padding: '8px',
-                                    color: isFavorite ? 'black' : 'inherit',
+                                    color: isFavorite ? 'red' : 'inherit',
                                     '&:hover': {
-                                        color: isFavorite ? 'black' : vistelicaColors.primary
+                                        color: isFavorite ? 'darkred' : 'primary.main'
                                     }
                                 }}
                             >
-                                {isFavorite ? (
+                                {loadingWishlist ? (
+                                    <CircularProgress size={24} />
+                                ) : isFavorite ? (
                                     <FavoriteIcon fontSize="medium" />
                                 ) : (
                                     <FavoriteBorderIcon fontSize="medium" />
@@ -153,21 +222,19 @@ const ProductDetail = ({
                                     textDecoration: 'line-through',
                                     marginLeft: '8px'
                                 }}>
-                                    {(parseFloat(product.price) / (1 - parseFloat(product.discount_percentage) / 100)).toFixed(2)}€
+                                    {(parseFloat(product.price) / (1 - parseFloat(product.discount_percentage) / 100).toFixed(2))}€
                                 </span>
                             )}
                         </Typography>
 
                         <Divider sx={{ my: 2 }} />
 
-                        {/* Selector de tallas */}
                         <SizeSelector
                             sizes={availableSizes}
                             selectedSize={selectedSize}
                             onSizeChange={onSizeChange}
                         />
 
-                        {/* Selector de colores */}
                         <ColorSelector
                             colors={availableColors}
                             selectedColor={selectedColor}
@@ -186,17 +253,22 @@ const ProductDetail = ({
                                 variant="contained"
                                 color="primary"
                                 size="medium"
-                                sx={{ flex: 1, maxWidth: 650 , background: vistelicaColors.primary}}
-                                onClick={() => {
-                                    console.log('Añadir al carrito:', {
-                                        productId: product.product_id,
-                                        size: selectedSize,
-                                        color: selectedColor,
-                                        quantity: 1
-                                    });
+                                sx={{
+                                    flex: 1,
+                                    maxWidth: 650,
+                                    backgroundColor: vistelicaColors.primary,
+                                    '&:hover': {
+                                        backgroundColor: vistelicaColors.primaryDark
+                                    },
+                                    '&:disabled': {
+                                        backgroundColor: '#e0e0e0'
+                                    }
                                 }}
+                                onClick={onAddToCart}
+                                disabled={addingToCart}
+                                startIcon={addingToCart ? <CircularProgress size={20} color="inherit" /> : <ShoppingCartIcon />}
                             >
-                                Añadir al carrito <ShoppingCartIcon />
+                                {addingToCart ? 'Añadiendo...' : 'Añadir al carrito'}
                             </Button>
                             <Button
                                 variant="outlined"

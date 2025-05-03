@@ -2,13 +2,17 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Box, Typography, Button, Fade, Grid, Divider, Chip, IconButton, GlobalStyles, Tooltip } from '@mui/material';
+import { Box, Typography, Button, Divider, Chip, IconButton, GlobalStyles, Tooltip, Breadcrumbs, Link as MuiLink, CircularProgress } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import CloseIcon from '@mui/icons-material/Close';
-import ViewModuleIcon from '@mui/icons-material/ViewModule';  // Para vista de 4 productos
-import ViewComfyIcon from '@mui/icons-material/ViewComfy';    // Para vista de 2 productos
+import ViewModuleIcon from '@mui/icons-material/ViewModule';
+import ViewComfyIcon from '@mui/icons-material/ViewComfy';
+import HomeIcon from '@mui/icons-material/Home';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
+import Link from 'next/link';
+
+// Importación del Navbar
+import HeaderComponent from '@/components/layout/HeaderComponent';
 
 // Servicios y utilidades
 import productService from '@/services/productService';
@@ -26,6 +30,8 @@ const ProductList = () => {
     const searchParams = useSearchParams();
     const gender = searchParams.get('gender');
     const category = searchParams.get('category');
+    const subcategory = searchParams.get('subcategory');
+    const subcategoryName = searchParams.get('name');
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -35,36 +41,39 @@ const ProductList = () => {
     const [categories, setCategories] = useState([]);
     const [subcategories, setSubcategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
+    const [selectedSubcategory, setSelectedSubcategory] = useState(null);
     const [showFilters, setShowFilters] = useState(!isMobile);
     const [sortOption, setSortOption] = useState('relevancia');
-    const [gridView, setGridView] = useState('grid4'); // Estado para la vista de cuadrícula
+    const [gridView, setGridView] = useState('grid4');
+    const [categorySubcategories, setCategorySubcategories] = useState([]);
+    const [loadingSubcategories, setLoadingSubcategories] = useState(false);
     const [filters, setFilters] = useState({
         brands: [],
         colors: [],
         ratings: [],
         priceMin: '',
         priceMax: '',
+        subcategories: []
     });
     const [loading, setLoading] = useState(true);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
 
     // Función para cambiar la vista de cuadrícula
     const toggleGridView = () => {
         setGridView(gridView === 'grid4' ? 'grid2' : 'grid4');
     };
 
-    // Función para abrir el sidebar en móvil
+    // Funciones para sidebar
     const openSidebar = () => {
         document.documentElement.style.setProperty('--SideNavigation-slideIn', '1');
         setShowFilters(true);
     };
 
-    // Función para cerrar el sidebar en móvil
     const closeSidebar = () => {
         document.documentElement.style.setProperty('--SideNavigation-slideIn', '0');
         if (isMobile) setShowFilters(false);
     };
 
-    // Efecto para controlar la visibilidad en cambios de viewport
     useEffect(() => {
         setShowFilters(!isMobile);
     }, [isMobile]);
@@ -73,129 +82,314 @@ const ProductList = () => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const data = await categoryService.getAllWithSubcategories();
-                setCategories(data);
+                const categories = await categoryService.fetchCategories();
+                setCategories(categories);
 
-                // Extraer todas las subcategorías para facilitar la búsqueda
+                // Extraer todas las subcategorías para navegación global
                 const allSubcats = [];
-                data.forEach(category => {
+                categories.forEach(category => {
                     if (category.subcategories && category.subcategories.length > 0) {
                         allSubcats.push(...category.subcategories.map(subcat => ({
                             ...subcat,
                             parentCategory: category.name,
-                            parentSlug: category.slug,
+                            parentCategoryId: category.category_id,
+                            parentSlug: category.slug || category.name.toLowerCase(),
                             gender: category.gender
                         })));
                     }
                 });
                 setSubcategories(allSubcats);
+
+                // Si hay una categoría en la URL, cargar sus subcategorías específicas
+                if (category) {
+                    const foundCategory = categories.find(c =>
+                        c.slug === category ||
+                        c.name.toLowerCase() === category.toLowerCase() ||
+                        c.category_id === parseInt(category)
+                    );
+
+                    if (foundCategory) {
+                        setSelectedCategory(foundCategory);
+                        loadCategorySubcategories(foundCategory.category_id);
+                    }
+                }
             } catch (err) {
                 console.error('Error al cargar categorías:', err);
             }
         };
 
         fetchCategories();
-    }, []);
+    }, [category]);
 
-    // Cargar productos según género y categoría
+    // Función para cargar subcategorías específicas de una categoría
+    const loadCategorySubcategories = async (categoryId) => {
+        if (!categoryId) return [];
+
+        setLoadingSubcategories(true);
+        try {
+            const subcats = await categoryService.getSubcategoriesByCategory(categoryId);
+            setCategorySubcategories(subcats);
+            setLoadingSubcategories(false);
+            return subcats;
+        } catch (error) {
+            console.error(`Error al cargar subcategorías para la categoría ${categoryId}:`, error);
+            setCategorySubcategories([]);
+            setLoadingSubcategories(false);
+            return [];
+        }
+    };
+
+    // Actualizar las subcategorías cuando cambia la categoría seleccionada
     useEffect(() => {
-        const fetchProducts = async () => {
-            setLoading(true);
-            try {
-                const data = await productService.getAll();
-                let filteredData = data;
+        if (selectedCategory && selectedCategory.category_id) {
+            loadCategorySubcategories(selectedCategory.category_id);
+        }
+    }, [selectedCategory]);
 
+    // Cargar productos con la nueva API para subcategorías
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchProducts = async () => {
+            if (!isMounted) return;
+
+            if (isInitialLoad) {
+                setLoading(true);
+            }
+
+            try {
+                // Cargar imágenes primero y crear un mapa
+                let imagesMap = {};
+                try {
+                    const images = await productService.getMainProductImages();
+                    console.log("Imágenes recibidas del backend:", images);
+
+                    // Convertir el array de imágenes a un objeto para acceso rápido
+                    if (Array.isArray(images)) {
+                        images.forEach(img => {
+                            // Asegurar que usamos el ID correcto como clave
+                            const productId = String(img.product_id);
+                            // Verificar si la URL de la imagen es completa o necesita prefijo
+                            const imageUrl = img.image_url.startsWith('http')
+                                ? img.image_url
+                                : `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${img.image_url}`;
+
+                            imagesMap[productId] = imageUrl;
+                            //console.log(`Imagen mapeada: Producto ${productId} -> ${imageUrl}`);
+                        });
+                    }
+                } catch (imgError) {
+                    console.error("Error al cargar imágenes de productos:", imgError);
+                }
+
+                // Cargar productos
+                let data = [];
+                let foundSubcategory = null;
+                let parentCategory = null;
+
+                // Si tenemos subcategoría específica en la URL
+                if (subcategory) {
+                    console.log("Filtrando por subcategoría ID:", subcategory);
+
+                    // Encontrar la subcategoría por ID
+                    foundSubcategory = subcategories.find(s =>
+                        s.subcategory_id === parseInt(subcategory) ||
+                        s.slug === subcategory
+                    );
+
+                    if (foundSubcategory) {
+                        console.log("Subcategoría encontrada:", foundSubcategory.name);
+
+                        // Buscar la categoría padre
+                        parentCategory = categories.find(c =>
+                            c.category_id === foundSubcategory.parentCategoryId ||
+                            c.subcategories?.some(s =>
+                                s.subcategory_id === parseInt(subcategory) ||
+                                s.slug === subcategory
+                            )
+                        );
+
+                        if (parentCategory && foundSubcategory) {
+                            // Usar la nueva API para obtener productos por categoría y subcategoría
+                            try {
+                                data = await productService.getByCategoryAndSubcategory(
+                                    parentCategory.category_id,
+                                    foundSubcategory.subcategory_id
+                                );
+                                console.log(`Productos obtenidos con getByCategoryAndSubcategory: ${data.length}`);
+                            } catch (err) {
+                                console.error("Error al obtener productos por categoría/subcategoría:", err);
+                                // Fallback a filtrado manual si la API falla
+                                data = await productService.getAll();
+                                data = data.filter(product => {
+                                    const productSubcategory = product.subcategory ?
+                                        (typeof product.subcategory === 'string' ?
+                                                product.subcategory.toLowerCase() :
+                                                String(product.subcategory).toLowerCase()
+                                        ) : '';
+
+                                    return productSubcategory === foundSubcategory.name.toLowerCase() ||
+                                        productSubcategory === subcategoryName?.toLowerCase();
+                                });
+                            }
+                        } else {
+                            // Fallback si no tenemos la información completa
+                            data = await productService.getAll();
+                            data = data.filter(p => {
+                                const pSubcat = p.subcategory ? String(p.subcategory).toLowerCase() : '';
+                                return pSubcat === foundSubcategory.name.toLowerCase();
+                            });
+                        }
+                    } else {
+                        // Si no encontramos la subcategoría en nuestra memoria caché
+                        data = await productService.getAll();
+                        data = data.filter(p => {
+                            const pSubcat = p.subcategory ? String(p.subcategory).toLowerCase() : '';
+                            return pSubcat === subcategoryName?.toLowerCase();
+                        });
+                    }
+
+                    if (isMounted) {
+                        setSelectedSubcategory(foundSubcategory || {name: subcategoryName || "Subcategoría"});
+                        setSelectedCategory(parentCategory || {name: "Categoría"});
+                    }
+                }
+                // Si solo tenemos categoría en la URL
+                else if (category) {
+                    const categoryObj = categories.find(c =>
+                        c.slug === category ||
+                        c.name.toLowerCase() === category.toLowerCase() ||
+                        c.category_id === parseInt(category)
+                    );
+
+                    if (categoryObj) {
+                        // Si tenemos un filtro de subcategorías, aplicarlo
+                        if (filters.subcategories && filters.subcategories.length > 0) {
+                            const allProducts = [];
+                            for (const subcat of filters.subcategories) {
+                                try {
+                                    const subProducts = await productService.getByCategoryAndSubcategory(
+                                        categoryObj.category_id,
+                                        subcat
+                                    );
+                                    allProducts.push(...subProducts);
+                                } catch (err) {
+                                    console.error(`Error al cargar productos para subcategoría ${subcat}:`, err);
+                                }
+                            }
+                            data = allProducts;
+                        }
+                        // Si no, cargar todos los productos de esa categoría
+                        else {
+                            data = await productService.getAll();
+                            data = data.filter(p =>
+                                (typeof p.category === 'string' ?
+                                    p.category.toLowerCase() :
+                                    String(p.category || '').toLowerCase()) === categoryObj.name.toLowerCase()
+                            );
+                        }
+
+                        if (isMounted) {
+                            setSelectedCategory(categoryObj);
+                            setSelectedSubcategory(null);
+                        }
+                    } else {
+                        data = await productService.getAll();
+                    }
+                } else {
+                    data = await productService.getAll();
+                    if (isMounted) {
+                        setSelectedCategory(gender ? {name: gender.charAt(0).toUpperCase() + gender.slice(1)} : {name: 'Todos los productos'});
+                        setSelectedSubcategory(null);
+                    }
+                }
+
+                // Filtrar por género si existe
                 if (gender) {
-                    filteredData = filteredData.filter(p =>
-                        p.gender.toLowerCase() === gender.toLowerCase()
+                    data = data.filter(p =>
+                        (typeof p.gender === 'string' ? p.gender.toLowerCase() : String(p.gender || '').toLowerCase()) === gender.toLowerCase()
                     );
                 }
 
-                if (category && category !== 'todos') {
-                    // Verificar si es una categoría principal o subcategoría
-                    const isMainCategory = categories.some(c => c.slug === category);
-                    const isSubCategory = subcategories.some(s => s.slug === category);
+                if (isMounted) {
+                    console.log(`Productos finales obtenidos: ${data.length}`);
 
-                    if (isMainCategory) {
-                        // Si es categoría principal, incluir productos de sus subcategorías también
-                        const categoryObj = categories.find(c => c.slug === category);
-                        const subcatSlugs = categoryObj?.subcategories?.map(s => s.slug) || [];
+                    // Asociar las imágenes a los productos correctamente
+                    const productsWithImages = data.map(product => {
+                        // Probar con diferentes formatos de ID para mayor compatibilidad
+                        const productId = String(product.product_id || product._id);
+                        const imageUrl = imagesMap[productId];
 
-                        filteredData = filteredData.filter(p =>
-                            p.category.toLowerCase() === category.toLowerCase() ||
-                            subcatSlugs.includes(p.category.toLowerCase())
-                        );
+                        console.log(`Producto ${productId}: ${product.name || 'sin nombre'}`);
+                        console.log(`- ID usado para buscar imagen: ${productId}`);
+                        console.log(`- Imagen encontrada: ${imageUrl || 'NO ENCONTRADA'}`);
 
-                        setSelectedCategory(categoryObj);
-                    }
-                    else if (isSubCategory) {
-                        // Si es subcategoría, filtrar solo por ella
-                        filteredData = filteredData.filter(p =>
-                            p.category.toLowerCase() === category.toLowerCase()
-                        );
+                        return {
+                            ...product,
+                            imageUrl: imageUrl || '/images/placeholder-product.jpg'
+                        };
+                    });
 
-                        const subcatObj = subcategories.find(s => s.slug === category);
-                        setSelectedCategory({
-                            ...subcatObj,
-                            isSubcategory: true
-                        });
-                    }
-                    else {
-                        // Filtro genérico si no se identifica claramente
-                        filteredData = filteredData.filter(p =>
-                            p.category.toLowerCase() === category.toLowerCase()
-                        );
-
-                        setSelectedCategory({ name: `Categoría: ${category}` });
-                    }
-                } else {
-                    setSelectedCategory({ name: gender ? `${gender.charAt(0).toUpperCase() + gender.slice(1)}` : 'Todos los productos' });
+                    setProducts(productsWithImages);
+                    setFilteredProducts(productsWithImages);
+                    setIsInitialLoad(false);
                 }
-
-                setProducts(filteredData);
-                setFilteredProducts(filteredData);
             } catch (err) {
                 console.error('Error al cargar productos:', err);
+                if (isMounted) {
+                    setIsInitialLoad(false);
+                }
             } finally {
-                setLoading(false);
+                if (isMounted && isInitialLoad) {
+                    setLoading(false);
+                }
             }
         };
 
         fetchProducts();
-    }, [gender, category, categories, subcategories]);
 
-    // Aplicar filtros a los productos
+        return () => {
+            isMounted = false;
+        };
+    }, [gender, category, subcategory, subcategoryName, categories.length, subcategories.length, filters.subcategories]);
+
+    // Aplicar filtros al cambiar los criterios
     useEffect(() => {
+        if (products.length === 0) return;
+
         let result = [...products];
 
-        // Filtro por marcas
+        // Aplicar filtros
         if (filters.brands.length > 0) {
             result = result.filter(p => filters.brands.includes(p.brand));
         }
 
-        // Filtro por colores
         if (filters.colors.length > 0) {
-            result = result.filter(p => filters.colors.includes(p.color));
+            result = result.filter(p =>
+                p.colors && p.colors.some(c => filters.colors.includes(c))
+            );
         }
 
-        // Filtro por rating
         if (filters.ratings.length > 0) {
-            result = result.filter(p => filters.ratings.includes(Math.floor(p.rating)));
+            const minRating = Math.min(...filters.ratings);
+            result = result.filter(p => p.rating >= minRating);
         }
 
-        // Filtro por precio
         if (filters.priceMin !== '') {
-            result = result.filter(p => p.price >= parseInt(filters.priceMin));
-        }
-        if (filters.priceMax !== '') {
-            result = result.filter(p => p.price <= parseInt(filters.priceMax));
+            result = result.filter(p => p.price >= parseFloat(filters.priceMin));
         }
 
-        // Ordenamiento
-        result = sortProducts(result, sortOption);
+        if (filters.priceMax !== '') {
+            result = result.filter(p => p.price <= parseFloat(filters.priceMax));
+        }
+
+        // Aplicar ordenamiento
+        if (sortOption !== 'relevancia') {
+            result = sortProducts(result, sortOption);
+        }
 
         setFilteredProducts(result);
-    }, [filters, sortOption, products]);
+    }, [filters.brands, filters.colors, filters.ratings, filters.priceMin, filters.priceMax, sortOption, products]);
 
     // Resetear filtros
     const resetFilters = () => {
@@ -205,40 +399,27 @@ const ProductList = () => {
             ratings: [],
             priceMin: '',
             priceMax: '',
+            subcategories: []
         });
         setSortOption('relevancia');
     };
 
     // Verificar si hay filtros activos
     const hasActiveFilters = () => {
-        return (
-            filters.brands.length > 0 ||
+        return filters.brands.length > 0 ||
             filters.colors.length > 0 ||
             filters.ratings.length > 0 ||
             filters.priceMin !== '' ||
             filters.priceMax !== '' ||
-            sortOption !== 'relevancia'
-        );
+            filters.subcategories.length > 0 ||
+            sortOption !== 'relevancia';
     };
 
-    // Obtener un título más informativo para la página
+    // Obtener título para la página - solo la subcategoría si existe
     const getPageTitle = () => {
-        if (selectedCategory) {
-            if (selectedCategory.isSubcategory) {
-                const parentCategory = categories.find(c =>
-                    c.subcategories?.some(s => s._id === selectedCategory._id)
-                );
-                return (
-                    <>
-                        {selectedCategory.name}
-                        {parentCategory && (
-                            <Typography variant="subtitle1" color="text.secondary">
-                                {parentCategory.name}
-                            </Typography>
-                        )}
-                    </>
-                );
-            }
+        if (selectedSubcategory && selectedSubcategory.name) {
+            return selectedSubcategory.name;
+        } else if (selectedCategory && selectedCategory.name) {
             return selectedCategory.name;
         }
         return gender ? `${gender.charAt(0).toUpperCase() + gender.slice(1)}` : 'Productos';
@@ -246,8 +427,11 @@ const ProductList = () => {
 
     return (
         <>
+            {/* Incluir el navbar */}
+            <HeaderComponent />
+
             <GlobalStyles
-                styles={(theme) => ({
+                styles={() => ({
                     ':root': {
                         '--Sidebar-width': '300px',
                         '--SideNavigation-slideIn': '0',
@@ -262,26 +446,50 @@ const ProductList = () => {
                 display: 'flex',
                 position: 'relative'
             }}>
-                {/* Contenedor para el sidebar con filtros */}
+                {/* Sidebar con filtros - Corregido para buen funcionamiento del scroll */}
                 <Box
                     sx={{
-                        position: { xs: 'static', md: 'relative' },
-                        width: { md: showFilters ? 'var(--Sidebar-width)' : '0px' },
+                        position: { xs: 'fixed', md: 'sticky' },
+                        top: { xs: 0, md: '64px' }, // Ajustar según la altura de tu navbar
+                        left: { xs: showFilters ? 0 : '-100%', md: 0 },
+                        height: { xs: '100vh', md: 'calc(100vh - 64px)' },
+                        width: { xs: '270px', md: showFilters ? 'var(--Sidebar-width)' : '0px' },
+                        backgroundColor: 'white',
+                        zIndex: { xs: 1200, md: 100 },
+                        transition: 'all 0.3s ease-in-out',
+                        boxShadow: { xs: showFilters ? '0 0 10px rgba(0,0,0,0.2)' : 'none', md: 'none' },
+                        overflowY: 'auto',
                         flexShrink: 0,
-                        overflow: 'hidden',
-                        transition: 'width 0.3s ease-in-out',
+                        overflowX: 'hidden',
+                        borderRight: '1px solid rgba(0,0,0,0.08)'
                     }}
                 >
                     <FilterSidebar
                         filters={filters}
                         setFilters={setFilters}
                         categories={categories}
-                        subcategories={subcategories}
+                        subcategories={categorySubcategories}
+                        loadingSubcategories={loadingSubcategories}
+                        selectedCategory={selectedCategory}
                         selectedGender={gender}
                         currentCategory={category}
                         showFilters={showFilters}
                         setShowFilters={setShowFilters}
                         closeSidebar={closeSidebar}
+                        onSubcategorySelect={(subcatId) => {
+                            // Manejar selección de subcategoría en el filtro lateral
+                            if (filters.subcategories.includes(subcatId)) {
+                                setFilters(prev => ({
+                                    ...prev,
+                                    subcategories: prev.subcategories.filter(id => id !== subcatId)
+                                }));
+                            } else {
+                                setFilters(prev => ({
+                                    ...prev,
+                                    subcategories: [...prev.subcategories, subcatId]
+                                }));
+                            }
+                        }}
                     />
                 </Box>
 
@@ -290,100 +498,71 @@ const ProductList = () => {
                     component="main"
                     sx={{
                         flexGrow: 1,
-                        width: { xs: '100%', md: '100%' },
+                        width: { xs: '100%', md: showFilters ? 'calc(100% - var(--Sidebar-width))' : '100%' },
                         ml: { xs: 0 },
-                        transition: 'margin-left 0.3s',
+                        transition: 'margin-left 0.3s, width 0.3s',
                         px: { xs: 2, sm: 3, md: 4 },
                     }}
                 >
-                    {/* Encabezado y controles */}
+                    {/* Título centrado */}
+                    <Box sx={{ textAlign: 'center', mb: 3 }}>
+                        <Typography variant="h4" component="h1" fontWeight="bold">
+                            {getPageTitle()}
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                            ({filteredProducts.length} productos)
+                        </Typography>
+                    </Box>
+
+                    {/* Encabezado y controles - NUEVA ESTRUCTURA */}
                     <Box sx={{
                         display: 'flex',
                         justifyContent: 'space-between',
-                        alignItems: 'center',
-                        flexDirection: { xs: 'column', sm: 'row' },
-                        mb: 3
+                        alignItems: { xs: 'stretch', md: 'center' },
+                        flexDirection: { xs: 'column', md: 'row' },
+                        mb: 3,
+                        gap: 2
                     }}>
-                        <Box>
-                            <Typography variant="h4" component="h1" fontWeight="bold">
-                                {getPageTitle()}
-                                <Box component="span" sx={{ color: 'text.secondary', ml: 1 }}>
-                                    ({filteredProducts.length})
-                                </Box>
-                            </Typography>
+                        {/* Breadcrumb movido aquí */}
+                        <Box sx={{ flex: 1 }}>
+                            <Breadcrumbs aria-label="breadcrumb">
+                                <MuiLink
+                                    component={Link}
+                                    underline="hover"
+                                    color="inherit"
+                                    href="/"
+                                    sx={{ display: 'flex', alignItems: 'center' }}
+                                >
+                                    <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
+                                    Inicio
+                                </MuiLink>
 
-                            {/* Filtros activos */}
-                            {hasActiveFilters() && (
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-                                    {filters.brands.map(brandId => {
-                                        const brand = BRANDS.find(b => b.id === brandId);
-                                        return (
-                                            <Chip
-                                                key={brandId}
-                                                label={brand?.label || brandId}
-                                                size="small"
-                                                onDelete={() => {
-                                                    setFilters(prev => ({
-                                                        ...prev,
-                                                        brands: prev.brands.filter(b => b !== brandId)
-                                                    }));
-                                                }}
-                                            />
-                                        );
-                                    })}
+                                {selectedCategory && selectedCategory.name && selectedCategory.name !== 'Todos los productos' && (
+                                    <MuiLink
+                                        component={Link}
+                                        underline="hover"
+                                        color="inherit"
+                                        href={`/product-list?category=${selectedCategory.slug || selectedCategory.name.toLowerCase()}`}
+                                    >
+                                        {selectedCategory.name}
+                                    </MuiLink>
+                                )}
 
-                                    {filters.colors.map(colorId => {
-                                        const color = COLORS.find(c => c.id === colorId);
-                                        return (
-                                            <Chip
-                                                key={colorId}
-                                                label={color?.label || colorId}
-                                                size="small"
-                                                onDelete={() => {
-                                                    setFilters(prev => ({
-                                                        ...prev,
-                                                        colors: prev.colors.filter(c => c !== colorId)
-                                                    }));
-                                                }}
-                                            />
-                                        );
-                                    })}
-                                    {filters.ratings.map(rating => (
-                                        <Chip
-                                            key={rating}
-                                            label={`${rating}★ o más`}
-                                            size="small"
-                                            onDelete={() => {
-                                                setFilters(prev => ({
-                                                    ...prev,
-                                                    ratings: prev.ratings.filter(r => r !== rating)
-                                                }));
-                                            }}
-                                        />
-                                    ))}
-                                    {(filters.priceMin !== '' || filters.priceMax !== '') && (
-                                        <Chip
-                                            label={`${filters.priceMin || 0}€ - ${filters.priceMax || '∞'}€`}
-                                            size="small"
-                                            onDelete={() => {
-                                                setFilters(prev => ({
-                                                    ...prev,
-                                                    priceMin: '',
-                                                    priceMax: ''
-                                                }));
-                                            }}
-                                        />
-                                    )}
-                                </Box>
-                            )}
+                                {selectedSubcategory && selectedSubcategory.name && (
+                                    <Typography color="text.primary">
+                                        {selectedSubcategory.name}
+                                    </Typography>
+                                )}
+                            </Breadcrumbs>
                         </Box>
 
+                        {/* Controles */}
                         <Box sx={{
                             display: 'flex',
                             alignItems: 'center',
                             gap: 2,
-                            mt: { xs: 2, sm: 0 },
-                            width: { xs: '100%', sm: 'auto' }
+                            justifyContent: { xs: 'flex-end', md: 'flex-end' },
+                            minWidth: { xs: 'auto', md: '320px' }
                         }}>
                             {/* Botón de vista de productos */}
                             <Tooltip title={gridView === 'grid4' ? "Ver 2 por fila" : "Ver 4 por fila"}>
@@ -428,11 +607,98 @@ const ProductList = () => {
                         </Box>
                     </Box>
 
+                    {/* Filtros activos */}
+                    {hasActiveFilters() && (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1, mb: 3 }}>
+                            {/* Chips para subcategorías */}
+                            {filters.subcategories.map(subcatId => {
+                                const subcat = categorySubcategories.find(s => s.subcategory_id === subcatId);
+                                return subcat && (
+                                    <Chip
+                                        key={`subcat-${subcatId}`}
+                                        label={subcat.name || `Subcategoría ${subcatId}`}
+                                        size="small"
+                                        onDelete={() => {
+                                            setFilters(prev => ({
+                                                ...prev,
+                                                subcategories: prev.subcategories.filter(id => id !== subcatId)
+                                            }));
+                                        }}
+                                    />
+                                );
+                            })}
+
+                            {/* Otras chips de filtros */}
+                            {filters.brands.map(brandId => {
+                                const brand = BRANDS.find(b => b.id === brandId);
+                                return (
+                                    <Chip
+                                        key={brandId}
+                                        label={brand?.label || brandId}
+                                        size="small"
+                                        onDelete={() => {
+                                            setFilters(prev => ({
+                                                ...prev,
+                                                brands: prev.brands.filter(b => b !== brandId)
+                                            }));
+                                        }}
+                                    />
+                                );
+                            })}
+
+                            {filters.colors.map(colorId => {
+                                const color = COLORS.find(c => c.id === colorId);
+                                return (
+                                    <Chip
+                                        key={colorId}
+                                        label={color?.label || colorId}
+                                        size="small"
+                                        onDelete={() => {
+                                            setFilters(prev => ({
+                                                ...prev,
+                                                colors: prev.colors.filter(c => c !== colorId)
+                                            }));
+                                        }}
+                                    />
+                                );
+                            })}
+
+                            {filters.ratings.map(rating => (
+                                <Chip
+                                    key={rating}
+                                    label={`${rating}★ o más`}
+                                    size="small"
+                                    onDelete={() => {
+                                        setFilters(prev => ({
+                                            ...prev,
+                                            ratings: prev.ratings.filter(r => r !== rating)
+                                        }));
+                                    }}
+                                />
+                            ))}
+
+                            {(filters.priceMin !== '' || filters.priceMax !== '') && (
+                                <Chip
+                                    label={`${filters.priceMin || 0}€ - ${filters.priceMax || '∞'}€`}
+                                    size="small"
+                                    onDelete={() => {
+                                        setFilters(prev => ({
+                                            ...prev,
+                                            priceMin: '',
+                                            priceMax: ''
+                                        }));
+                                    }}
+                                />
+                            )}
+                        </Box>
+                    )}
+
                     <Divider sx={{ mb: 3 }} />
 
                     {/* Grid de productos */}
                     {loading ? (
-                        <Box sx={{ textAlign: 'center', py: 6 }}>
+                        <Box sx={{ textAlign: 'center', py: 6, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <CircularProgress color="primary" size={40} sx={{ mb: 2 }} />
                             <Typography>Cargando productos...</Typography>
                         </Box>
                     ) : filteredProducts.length > 0 ? (

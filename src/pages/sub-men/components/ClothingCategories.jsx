@@ -2,10 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import Grid from '@mui/material/Grid';
+import { useRouter } from 'next/navigation';
 import categoryService from '@/services/categoryService';
+import Box from '@mui/material/Box';
 
 const ClothingCategories = () => {
     const [subcategories, setSubcategories] = useState([]);
+    const router = useRouter();
 
     useEffect(() => {
         const loadSubcategories = async () => {
@@ -30,6 +33,16 @@ const ClothingCategories = () => {
         loadSubcategories();
     }, []);
 
+    // Función para navegar a la página de productos filtrada por subcategoría
+    const handleCategoryClick = (subcat) => {
+        // Guardar en localStorage para sincronizar con el sidebar
+        localStorage.setItem('selectedCategory', 'hombre');
+        localStorage.setItem('selectedSubcategory', subcat.subcategory_id.toString());
+
+        // Navegar a la página de productos con filtrado
+        router.push(`/product-list?category=hombre&subcategory=${subcat.subcategory_id}&name=${encodeURIComponent(subcat.name)}`);
+    };
+
     return (
         <Grid container spacing={1} sx={{ backgroundColor: '#ffffff', padding: '20px 0' }}>
             {subcategories.map((subcat) => (
@@ -40,14 +53,26 @@ const ClothingCategories = () => {
                     sm={6}
                     md={4}
                     lg={2}
+                    onClick={() => handleCategoryClick(subcat)}
                 >
-                    <div style={{
-                        position: 'relative',
-                        width: '100%',
-                        height: '180px',
-                        overflow: 'hidden',
-                        cursor: 'pointer'
-                    }}>
+                    <Box
+                        sx={{
+                            position: 'relative',
+                            width: '100%',
+                            height: '180px',
+                            overflow: 'hidden',
+                            cursor: 'pointer',
+                            transition: 'transform 0.3s ease',
+                            '&:hover': {
+                                '& img': {
+                                    transform: 'scale(1.05)'
+                                },
+                                '& .overlay': {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.4)'
+                                }
+                            }
+                        }}
+                    >
                         <img
                             src={subcat.image_url_sub}
                             alt={subcat.name}
@@ -58,17 +83,21 @@ const ClothingCategories = () => {
                                 transition: 'transform 0.3s ease'
                             }}
                         />
-                        <div style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            backgroundColor: 'rgba(0, 0, 0, 0.2)'
-                        }}>
+                        <Box
+                            className="overlay"
+                            sx={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                                transition: 'background-color 0.3s ease'
+                            }}
+                        >
                             <span style={{
                                 color: '#ffffff',
                                 fontSize: '24px',
@@ -79,8 +108,8 @@ const ClothingCategories = () => {
                             }}>
                                 {subcat.name}
                             </span>
-                        </div>
-                    </div>
+                        </Box>
+                    </Box>
                 </Grid>
             ))}
         </Grid>

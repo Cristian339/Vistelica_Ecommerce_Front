@@ -33,7 +33,7 @@ class WishService {
             const response = await axios.delete(
                 `${API_URL}/wishlist/remove`,
                 {
-                    headers: await getAuthHeaders(),
+                    headers: await getToken(),
                     data: { productId }
                 }
             );
@@ -52,8 +52,8 @@ class WishService {
     async getUserWishlist(userId) {
         try {
             const response = await axios.get(
-                `${API_URL}/wishlist/user/${userId}`,
-                { headers: await getAuthHeaders() }
+                `${API_URL}/wishlist/user/${user.userId}`,
+                { headers: await getToken() }
             );
             return response.data;
         } catch (error) {
