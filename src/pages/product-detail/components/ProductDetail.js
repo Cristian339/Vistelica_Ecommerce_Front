@@ -173,7 +173,7 @@ const ProductDetail = ({
 
                 <Grid item xs={12} md={5} lg={4}>
                     <CompactDetailBox sx={{
-                        minWidth: '700px',
+                        width: 800, // Evita problemas de desbordamiento
                         position: 'sticky',
                         top: theme.spacing(2),
                         paddingLeft: { md: 2 },

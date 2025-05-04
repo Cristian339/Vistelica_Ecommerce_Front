@@ -1,5 +1,5 @@
 'use client';
-import { Container, Grid, Typography } from '@mui/material';
+import { Container, Grid, Typography, Box } from '@mui/material';
 import CartList from './components/CartList';
 import CartSummary from './components/CartSummary';
 import Navbar from "@/components/layout/HeaderComponent";
@@ -70,7 +70,7 @@ export default function CartPage() {
         return (
             <>
                 <Navbar />
-                <Container maxWidth="xl" disableGutters sx={{ my: 4, px: { xs: 2, md: 4 } }}>
+                <Container maxWidth="xl" sx={{ my: 4, px: { xs: 2, md: 4 } }}>
                     <Typography>Cargando carrito...</Typography>
                 </Container>
             </>
@@ -84,19 +84,41 @@ export default function CartPage() {
     return (
         <>
             <Navbar />
-            <Container maxWidth="xl" disableGutters sx={{ my: 4, px: { xs: 2, md: 4 } }}>
-                <Typography variant="h4" component="h1" sx={{
-                    fontWeight: 'bold',
-                    mb: 4,
-                    textAlign: 'center',
-                    fontSize: '1.8rem',
-                    fontFamily: "'Amethysta', serif"
-                }}>
+            <Container
+                maxWidth="xl"
+                sx={{
+                    my: 4,
+                    px: { xs: 2, md: 4 },
+                    minHeight: 'calc(100vh - 200px)'
+                }}
+            >
+                <Typography
+                    variant="h4"
+                    component="h1"
+                    sx={{
+                        fontWeight: 'bold',
+                        mb: 4,
+                        textAlign: 'center',
+                        fontSize: { xs: '1.5rem', md: '1.8rem' },
+                        fontFamily: "'Amethysta', serif"
+                    }}
+                >
                     CESTA DE LA COMPRA
                 </Typography>
 
-                <Grid container spacing={4}>
-                    <Grid item xs={12} md={8}>
+                {/* Cambiamos a Box con flexbox en lugar de Grid */}
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: { xs: 'column', md: 'row' },
+                    gap: 3,
+                    alignItems: 'flex-start'
+                }}>
+                    {/* CartList - Ocupa todo el espacio disponible */}
+                    <Box sx={{
+                        flex: 1,
+                        minWidth: 0, // Evita problemas de desbordamiento
+                        width: '100%'
+                    }}>
                         <CartList
                             cartItems={cartItems}
                             setCartItems={setCartItems}
@@ -104,17 +126,22 @@ export default function CartPage() {
                             userId={cart.user?.user_id}
                             sessionId={cart.session_id}
                         />
-                    </Grid>
+                    </Box>
 
-                    <Grid item xs={12} md={4}>
+                    {/* CartSummary - Ancho fijo a la derecha */}
+                    <Box sx={{
+                        width: { xs: '100%', md: '350px' },
+                        position: { md: 'sticky' },
+                        top: 100
+                    }}>
                         <CartSummary
                             totalPrice={total.totalPrice}
                             itemCount={total.itemCount}
                             isGuest={!cart.user && cart.session_id}
                             onCheckout={handleCheckout}
                         />
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Box>
             </Container>
         </>
     );
