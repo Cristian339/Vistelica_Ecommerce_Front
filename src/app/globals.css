@@ -41,6 +41,71 @@ a {
   text-decoration: none;
 }
 
+/* Estilos para los toasts de Vistelica */
+.vistelica-toast {
+  border-radius: 8px !important;
+  box-shadow: none !important; /* Eliminamos la sombra completamente */
+  font-family: Amethysta, sans-serif !important;
+  border-left: 4px solid !important;
+  padding: 0 !important;
+  margin-bottom: 12px !important;
+  background-color: #ffffff !important;
+}
+
+.vistelica-toast-body {
+  padding: 16px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.3px !important;
+  color: #232A2E !important; /* Color secondary para mejor legibilidad */
+  font-size: 15px !important;
+}
+
+.vistelica-toast-progress {
+  height: 3px !important;
+}
+
+/* Éxito - success */
+.Toastify__toast-success {
+  border-left-color: #E4B002 !important; /* Color primary */
+}
+.Toastify__toast-success .vistelica-toast-progress {
+  background: #E4B002 !important; /* Color primary */
+}
+
+/* Error */
+.Toastify__toast-error {
+  border-left-color: #D32F2F !important; /* Color error */
+}
+.Toastify__toast-error .vistelica-toast-progress {
+  background: #D32F2F !important; /* Color error */
+}
+
+/* Información */
+.Toastify__toast-info {
+  border-left-color: #0288D1 !important; /* Color info */
+}
+.Toastify__toast-info .vistelica-toast-progress {
+  background: #0288D1 !important; /* Color info */
+}
+
+/* Advertencia */
+.Toastify__toast-warning {
+  border-left-color: #ED6C02 !important; /* Color warning */
+}
+.Toastify__toast-warning .vistelica-toast-progress {
+  background: #ED6C02 !important; /* Color warning */
+}
+
+/* Botón de cerrar */
+.Toastify__close-button {
+  color:#E4B002 !important; /* Color secondary */
+  opacity: 0.7 !important;
+}
+
+.Toastify__close-button:hover {
+  opacity: 1 !important;
+}
+
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;

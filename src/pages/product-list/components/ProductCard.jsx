@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, Rating, styled, IconButton } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import Link from 'next/link';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import { isInLocalWishlist } from '@/utils/localStorageHelpers';
 
 // Corrección de estilos para eliminar la advertencia de largeView
 const ProductCardContainer = styled(Box, {
@@ -67,35 +71,62 @@ const FavoriteButton = styled(IconButton)(({ theme }) => ({
     }
 }));
 
-const ProductCard = ({ product, largeView = false }) => {
-    const [isFavorite, setIsFavorite] = useState(false);
+const ActionButton = styled(IconButton)(({ theme }) => ({
+    transition: 'all 0.2s ease',
+    '&:hover': {
+        transform: 'scale(1.1)'
+    },
+}));
+
+const ProductCard = ({ product, largeView = false, onAddToWishlist, onRemove, onAddToCart, isWishlistPage = false }) => {
+    const theme = useTheme();
     const [imageError, setImageError] = useState(false);
+    const [isInFavorites, setIsInFavorites] = useState(false);
+
+    // Verificar si el producto está en favoritos al cargar el componente
+    useEffect(() => {
+        if (product && product.id) {
+            setIsInFavorites(isInLocalWishlist(product.id));
+        }
+    }, [product]);
+
+    // Si el producto no existe, no renderizar nada
+    if (!product) return null;
 
     const toggleFavorite = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        setIsFavorite(!isFavorite);
+
+        if (onAddToWishlist) {
+            onAddToWishlist(product, isInFavorites);
+        } else {
+            // Actualizar solo el estado local si no hay función de manejo
+            setIsInFavorites(!isInFavorites);
+        }
     };
 
     // Usar imageUrl como fuente principal de imagen
     const imageUrl = !imageError ?
-        (product.imageUrl || product.images?.[0] || '/images/placeholder-product.jpg') :
+        (product.imageUrl || product.image || product.images?.[0] || '/images/placeholder-product.jpg') :
         '/images/placeholder-product.jpg';
 
     // ID del producto para el enlace - usar cualquier formato disponible
-    const productId = product.product_id || product._id || '';
+    const productId = product.product_id || product.id || product._id || '';
 
     return (
         <ProductCardContainer largeView={largeView}>
-            <FavoriteButton
-                className={`heart-icon ${isFavorite ? 'active' : ''}`}
-                onClick={toggleFavorite}
-                size={largeView ? "medium" : "small"}
-                aria-label="añadir a favoritos"
-                color={isFavorite ? "error" : "default"}
-            >
-                {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-            </FavoriteButton>
+            {!isWishlistPage && (
+                <FavoriteButton
+                    className={`heart-icon ${isInFavorites ? 'active' : ''}`}
+                    onClick={toggleFavorite}
+                    size={largeView ? "medium" : "small"}
+                    aria-label="añadir a favoritos"
+                    color="error"
+                    sx={{ opacity: isInFavorites ? 1 : undefined }}
+                >
+                    {isInFavorites ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                </FavoriteButton>
+            )}
 
             <Link href={`/product/${productId}`} passHref style={{ textDecoration: 'none', color: 'inherit' }}>
                 <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -170,6 +201,34 @@ const ProductCard = ({ product, largeView = false }) => {
                     </Box>
                 </Box>
             </Link>
+
+            {isWishlistPage && (
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    p: 2,
+                    borderTop: `1px solid ${theme.palette.divider}`
+                }}>
+                    <ActionButton
+                        onClick={() => onRemove?.(product.id || product.product_id)}
+                        color="error"
+                        size="medium"
+                        sx={{ mr: 1 }}
+                        aria-label="Eliminar de favoritos"
+                    >
+                        <DeleteIcon />
+                    </ActionButton>
+
+                    <ActionButton
+                        onClick={() => onAddToCart?.(product)}
+                        color="primary"
+                        size="medium"
+                        aria-label="Añadir al carrito"
+                    >
+                        <AddShoppingCartIcon />
+                    </ActionButton>
+                </Box>
+            )}
         </ProductCardContainer>
     );
 };

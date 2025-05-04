@@ -409,7 +409,7 @@ const FilterSidebar = ({
                         </AccordionSummary>
                         <AccordionDetails>
                             <FormGroup>
-                                {BRANDS.map((brand, index) => (
+                                {BRANDS && BRANDS.map((brand, index) => (
                                     <motion.div
                                         key={brand.id}
                                         initial={{opacity: 0, y: 10}}
@@ -427,7 +427,7 @@ const FilterSidebar = ({
                                             }
                                             label={
                                                 <Typography variant="body2" sx={{color: vistelicaColors.textDark}}>
-                                                    {brand.label}
+                                                    {brand.name}
                                                 </Typography>
                                             }
                                             sx={{

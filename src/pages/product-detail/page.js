@@ -22,7 +22,7 @@ function App({ params }) {
     }, []);
 
     useEffect(() => {
-        const productId = '1';
+        const productId = '4';
 
         const fetchProductData = async () => {
             try {

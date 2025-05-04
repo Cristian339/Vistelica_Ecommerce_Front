@@ -78,7 +78,7 @@ export default function Navbar() {
 
     const handlewishlist = async () => {
         try{
-            router.push('/wishlist/page');
+            router.push('/wish-list/Wishlist');
         }catch (error) {
             console.error("Error al verificar el login:", error);
             alert("Ocurrió un error. Intenta nuevamente.");
@@ -95,6 +95,16 @@ export default function Navbar() {
             }
         } catch (error) {
             console.error("Error al verificar el login:", error);
+            alert("Ocurrió un error. Intenta nuevamente.");
+        }
+    };
+
+    const handleFavoritesClick = () => {
+        try {
+            // Ruta correcta basada en la estructura de archivos
+            router.push('/wish-list/Wishlist');
+        } catch (error) {
+            console.error("Error al acceder a favoritos:", error);
             alert("Ocurrió un error. Intenta nuevamente.");
         }
     };
@@ -178,8 +188,8 @@ export default function Navbar() {
                                     <AccountCircleIcon sx={{ fontSize: "34px" }} />
                                 </IconButton>
 
-                                <IconButton sx={{color: "#171717"}}>
-                                    <FavoriteBorderIcon sx={{fontSize: "34px"}} onClick={handlewishlist}/>
+                                <IconButton sx={{color: "#171717"}} onClick={handlewishlist}>
+                                    <FavoriteBorderIcon sx={{fontSize: "34px"}}/>
                                 </IconButton>
                             </>
                         )}

@@ -24,12 +24,24 @@ import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
+import { logout } from '../../services/authService'; // Importación de la función logout
 
 const SidebarMenu = ({ username }) => {
     const router = useRouter();
 
     const handleNavigation = (path) => {
         router.push(path);  // Navegar a la ruta proporcionada
+    };
+
+    // Función para manejar el cierre de sesión
+    const handleLogout = async () => {
+        try {
+            await logout();
+            router.push('/sign-in-side/Sign-in-side');
+        } catch (error) {
+            console.error("Error al cerrar sesión:", error);
+            // Aquí podrías añadir una notificación de error si lo deseas
+        }
     };
 
     return (
@@ -89,7 +101,11 @@ const SidebarMenu = ({ username }) => {
                     <ListItemText primary="Devoluciones" />
                 </ListItem>
 
-                <ListItem button sx={{ mb: 1, borderRadius: 1 }}>
+                <ListItem
+                    button
+                    sx={{ mb: 1, borderRadius: 1 }}
+                    onClick={handleLogout}
+                >
                     <ListItemIcon sx={{ minWidth: 40 }}>
                         <LogoutOutlinedIcon />
                     </ListItemIcon>
