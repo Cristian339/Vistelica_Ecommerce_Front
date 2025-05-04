@@ -2,10 +2,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import ProductCard from './ProductCard';
 
-const ProductGrid = ({ products, gridView }) => {
-    // Define el padding según el tipo de vista
-    const itemPadding = gridView === 'grid2' ? '12px' : '4px';
-
+const ProductGrid = ({ products, gridView, onAddToWishlist, favoriteIds = [] }) => {
     // Verificar si hay productos para mostrar
     if (!Array.isArray(products) || products.length === 0) {
         return (
@@ -18,38 +15,25 @@ const ProductGrid = ({ products, gridView }) => {
     }
 
     return (
-        <Box
-            sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                width: '100%',
-                margin: gridView === 'grid2' ? '-12px' : '-4px', // Compensar el padding
-            }}
-        >
-            {products.map((product) => {
-                // Asegurarse de que tenemos un ID único para cada producto
-                const productId = product.product_id || product._id || `product-${Math.random()}`;
-
-                return (
-                    <Box
-                        key={productId}
-                        sx={{
-                            width: {
-                                xs: '100%',
-                                sm: '50%',
-                                md: gridView === 'grid4' ? '25%' : '50%'
-                            },
-                            padding: itemPadding,
-                            boxSizing: 'border-box',
-                        }}
-                    >
-                        <ProductCard
-                            product={product}
-                            largeView={gridView === 'grid2'}
-                        />
-                    </Box>
-                );
-            })}
+        <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                md: gridView === 'grid4' ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
+                lg: gridView === 'grid4' ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)',
+            },
+            gap: { xs: 2, sm: 3 }
+        }}>
+            {products.map((product) => (
+                <ProductCard
+                    key={product.product_id || product.id}
+                    product={product}
+                    largeView={gridView === 'grid2'}
+                    onAddToWishlist={onAddToWishlist}
+                    favoriteIds={favoriteIds}
+                />
+            ))}
         </Box>
     );
 };

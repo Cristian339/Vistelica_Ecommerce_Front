@@ -28,8 +28,6 @@ const EmptyWishlist = () => {
 
     return (
         <>
-
-
             <Fade in={true} timeout={800}>
                 <Paper
                     elevation={0}
@@ -125,7 +123,7 @@ const EmptyWishlist = () => {
                             variant="contained"
                             size="large"
                             startIcon={<ShoppingBagOutlinedIcon />}
-                            onClick={() => router.push('/products')}
+                            onClick={() => router.push('/home/Home')}
                             sx={{
                                 px: { xs: 3, sm: 4 },
                                 py: 1.5,

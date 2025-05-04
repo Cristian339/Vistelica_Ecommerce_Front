@@ -2,7 +2,11 @@
 
 import React, { useEffect, useState,useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Box, Typography, Button, Divider, Chip, IconButton, GlobalStyles, Tooltip, Breadcrumbs, Link as MuiLink, CircularProgress } from '@mui/material';
+import {
+    Box, Typography, Button, Divider, Chip, IconButton, GlobalStyles,
+    Tooltip, Breadcrumbs, Link as MuiLink, CircularProgress,
+    Snackbar, Alert
+} from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import ViewComfyIcon from '@mui/icons-material/ViewComfy';
@@ -15,7 +19,7 @@ import Link from 'next/link';
 import HeaderComponent from '@/components/layout/HeaderComponent';
 
 // Servicios y utilidades
-import wishService from '@/services/wishService';
+import wishlistService from '@/services/wishlistService';
 import productService from '@/services/productService';
 import categoryService from '@/services/categoryService';
 import { sortProducts } from './components/SortUtils';
@@ -61,6 +65,7 @@ const ProductList = () => {
     const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [sessionId, setSessionId] = useState(null);
+    const [favoriteIds, setFavoriteIds] = useState([]);
 
 
 
@@ -145,68 +150,132 @@ const ProductList = () => {
         }
     };
 
-// Función para manejar agregar a favoritos
-    const handleAddToWishlist = useCallback(async (product) => {
-        console.log("Función handleAddToWishlist llamada con:", product);
-
-        if (isAuthenticated) {
-            // Usuario autenticado: guardar en DB
-            try {
-                await wishService.addToWishlist(product.id || product.product_id);
-                setToast({
-                    open: true,
-                    message: 'Producto añadido a favoritos',
-                    severity: 'success'
-                });
-            } catch (error) {
-                console.error("Error al añadir a favoritos:", error);
-                setToast({
-                    open: true,
-                    message: 'Error al añadir a favoritos',
-                    severity: 'error'
-                });
-            }
-        } else {
-            // Usuario no autenticado: guardar en localStorage
-            const localWishlist = JSON.parse(localStorage.getItem('vistelica_wishlist') || '[]');
-
-            // Verificar si ya existe el producto en favoritos
-            const productId = product.id || product.product_id;
-            const exists = localWishlist.some(item => (item.id || item.product_id) === productId);
-
-            if (!exists) {
-                // Guardar solo la información necesaria
-                const wishlistItem = {
-                    id: productId,
-                    product_id: productId, // Para compatibilidad
-                    name: product.name,
-                    image_url: product.image_url || product.imageUrl,
-                    price: product.price
-                };
-
-                // Añadir a la lista y guardar en localStorage con el sessionId
-                localWishlist.push(wishlistItem);
-                localStorage.setItem('vistelica_wishlist', JSON.stringify(localWishlist));
-                localStorage.setItem('wishlist_sessionId', sessionId);
-
-                console.log("Producto guardado en localStorage:", wishlistItem);
-
-                // Mostrar toast de confirmación
-                setToast({
-                    open: true,
-                    message: 'Producto añadido a favoritos',
-                    severity: 'success'
-                });
+//  useEffect para cargar favoritos actuales
+    useEffect(() => {
+        const loadFavorites = async () => {
+            if (isAuthenticated) {
+                try {
+                    const wishlistItems = await wishlistService.getWishlist();
+                    const ids = wishlistItems.map(item => item.product_id);
+                    setFavoriteIds(ids);
+                    console.log("IDs de favoritos cargados:", ids);
+                } catch (error) {
+                    console.error("Error al cargar favoritos:", error);
+                    // Fallar silenciosamente
+                }
             } else {
-                // Producto ya en favoritos
-                setToast({
-                    open: true,
-                    message: 'Este producto ya está en tus favoritos',
-                    severity: 'info'
-                });
+                const localWishlist = JSON.parse(localStorage.getItem('vistelica_wishlist') || '[]');
+                const ids = localWishlist.map(item => item.id || item.product_id);
+                setFavoriteIds(ids);
             }
+        };
+
+        loadFavorites();
+    }, [isAuthenticated]);
+
+
+
+// Función para manejar agregar a favoritos
+    const handleAddToWishlist = useCallback(async (product, isRemove) => {
+        console.log("===== INICIO handleAddToWishlist =====");
+        console.log("Producto recibido:", product);
+        console.log("¿Eliminar de favoritos?:", isRemove);
+
+        const productId = product.id || product.product_id;
+
+        try {
+            if (isAuthenticated) {
+                if (isRemove) {
+                    // Eliminar de favoritos
+                    await wishlistService.removeFromWishlist(productId);
+                    setFavoriteIds(prev => prev.filter(id => id !== productId));
+                    setToast({
+                        open: true,
+                        message: 'Producto eliminado de favoritos',
+                        severity: 'info'
+                    });
+                } else {
+                    // Añadir a favoritos
+                    try {
+                        await wishlistService.addToWishlist(productId);
+
+                        // Actualizar el estado favoriteIds
+                        if (!favoriteIds.includes(productId)) {
+                            setFavoriteIds(prev => [...prev, productId]);
+                        }
+
+                        setToast({
+                            open: true,
+                            message: 'Producto añadido a favoritos',
+                            severity: 'success'
+                        });
+                    } catch (error) {
+                        console.error("Error en wishlistService:", error);
+                        // Ignorar el error de producto duplicado
+                        if (!error.message?.includes("ya está en la lista de deseos")) {
+                            setToast({
+                                open: true,
+                                message: 'Error al añadir a favoritos',
+                                severity: 'error'
+                            });
+                        } else if (!favoriteIds.includes(productId)) {
+                            // Si el error es por duplicado pero no lo tenemos en el state, añadirlo
+                            setFavoriteIds(prev => [...prev, productId]);
+                        }
+                    }
+                }
+            } else {
+                // Usuario no autenticado: usar localStorage
+                const localWishlist = JSON.parse(localStorage.getItem('vistelica_wishlist') || '[]');
+
+                if (isRemove) {
+                    // Eliminar de favoritos
+                    const updatedWishlist = localWishlist.filter(
+                        item => (item.id || item.product_id) !== productId
+                    );
+                    localStorage.setItem('vistelica_wishlist', JSON.stringify(updatedWishlist));
+                    setFavoriteIds(prev => prev.filter(id => id !== productId));
+                    setToast({
+                        open: true,
+                        message: 'Producto eliminado de favoritos',
+                        severity: 'info'
+                    });
+                } else {
+                    // Verificar si ya existe
+                    if (!localWishlist.some(item => (item.id || item.product_id) === productId)) {
+                        // Guardar solo la información necesaria
+                        const wishlistItem = {
+                            id: productId,
+                            product_id: productId,
+                            name: product.name,
+                            image_url: product.image_url || product.imageUrl,
+                            price: product.price
+                        };
+
+                        localWishlist.push(wishlistItem);
+                        localStorage.setItem('vistelica_wishlist', JSON.stringify(localWishlist));
+                        localStorage.setItem('wishlist_sessionId', sessionId);
+
+                        setFavoriteIds(prev => [...prev, productId]);
+                        setToast({
+                            open: true,
+                            message: 'Producto añadido a favoritos',
+                            severity: 'success'
+                        });
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Error general:", error);
+            setToast({
+                open: true,
+                message: 'Error al procesar tu solicitud',
+                severity: 'error'
+            });
         }
-    }, [isAuthenticated, sessionId]);
+
+        console.log("===== FIN handleAddToWishlist =====");
+    }, [isAuthenticated, sessionId, favoriteIds]);
 
     // Verificar autenticación al cargar la página
     useEffect(() => {
@@ -801,6 +870,7 @@ const ProductList = () => {
                             products={filteredProducts}
                             gridView={gridView}
                             onAddToWishlist={handleAddToWishlist}
+                            favoriteIds={favoriteIds}
                         />
                     ) : (
                         <Box sx={{ textAlign: 'center', py: 6 }}>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Button, Typography, Paper, useTheme, useMediaQuery, Fade } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -11,6 +11,21 @@ const AnonymousWishlistMessage = () => {
     const router = useRouter();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    useEffect(() => {
+        // Verificar autenticación al cargar el componente
+        // Ajusta esto según tu método de autenticación actual
+        const checkAuth = () => {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            setIsAuthenticated(!!token);
+        };
+
+        checkAuth();
+    }, []);
+
+    // Si el usuario ya está autenticado, no mostramos este componente
+    if (isAuthenticated) return null;
 
     const iconAnimation = {
         y: [0, -5, 0],
@@ -103,11 +118,12 @@ const AnonymousWishlistMessage = () => {
 
                     <Button
                         variant="contained"
-                        onClick={() => router.push('/login')}
+                        onClick={() => router.push('/sign-in-side/Sign-in-side')}
                         endIcon={<ArrowForwardIcon />}
                         sx={{
                             ml: { xs: 0, sm: 2 },
                             px: { xs: 2, sm: 3 },
+
                             py: 1,
                             borderRadius: 6,
                             textTransform: 'none',

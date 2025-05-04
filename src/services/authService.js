@@ -245,25 +245,6 @@ export const signInWithFacebook = async () => {
 };
 
 /**
- * Cierra la sesión del usuario actual
- * @returns {Promise<void>}
- */
-export const logout = async () => {
-    try {
-        localStorage.removeItem('token');
-        localStorage.removeItem('firebaseToken');
-
-        // Cerrar sesión en Firebase si hay una sesión activa
-        if (auth.currentUser) {
-            await signOut(auth);
-        }
-    } catch (error) {
-        console.error("Error al cerrar sesión:", error);
-        throw error;
-    }
-};
-
-/**
  * Registra un usuario de proveedor social en el backend
  * @param {Object} userData - Datos del usuario autenticado con proveedor social
  * @returns {Promise} - Respuesta del servidor
@@ -318,4 +299,27 @@ export const getToken = () => {
         }
     }
     return null;
+};
+
+/**
+ * Cierra la sesión del usuario actual
+ * @returns {Promise<void>}
+ */
+export const logout = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('No hay token disponible');
+
+        await axios.post(`${API_URL}/logout`, {}, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        localStorage.removeItem('token');
+        localStorage.removeItem('firebaseToken');
+    } catch (error) {
+        console.error("Error al cerrar sesión:", error);
+        throw error;
+    }
 };

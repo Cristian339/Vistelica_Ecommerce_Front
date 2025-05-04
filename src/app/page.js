@@ -14,7 +14,7 @@ import CartPage from "@/pages/cart/page";
 export default function Home() {
     return (
         <div>
-            <ProductDetail/>
+            <HomePage />
         </div>
     );
 }
