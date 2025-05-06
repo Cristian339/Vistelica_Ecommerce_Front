@@ -34,14 +34,34 @@ const ClothingCategories = () => {
     }, []);
 
     // Función para navegar a la página de productos filtrada por subcategoría
-    const handleCategoryClick = (subcat) => {
-        // Guardar en localStorage para sincronizar con el sidebar
-        localStorage.setItem('selectedCategory', 'hombre');
-        localStorage.setItem('selectedSubcategory', subcat.subcategory_id.toString());
+    const handleCategoryClick = async (subcat) => {
+        console.log("Subcategoría clickeada:", subcat);
+        const categories = await categoryService.fetchCategories();
 
-        // Navegar a la página de productos con filtrado
-        router.push(`/product-list?category=hombre&subcategory=${subcat.subcategory_id}&name=${encodeURIComponent(subcat.name)}`);
+        // Encuentra la categoría "Hombre" y asigna su category_id
+        const hombreCategory = categories.find(
+            (cat) => cat.name.toLowerCase() === 'hombre'
+        );
+
+        const categoryId = hombreCategory ? hombreCategory.category_id : '';
+        const categorySlug = hombreCategory ? hombreCategory.slug || 'hombre' : 'hombre';
+
+        // Guardar en localStorage para posible uso posterior
+        localStorage.setItem('selectedCategory', categoryId);
+        localStorage.setItem('selectedSubcategory', subcat.subcategory_id);
+
+        console.log("ID de categoría:", categoryId);
+        console.log("ID de subcategoría:", subcat.subcategory_id);
+
+        // Construir la URL con parámetros para la página de productos
+        // Utilizamos los slugs cuando están disponibles, o IDs como respaldo
+        const subcategorySlug = subcat.slug || subcat.subcategory_id;
+
+        // Redirigir a la página de productos con los parámetros adecuados
+        // Redirigir a la página de productos con los parámetros adecuados
+        router.push(`/product-list/productList?category=${categorySlug}&subcategory=${subcategorySlug}`);
     };
+
 
     return (
         <Grid container spacing={1} sx={{ backgroundColor: '#ffffff', padding: '20px 0' }}>
