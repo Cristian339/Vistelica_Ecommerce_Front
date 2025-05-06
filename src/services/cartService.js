@@ -16,7 +16,6 @@ const cartService = {
      * @returns {string|null}
      */
     getSessionId() {
-
         return localStorage.getItem('sessionId');
     },
 
@@ -35,7 +34,6 @@ const cartService = {
      */
     clearSessionId() {
         localStorage.removeItem('sessionId');
-
     },
 
     /**
@@ -189,15 +187,19 @@ const cartService = {
      * @param {number} productId - ID del producto
      * @param {number} quantity - Cantidad
      * @param {number} price - Precio unitario
+     * @param {string|null} size - Tamaño seleccionado
+     * @param {string|null} color - Color seleccionado
      * @returns {Promise<Object>} - Item añadido
      */
-    async addToCart(orderId, productId, quantity, price) {
+    async addToCart(orderId, productId, quantity, price, size = null, color = null) {
         try {
             const response = await axios.post(`${API_URL}/cart/items`, {
                 orderId,
                 productId,
                 quantity,
-                price
+                price,
+                size,
+                color
             });
             return response.data.data || response.data;
         } catch (error) {
@@ -223,12 +225,16 @@ const cartService = {
      * Actualiza la cantidad de un item
      * @param {number} itemId - ID del item
      * @param {number} quantity - Nueva cantidad
+     * @param {string|null} size - Nuevo tamaño (opcional)
+     * @param {string|null} color - Nuevo color (opcional)
      * @returns {Promise<Object>} - Item actualizado
      */
-    async updateCartItem(itemId, quantity) {
+    async updateCartItem(itemId, quantity, size = null, color = null) {
         try {
             const response = await axios.put(`${API_URL}/cart/items/${itemId}/quantity`, {
-                quantity
+                quantity,
+                size,
+                color
             });
             return response.data.data || response.data;
         } catch (error) {

@@ -128,7 +128,12 @@ const ProductCard = ({ product, largeView = false, onAddToWishlist, onRemove, on
                 </FavoriteButton>
             )}
 
-            <Link href={`/product/${productId}`} passHref style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Link
+                href={`/product-detail/page/${productId}`}
+                as={`/product-detail/page?id=${productId}`}
+                passHref
+                style={{ textDecoration: 'none', color: 'inherit' }}
+            >
                 <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <ImageContainer largeView={largeView}>
                         <ProductImage

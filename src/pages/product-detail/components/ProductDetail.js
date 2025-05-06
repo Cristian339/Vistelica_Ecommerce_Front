@@ -9,7 +9,8 @@ import {
     Button,
     Box,
     IconButton,
-    CircularProgress
+    CircularProgress,
+    Alert
 } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -76,6 +77,7 @@ const ProductDetail = ({
     const [reviews, setReviews] = useState([]);
     const [loadingReviews, setLoadingReviews] = useState(true);
     const [errorReviews, setErrorReviews] = useState(null);
+    const [errorMessage, setErrorMessage] = useState(null);
 
     // Verificar si el producto está en la wishlist al cargar el componente
     useEffect(() => {
@@ -84,13 +86,10 @@ const ProductDetail = ({
         const checkWishlistStatus = async () => {
             try {
                 setLoadingWishlist(true);
-                // Primero intentamos con el endpoint específico
                 const inWishlist = await wishlistService.checkProductInWishlist(product.product_id);
 
-                // Si falla, obtenemos toda la wishlist y verificamos manualmente
                 if (inWishlist === null || inWishlist === undefined) {
                     const wishlist = await wishlistService.getWishlist();
-                    console.log(wishlist);
                     const found = wishlist.some(item => item.product_id === product.product_id);
                     if (isMounted) setIsFavorite(found);
                 } else {
@@ -159,10 +158,32 @@ const ProductDetail = ({
         }
     };
 
+    const handleAddToCart = async () => {
+        // Validar que se haya seleccionado talla y color si están disponibles
+        if ((availableSizes.length > 0 && !selectedSize) ||
+            (availableColors.length > 0 && !selectedColor)) {
+            setErrorMessage('Por favor selecciona talla y color antes de añadir al carrito');
+            return;
+        }
+
+        setErrorMessage(null);
+        try {
+            await onAddToCart({
+                productId: product.product_id,
+                quantity: 1,
+                price: parseFloat(product.price),
+                size: selectedSize,
+                color: selectedColor
+            });
+        } catch (error) {
+            setErrorMessage('Error al añadir al carrito');
+            console.error('Error adding to cart:', error);
+        }
+    };
+
     if (!initialized) {
         return <CircularProgress />;
     }
-
 
     return (
         <ProductDetailContainer>
@@ -173,7 +194,7 @@ const ProductDetail = ({
 
                 <Grid item xs={12} md={5} lg={4}>
                     <CompactDetailBox sx={{
-                        width: 800, // Evita problemas de desbordamiento
+                        width: 800,
                         position: 'sticky',
                         top: theme.spacing(2),
                         paddingLeft: { md: 2 },
@@ -229,17 +250,27 @@ const ProductDetail = ({
 
                         <Divider sx={{ my: 2 }} />
 
-                        <SizeSelector
-                            sizes={availableSizes}
-                            selectedSize={selectedSize}
-                            onSizeChange={onSizeChange}
-                        />
+                        {availableSizes.length > 0 && (
+                            <SizeSelector
+                                sizes={availableSizes}
+                                selectedSize={selectedSize}
+                                onSizeChange={onSizeChange}
+                            />
+                        )}
 
-                        <ColorSelector
-                            colors={availableColors}
-                            selectedColor={selectedColor}
-                            onColorChange={onColorChange}
-                        />
+                        {availableColors.length > 0 && (
+                            <ColorSelector
+                                colors={availableColors}
+                                selectedColor={selectedColor}
+                                onColorChange={onColorChange}
+                            />
+                        )}
+
+                        {errorMessage && (
+                            <Alert severity="error" sx={{ mb: 2 }}>
+                                {errorMessage}
+                            </Alert>
+                        )}
 
                         <ProductInfo description={product.description} sx={{maxWidth: 90}}/>
 
@@ -264,7 +295,7 @@ const ProductDetail = ({
                                         backgroundColor: '#e0e0e0'
                                     }
                                 }}
-                                onClick={onAddToCart}
+                                onClick={handleAddToCart}
                                 disabled={addingToCart}
                                 startIcon={addingToCart ? <CircularProgress size={20} color="inherit" /> : <ShoppingCartIcon />}
                             >

@@ -1,16 +1,18 @@
 'use client';
-import { Box, Typography, IconButton, Avatar, CircularProgress } from '@mui/material';
+import { Box, Typography, IconButton, Avatar, CircularProgress, Chip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';
 import cartService from '@/services/cartService';
-import productService from '@/services/productService'; // Importamos el servicio de productos
+import productService from '@/services/productService';
 import { useState, useEffect } from 'react';
 
 export default function CartItem({ item, setCartItems, setTotal, userId, sessionId }) {
     const [quantity, setQuantity] = useState(item.quantity);
     const [mainImage, setMainImage] = useState(item.product?.image_url || "https://via.placeholder.com/80");
     const [loadingImage, setLoadingImage] = useState(false);
+    // Asegurarnos que price es un número
+    const price = typeof item.price === 'string' ? parseFloat(item.price) : Number(item.price) || 0;
 
     // Efecto para cargar la imagen principal
     useEffect(() => {
@@ -24,7 +26,6 @@ export default function CartItem({ item, setCartItems, setTotal, userId, session
                     }
                 } catch (error) {
                     console.error('Error loading product image:', error);
-                    // Mantenemos el placeholder si hay error
                 } finally {
                     setLoadingImage(false);
                 }
@@ -36,7 +37,7 @@ export default function CartItem({ item, setCartItems, setTotal, userId, session
 
     const handleQuantityChange = async (newQuantity) => {
         try {
-            await cartService.updateCartItem(item.order_detail_id, newQuantity);
+            await cartService.updateCartItem(item.order_detail_id, newQuantity, item.size, item.color);
             setQuantity(newQuantity);
 
             setCartItems(prev => prev.map(i =>
@@ -103,17 +104,52 @@ export default function CartItem({ item, setCartItems, setTotal, userId, session
                 />
             )}
 
-            <Typography variant="body1" sx={{
-                fontWeight: 500,
-                flexGrow: 1,
-                fontFamily: "'Amethysta', serif"
-            }}>
-                {item.product?.name || "Producto"}
-            </Typography>
+            <Box sx={{ flexGrow: 1 }}>
+                <Typography variant="body1" sx={{
+                    fontWeight: 500,
+                    fontFamily: "'Amethysta', serif",
+                    mb: 1
+                }}>
+                    {item.product?.name || "Producto"}
+                </Typography>
+
+                {/* Mostrar talla y color si existen */}
+                <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                    {item.size && (
+                        <Chip
+                            label={`Talla: ${item.size}`}
+                            size="small"
+                            sx={{
+                                backgroundColor: '#f5f5f5',
+                                fontFamily: "'Amethysta', serif"
+                            }}
+                        />
+                    )}
+                    {item.color && (
+                        <Chip
+                            label={`Color: ${item.color}`}
+                            size="small"
+                            sx={{
+                                backgroundColor: '#f5f5f5',
+                                fontFamily: "'Amethysta', serif"
+                            }}
+                        />
+                    )}
+                </Box>
+
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    {price.toFixed(2)}€ c/u
+                </Typography>
+            </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                <Typography sx={{ fontFamily: "'Amethysta', serif" }}>
-                    {(item.price * item.quantity).toFixed(2)}€
+                <Typography sx={{
+                    fontFamily: "'Amethysta', serif",
+                    fontWeight: 500,
+                    minWidth: 80,
+                    textAlign: 'right'
+                }}>
+                    {(price * quantity).toFixed(2)}€
                 </Typography>
 
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

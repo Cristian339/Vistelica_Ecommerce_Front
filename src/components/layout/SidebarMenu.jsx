@@ -66,7 +66,7 @@ const SidebarMenu = ({ username }) => {
                     <ListItemText primary="Mis datos" />
                 </ListItem>
 
-                <ListItem button sx={{ mb: 1, borderRadius: 1 }}>
+                <ListItem button sx={{ mb: 1, borderRadius: 1 }} onClick={() => handleNavigation('/order-history/AccountLayout')}>
                     <ListItemIcon sx={{ minWidth: 40 }}>
                         <LocalShippingOutlinedIcon />
                     </ListItemIcon>
