@@ -78,30 +78,34 @@ const hardcodedProducts = [
     }
 ];
 
-// Estilos CSS puros
+// Estilos CSS con mejoras para móvil
 const styles = {
     container: {
         width: '100%',
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '20px',
+        padding: '20px 10px', // Reducido padding en móvil
         fontFamily: 'Arial, sans-serif',
+        boxSizing: 'border-box',
     },
     header: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: '20px',
+        flexWrap: 'wrap', // Para pantallas muy pequeñas
     },
     title: {
-        fontSize: '28px',
+        fontSize: '24px', // Tamaño reducido para móvil
         fontWeight: 'bold',
         color: '#1a1a1a',
+        margin: '0',
     },
     subtitle: {
-        fontSize: '16px',
+        fontSize: '14px', // Tamaño reducido para móvil
         color: '#666',
         marginTop: '5px',
+        margin: '5px 0 0 0',
     },
     seeAll: {
         fontSize: '14px',
@@ -109,18 +113,22 @@ const styles = {
         color: '#1a1a1a',
         textDecoration: 'none',
         cursor: 'pointer',
+        padding: '5px', // Área táctil más grande
     },
     productsContainer: {
         position: 'relative',
         overflow: 'hidden',
+        width: '100%',
     },
     productsList: {
         display: 'flex',
         transition: 'transform 0.5s ease-in-out',
-        gap: '20px',
+        gap: '15px', // Gap reducido para móvil
+        margin: '0',
+        padding: '0',
     },
     productCard: {
-        flex: '0 0 calc(25% - 15px)',
+        flex: '0 0 100%', // Se ajustará según slidesToShow
         backgroundColor: '#f5f3ef',
         borderRadius: '8px',
         overflow: 'hidden',
@@ -129,29 +137,32 @@ const styles = {
     },
     productImage: {
         width: '100%',
-        height: '300px',
+        height: '200px', // Altura reducida para móvil
         objectFit: 'cover',
         backgroundColor: '#f5f3ef',
     },
     productInfo: {
-        padding: '15px',
+        padding: '12px',
     },
     productName: {
         fontSize: '16px',
         fontWeight: 'bold',
         marginBottom: '5px',
+        margin: '0 0 5px 0',
     },
     productBrand: {
         fontSize: '14px',
         color: '#666',
-        marginBottom: '10px',
+        marginBottom: '8px',
+        margin: '0 0 8px 0',
     },
     productPrice: {
-        fontSize: '18px',
+        fontSize: '16px',
         fontWeight: 'bold',
+        margin: '0',
     },
     navigationControls: {
-        marginTop: '30px',
+        marginTop: '20px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -162,7 +173,7 @@ const styles = {
         backgroundColor: '#e0e0e0',
         position: 'relative',
         cursor: 'pointer',
-        margin: '0 20px',
+        margin: '0 10px', // Margen reducido para móvil
     },
     progressBar: {
         height: '100%',
@@ -170,9 +181,9 @@ const styles = {
         transition: 'width 0.3s ease-in-out',
     },
     arrowButton: {
-        minWidth: '40px',
-        width: '40px',
-        height: '40px',
+        minWidth: '36px', // Tamaño reducido para móvil
+        width: '36px',
+        height: '36px',
         borderRadius: '50%',
         display: 'flex',
         justifyContent: 'center',
@@ -180,41 +191,54 @@ const styles = {
         backgroundColor: 'transparent',
         border: '1px solid #e0e0e0',
         cursor: 'pointer',
-        '&:hover': {
-            backgroundColor: '#f5f5f5',
-        },
+        padding: '0',
     },
 };
 
-// Props del componente:
-// - products: Array de objetos producto (opcional, por defecto usa hardcodedProducts)
-// - title: Título del carrusel (opcional, por defecto "New arrivals")
-// - subtitle: Subtítulo del carrusel (opcional)
-// - onSeeAllClick: Función para manejar el clic en "See all" (opcional)
-// - initialSlidesToShow: Número inicial de slides a mostrar (opcional, por defecto 4)
-
 const ProductCarousel = ({
-                             products = hardcodedProducts, // Usa los productos hardcodeados por defecto
+                             products = hardcodedProducts,
                              title = "Explora nuestros productos",
-                             subtitle = "Empieza a ver nuestros productos más  impresionates de nuestro extenso catologo.",
+                             subtitle = "Empieza a ver nuestros productos más impresionantes de nuestro extenso catálogo.",
                              onSeeAllClick = () => {},
                              initialSlidesToShow = 4
                          }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [slidesToShow, setSlidesToShow] = useState(initialSlidesToShow);
-    const maxIndex = Math.max(0, Math.ceil(products.length / slidesToShow) - 1);
+    const [cardWidth, setCardWidth] = useState(100);
+    const containerRef = useRef(null);
     const progressBarRef = useRef(null);
 
+    // Calcular el índice máximo basado en el número de slides
+    const maxIndex = Math.max(0, products.length - slidesToShow);
+
+    // Efecto para manejar el resize y ajustar el número de slides
     useEffect(() => {
         const handleResize = () => {
-            if (window.innerWidth <= 600) {
-                setSlidesToShow(1);
+            let newSlidesToShow;
+
+            if (window.innerWidth < 480) {
+                newSlidesToShow = 1;
+            } else if (window.innerWidth <= 600) {
+                newSlidesToShow = 1.2; // Muestra 1 completo y un poco del siguiente
             } else if (window.innerWidth <= 900) {
-                setSlidesToShow(2);
+                newSlidesToShow = 2;
             } else if (window.innerWidth <= 1200) {
-                setSlidesToShow(3);
+                newSlidesToShow = 3;
             } else {
-                setSlidesToShow(initialSlidesToShow);
+                newSlidesToShow = initialSlidesToShow;
+            }
+
+            setSlidesToShow(newSlidesToShow);
+
+            // Ajustar el ancho de la tarjeta según slidesToShow
+            // Para valores decimales, calculamos el porcentaje apropiado
+            const newCardWidth = 100 / newSlidesToShow;
+            setCardWidth(newCardWidth);
+
+            // Asegurarse de que currentIndex no exceda el nuevo maxIndex
+            const newMaxIndex = Math.max(0, products.length - newSlidesToShow);
+            if (currentIndex > newMaxIndex) {
+                setCurrentIndex(newMaxIndex);
             }
         };
 
@@ -224,7 +248,7 @@ const ProductCarousel = ({
         return () => {
             window.removeEventListener('resize', handleResize);
         };
-    }, [initialSlidesToShow]);
+    }, [initialSlidesToShow, products.length, currentIndex]);
 
     const handlePrevious = () => {
         setCurrentIndex((prevIndex) => Math.max(0, prevIndex - 1));
@@ -243,13 +267,14 @@ const ProductCarousel = ({
         setCurrentIndex(Math.min(maxIndex, Math.max(0, newIndex)));
     };
 
+    // Calcular el porcentaje de progreso
     const progressPercentage = maxIndex === 0 ? 100 : (currentIndex / maxIndex) * 100;
 
     // Si no hay productos, no renderizar nada
     if (!products.length) return null;
 
     return (
-        <div style={styles.container}>
+        <div style={styles.container} ref={containerRef}>
             <div style={styles.header}>
                 <div>
                     <h2 style={styles.title}>{title}</h2>
@@ -266,10 +291,16 @@ const ProductCarousel = ({
                     }}
                 >
                     {products.map((product) => (
-                        <div key={product.id} style={styles.productCard}>
+                        <div
+                            key={product.id}
+                            style={{
+                                ...styles.productCard,
+                                flex: `0 0 ${cardWidth}%`, // Ancho dinámico basado en slidesToShow
+                            }}
+                        >
                             <Box
                                 sx={{
-                                    height: '300px',
+                                    height: { xs: '200px', sm: '250px', md: '300px' },
                                     backgroundColor: '#f5f3ef',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -279,7 +310,10 @@ const ProductCarousel = ({
                             >
                                 <Box
                                     component="img"
-                                    sx={styles.productImage}
+                                    sx={{
+                                        ...styles.productImage,
+                                        height: { xs: '200px', sm: '250px', md: '300px' },
+                                    }}
                                     alt={product.name}
                                     src={product.image}
                                     onError={(e) => {
@@ -301,11 +335,14 @@ const ProductCarousel = ({
             <div style={styles.navigationControls}>
                 <Button
                     variant="outlined"
-                    style={styles.arrowButton}
+                    style={{
+                        ...styles.arrowButton,
+                        opacity: currentIndex === 0 ? 0.5 : 1,
+                    }}
                     onClick={handlePrevious}
                     disabled={currentIndex === 0}
                 >
-                    <ArrowBackIosIcon fontSize="small" />
+                    <ArrowBackIosIcon style={{ fontSize: '16px' }} />
                 </Button>
 
                 <div
@@ -323,11 +360,14 @@ const ProductCarousel = ({
 
                 <Button
                     variant="outlined"
-                    style={styles.arrowButton}
+                    style={{
+                        ...styles.arrowButton,
+                        opacity: currentIndex >= maxIndex ? 0.5 : 1,
+                    }}
                     onClick={handleNext}
                     disabled={currentIndex >= maxIndex}
                 >
-                    <ArrowForwardIosIcon fontSize="small" />
+                    <ArrowForwardIosIcon style={{ fontSize: '16px' }} />
                 </Button>
             </div>
         </div>

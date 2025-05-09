@@ -169,6 +169,22 @@ export const createProductReview = async (productId, rating, reviewText, userid)
         throw error;
     }
 };
+/**
+ * Obtiene productos destacados aleatorios
+ * @returns {Promise<Array>} Lista de productos destacados
+ */
+export const getRandomFeaturedProducts = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/products/featured/random`);
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener productos destacados aleatorios:', error);
+        throw new Error(
+            error.response?.data?.message ||
+            'No se pudieron cargar los productos destacados.'
+        );
+    }
+};
 
 const productService = {
     getAll,
@@ -179,7 +195,8 @@ const productService = {
     getAllImagesByProductId,
     getReviewsByProductId,
     getReviewsByProductName,
-    createProductReview
+    createProductReview,
+    getRandomFeaturedProducts
 };
 
 export default productService;

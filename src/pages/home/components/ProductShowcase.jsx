@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     Container,
     Grid,
@@ -8,9 +8,11 @@ import {
     Typography,
     Box
 } from '@mui/material';
+import productService from "@/services/productService";
 
 const ProductCard = ({ product }) => {
     const [isHovered, setIsHovered] = useState(false);
+    const colorCount = product.colors ? product.colors.replace(/[{}]/g, '').split(',').length : 0;
 
     return (
         <Card
@@ -31,7 +33,7 @@ const ProductCard = ({ product }) => {
             {/* Contenedor de imagen con tamaño reducido */}
             <Box sx={{
                 width: '100%',
-                height: '240px', // Reducido de 320px a 270px
+                height: '300px', // Reducido de 320px a 270px
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -40,18 +42,29 @@ const ProductCard = ({ product }) => {
             }}>
                 <CardMedia
                     component="img"
-                    image={product.imageUrl}
+                    image={product.main_image}
                     alt={product.name}
                     sx={{
-                        objectFit: 'contain',
-                        maxHeight: '100%',
-                        maxWidth: '100%'
+                        width: '100%', // Ensures the image takes the full width of the container
+                        height: '100%', // Fixed height for uniformity
+                        objectFit: 'cover', // Ensures the image fills the container without distortion
                     }}
                 />
             </Box>
 
             <CardContent sx={{ p: 2 }}>
-                <Typography variant="subtitle2" component="h3">
+                <Typography
+                    variant="subtitle2"
+                    component="h3"
+                    sx={{
+                        display: '-webkit-box',
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        WebkitLineClamp: 2,
+                        height: '3em',
+                    }}
+                >
                     {product.name}
                 </Typography>
             </CardContent>
@@ -75,21 +88,21 @@ const ProductCard = ({ product }) => {
                         Desde ${product.price}
                     </Typography>
 
-                    {product.rating && (
+                    {product.average_rating !== null && product.average_rating !== undefined && (
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                             <Typography component="span" color="warning.main" mr={0.5}>★</Typography>
                             <Typography variant="body2" component="span">
-                                {product.rating}
+                                {product.average_rating.toFixed(1)}
                             </Typography>
                             <Typography variant="caption" component="span" color="text.secondary" ml={0.5}>
-                                ({product.reviews} reseñas)
+                                ({product.average_rating || 0} reseñas)
                             </Typography>
                         </Box>
                     )}
 
-                    {product.variants && (
+                    {colorCount > 0 && (
                         <Typography variant="caption" color="text.secondary">
-                            {product.variants} variantes
+                            {colorCount} variantes de color
                         </Typography>
                     )}
                 </Box>
@@ -99,58 +112,25 @@ const ProductCard = ({ product }) => {
 };
 
 const ProductShowcase = () => {
-    const products = [
-        {
-            id: 1,
-            name: "Anillo Inspirado en Vintage con Zafiro",
-            price: "420.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-            rating: "4.85",
-            reviews: "11",
-            variants: "5"
-        },
-        {
-            id: 2,
-            name: "Altavoz Bluetooth de Malla Redondo",
-            price: "215.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-            rating: "4.7",
-            reviews: "24",
-            variants: "3"
-        },
-        {
-            id: 3,
-            name: "Parlante Portátil Minimalista",
-            price: "145.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-            variants: "2"
-        },
-        {
-            id: 4,
-            name: "Gafas de Sol Clásicas",
-            price: "95.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-            rating: "4.9",
-            reviews: "37",
-            variants: "4"
-        },
-        {
-            id: 5,
-            name: "Plato Decorativo Mármol",
-            price: "125.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-            variants: "1"
-        },
-        {
-            id: 6,
-            name: "Jarrón Plateado Moderno",
-            price: "175.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-            rating: "4.6",
-            reviews: "8",
-            variants: "2"
-        }
-    ];
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchFeaturedProducts = async () => {
+            try {
+                const data = await productService.getRandomFeaturedProducts();
+                // Limitar los productos a 6
+                setProducts(data.slice(0, 8));
+            } catch (error) {
+                console.error('Error al cargar productos destacados:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchFeaturedProducts();
+    }, []);
+
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -161,7 +141,7 @@ const ProductShowcase = () => {
             {/* Contenedor de productos con Grid modificado */}
             <Grid container spacing={3}>
                 {products.map(product => (
-                    <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={product.product_id}>
                         <ProductCard product={product} />
                     </Grid>
                 ))}
