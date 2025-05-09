@@ -32,7 +32,7 @@ const AccountLayout = () => {
                         <SidebarMenu username={userData?.name} />
                     </Grid>
                     <Grid item xs={8} sm={9} md={9} lg={9} sx={{ flexGrow: 1 }}>
-                        <AccountInfo userData={userData} />
+                        <AccountInfo userData={userData} setUserData={setUserData} />
                     </Grid>
                 </Grid>
             </Container>

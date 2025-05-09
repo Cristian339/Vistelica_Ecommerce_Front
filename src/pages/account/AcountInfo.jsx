@@ -8,9 +8,9 @@ import {
     Paper,
     CircularProgress
 } from '@mui/material';
-import { getUserProfile } from '@/services/profileService'; // Asegúrate de que la ruta sea correcta
+import { getUserProfile } from '@/services/profileService';
 
-const AccountInfo = ({ userData }) => {
+const AccountInfo = ({ userData, setUserData }) => {
     const [loading, setLoading] = useState(!userData);
 
     useEffect(() => {
@@ -28,7 +28,7 @@ const AccountInfo = ({ userData }) => {
 
             fetchProfile();
         }
-    }, [userData]);
+    }, [userData, setUserData]);
 
     if (loading) return <CircularProgress />;
 
