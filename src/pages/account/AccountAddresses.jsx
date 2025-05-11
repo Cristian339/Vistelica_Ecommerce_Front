@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
     Typography,
     Divider,
@@ -18,24 +18,28 @@ import {
     Card,
     CardContent,
     CardActions,
-    Checkbox,
-    FormControlLabel,
     Snackbar,
     Alert,
     DialogContentText,
     Tooltip,
     Zoom,
+    useMediaQuery,
+    useTheme,
+    Fab,
+    Menu,
+    MenuItem,
 } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
-import { getUserProfile } from '@/services/profileService';
+import {getUserProfile} from '@/services/profileService';
 import addressService from '@/services/addressService';
-import { Container } from '@mui/system';
+import {Container} from '@mui/system';
 import SidebarMenu from '@/components/layout/SidebarMenu';
 import Navbar from "@/components/layout/HeaderComponent";
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import {vistelicaColors} from "@/pages/shared-theme/vistelicaColors";
 import StarOutlineIcon from '@mui/icons-material/StarOutline';
 import StarIcon from '@mui/icons-material/Star';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -43,8 +47,14 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import HomeIcon from '@mui/icons-material/Home';
 import BusinessIcon from '@mui/icons-material/Business';
 import PlaceIcon from '@mui/icons-material/Place';
+import MarkunreadMailboxIcon from '@mui/icons-material/MarkunreadMailbox';
+import FlagIcon from '@mui/icons-material/Flag';
 
 const AccountAddresses = () => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
     const [userData, setUserData] = useState(null);
     const [addresses, setAddresses] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -112,16 +122,28 @@ const AccountAddresses = () => {
     const handleOpenDialog = (address = null) => {
         if (address) {
             setEditingAddress(address);
+
+            // Extraer número de la calle si existe
+            let street = address.street || '';
+            let number = '';
+
+            // Intentar extraer el número de la dirección
+            const streetMatch = street.match(/(.*?)(?:\s+(\d+.*))?$/);
+            if (streetMatch && streetMatch[2]) {
+                street = streetMatch[1].trim();
+                number = streetMatch[2].trim();
+            }
+
             setFormData({
-                alias: address.alias,
-                street: address.street,
-                number: address.number,
-                postalCode: address.postalCode,
-                city: address.city,
-                province: address.province,
+                alias: address.label || '',
+                street: street,
+                number: number,
+                postalCode: address.postal_code || '',
+                city: address.city || '',
+                province: address.state || '',
                 country: address.country || 'España',
                 description: address.description || '',
-                isDefault: address.isDefault
+                isDefault: address.is_default || false
             });
         } else {
             setEditingAddress(null);
@@ -145,7 +167,7 @@ const AccountAddresses = () => {
     };
 
     const handleChange = (e) => {
-        const { name, value, checked } = e.target;
+        const {name, value, checked} = e.target;
         setFormData({
             ...formData,
             [name]: name === 'isDefault' ? checked : value
@@ -277,43 +299,71 @@ const AccountAddresses = () => {
     };
 
     const getAddressIcon = (alias) => {
-        if (!alias) return <LocationOnIcon />;
+        if (!alias) return <LocationOnIcon/>;
 
         const normalizedAlias = alias.toLowerCase();
         if (normalizedAlias.includes('casa') || normalizedAlias.includes('hogar')) {
-            return <HomeIcon />;
+            return <HomeIcon/>;
         } else if (normalizedAlias.includes('trabajo') || normalizedAlias.includes('oficina')) {
-            return <BusinessIcon />;
+            return <BusinessIcon/>;
         }
-        return <PlaceIcon />;
+        return <PlaceIcon/>;
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        try {
+            return new Date(dateString).toLocaleDateString('es-ES', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        } catch (e) {
+            return '';
+        }
     };
 
     if (loading && addresses.length === 0) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                <CircularProgress />
+            <Box sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>
+                <CircularProgress/>
             </Box>
         );
     }
 
     return (
         <div>
-            <Navbar />
-            <Container maxWidth="lg" sx={{ py: 4 }}>
-                <Grid container spacing={2} sx={{ flexWrap: { xs: 'nowrap' } }}>
-                    <Grid item xs={4} sm={3} md={3} lg={3} sx={{ minWidth: { xs: '200px' } }}>
-                        <SidebarMenu username={userData?.name || 'Usuario'} />
-                    </Grid>
-                    <Grid item xs={8} sm={9} md={9} lg={9} sx={{ flexGrow: 1 }}>
-                        <Paper elevation={0} sx={{ border: '1px solid #e0e0e0', p: 3, height: '100%' }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Navbar/>
+            <Container maxWidth="lg" sx={{py: {xs: 2, md: 4}}}>
+                <Grid container spacing={2} sx={{
+                    flexWrap: {xs: 'wrap', md: 'nowrap'}
+                }}>
+                    {/* Sidebar solo visible en desktop */}
+                    {!isMobile && (
+                        <Grid item md={3} lg={3}>
+                            <SidebarMenu username={userData?.name || 'Usuario'}/>
+                        </Grid>
+                    )}
+
+                    {/* Contenido principal - ancho completo en móviles */}
+                    <Grid item xs={12} md={9} lg={9}>
+                        <Paper elevation={0} sx={{border: '1px solid #e0e0e0', p: {xs: 2, sm: 3}, height: '100%'}}>
+                            <Box sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: {xs: 'flex-start', sm: 'center'},
+                                flexDirection: {xs: 'column', sm: 'row'},
+                                gap: {xs: 2, sm: 0},
+                                mb: 2
+                            }}>
                                 <Typography variant="h5" component="h1" fontWeight="500">
                                     Mis direcciones
                                 </Typography>
                                 <Button
                                     variant="contained"
-                                    startIcon={<AddIcon />}
+                                    startIcon={<AddIcon/>}
                                     onClick={() => handleOpenDialog()}
+                                    fullWidth={isMobile}
                                     sx={{
                                         backgroundColor: vistelicaColors.primary,
                                         '&:hover': {
@@ -324,180 +374,271 @@ const AccountAddresses = () => {
                                     Nueva dirección
                                 </Button>
                             </Box>
-                            <Divider sx={{ mb: 4 }} />
+                            <Divider sx={{mb: {xs: 2, sm: 4}}}/>
 
                             {addresses.length === 0 ? (
-                                <Box sx={{ textAlign: 'center', py: 4 }}>
-                                    <LocationOnIcon sx={{ fontSize: 60, color: vistelicaColors.secondary, mb: 2 }} />
+                                <Box sx={{textAlign: 'center', py: 4}}>
+                                    <LocationOnIcon sx={{fontSize: 60, color: vistelicaColors.secondary, mb: 2}}/>
                                     <Typography variant="body1">
                                         No tienes direcciones guardadas
                                     </Typography>
                                     <Button
                                         variant="outlined"
-                                        startIcon={<AddIcon />}
-                                        sx={{ mt: 2 }}
+                                        startIcon={<AddIcon/>}
+                                        sx={{mt: 2}}
                                         onClick={() => handleOpenDialog()}
+                                        fullWidth={isMobile}
                                     >
                                         Añadir dirección
                                     </Button>
                                 </Box>
                             ) : (
-                                <Grid container spacing={3}>
+                                <Grid container spacing={2}>
                                     {Array.isArray(addresses) && addresses.map((address) => (
                                         <Grid item xs={12} sm={6} key={address.id}>
-                                            <Zoom in={true} style={{ transitionDelay: '100ms' }}>
+                                            <Zoom in={true} style={{transitionDelay: '100ms'}}>
                                                 <Card
                                                     sx={{
                                                         position: 'relative',
-                                                        border: address.isDefault ? `2px solid ${vistelicaColors.primary}` : '1px solid #e0e0e0',
-                                                        boxShadow: address.isDefault ? `0 4px 12px rgba(228, 176, 2, 0.3)` : '0 1px 5px rgba(0, 0, 0, 0.05)',
+                                                        border: address.is_default ? `2px solid ${vistelicaColors.primary}` : '1px solid #e0e0e0',
+                                                        boxShadow: address.is_default ? `0 4px 12px rgba(228, 176, 2, 0.3)` : '0 1px 5px rgba(0, 0, 0, 0.05)',
                                                         borderRadius: '12px',
                                                         transition: 'all 0.3s ease',
-                                                        transform: address.isDefault ? 'scale(1.02)' : 'scale(1)',
+                                                        transform: address.is_default ? 'scale(1.02)' : 'scale(1)',
                                                         '&:hover': {
                                                             boxShadow: '0 6px 14px rgba(0, 0, 0, 0.1)',
-                                                            transform: address.isDefault ? 'scale(1.03)' : 'scale(1.01)'
+                                                            transform: address.is_default ? 'scale(1.03)' : 'scale(1.01)'
                                                         },
-                                                        height: '100%',
+                                                        height: {xs: '280px', sm: '320px'}, // Altura fija tanto en móvil como en desktop
                                                         display: 'flex',
                                                         flexDirection: 'column',
-                                                        background: address.isDefault ? 'linear-gradient(to bottom right, #fffdf7, #fff)' : '#fff',
+                                                        background: address.is_default ? 'linear-gradient(to bottom right, #fffdf7, #fff)' : '#fff',
                                                     }}
                                                 >
-                                                    {address.isDefault && (
-                                                        <Box
-                                                            sx={{
-                                                                position: 'absolute',
-                                                                top: 12,
-                                                                right: 12,
-                                                                backgroundColor: vistelicaColors.primary,
-                                                                color: 'white',
-                                                                px: 1.5,
-                                                                py: 0.6,
-                                                                borderRadius: 2,
-                                                                fontSize: '0.8rem',
-                                                                fontWeight: 'bold',
-                                                                boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
+                                                    <CardContent sx={{
+                                                        pt: {xs: 2, sm: 3},
+                                                        pb: 1,
+                                                        flexGrow: 1,
+                                                        overflow: 'auto'
+                                                    }}>
+                                                        <Box sx={{
+                                                            display: 'flex',
+                                                            alignItems: 'flex-start',
+                                                            mb: 1.5
+                                                        }}>
+                                                            <Box sx={{
+                                                                mr: 1.5,
+                                                                backgroundColor: address.is_default ? 'rgba(228, 176, 2, 0.15)' : 'rgba(0, 0, 0, 0.04)',
+                                                                borderRadius: '50%',
+                                                                width: 36,
+                                                                height: 36,
                                                                 display: 'flex',
                                                                 alignItems: 'center',
-                                                                gap: 0.5,
-                                                                zIndex: 1,
-                                                                animation: 'pulse 2s infinite ease-in-out',
-                                                                '@keyframes pulse': {
-                                                                    '0%': { boxShadow: '0 0 0 0 rgba(228, 176, 2, 0.4)' },
-                                                                    '70%': { boxShadow: '0 0 0 10px rgba(228, 176, 2, 0)' },
-                                                                    '100%': { boxShadow: '0 0 0 0 rgba(228, 176, 2, 0)' }
-                                                                }
-                                                            }}
-                                                        >
-                                                            <LocationOnIcon fontSize="small" />
-                                                            Predeterminada
-                                                        </Box>
-                                                    )}
-
-                                                    <CardContent sx={{ pt: 3, pb: 1, flexGrow: 1 }}>
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                                            {getAddressIcon(address.alias)}
-                                                            <Typography variant="h6" sx={{
-                                                                fontWeight: 600,
-                                                                color: address.isDefault ? vistelicaColors.secondary : 'text.primary',
-                                                                pr: address.isDefault ? 10 : 0,
+                                                                justifyContent: 'center',
+                                                                color: address.is_default ? vistelicaColors.primary : 'text.secondary',
+                                                                flexShrink: 0
                                                             }}>
-                                                                {address.alias}
-                                                            </Typography>
+                                                                {getAddressIcon(address.label)}
+                                                            </Box>
+                                                            <Box sx={{width: '100%'}}>
+                                                                <Typography
+                                                                    variant="h6"
+                                                                    sx={{
+                                                                        fontWeight: 600,
+                                                                        color: address.is_default ? vistelicaColors.secondary : 'text.primary',
+                                                                        mb: address.is_default ? 1 : 0
+                                                                    }}
+                                                                >
+                                                                    {address.label || 'Dirección sin nombre'}
+                                                                </Typography>
+                                                                {address.is_default && (
+                                                                    <Box
+                                                                        component="span"
+                                                                        sx={{
+                                                                            display: 'inline-flex',
+                                                                            alignItems: 'center',
+                                                                            color: vistelicaColors.primary,
+                                                                            fontSize: '0.85rem', // Más grande
+                                                                            fontWeight: 'bold',
+                                                                            backgroundColor: 'rgba(228, 176, 2, 0.1)',
+                                                                            px: 1.5, // Más padding horizontal
+                                                                            py: 0.5, // Más padding vertical
+                                                                            borderRadius: 1,
+                                                                            width: 'fit-content'
+                                                                        }}
+                                                                    >
+                                                                        <StarIcon fontSize="small" sx={{mr: 0.5}}/>
+                                                                        Predeterminada
+                                                                    </Box>
+                                                                )}
+                                                            </Box>
                                                         </Box>
 
-                                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 2.5 }}>
-                                                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                                                                <LocationOnIcon sx={{ color: vistelicaColors.secondary, mt: 0.3 }} fontSize="small" />
+                                                        <Box sx={{
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            gap: 1.2,
+                                                            mt: 2
+                                                        }}>
+                                                            {/* Dirección completa */}
+                                                            <Box sx={{
+                                                                display: 'flex',
+                                                                alignItems: 'flex-start',
+                                                                gap: 1
+                                                            }}>
+                                                                <LocationOnIcon
+                                                                    sx={{color: vistelicaColors.secondary, mt: 0.3}}
+                                                                    fontSize="small"/>
                                                                 <Box>
-                                                                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                                                        {address.street}, {address.number}
+                                                                    <Typography variant="body2" sx={{fontWeight: 500}}>
+                                                                        {address.street || 'Sin calle'}
                                                                     </Typography>
                                                                     <Typography variant="body2" color="text.secondary">
-                                                                        {address.city}, {address.province}
+                                                                        {address.city || 'Sin ciudad'}, {address.state || 'Sin provincia'}
                                                                     </Typography>
                                                                     <Typography variant="body2" color="text.secondary">
-                                                                        {address.postalCode}, {address.country}
+                                                                        {address.country || 'España'}
                                                                     </Typography>
                                                                 </Box>
                                                             </Box>
 
-                                                            {address.description && (
-                                                                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mt: 0.5 }}>
-                                                                    <InfoOutlinedIcon sx={{ color: vistelicaColors.secondary, mt: 0.3 }} fontSize="small" />
-                                                                    <Typography variant="body2" color="text.secondary">
-                                                                        {address.description}
-                                                                    </Typography>
-                                                                </Box>
-                                                            )}
+                                                            {/* Código postal */}
+                                                            <Box sx={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: 1,
+                                                                mt: 0.5
+                                                            }}>
+                                                                <MarkunreadMailboxIcon
+                                                                    sx={{color: vistelicaColors.secondary}}
+                                                                    fontSize="small"/>
+                                                                <Typography variant="body2">
+                                                                    <Box component="span" sx={{
+                                                                        color: vistelicaColors.primary,
+                                                                        fontWeight: 600
+                                                                    }}>
+                                                                        Código postal:
+                                                                    </Box> {address.postal_code || 'No especificado'}
+                                                                </Typography>
+                                                            </Box>
 
-                                                            {address.createdAt && (
-                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                                                                    <AccessTimeIcon sx={{ color: vistelicaColors.secondary }} fontSize="small" />
-                                                                    <Typography variant="body2" color="text.secondary" fontSize="0.75rem">
-                                                                        Creada: {new Date(address.createdAt).toLocaleDateString('es-ES', {
-                                                                        day: 'numeric', month: 'short', year: 'numeric'
-                                                                    })}
+                                                            {/* País */}
+                                                            <Box sx={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: 1,
+                                                                mt: 0.5
+                                                            }}>
+                                                                <FlagIcon sx={{color: vistelicaColors.secondary}}
+                                                                          fontSize="small"/>
+                                                                <Typography variant="body2">
+                                                                    <Box component="span" sx={{
+                                                                        color: vistelicaColors.primary,
+                                                                        fontWeight: 600
+                                                                    }}>
+                                                                        País:
+                                                                    </Box> {address.country || 'No especificado'}
+                                                                </Typography>
+                                                            </Box>
+
+                                                            {/* Fecha de creación */}
+                                                            {address.created_at && (
+                                                                <Box sx={{
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: 1,
+                                                                    mt: 0.5
+                                                                }}>
+                                                                    <AccessTimeIcon
+                                                                        sx={{color: vistelicaColors.secondary}}
+                                                                        fontSize="small"/>
+                                                                    <Typography variant="body2" fontSize="0.75rem">
+                                                                        <Box component="span" sx={{
+                                                                            color: vistelicaColors.primary,
+                                                                            fontWeight: 600
+                                                                        }}>
+                                                                            Fecha de creación:
+                                                                        </Box> {formatDate(address.created_at)}
                                                                     </Typography>
                                                                 </Box>
                                                             )}
                                                         </Box>
                                                     </CardContent>
 
-                                                    <Divider sx={{ mx: 2, opacity: 0.6, my: 1 }} />
+                                                    <Divider sx={{mx: 2, opacity: 0.6, my: 0.5}}/>
 
                                                     <CardActions sx={{
                                                         justifyContent: 'space-between',
-                                                        p: 1.5,
-                                                        backgroundColor: address.isDefault ? 'rgba(228, 176, 2, 0.03)' : 'transparent'
+                                                        p: {xs: 0.5, sm: 1},
+                                                        backgroundColor: address.is_default ? 'rgba(228, 176, 2, 0.03)' : 'transparent',
+                                                        flexDirection: 'row',
+                                                        flexWrap: 'nowrap'
                                                     }}>
-                                                        {!address.isDefault && (
-                                                            <Button
-                                                                size="small"
-                                                                onClick={() => handleSetDefaultAddress(address.id)}
-                                                                sx={{
-                                                                    color: vistelicaColors.primary,
-                                                                    '&:hover': { backgroundColor: 'rgba(228, 176, 2, 0.1)' }
-                                                                }}
-                                                                startIcon={<StarIcon />}
-                                                            >
-                                                                Predeterminar
-                                                            </Button>
-                                                        )}
-                                                        <Box sx={{ display: 'flex', gap: 1, ml: address.isDefault ? 'auto' : 0 }}>
-                                                            <Tooltip title="Editar dirección" arrow placement="top">
-                                                                <Button
-                                                                    size="small"
-                                                                    onClick={() => handleOpenDialog(address)}
-                                                                    startIcon={<EditIcon />}
-                                                                    sx={{ color: vistelicaColors.secondary }}
-                                                                >
-                                                                    Editar
-                                                                </Button>
-                                                            </Tooltip>
-                                                            <Tooltip
-                                                                title={address.isDefault ? "No puedes eliminar la dirección predeterminada" : "Eliminar dirección"}
-                                                                arrow
-                                                                placement="top"
-                                                            >
-                                                                <span>
-                                                                    <Button
+                                                        <Box sx={{
+                                                            display: 'flex',
+                                                            width: '100%',
+                                                            justifyContent: 'space-between',
+                                                            alignItems: 'center'
+                                                        }}>
+                                                            {!address.is_default && (
+                                                                <Tooltip
+                                                                    title="Establecer como dirección predeterminada">
+                                                                    <IconButton
                                                                         size="small"
-                                                                        onClick={() => openConfirmDeleteDialog(address)}
-                                                                        disabled={address.isDefault}
-                                                                        startIcon={<DeleteIcon />}
+                                                                        onClick={() => handleSetDefaultAddress(address.id)}
                                                                         sx={{
-                                                                            color: address.isDefault ? 'rgba(0,0,0,0.26)' : vistelicaColors.error,
+                                                                            color: vistelicaColors.primary,
                                                                             '&:hover': {
-                                                                                backgroundColor: address.isDefault ? 'transparent' : 'rgba(211, 47, 47, 0.04)'
+                                                                                backgroundColor: 'rgba(228, 176, 2, 0.1)',
+                                                                                transform: 'scale(1.1)'
                                                                             }
                                                                         }}
                                                                     >
-                                                                        Eliminar
+                                                                        <StarIcon/>
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            )}
+
+                                                            {address.is_default && <Box sx={{width: '36px'}}></Box>}
+
+                                                            <Box sx={{
+                                                                display: 'flex',
+                                                                gap: 1,
+                                                                justifyContent: 'flex-end'
+                                                            }}>
+                                                                <Tooltip title="Editar dirección">
+                                                                    <Button
+                                                                        size="small"
+                                                                        onClick={() => handleOpenDialog(address)}
+                                                                        startIcon={<EditIcon/>}
+                                                                        sx={{
+                                                                            color: vistelicaColors.secondary,
+                                                                            minWidth: {xs: '36px', sm: '64px'},
+                                                                            px: {xs: 0.5, sm: 1}
+                                                                        }}
+                                                                    >
+                                                                        {!isMobile && 'Editar'}
                                                                     </Button>
-                                                                </span>
-                                                            </Tooltip>
+                                                                </Tooltip>
+                                                                <Tooltip
+                                                                    title={address.is_default ? "No se puede eliminar la dirección predeterminada" : "Eliminar dirección"}>
+                                        <span>
+                                            <Button
+                                                size="small"
+                                                onClick={() => openConfirmDeleteDialog(address)}
+                                                disabled={address.is_default}
+                                                startIcon={<DeleteIcon/>}
+                                                sx={{
+                                                    color: address.is_default ? 'rgba(0,0,0,0.26)' : vistelicaColors.error,
+                                                    minWidth: {xs: '36px', sm: '64px'},
+                                                    px: {xs: 0.5, sm: 1}
+                                                }}
+                                            >
+                                                {!isMobile && 'Eliminar'}
+                                            </Button>
+                                        </span>
+                                                                </Tooltip>
+                                                            </Box>
                                                         </Box>
                                                     </CardActions>
                                                 </Card>
@@ -511,113 +652,269 @@ const AccountAddresses = () => {
                 </Grid>
             </Container>
 
+
+            {/* Botón flotante para mostrar sidebar en móvil */}
+            {isMobile && (
+                <Fab
+                    color="primary"
+                    aria-label="menu"
+                    onClick={() => setSidebarOpen(true)}
+                    sx={{
+                        position: 'fixed',
+                        bottom: 16,
+                        right: 16,
+                        backgroundColor: vistelicaColors.primary,
+                        '&:hover': {
+                            backgroundColor: vistelicaColors.secondary
+                        },
+                        zIndex: 1050
+                    }}
+                >
+                    <MenuIcon />
+                </Fab>
+            )}
+
+            {/* SidebarMenu para móvil como drawer */}
+            {isMobile && (
+                <SidebarMenu
+                    username={userData?.name || 'Usuario'}
+                    drawerOpen={sidebarOpen}
+                    setDrawerOpen={setSidebarOpen}
+                />
+            )}
+
             {/* Dialog para añadir/editar dirección */}
-            <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-                <DialogTitle>
-                    {editingAddress ? 'Editar dirección' : 'Añadir nueva dirección'}
+            <Dialog
+                open={openDialog}
+                onClose={handleCloseDialog}
+                maxWidth="md"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        maxWidth: {xs: '95%', sm: '700px'},
+                        margin: '0 auto',
+                        width: '100%'
+                    }
+                }}
+            >
+                <DialogTitle
+                    sx={{
+                        bgcolor: editingAddress?.is_default ? 'rgba(228, 176, 2, 0.08)' : 'transparent',
+                        borderBottom: '1px solid #eaeaea',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        py: 2.5,
+                        mb: {xs: 1, sm: 3},
+                        position: 'relative',
+                        zIndex: 1,
+                        px: {xs: 2, sm: 3}
+                    }}
+                >
+                    <LocationOnIcon sx={{color: vistelicaColors.secondary}}/>
+                    <Typography variant="h6" fontWeight="600" fontSize={{xs: '1.1rem', sm: '1.25rem'}}>
+                        {editingAddress ? 'Editar dirección' : 'Añadir nueva dirección'}
+                    </Typography>
                 </DialogTitle>
-                <DialogContent>
-                    <Grid container spacing={2} sx={{ mt: 0.5 }}>
-                        <Grid item xs={12}>
-                            <TextField
-                                name="alias"
-                                label="Nombre de la dirección"
-                                placeholder="Ej: Casa, Trabajo, etc."
-                                value={formData.alias}
-                                onChange={handleChange}
-                                fullWidth
-                                required
-                            />
+                <DialogContent
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        px: {xs: 2, sm: 4},
+                        py: {xs: 2, sm: 4},
+                        mt: {xs: 0, sm: 2},
+                        maxHeight: '70vh',
+                        overflowY: 'auto',
+                        '&.MuiDialogContent-root': {
+                            paddingTop: {xs: '24px', sm: '24px'}
+                        }
+                    }}
+                >
+                    <Box sx={{
+                        width: '100%',
+                        maxWidth: '550px',
+                        mx: 'auto',
+                        textAlign: 'center'
+                    }}>
+                        <Grid container spacing={{ xs: 2, sm: 3.5 }} justifyContent="center">
+                            <Grid item xs={12}>
+                                <TextField
+                                    name="alias"
+                                    label="Nombre de la dirección"
+                                    placeholder="Ej: Casa, Trabajo, etc."
+                                    value={formData.alias}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    required
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '&:hover fieldset': {borderColor: vistelicaColors.primary},
+                                            '&.Mui-focused fieldset': {borderColor: vistelicaColors.primary}
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: vistelicaColors.primary
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={8}>
+                                <TextField
+                                    name="street"
+                                    label="Calle"
+                                    value={formData.street}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    required
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '&:hover fieldset': {borderColor: vistelicaColors.primary},
+                                            '&.Mui-focused fieldset': {borderColor: vistelicaColors.primary}
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: vistelicaColors.primary
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={4}>
+                                <TextField
+                                    name="number"
+                                    label="Número"
+                                    value={formData.number}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '&:hover fieldset': {borderColor: vistelicaColors.primary},
+                                            '&.Mui-focused fieldset': {borderColor: vistelicaColors.primary}
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: vistelicaColors.primary
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={4}>
+                                <TextField
+                                    name="postalCode"
+                                    label="Código postal"
+                                    value={formData.postalCode}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    required
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '&:hover fieldset': {borderColor: vistelicaColors.primary},
+                                            '&.Mui-focused fieldset': {borderColor: vistelicaColors.primary}
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: vistelicaColors.primary
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={8}>
+                                <TextField
+                                    name="city"
+                                    label="Ciudad"
+                                    value={formData.city}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    required
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '&:hover fieldset': {borderColor: vistelicaColors.primary},
+                                            '&.Mui-focused fieldset': {borderColor: vistelicaColors.primary}
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: vistelicaColors.primary
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    name="province"
+                                    label="Provincia"
+                                    value={formData.province}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    required
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '&:hover fieldset': {borderColor: vistelicaColors.primary},
+                                            '&.Mui-focused fieldset': {borderColor: vistelicaColors.primary}
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: vistelicaColors.primary
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    name="country"
+                                    label="País"
+                                    value={formData.country}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    required
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '&:hover fieldset': {borderColor: vistelicaColors.primary},
+                                            '&.Mui-focused fieldset': {borderColor: vistelicaColors.primary}
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: vistelicaColors.primary
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    name="description"
+                                    label="Instrucciones de entrega"
+                                    value={formData.description}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    multiline
+                                    rows={3}
+                                    placeholder="Ej: Puerta derecha, timbre roto, llamar por teléfono antes de entregar, etc."
+                                    helperText="Información útil para el repartidor"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '&:hover fieldset': {borderColor: vistelicaColors.primary},
+                                            '&.Mui-focused fieldset': {borderColor: vistelicaColors.primary}
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: vistelicaColors.primary
+                                        }
+                                    }}
+                                />
+                            </Grid>
                         </Grid>
-                        <Grid item xs={12} sm={8}>
-                            <TextField
-                                name="street"
-                                label="Calle"
-                                value={formData.street}
-                                onChange={handleChange}
-                                fullWidth
-                                required
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                            <TextField
-                                name="number"
-                                label="Número"
-                                value={formData.number}
-                                onChange={handleChange}
-                                fullWidth
-                                required
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                            <TextField
-                                name="postalCode"
-                                label="Código postal"
-                                value={formData.postalCode}
-                                onChange={handleChange}
-                                fullWidth
-                                required
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={8}>
-                            <TextField
-                                name="city"
-                                label="Ciudad"
-                                value={formData.city}
-                                onChange={handleChange}
-                                fullWidth
-                                required
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField
-                                name="province"
-                                label="Provincia"
-                                value={formData.province}
-                                onChange={handleChange}
-                                fullWidth
-                                required
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField
-                                name="country"
-                                label="País"
-                                value={formData.country}
-                                onChange={handleChange}
-                                fullWidth
-                                required
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                name="description"
-                                label="Descripción (opcional)"
-                                placeholder="Instrucciones adicionales de entrega..."
-                                value={formData.description || ''}
-                                onChange={handleChange}
-                                fullWidth
-                                multiline
-                                rows={2}
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={formData.isDefault}
-                                        onChange={handleChange}
-                                        name="isDefault"
-                                        color="primary"
-                                    />
-                                }
-                                label="Establecer como dirección predeterminada"
-                            />
-                        </Grid>
-                    </Grid>
+                    </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDialog}>Cancelar</Button>
+                <DialogActions sx={{
+                    px: { xs: 2, sm: 3 },
+                    py: { xs: 1.5, sm: 2 },
+                    borderTop: '1px solid #eaeaea',
+                    bgcolor: '#fafafa',
+                    justifyContent: 'center'
+                }}>
+                    <Button
+                        onClick={handleCloseDialog}
+                        sx={{
+                            color: 'text.secondary',
+                            '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' },
+                            mx: { xs: 1, sm: 2 }
+                        }}
+                    >
+                        Cancelar
+                    </Button>
                     <Button
                         onClick={handleSaveAddress}
                         variant="contained"
@@ -626,10 +923,12 @@ const AccountAddresses = () => {
                             backgroundColor: vistelicaColors.primary,
                             '&:hover': {
                                 backgroundColor: vistelicaColors.secondary,
-                            }
+                            },
+                            px: { xs: 2, sm: 3 },
+                            mx: { xs: 1, sm: 2 }
                         }}
                     >
-                        {loading ? <CircularProgress size={24} /> : 'Guardar'}
+                        {loading ? <CircularProgress size={24} /> : editingAddress ? 'Actualizar' : 'Guardar'}
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -638,27 +937,68 @@ const AccountAddresses = () => {
             <Dialog
                 open={confirmDeleteDialog}
                 onClose={closeConfirmDeleteDialog}
-                aria-labelledby="alert-dialog-title"
-                aria-describedby="alert-dialog-description"
+                PaperProps={{
+                    sx: {
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        maxWidth: '500px',
+                        margin: '0 auto'
+                    }
+                }}
             >
-                <DialogTitle id="alert-dialog-title">
-                    Confirmar eliminación
+                <DialogTitle
+                    sx={{
+                        bgcolor: 'rgba(239, 83, 80, 0.08)',
+                        borderBottom: '1px solid #eaeaea',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        py: 2.5,
+                        position: 'relative'
+                    }}
+                >
+                    <DeleteIcon sx={{color: '#d32f2f'}}/>
+                    <Typography variant="h6" fontWeight="600">
+                        Confirmar eliminación
+                    </Typography>
                 </DialogTitle>
-                <DialogContent>
-                    <DialogContentText id="alert-dialog-description">
-                        ¿Estás seguro de que deseas eliminar la dirección "{addressToDelete?.alias}"? Esta acción no se puede deshacer.
-                    </DialogContentText>
+                <DialogContent sx={{px: 3, py: 3, mt: 1}}>
+                    <Box sx={{display: 'flex', alignItems: 'flex-start', gap: 2}}>
+                        <InfoOutlinedIcon sx={{color: 'text.secondary', mt: 0.5}}/>
+                        <DialogContentText id="alert-dialog-description" sx={{m: 0}}>
+                            ¿Estás seguro de que deseas eliminar la dirección <b>"{addressToDelete?.alias || ''}"</b>?
+                            <br/>
+                            Esta acción no se puede deshacer.
+                        </DialogContentText>
+                    </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={closeConfirmDeleteDialog} color="primary">
+                <DialogActions sx={{
+                    px: 3,
+                    py: 2,
+                    borderTop: '1px solid #eaeaea',
+                    bgcolor: '#fafafa'
+                }}>
+                    <Button
+                        onClick={closeConfirmDeleteDialog}
+                        sx={{
+                            color: 'text.secondary',
+                            '&:hover': {bgcolor: 'rgba(0,0,0,0.05)'}
+                        }}
+                    >
                         Cancelar
                     </Button>
                     <Button
                         onClick={handleDeleteAddress}
-                        color="error"
                         variant="contained"
-                        startIcon={<DeleteIcon />}
-                        autoFocus
+                        disabled={loading}
+                        startIcon={<DeleteIcon/>}
+                        sx={{
+                            backgroundColor: '#d32f2f',
+                            '&:hover': {
+                                backgroundColor: '#b71c1c',
+                            },
+                            px: 3
+                        }}
                     >
                         Eliminar
                     </Button>
@@ -670,12 +1010,12 @@ const AccountAddresses = () => {
                 open={snackbar.open}
                 autoHideDuration={4000}
                 onClose={handleCloseSnackbar}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                anchorOrigin={{vertical: 'bottom', horizontal: 'center'}}
             >
                 <Alert
                     onClose={handleCloseSnackbar}
                     severity={snackbar.severity}
-                    sx={{ width: '100%' }}
+                    sx={{width: '100%'}}
                 >
                     {snackbar.message}
                 </Alert>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import {
     Typography,
@@ -13,7 +13,15 @@ import {
     Paper,
     Avatar,
     Collapse,
-    styled
+    styled,
+    useMediaQuery,
+    useTheme,
+    Drawer,
+    IconButton,
+    AppBar,
+    Toolbar,
+    Slide,
+    Fade
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
@@ -28,6 +36,8 @@ import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
+import CloseIcon from '@mui/icons-material/Close';
+import MenuIcon from '@mui/icons-material/Menu';
 import { logout } from '../../services/authService';
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 import { typography } from '@/pages/shared-theme/themePrimitives';
@@ -107,14 +117,68 @@ const MotionBox = styled(motion.div)({
     width: '100%',
 });
 
-const SidebarMenu = ({ username }) => {
-    const router = useRouter();
+// Acepta drawerOpen y setDrawerOpen como props opcionales para control externo
+const SidebarMenu = ({ username, drawerOpen: externalDrawerOpen, setDrawerOpen: externalSetDrawerOpen }) => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const [internalDrawerOpen, setInternalDrawerOpen] = useState(false);
     const [helpOpen, setHelpOpen] = useState(false);
+    const router = useRouter();
     const currentPath = router.pathname;
     const userInitial = username ? username.charAt(0).toUpperCase() : 'U';
 
+    // Nuevos estados para controlar la visibilidad de la AppBar
+    const [isAppBarVisible, setIsAppBarVisible] = useState(true);
+    const [lastScrollTop, setLastScrollTop] = useState(0);
+    const [appBarTransparent, setAppBarTransparent] = useState(false);
+
+    // Usa el estado interno o el externo según las props
+    const drawerOpen = externalDrawerOpen !== undefined ? externalDrawerOpen : internalDrawerOpen;
+    const setDrawerOpen = externalSetDrawerOpen || setInternalDrawerOpen;
+
+    // Función para manejar el evento de scroll
+    useEffect(() => {
+        if (!isMobile) return;
+
+        const handleScroll = () => {
+            const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            // Si el scroll es menor a 10px, siempre mostrar la barra
+            if (currentScrollTop < 10) {
+                setIsAppBarVisible(true);
+                setAppBarTransparent(false);
+                setLastScrollTop(currentScrollTop);
+                return;
+            }
+
+            // Detectar dirección del scroll
+            if (currentScrollTop > lastScrollTop) {
+                // Scroll hacia abajo - ocultar barra
+                setIsAppBarVisible(false);
+            } else {
+                // Scroll hacia arriba - mostrar barra
+                setIsAppBarVisible(true);
+
+                // Hacer transparente si sigue haciendo scroll
+                if (currentScrollTop > 50) {
+                    setAppBarTransparent(true);
+                } else {
+                    setAppBarTransparent(false);
+                }
+            }
+
+            setLastScrollTop(currentScrollTop);
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [isMobile, lastScrollTop]);
+
     const handleNavigation = (path) => {
         router.push(path);
+        if (isMobile) {
+            setDrawerOpen(false);
+        }
     };
 
     const handleLogout = async () => {
@@ -140,16 +204,23 @@ const SidebarMenu = ({ username }) => {
 
     const menuItems = [
         { text: "Mi cuenta", icon: <PersonOutlineIcon />, path: "/account/AccountLayout", selected: currentPath === "/account/AccountLayout" },
-        { text: "Mis datos", icon: <EditIcon />, path: "/account/AccountInfoEditable", selected: currentPath === "/account/AccountInfoEditable" },
         { text: "Pedidos", icon: <LocalShippingOutlinedIcon />, path: "/order-history/AccountLayout", selected: currentPath === "/order-history/AccountLayout" },
         { text: "Direcciones", icon: <LocationOnOutlinedIcon />, path: "/account/AccountAddresses", selected: currentPath === "/account/AccountAddresses" },
         { text: "Métodos de pago", icon: <PaymentOutlinedIcon />, path: "#", selected: false },
         { text: "Devoluciones", icon: <AssignmentReturnOutlinedIcon />, path: "#", selected: false },
     ];
 
-    return (
-        <StyledPaper>
+    // Contenido del sidebar que será reutilizado tanto para desktop como para móvil
+    const sidebarContent = (
+        <>
             <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', mb: 3 }}>
+                {isMobile && (
+                    <Box sx={{ alignSelf: 'flex-end', mb: 1 }}>
+                        <IconButton onClick={() => setDrawerOpen(false)}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
+                )}
                 <UserAvatar>{userInitial}</UserAvatar>
                 <Typography
                     variant="h5"
@@ -189,8 +260,8 @@ const SidebarMenu = ({ username }) => {
                         <MotionBox
                             key={item.text}
                             custom={index}
-                            initial="hidden"
-                            animate="visible"
+                            initial={!isMobile && "hidden"}
+                            animate={!isMobile && "visible"}
                             variants={listItemVariants}
                         >
                             <StyledListItemButton
@@ -207,8 +278,8 @@ const SidebarMenu = ({ username }) => {
 
                     <MotionBox
                         custom={menuItems.length}
-                        initial="hidden"
-                        animate="visible"
+                        initial={!isMobile && "hidden"}
+                        animate={!isMobile && "visible"}
                         variants={listItemVariants}
                     >
                         <StyledListItemButton
@@ -223,8 +294,8 @@ const SidebarMenu = ({ username }) => {
 
                     <MotionBox
                         custom={menuItems.length + 1}
-                        initial="hidden"
-                        animate="visible"
+                        initial={!isMobile && "hidden"}
+                        animate={!isMobile && "visible"}
                         variants={listItemVariants}
                     >
                         <StyledListItemButton
@@ -274,8 +345,8 @@ const SidebarMenu = ({ username }) => {
                 <Collapse in={helpOpen || true}>
                     <Box
                         component={motion.div}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
+                        initial={!isMobile && { opacity: 0 }}
+                        animate={!isMobile && { opacity: 1 }}
                         transition={{ duration: 0.5 }}
                         sx={{
                             backgroundColor: `${vistelicaColors.tertiary}10`,
@@ -299,7 +370,7 @@ const SidebarMenu = ({ username }) => {
                             sx={{
                                 '&:hover': {
                                     '& .email-text': {
-                                        color: vistelicaColors.primary,
+                                        color: vistelicaColors.primary
                                     }
                                 }
                             }}
@@ -320,6 +391,81 @@ const SidebarMenu = ({ username }) => {
                     </Box>
                 </Collapse>
             </Box>
+        </>
+    );
+
+    // Para dispositivos móviles, mostramos la AppBar secundaria + Drawer
+    if (isMobile) {
+        return (
+            <>
+                {/* AppBar secundaria específica para páginas de cuenta con animación de desvanecimiento */}
+                <Fade in={isAppBarVisible} timeout={{ enter: 400, exit: 300 }}>
+                    <AppBar
+                        position="fixed"
+                        sx={{
+                            backgroundColor: appBarTransparent ? 'rgba(255, 255, 255, 0.85)' : '#fff',
+                            backdropFilter: appBarTransparent ? 'blur(8px)' : 'none',
+                            boxShadow: appBarTransparent ? '0 1px 4px rgba(0,0,0,0.05)' : '0 2px 4px rgba(0,0,0,0.1)',
+                            top: '80px',
+                            zIndex: theme.zIndex.drawer - 1,
+                            transition: 'all 0.3s ease'
+                        }}
+                    >
+                        <Toolbar sx={{ position: 'relative', justifyContent: 'center' }}>
+                            <IconButton
+                                color="inherit"
+                                aria-label="abrir menú"
+                                edge="start"
+                                onClick={() => setDrawerOpen(true)}
+                                sx={{
+                                    color: vistelicaColors.primary,
+                                    position: 'absolute',
+                                    left: 16
+                                }}
+                            >
+                                <MenuIcon />
+                            </IconButton>
+                            <Typography
+                                variant="h6"
+                                component="div"
+                                sx={{
+                                    color: vistelicaColors.primary,
+                                    fontFamily: typography.fontFamily,
+                                    fontWeight: 400,
+                                    textAlign: 'center'
+                                }}
+                            >
+                                Mi Cuenta
+                            </Typography>
+                        </Toolbar>
+                    </AppBar>
+                </Fade>
+
+                {/* Espacio para compensar la altura de la barra secundaria */}
+                <Toolbar sx={{ mt: '70px' }} />
+
+                <Drawer
+                    anchor="left"
+                    open={drawerOpen}
+                    onClose={() => setDrawerOpen(false)}
+                    sx={{
+                        '& .MuiDrawer-paper': {
+                            width: { xs: '85%', sm: '350px' },
+                            borderRadius: '0 12px 12px 0',
+                            p: 2
+                        },
+                    }}
+                >
+                    {sidebarContent}
+                </Drawer>
+            </>
+        );
+    }
+
+    // Para desktop, mostrar el sidebar normal
+    return (
+        <StyledPaper>
+            {sidebarContent}
         </StyledPaper>
     );
 };
