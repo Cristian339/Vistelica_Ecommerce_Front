@@ -8,14 +8,22 @@ import {
     Typography,
     Box
 } from '@mui/material';
-import productService from "@/services/productService";
+import productService, {getTopRatedFeaturedProducts} from "@/services/productService";
+import {useRouter} from "next/router";
+import {router} from "next/client";
 
 const ProductCard = ({ product }) => {
+
     const [isHovered, setIsHovered] = useState(false);
     const colorCount = product.colors ? product.colors.replace(/[{}]/g, '').split(',').length : 0;
 
+
+    const handleProductClick = () => {
+        router.push(`/product-detail/page?id=${product.product_id}`);
+    };
     return (
         <Card
+            onClick={handleProductClick}
             sx={{
                 position: 'relative',
                 height: '350px', // Reducido de 400px a 350px
@@ -95,7 +103,7 @@ const ProductCard = ({ product }) => {
                                 {product.average_rating.toFixed(1)}
                             </Typography>
                             <Typography variant="caption" component="span" color="text.secondary" ml={0.5}>
-                                ({product.average_rating || 0} reseñas)
+                                ({product.reviews_count || 0} reseñas)
                             </Typography>
                         </Box>
                     )}
@@ -118,7 +126,7 @@ const ProductShowcase = () => {
     useEffect(() => {
         const fetchFeaturedProducts = async () => {
             try {
-                const data = await productService.getRandomFeaturedProducts();
+                const data = await productService.getTopRatedFeaturedProducts();
                 // Limitar los productos a 6
                 setProducts(data.slice(0, 8));
             } catch (error) {

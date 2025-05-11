@@ -8,37 +8,49 @@ import {
     CardContent,
     useMediaQuery,
     useTheme,
-    GlobalStyles // Importamos GlobalStyles
+    GlobalStyles
 } from '@mui/material';
+import productService from '@/services/productService';
 
-// Componente para un slide individual del carrusel
+import { useRouter } from 'next/navigation';
+
 const CarouselItem = ({ product }) => {
+    const router = useRouter();
+
+    const handleProductClickDetail = (productId) => {
+        if (router) {
+            router.push(`/product-detail/page?id=${productId}`);
+        } else {
+            console.error('Router is not available.');
+        }
+    };
+
     return (
         <Card
+            onClick={() => handleProductClickDetail(product.product_id)}
             sx={{
                 position: 'relative',
                 height: '275px',
                 minWidth: {
-                    xs: '65%', // En móviles ocupa 65% del ancho
-                    sm: '45%', // En tablets ocupa 45% del ancho
-                    md: '33%', // En desktop ocupa 33% del ancho
-                    lg: '25%'  // En pantallas grandes ocupa 25% del ancho
+                    xs: '65%',
+                    sm: '45%',
+                    md: '33%',
+                    lg: '25%'
                 },
                 mx: 1,
                 borderRadius: 2,
                 overflow: 'hidden',
-                boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                cursor: 'pointer',
+                '&:hover': {
+                    boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
+                }
             }}
         >
-            <Box sx={{
-                position: 'relative',
-                height: '85%',
-                width: '100%',
-                overflow: 'hidden'
-            }}>
+            <Box sx={{ position: 'relative', height: '85%', width: '100%', overflow: 'hidden' }}>
                 <CardMedia
                     component="img"
-                    image={product.imageUrl}
+                    image={product.main_image || product.mainImage}
                     alt={product.name}
                     sx={{
                         objectFit: 'cover',
@@ -47,26 +59,26 @@ const CarouselItem = ({ product }) => {
                     }}
                 />
             </Box>
-
-            <CardContent sx={{
-                py: 1.5,
-                position: 'absolute',
-                bottom: 0,
-                width: '100%',
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                backdropFilter: 'blur(5px)'
-            }}>
+            <CardContent
+                sx={{
+                    py: 1.5,
+                    position: 'absolute',
+                    bottom: 0,
+                    width: '100%',
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    backdropFilter: 'blur(5px)'
+                }}
+            >
                 <Typography variant="subtitle2" noWrap>
                     {product.name}
                 </Typography>
                 <Typography variant="body2" fontWeight={500} color="primary">
-                    ${product.price}
+                    ${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
                 </Typography>
             </CardContent>
         </Card>
     );
 };
-
 const AutomaticCarouselWithScrollbar = () => {
     const scrollContainerRef = useRef(null);
     const scrollbarRef = useRef(null);
@@ -76,49 +88,28 @@ const AutomaticCarouselWithScrollbar = () => {
     const [isDragging, setIsDragging] = useState(false);
     const [dragStartX, setDragStartX] = useState(0);
     const [initialScrollLeft, setInitialScrollLeft] = useState(0);
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Datos de ejemplo (reemplazar con data real de tu API)
-    const products = [
-        {
-            id: 1,
-            name: "Anillo Inspirado en Vintage con Zafiro",
-            price: "420.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-        },
-        {
-            id: 2,
-            name: "Altavoz Bluetooth de Malla Redondo",
-            price: "215.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-        },
-        {
-            id: 3,
-            name: "Parlante Portátil Minimalista",
-            price: "145.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-        },
-        {
-            id: 4,
-            name: "Gafas de Sol Clásicas",
-            price: "95.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-        },
-        {
-            id: 5,
-            name: "Plato Decorativo Mármol",
-            price: "125.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-        },
-        {
-            id: 6,
-            name: "Jarrón Plateado Moderno",
-            price: "175.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-        }
-    ];
+    // Cargar productos desde la API
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                setLoading(true);
+                const data = await productService.getRandomAccessoryProducts();
+                setProducts(data);
+            } catch (error) {
+                console.error('Error al cargar los accesorios:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProducts();
+    }, []);
 
     // Duplicar productos para crear efecto infinito
-    const carouselProducts = [...products, ...products, ...products];
+    const carouselProducts = products.length > 0 ? [...products, ...products, ...products] : [];
 
     // Lógica para actualizar la posición de la barra de desplazamiento basada en el scroll
     const updateScrollbarPosition = () => {
@@ -134,7 +125,7 @@ const AutomaticCarouselWithScrollbar = () => {
     // Manejar el scroll automático y actualizar la posición de la barra
     useEffect(() => {
         const scrollContainer = scrollContainerRef.current;
-        if (!scrollContainer) return;
+        if (!scrollContainer || loading || products.length === 0) return;
 
         let animationFrameId;
         let lastTime = 0;
@@ -196,7 +187,7 @@ const AutomaticCarouselWithScrollbar = () => {
             scrollContainer.removeEventListener('mouseenter', handleMouseEnter);
             scrollContainer.removeEventListener('mouseleave', handleMouseLeave);
         };
-    }, [isMobile, isDragging]);
+    }, [isMobile, isDragging, loading, products]);
 
     // Funciones para manejar el arrastre de la barra de desplazamiento
     const handleDragStart = (e) => {
@@ -287,10 +278,11 @@ const AutomaticCarouselWithScrollbar = () => {
             />
 
             <Typography variant="h5" component="h2" fontWeight={500} mb={3} sx={{ fontFamily: 'Amethysta, sans-serif' }}>
-                Tendencias actuales
+                Accesorios variados
             </Typography>
 
             <Box
+
                 ref={scrollContainerRef}
                 className="hide-carousel-scrollbar"
                 sx={{
@@ -299,19 +291,42 @@ const AutomaticCarouselWithScrollbar = () => {
                     overflowX: 'auto',
                     scrollBehavior: 'smooth',
                     pb: 2
-                    // Eliminamos el pseudo-elemento problemático de aquí
                 }}
             >
-                {carouselProducts.map((product, index) => (
-                    <CarouselItem
-                        key={`${product.id}-${index}`}
-                        product={product}
-                    />
-                ))}
+                {loading ? (
+                    // Mostrar placeholders mientras carga
+                    Array(6).fill(0).map((_, index) => (
+                        <Box
+                            key={index}
+                            sx={{
+                                height: '275px',
+                                minWidth: {
+                                    xs: '65%',
+                                    sm: '45%',
+                                    md: '33%',
+                                    lg: '25%'
+                                },
+                                mx: 1,
+                                borderRadius: 2,
+                                bgcolor: 'rgba(0,0,0,0.05)'
+                            }}
+                        />
+                    ))
+                ) : (
+                    carouselProducts.map((product, index) => (
+                        <CarouselItem
+
+                            key={`${product.id}-${index}`}
+                            product={product}
+
+                        />
+                    ))
+                )}
             </Box>
 
             {/* Barra de desplazamiento personalizada estilo minimalista */}
             <Box
+
                 sx={{
                     position: 'relative',
                     height: '4px',
@@ -323,6 +338,7 @@ const AutomaticCarouselWithScrollbar = () => {
                     background: 'rgba(158, 158, 158, 0.3)'
                 }}
                 onClick={handleScrollbarClick}
+
             >
                 <Box
                     ref={scrollbarRef}

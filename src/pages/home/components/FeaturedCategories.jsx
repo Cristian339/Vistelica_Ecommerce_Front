@@ -89,14 +89,14 @@ const categories = [
         path: '/sub-women/MainLayout-subW',
     },
     {
-        title: 'Teen',
+        title: 'Chica',
         image: 'https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743966088/vistelica/home%20page/Categories/ezcb19ycheflvmt648ay.avif',
         imageAlt: 'Categoría de moda para adolescentes',
         path: '/sub-teen/MainLayout-subT',
     },
     {
-        title: 'Accesorios',
-        image: 'https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743966077/vistelica/home%20page/Categories/ctuks3byizjocgni8mmr.jpg',
+        title: 'Chico',
+        image: 'https://res.cloudinary.com/dhyv4dpk2/image/upload/v1746901931/vistelica/home%20page/Categories/cpvbixbmwopjxgsrjqr7.png',
         imageAlt: 'Categoría de accesorios de moda',
         path: '/accesorios',
     },

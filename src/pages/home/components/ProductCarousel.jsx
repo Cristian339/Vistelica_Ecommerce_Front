@@ -1,82 +1,12 @@
 // ProductCarousel.jsx
 import React, { useState, useRef, useEffect } from 'react';
-import { Button, Box, Typography } from '@mui/material';
+import { Button, Box, Typography, CircularProgress } from '@mui/material';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import productService from '../../../services/productService';
+import { useRouter } from 'next/navigation';
 
-// Datos de productos hardcodeados directamente en el componente
-const hardcodedProducts = [
-    {
-        id: 1,
-        name: 'ZZ Plant',
-        brand: 'Botanical Gardens',
-        price: 80.00,
-        image: 'https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png',
-    },
-    {
-        id: 2,
-        name: 'Spray Bottle',
-        brand: 'Planted',
-        price: 15.00,
-        image: 'https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png',
-    },
-    {
-        id: 3,
-        name: 'Snake Plant',
-        brand: 'GreenLeaf',
-        price: 109.99,
-        image: 'https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png',
-    },
-    {
-        id: 4,
-        name: 'Sansevieria',
-        brand: 'Urban Jungle',
-        price: 45.00,
-        image: 'https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png',
-    },
-    {
-        id: 5,
-        name: 'Monstera Deliciosa',
-        brand: 'Tropical Haven',
-        price: 120.00,
-        image: 'https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png',
-    },
-    {
-        id: 6,
-        name: 'Clay Pot - Medium',
-        brand: 'Terra Cotta',
-        price: 28.50,
-        image: 'https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png',
-    },
-    {
-        id: 7,
-        name: 'Plant Food Formula',
-        brand: 'GreenThumb',
-        price: 19.99,
-        image: 'https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png',
-    },
-    {
-        id: 8,
-        name: 'Fiddle Leaf Fig',
-        brand: 'Exotic Plants',
-        price: 150.00,
-        image: 'https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png',
-    },
-    {
-        id: 9,
-        name: 'Potting Soil - 5L',
-        brand: 'EarthMix',
-        price: 22.99,
-        image: 'https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png',
-    },
-    {
-        id: 10,
-        name: 'Watering Can',
-        brand: 'GardenEssentials',
-        price: 34.50,
-        image: 'https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png',
-    }
-];
+
 
 // Estilos CSS con mejoras para móvil
 const styles = {
@@ -193,20 +123,57 @@ const styles = {
         cursor: 'pointer',
         padding: '0',
     },
+    loadingContainer: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '300px',
+        width: '100%',
+    },
+    errorContainer: {
+        textAlign: 'center',
+        padding: '20px',
+        color: '#ff5252',
+    },
 };
 
 const ProductCarousel = ({
-                             products = hardcodedProducts,
                              title = "Explora nuestros productos",
                              subtitle = "Empieza a ver nuestros productos más impresionantes de nuestro extenso catálogo.",
-                             onSeeAllClick = () => {},
+
                              initialSlidesToShow = 4
                          }) => {
+    const router = useRouter();
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [slidesToShow, setSlidesToShow] = useState(initialSlidesToShow);
     const [cardWidth, setCardWidth] = useState(100);
     const containerRef = useRef(null);
     const progressBarRef = useRef(null);
+
+    const handleProductClick = () => {
+        router.push(`/product-detail/page?id=${product.product_id}`);
+    };
+    // Cargar productos destacados desde la API
+    useEffect(() => {
+        const fetchFeaturedProducts = async () => {
+            try {
+                setLoading(true);
+                const data = await productService.getRandomFeaturedProducts();
+                setProducts(data);
+                setError(null);
+            } catch (err) {
+                console.error('Error al cargar productos destacados:', err);
+                setError('No se pudieron cargar los productos destacados. Por favor, inténtalo de nuevo más tarde.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchFeaturedProducts();
+    }, []);
 
     // Calcular el índice máximo basado en el número de slides
     const maxIndex = Math.max(0, products.length - slidesToShow);
@@ -270,9 +237,53 @@ const ProductCarousel = ({
     // Calcular el porcentaje de progreso
     const progressPercentage = maxIndex === 0 ? 100 : (currentIndex / maxIndex) * 100;
 
+    // Mostrador de carga
+    if (loading) {
+        return (
+            <div style={styles.container}>
+                <div style={styles.header}>
+                    <div>
+                        <h2 style={styles.title}>{title}</h2>
+                        {subtitle && <p style={styles.subtitle}>{subtitle}</p>}
+                    </div>
+                </div>
+                <div style={styles.loadingContainer}>
+                    <CircularProgress />
+                </div>
+            </div>
+        );
+    }
+
+    // Mostrador de error
+    if (error) {
+        return (
+            <div style={styles.container}>
+                <div style={styles.header}>
+                    <div>
+                        <h2 style={styles.title}>{title}</h2>
+                        {subtitle && <p style={styles.subtitle}>{subtitle}</p>}
+                    </div>
+                </div>
+                <div style={styles.errorContainer}>
+                    <p>{error}</p>
+                </div>
+            </div>
+        );
+    }
+
     // Si no hay productos, no renderizar nada
     if (!products.length) return null;
 
+
+
+    const handleSeeAllClick = () => {
+        router.push('/product-list/productList');
+
+    };
+
+    const handleProductClickDetail = (productId) => {
+        router.push(`/product-detail/page?id=${productId}`);
+    };
     return (
         <div style={styles.container} ref={containerRef}>
             <div style={styles.header}>
@@ -280,10 +291,10 @@ const ProductCarousel = ({
                     <h2 style={styles.title}>{title}</h2>
                     {subtitle && <p style={styles.subtitle}>{subtitle}</p>}
                 </div>
-                <span style={styles.seeAll} onClick={onSeeAllClick}>See all</span>
+                <span style={styles.seeAll} onClick={handleSeeAllClick}>See all</span>
             </div>
 
-            <div style={styles.productsContainer}>
+            <div style={styles.productsContainer} >
                 <div
                     style={{
                         ...styles.productsList,
@@ -292,12 +303,14 @@ const ProductCarousel = ({
                 >
                     {products.map((product) => (
                         <div
-                            key={product.id}
+                            key={product.product_id}
                             style={{
                                 ...styles.productCard,
                                 flex: `0 0 ${cardWidth}%`, // Ancho dinámico basado en slidesToShow
                             }}
+                            onClick={() => handleProductClickDetail(product.product_id)}
                         >
+
                             <Box
                                 sx={{
                                     height: { xs: '200px', sm: '250px', md: '300px' },
@@ -315,7 +328,7 @@ const ProductCarousel = ({
                                         height: { xs: '200px', sm: '250px', md: '300px' },
                                     }}
                                     alt={product.name}
-                                    src={product.image}
+                                    src={product.image || product.main_image || '/api/placeholder/400/300'}
                                     onError={(e) => {
                                         e.target.onerror = null;
                                         e.target.src = '/api/placeholder/400/300';
@@ -324,8 +337,8 @@ const ProductCarousel = ({
                             </Box>
                             <div style={styles.productInfo}>
                                 <h3 style={styles.productName}>{product.name}</h3>
-                                {product.brand && <p style={styles.productBrand}>{product.brand}</p>}
-                                <p style={styles.productPrice}>${product.price.toFixed(2)}</p>
+                                {product.subcategory_name && <p style={styles.subcategory_name}>{product.subcategory_name}</p>}
+                                <p style={styles.productPrice}>${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}</p>
                             </div>
                         </div>
                     ))}

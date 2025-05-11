@@ -13,6 +13,7 @@ import {
     Button,
     CircularProgress
 } from '@mui/material';
+import Navbar from "@/components/layout/HeaderComponent";
 
 const AccountInfoEditable = () => {
     const [userData, setUserData] = useState(null);
@@ -61,6 +62,7 @@ const AccountInfoEditable = () => {
 
     return (
         <div>
+            <Navbar />
             {/* Aquí se agrega el Navbar si es necesario */}
             <Container maxWidth="lg" sx={{ py: 4 }}>
                 <Grid container spacing={2} sx={{ flexWrap: { xs: 'nowrap' } }}>
