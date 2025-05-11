@@ -169,6 +169,50 @@ export const createProductReview = async (productId, rating, reviewText, userid)
         throw error;
     }
 };
+/**
+ * Obtiene productos destacados aleatorios
+ * @returns {Promise<Array>} Lista de productos destacados
+ */
+export const getRandomFeaturedProducts = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/products/featured/random`);
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener productos destacados aleatorios:', error);
+        throw new Error(
+            error.response?.data?.message ||
+            'No se pudieron cargar los productos destacados.'
+        );
+    }
+};
+/**
+ * Obtiene productos destacados con mejor rating
+ * @returns {Promise<Array>} Lista de productos destacados ordenados por rating
+ */
+export const getTopRatedFeaturedProducts = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/products/featured/top-rated`);
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener productos destacados por rating:', error);
+        throw new Error(
+            error.response?.data?.message ||
+            'No se pudieron cargar los productos destacados por rating.'
+        );
+    }
+};
+export const getRandomAccessoryProducts = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/products/featured/accessories`);
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener productos aleatorios de accesorios:', error);
+        throw new Error(
+            error.response?.data?.message ||
+            'No se pudieron cargar los productos aleatorios de accesorios.'
+        );
+    }
+};
 
 const productService = {
     getAll,
@@ -179,7 +223,10 @@ const productService = {
     getAllImagesByProductId,
     getReviewsByProductId,
     getReviewsByProductName,
-    createProductReview
+    createProductReview,
+    getRandomFeaturedProducts,
+    getTopRatedFeaturedProducts,
+    getRandomAccessoryProducts
 };
 
 export default productService;

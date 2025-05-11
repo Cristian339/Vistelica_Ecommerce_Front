@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     Container,
     Grid,
@@ -8,149 +8,137 @@ import {
     Typography,
     Box
 } from '@mui/material';
+import productService from "@/services/productService";
+import Link from 'next/link';
 
 const ProductCard = ({ product }) => {
     const [isHovered, setIsHovered] = useState(false);
+    const colorCount = product.colors ? product.colors.replace(/[{}]/g, '').split(',').length : 0;
 
     return (
-        <Card
-            sx={{
-                position: 'relative',
-                height: '350px', // Reducido de 400px a 350px
-                maxWidth: '100%', // Asegura que no supere el ancho del contenedor
-                transition: 'box-shadow 0.3s',
-                '&:hover': {
-                    boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
-                },
-                margin: '0 auto' // Centra la card en su contenedor
-            }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            elevation={isHovered ? 6 : 1}
+        <Link
+            href={`/product-detail/page?id=${product.product_id}`}
+            passHref
+            style={{ textDecoration: 'none' }}
         >
-            {/* Contenedor de imagen con tamaño reducido */}
-            <Box sx={{
-                width: '100%',
-                height: '240px', // Reducido de 320px a 270px
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                overflow: 'hidden',
-                position: 'relative'
-            }}>
-                <CardMedia
-                    component="img"
-                    image={product.imageUrl}
-                    alt={product.name}
-                    sx={{
-                        objectFit: 'contain',
-                        maxHeight: '100%',
-                        maxWidth: '100%'
-                    }}
-                />
-            </Box>
-
-            <CardContent sx={{ p: 2 }}>
-                <Typography variant="subtitle2" component="h3">
-                    {product.name}
-                </Typography>
-            </CardContent>
-
-            {/* Info overlay que se muestra al pasar el ratón */}
-            {isHovered && (
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        bgcolor: 'rgba(255, 255, 255, 0.9)',
-                        p: 2,
-                        transition: 'opacity 0.3s',
-                        borderBottomLeftRadius: 4,
-                        borderBottomRightRadius: 4
-                    }}
-                >
-                    <Typography variant="body2" fontWeight={500} gutterBottom>
-                        Desde ${product.price}
-                    </Typography>
-
-                    {product.rating && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                            <Typography component="span" color="warning.main" mr={0.5}>★</Typography>
-                            <Typography variant="body2" component="span">
-                                {product.rating}
-                            </Typography>
-                            <Typography variant="caption" component="span" color="text.secondary" ml={0.5}>
-                                ({product.reviews} reseñas)
-                            </Typography>
-                        </Box>
-                    )}
-
-                    {product.variants && (
-                        <Typography variant="caption" color="text.secondary">
-                            {product.variants} variantes
-                        </Typography>
-                    )}
+            <Card
+                sx={{
+                    position: 'relative',
+                    height: '350px',
+                    maxWidth: '100%',
+                    transition: 'box-shadow 0.3s',
+                    '&:hover': {
+                        boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
+                    },
+                    margin: '0 auto',
+                    cursor: 'pointer'
+                }}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                elevation={isHovered ? 6 : 1}
+            >
+                {/* Contenedor de imagen con tamaño reducido */}
+                <Box sx={{
+                    width: '100%',
+                    height: '300px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    overflow: 'hidden',
+                    position: 'relative'
+                }}>
+                    <CardMedia
+                        component="img"
+                        image={product.main_image}
+                        alt={product.name}
+                        sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                        }}
+                    />
                 </Box>
-            )}
-        </Card>
+
+                <CardContent sx={{ p: 2 }}>
+                    <Typography
+                        variant="subtitle2"
+                        component="h3"
+                        sx={{
+                            display: '-webkit-box',
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            WebkitLineClamp: 2,
+                            height: '3em',
+                        }}
+                    >
+                        {product.name}
+                    </Typography>
+                </CardContent>
+
+                {/* Info overlay que se muestra al pasar el ratón */}
+                {isHovered && (
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            bgcolor: 'rgba(255, 255, 255, 0.9)',
+                            p: 2,
+                            transition: 'opacity 0.3s',
+                            borderBottomLeftRadius: 4,
+                            borderBottomRightRadius: 4
+                        }}
+                    >
+                        <Typography variant="body2" fontWeight={500} gutterBottom>
+                            Desde ${product.price}
+                        </Typography>
+
+                        {product.average_rating !== null && product.average_rating !== undefined && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                                <Typography component="span" color="warning.main" mr={0.5}>★</Typography>
+                                <Typography variant="body2" component="span">
+                                    {product.average_rating.toFixed(1)}
+                                </Typography>
+                                <Typography variant="caption" component="span" color="text.secondary" ml={0.5}>
+                                    ({product.reviews_count || 0} reseñas)
+                                </Typography>
+                            </Box>
+                        )}
+
+                        {colorCount > 0 && (
+                            <Typography variant="caption" color="text.secondary">
+                                {colorCount} variantes de color
+                            </Typography>
+                        )}
+                    </Box>
+                )}
+            </Card>
+        </Link>
     );
 };
 
 const ProductShowcase = () => {
-    const products = [
-        {
-            id: 1,
-            name: "Anillo Inspirado en Vintage con Zafiro",
-            price: "420.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-            rating: "4.85",
-            reviews: "11",
-            variants: "5"
-        },
-        {
-            id: 2,
-            name: "Altavoz Bluetooth de Malla Redondo",
-            price: "215.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-            rating: "4.7",
-            reviews: "24",
-            variants: "3"
-        },
-        {
-            id: 3,
-            name: "Parlante Portátil Minimalista",
-            price: "145.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-            variants: "2"
-        },
-        {
-            id: 4,
-            name: "Gafas de Sol Clásicas",
-            price: "95.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-            rating: "4.9",
-            reviews: "37",
-            variants: "4"
-        },
-        {
-            id: 5,
-            name: "Plato Decorativo Mármol",
-            price: "125.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-            variants: "1"
-        },
-        {
-            id: 6,
-            name: "Jarrón Plateado Moderno",
-            price: "175.00",
-            imageUrl: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743794098/vistelica/cardproductos/vonzkijgon1kakqvr5vy.png",
-            rating: "4.6",
-            reviews: "8",
-            variants: "2"
-        }
-    ];
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchFeaturedProducts = async () => {
+            try {
+                const data = await productService.getTopRatedFeaturedProducts();
+                // Limitar los productos a 8
+                setProducts(data.slice(0, 8));
+            } catch (error) {
+                console.error('Error al cargar productos destacados:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchFeaturedProducts();
+    }, []);
+
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -161,7 +149,7 @@ const ProductShowcase = () => {
             {/* Contenedor de productos con Grid modificado */}
             <Grid container spacing={3}>
                 {products.map(product => (
-                    <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={product.product_id}>
                         <ProductCard product={product} />
                     </Grid>
                 ))}
