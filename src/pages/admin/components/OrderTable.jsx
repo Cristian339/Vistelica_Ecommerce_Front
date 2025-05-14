@@ -1,5 +1,4 @@
 import * as React from 'react';
-// ... (otros imports se mantienen igual)
 import adminService from "@/services/adminService";
 import { ColorPaletteProp } from '@mui/joy/styles';
 import Avatar from '@mui/joy/Avatar';
@@ -193,38 +192,21 @@ function EditOrderForm({ order, onSave, onClose }) {
     );
 }
 
-function RowMenu({ order, onEdit }) {
-    return (
-        <Dropdown>
-            <MenuButton
-                slots={{ root: IconButton }}
-                slotProps={{ root: { variant: 'plain', color: 'neutral', size: 'sm' } }}
-            >
-                <MoreHorizRoundedIcon />
-            </MenuButton>
-            <Menu size="sm" sx={{ minWidth: 140 }}>
-                <MenuItem onClick={() => onEdit(order)}>Editar</MenuItem>
-                <MenuItem>Renombrar</MenuItem>
-                <Divider />
-                <MenuItem color="danger">Eliminar</MenuItem>
-            </Menu>
-        </Dropdown>
-    );
-}
-
 export default function OrderTable() {
     const [order, setOrder] = React.useState('desc');
     const [orderBy, setOrderBy] = React.useState('id');
     const [selected, setSelected] = React.useState([]);
-    const [rows, setRows] = React.useState([]); // Cambiamos a array vacío inicial
+    const [rows, setRows] = React.useState([]);
     const [editingOrder, setEditingOrder] = React.useState(null);
     const [nameFilter, setNameFilter] = React.useState('');
     const [emailFilter, setEmailFilter] = React.useState('');
     const [dateFilter, setDateFilter] = React.useState('');
-
-    // Cargar pedidos al montar el componente
     const [isLoading, setIsLoading] = React.useState(true);
     const [error, setError] = React.useState(null);
+
+    // Estados para la paginación
+    const [page, setPage] = React.useState(1);
+    const [rowsPerPage] = React.useState(20);
 
     React.useEffect(() => {
         const fetchOrders = async () => {
@@ -283,13 +265,10 @@ export default function OrderTable() {
         setEditingOrder(null);
     };
 
-    // Nueva función para eliminar pedido
     const handleDeleteOrder = async (orderId) => {
         try {
-            // Extraer el ID numérico del formato INV-1234
             const numericId = parseInt(orderId.split('-')[1]);
             await adminService.deleteOrder(numericId);
-            // Actualizar el estado eliminando el pedido
             setRows(prev => prev.filter(order => order.id !== orderId));
         } catch (error) {
             console.error('Error al eliminar pedido:', error);
@@ -318,7 +297,12 @@ export default function OrderTable() {
         return matchesName && matchesEmail && matchesDate;
     });
 
-    // Actualización del RowMenu para incluir eliminación
+    // Calcular pedidos paginados
+    const startIndex = (page - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    const paginatedRows = [...filteredRows].sort(getComparator(order, orderBy)).slice(startIndex, endIndex);
+    const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+
     function RowMenu({ order, onEdit }) {
         return (
             <Dropdown>
@@ -537,7 +521,7 @@ export default function OrderTable() {
                     </tr>
                     </thead>
                     <tbody>
-                    {[...filteredRows].sort(getComparator(order, orderBy)).map((row) => (
+                    {paginatedRows.map((row) => (
                         <tr key={row.id}>
                             <td style={{ textAlign: 'center' }}>
                                 <Checkbox
@@ -617,47 +601,44 @@ export default function OrderTable() {
                     </tbody>
                 </Table>
             </Sheet>
-            <Box
-                className="Pagination-laptopUp"
-                sx={{
-                    pt: 2,
-                    gap: 1,
-                    [`& .${iconButtonClasses.root}`]: { borderRadius: '50%' },
-                    display: {
-                        xs: 'none',
-                        md: 'flex',
-                    },
-                }}
-            >
-                <Button
-                    size="sm"
-                    variant="outlined"
-                    color="neutral"
-                    startDecorator={<KeyboardArrowLeftIcon />}
-                >
-                    Anterior
-                </Button>
-                <Box sx={{ flex: 1 }} />
-                {['1', '2', '3', '…', '8', '9', '10'].map((page) => (
-                    <IconButton
-                        key={page}
+
+            {/* Custom Pagination */}
+            {filteredRows.length > rowsPerPage && (
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 2,
+                    mt: 2,
+                    p: 1,
+                    borderTop: '1px solid',
+                    borderColor: 'divider'
+                }}>
+                    <Button
+                        variant="outlined"
                         size="sm"
-                        variant={Number(page) ? 'outlined' : 'plain'}
-                        color="neutral"
+                        disabled={page === 1}
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        startDecorator={<KeyboardArrowLeftIcon />}
                     >
-                        {page}
-                    </IconButton>
-                ))}
-                <Box sx={{ flex: 1 }} />
-                <Button
-                    size="sm"
-                    variant="outlined"
-                    color="neutral"
-                    endDecorator={<KeyboardArrowRightIcon />}
-                >
-                    Siguiente
-                </Button>
-            </Box>
+                        Anterior
+                    </Button>
+
+                    <Typography level="body-md">
+                        Página {page} de {totalPages}
+                    </Typography>
+
+                    <Button
+                        variant="outlined"
+                        size="sm"
+                        disabled={page >= totalPages}
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        endDecorator={<KeyboardArrowRightIcon />}
+                    >
+                        Siguiente
+                    </Button>
+                </Box>
+            )}
         </React.Fragment>
     );
 }

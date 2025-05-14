@@ -49,6 +49,10 @@ export default function CustomerTable() {
     const [emailFilter, setEmailFilter] = React.useState('');
     const [editingCustomer, setEditingCustomer] = React.useState(null);
 
+    // Estados para la paginación
+    const [page, setPage] = React.useState(1);
+    const [rowsPerPage] = React.useState(20);
+
     React.useEffect(() => {
         const fetchClients = async () => {
             try {
@@ -153,6 +157,12 @@ export default function CustomerTable() {
         }
         return 0;
     });
+
+    // Calcular clientes paginados
+    const startIndex = (page - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    const paginatedCustomers = sortedCustomers.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(sortedCustomers.length / rowsPerPage);
 
     function RowMenu({ customer, onToggleBan }) {
         return (
@@ -398,7 +408,7 @@ export default function CustomerTable() {
                     </tr>
                     </thead>
                     <tbody>
-                    {sortedCustomers.map((customer) => (
+                    {paginatedCustomers.map((customer) => (
                         <tr key={customer.id}>
                             <td style={{ textAlign: 'center' }}>
                                 <Checkbox
@@ -453,47 +463,44 @@ export default function CustomerTable() {
                     </tbody>
                 </Table>
             </Sheet>
-            <Box
-                className="Pagination-laptopUp"
-                sx={{
-                    pt: 2,
-                    gap: 1,
-                    [`& .${iconButtonClasses.root}`]: { borderRadius: '50%' },
-                    display: {
-                        xs: 'none',
-                        md: 'flex',
-                    },
-                }}
-            >
-                <Button
-                    size="sm"
-                    variant="outlined"
-                    color="neutral"
-                    startDecorator={<KeyboardArrowLeftIcon />}
-                >
-                    Anterior
-                </Button>
-                <Box sx={{ flex: 1 }} />
-                {['1', '2', '3', '…', '8', '9', '10'].map((page) => (
-                    <IconButton
-                        key={page}
+
+            {/* Custom Pagination */}
+            {sortedCustomers.length > rowsPerPage && (
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 2,
+                    mt: 2,
+                    p: 1,
+                    borderTop: '1px solid',
+                    borderColor: 'divider'
+                }}>
+                    <Button
+                        variant="outlined"
                         size="sm"
-                        variant={Number(page) ? 'outlined' : 'plain'}
-                        color="neutral"
+                        disabled={page === 1}
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        startDecorator={<KeyboardArrowLeftIcon />}
                     >
-                        {page}
-                    </IconButton>
-                ))}
-                <Box sx={{ flex: 1 }} />
-                <Button
-                    size="sm"
-                    variant="outlined"
-                    color="neutral"
-                    endDecorator={<KeyboardArrowRightIcon />}
-                >
-                    Siguiente
-                </Button>
-            </Box>
+                        Anterior
+                    </Button>
+
+                    <Typography level="body-md">
+                        Página {page} de {totalPages}
+                    </Typography>
+
+                    <Button
+                        variant="outlined"
+                        size="sm"
+                        disabled={page >= totalPages}
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        endDecorator={<KeyboardArrowRightIcon />}
+                    >
+                        Siguiente
+                    </Button>
+                </Box>
+            )}
         </React.Fragment>
     );
 }
