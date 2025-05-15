@@ -320,21 +320,11 @@ const ProductDetail = ({
                 </Grid>
 
                 <Grid item xs={12} sx={{ mt: { xs: 2, md: 0 } , width: '100%'}}>
-                    {loadingReviews ? (
-                        <Box display="flex" justifyContent="center" py={4}>
-                            <CircularProgress />
-                        </Box>
-                    ) : errorReviews ? (
-                        <Typography color="error" textAlign="center" py={2}>
-                            {errorReviews}
-                        </Typography>
-                    ) : (
-                        <ProductReviews
-                            reviews={reviews}
-                            productId={product.product_id}
-                            onReviewAdded={handleReviewAdded}
-                        />
-                    )}
+                    <ProductReviews
+                        reviews={reviews}
+                        productId={product.product_id}
+                        onReviewAdded={handleReviewAdded}
+                    />
                 </Grid>
             </Grid>
         </ProductDetailContainer>

@@ -16,7 +16,7 @@ import OrderHistory from "@/pages/order-history/AccountLayout"
 export default function Home() {
     return (
         <div>
-            <HomePage />
+            <HomePage/>
         </div>
     );
 }

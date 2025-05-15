@@ -134,11 +134,7 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                 Opiniones de clientes
             </Typography>
 
-            {reviews.length === 0 ? (
-                <Typography variant="body1" textAlign="center" py={4}>
-                    No hay reseñas disponibles para este producto.
-                </Typography>
-            ) : (
+
                 <Grid container spacing={4}>
                     {/* Columna izquierda - Estadísticas de valoraciones */}
                     <Grid item xs={12} md={5} sx={{
@@ -277,7 +273,7 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                         </Box>
                     </Grid>
                 </Grid>
-            )}
+
 
             {/* Modal para dejar reseña */}
             <Dialog open={openModal} onClose={handleCloseModal} fullWidth maxWidth="sm">

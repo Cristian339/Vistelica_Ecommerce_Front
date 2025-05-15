@@ -66,7 +66,7 @@ const cartService = {
      * @param {string|null} sessionId - ID de sesión
      * @returns {Promise<Object|null>} - Carrito encontrado o null
      */
-    async getCart(userId = null, sessionId = null) {
+    async getCart(userId, sessionId) {
         try {
             const response = await axios.get(`${API_URL}/cart/`, {
                 params: {
