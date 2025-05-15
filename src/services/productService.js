@@ -238,6 +238,29 @@ const searchProducts = async (searchText, categoryIds = []) => {
 };
 
 
+/**
+ * Obtiene productos básicos (id, nombre, precio e imagen) con filtros
+ * @param {string} searchText - Texto para buscar en nombres de productos
+ * @param {Array<number>} [categoryIds=[]] - IDs de categorías para filtrar (opcional)
+ * @returns {Promise<Array<{product_id: number, name: string, price: string, main_image: string}>>}
+ */
+const getProductsBasicInfo = async (searchText, categoryIds = []) => {
+    try {
+        const response = await axios.post(`${API_URL}/products/basic-info`, {
+            searchText,
+            categoryIds
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener información básica de productos:', error);
+        throw new Error(
+            error.response?.data?.message ||
+            'No se pudieron cargar los productos. Inténtalo más tarde.'
+        );
+    }
+};
+
+
 const productService = {
     getAll,
     getById,
@@ -251,7 +274,8 @@ const productService = {
     getRandomFeaturedProducts,
     getTopRatedFeaturedProducts,
     getRandomAccessoryProducts,
-    searchProducts          // Añadido
+    searchProducts,
+    getProductsBasicInfo
 };
 
 export default productService;

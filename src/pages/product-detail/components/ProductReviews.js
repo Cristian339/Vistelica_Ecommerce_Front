@@ -20,7 +20,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 import productService from '@/services/productService';
 import TextField from "@mui/material/TextField";
-import {getCurrentUser} from "@/services/authService";
+import { getCurrentUser } from "@/services/authService";
 
 const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
     const [openModal, setOpenModal] = useState(false);
@@ -33,6 +33,8 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
         severity: 'success'
     });
 
+    // Verificar si hay token en el localStorage
+    const hasToken = typeof window !== 'undefined' && localStorage.getItem('token');
 
     const calculateStats = () => {
         if (reviews.length === 0) {
@@ -72,8 +74,7 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
     const ratingStats = calculateStats();
 
     const handleOpenModal = () => {
-        const token = localStorage.getItem('token');
-        if (!token) {
+        if (!hasToken) {
             setSnackbar({
                 open: true,
                 message: 'Debes iniciar sesión para dejar una reseña',
@@ -94,7 +95,7 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
         setSubmitting(true);
         try {
             const user = await getCurrentUser();
-            await productService.createProductReview(productId, rating, reviewText,user.user_id);
+            await productService.createProductReview(productId, rating, reviewText, user.user_id);
 
             setSnackbar({
                 open: true,
@@ -134,146 +135,149 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                 Opiniones de clientes
             </Typography>
 
-
-                <Grid container spacing={4}>
-                    {/* Columna izquierda - Estadísticas de valoraciones */}
-                    <Grid item xs={12} md={5} sx={{
-                        width: '100%',
-                        '@media (min-width: 900px)': {
-                            minWidth: '20%',
-                            width: 'auto'
-                        }
+            <Grid container spacing={4}>
+                {/* Columna izquierda - Estadísticas de valoraciones */}
+                <Grid item xs={12} md={5} sx={{
+                    width: '100%',
+                    '@media (min-width: 900px)': {
+                        minWidth: '20%',
+                        width: 'auto'
+                    }
+                }}>
+                    <Box sx={{
+                        backgroundColor: 'background.paper',
+                        p: 3,
+                        borderRadius: 1,
+                        boxShadow: 1,
+                        height: '100%'
                     }}>
-                        <Box sx={{
-                            backgroundColor: 'background.paper',
-                            p: 3,
-                            borderRadius: 1,
-                            boxShadow: 1,
-                            height: '100%'
-                        }}>
-                            <Typography variant="h4" sx={{ fontWeight: 'bold', textAlign: 'center' }}>
-                                {ratingStats.average.toFixed(1)}
-                            </Typography>
-                            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
-                                <Rating
-                                    value={ratingStats.average}
-                                    precision={0.1}
-                                    readOnly
-                                    size="large"
-                                />
-                            </Box>
-                            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mb: 3 }}>
-                                {ratingStats.totalRatings} valoraciones
-                            </Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 'bold', textAlign: 'center' }}>
+                            {ratingStats.average.toFixed(1)}
+                        </Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                            <Rating
+                                value={ratingStats.average}
+                                precision={0.1}
+                                readOnly
+                                size="large"
+                            />
+                        </Box>
+                        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mb: 3 }}>
+                            {ratingStats.totalRatings} valoraciones
+                        </Typography>
 
-                            {ratingStats.breakdown.map((item, index) => (
-                                <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                    <Typography variant="body2" sx={{ width: 40 }}>
-                                        {item.stars} ★
-                                    </Typography>
-                                    <Box sx={{ flexGrow: 1, mx: 2 }}>
+                        {ratingStats.breakdown.map((item, index) => (
+                            <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                <Typography variant="body2" sx={{ width: 40 }}>
+                                    {item.stars} ★
+                                </Typography>
+                                <Box sx={{ flexGrow: 1, mx: 2 }}>
+                                    <Box
+                                        sx={{
+                                            height: 8,
+                                            backgroundColor: 'divider',
+                                            borderRadius: 4,
+                                            overflow: 'hidden'
+                                        }}
+                                    >
                                         <Box
                                             sx={{
-                                                height: 8,
-                                                backgroundColor: 'divider',
-                                                borderRadius: 4,
-                                                overflow: 'hidden'
+                                                width: `${item.percentage}%`,
+                                                height: '100%',
+                                                backgroundColor: vistelicaColors.primary
                                             }}
-                                        >
-                                            <Box
-                                                sx={{
-                                                    width: `${item.percentage}%`,
-                                                    height: '100%',
-                                                    backgroundColor: vistelicaColors.primary
-                                                }}
-                                            />
-                                        </Box>
+                                        />
                                     </Box>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {item.count}
-                                    </Typography>
                                 </Box>
-                            ))}
+                                <Typography variant="body2" color="text.secondary">
+                                    {item.count}
+                                </Typography>
+                            </Box>
+                        ))}
 
-                            <Button
-                                variant="contained"
-                                fullWidth
-                                onClick={handleOpenModal}
-                                sx={{
-                                    mt: 3,
-                                    backgroundColor: vistelicaColors.primary,
-                                    color: vistelicaColors.secondary,
-                                    '&:hover': {
-                                        backgroundColor: vistelicaColors.primaryDark
-                                    }
-                                }}
-                            >
-                                Dejar reseña
-                            </Button>
-                        </Box>
-                    </Grid>
-
-                    {/* Columna derecha - Lista de opiniones */}
-                    <Grid item xs={12} md={7} sx={{
-                        width: '100%',
-                        '@media (min-width: 900px)': {
-                            width: 'calc(100% - 20% - 32px)'
-                        }
-                    }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                            <Typography variant="body2" color="text.secondary">
-                                {reviews.length} opiniones
-                            </Typography>
-                        </Box>
-
-                        <Box sx={{
-                            maxHeight: '600px',
-                            overflowY: 'auto',
-                            pr: 2,
-                            '@media (max-width: 899px)': {
-                                maxHeight: 'none'
-                            }
-                        }}>
-                            {reviews.map((review, index) => (
-                                <Box key={index} mb={3}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                        <Avatar sx={{
-                                            width: 40,
-                                            height: 40,
-                                            mr: 2,
-                                            backgroundColor: vistelicaColors.primary
-                                        }}>
-                                            {review.user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                                        </Avatar>
-                                        <Box>
-                                            <Typography variant="subtitle2">
-                                                {review.user?.name || 'Usuario anónimo'}
-                                            </Typography>
-                                            <Rating
-                                                value={review.rating}
-                                                size="small"
-                                                readOnly
-                                                sx={{
-                                                    '& .MuiRating-iconFilled': {
-                                                        color: vistelicaColors.primary
-                                                    }
-                                                }}
-                                            />
-                                        </Box>
-                                    </Box>
-                                    <Typography variant="body2" paragraph>
-                                        {review.review_text}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                        {formatDate(review.created_at)}
-                                    </Typography>
-                                    {index < reviews.length - 1 && <Divider sx={{ my: 2 }} />}
-                                </Box>
-                            ))}
-                        </Box>
-                    </Grid>
+                        <Button
+                            variant="contained"
+                            fullWidth
+                            onClick={handleOpenModal}
+                            disabled={!hasToken}
+                            sx={{
+                                mt: 3,
+                                backgroundColor: vistelicaColors.primary,
+                                color: vistelicaColors.secondary,
+                                '&:hover': {
+                                    backgroundColor: vistelicaColors.primaryDark
+                                },
+                                '&:disabled': {
+                                    backgroundColor: '#e0e0e0',
+                                    color: '#a0a0a0'
+                                }
+                            }}
+                        >
+                            Dejar reseña
+                        </Button>
+                    </Box>
                 </Grid>
 
+                {/* Columna derecha - Lista de opiniones */}
+                <Grid item xs={12} md={7} sx={{
+                    width: '100%',
+                    '@media (min-width: 900px)': {
+                        width: 'calc(100% - 20% - 32px)'
+                    }
+                }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="body2" color="text.secondary">
+                            {reviews.length} opiniones
+                        </Typography>
+                    </Box>
+
+                    <Box sx={{
+                        maxHeight: '600px',
+                        overflowY: 'auto',
+                        pr: 2,
+                        '@media (max-width: 899px)': {
+                            maxHeight: 'none'
+                        }
+                    }}>
+                        {reviews.map((review, index) => (
+                            <Box key={index} mb={3}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                    <Avatar sx={{
+                                        width: 40,
+                                        height: 40,
+                                        mr: 2,
+                                        backgroundColor: vistelicaColors.primary
+                                    }}>
+                                        {review.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                                    </Avatar>
+                                    <Box>
+                                        <Typography variant="subtitle2">
+                                            {review.user?.name || 'Usuario anónimo'}
+                                        </Typography>
+                                        <Rating
+                                            value={review.rating}
+                                            size="small"
+                                            readOnly
+                                            sx={{
+                                                '& .MuiRating-iconFilled': {
+                                                    color: vistelicaColors.primary
+                                                }
+                                            }}
+                                        />
+                                    </Box>
+                                </Box>
+                                <Typography variant="body2" paragraph>
+                                    {review.review_text}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    {formatDate(review.created_at)}
+                                </Typography>
+                                {index < reviews.length - 1 && <Divider sx={{ my: 2 }} />}
+                            </Box>
+                        ))}
+                    </Box>
+                </Grid>
+            </Grid>
 
             {/* Modal para dejar reseña */}
             <Dialog open={openModal} onClose={handleCloseModal} fullWidth maxWidth="sm">
@@ -336,6 +340,22 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Snackbar para mensajes */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert
+                    onClose={handleCloseSnackbar}
+                    severity={snackbar.severity}
+                    sx={{ width: '100%' }}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };
