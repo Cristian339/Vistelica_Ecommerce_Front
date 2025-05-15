@@ -18,17 +18,17 @@ import {
     useTheme,
     Drawer,
     IconButton,
-    AppBar,
-    Toolbar,
-    Slide,
-    Fade
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
+    Button
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import EditIcon from '@mui/icons-material/Edit';
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
-import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
 import PaymentOutlinedIcon from '@mui/icons-material/PaymentOutlined';
 import AssignmentReturnOutlinedIcon from '@mui/icons-material/AssignmentReturnOutlined';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
@@ -37,7 +37,6 @@ import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
 import CloseIcon from '@mui/icons-material/Close';
-import MenuIcon from '@mui/icons-material/Menu';
 import { logout } from '../../services/authService';
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 import { typography } from '@/pages/shared-theme/themePrimitives';
@@ -47,11 +46,14 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
     border: `1px solid ${vistelicaColors.border}`,
     borderRadius: '12px',
     padding: theme.spacing(3),
+    width: '400px',
+    minWidth: '350px',
     height: '100%',
     background: '#fff',
     boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.05)',
     position: 'relative',
     overflow: 'hidden',
+    margin: theme.spacing(0, 4, 0, 0), // Aumentado el margen derecho
     '&::before': {
         content: '""',
         position: 'absolute',
@@ -86,15 +88,15 @@ const StyledListItemButton = styled(ListItemButton)(({ theme, selected }) => ({
 }));
 
 const UserAvatar = styled(Avatar)(({ theme }) => ({
-    width: 60,
-    height: 60,
+    width: 80,
+    height: 80,
     backgroundColor: vistelicaColors.tertiary,
     color: vistelicaColors.primary,
     fontFamily: typography.fontFamily,
     fontWeight: 600,
-    fontSize: '1.2rem',
+    fontSize: '1.5rem',
     marginBottom: theme.spacing(2),
-    border: `2px solid ${vistelicaColors.primary}`,
+    border: `2px solid ${vistelicaColors.secondary}`,
     boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
 }));
 
@@ -117,62 +119,42 @@ const MotionBox = styled(motion.div)({
     width: '100%',
 });
 
-// Acepta drawerOpen y setDrawerOpen como props opcionales para control externo
-const SidebarMenu = ({ username, drawerOpen: externalDrawerOpen, setDrawerOpen: externalSetDrawerOpen }) => {
+const SidebarMenu = ({ username, drawerOpen: externalDrawerOpen, setDrawerOpen: externalSetDrawerOpen, avatarUrl }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [internalDrawerOpen, setInternalDrawerOpen] = useState(false);
     const [helpOpen, setHelpOpen] = useState(false);
+    const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
     const router = useRouter();
     const currentPath = router.pathname;
     const userInitial = username ? username.charAt(0).toUpperCase() : 'U';
 
-    // Nuevos estados para controlar la visibilidad de la AppBar
-    const [isAppBarVisible, setIsAppBarVisible] = useState(true);
-    const [lastScrollTop, setLastScrollTop] = useState(0);
-    const [appBarTransparent, setAppBarTransparent] = useState(false);
+    // Estado para manejar la URL del avatar
+    const [userAvatar, setUserAvatar] = useState(avatarUrl || '');
+
+    // Buscar avatar en localStorage si no se proporciona por props
+    useEffect(() => {
+        if (!avatarUrl) {
+            try {
+                const userData = localStorage.getItem('userData');
+                if (userData) {
+                    const parsedData = JSON.parse(userData);
+                    const storedAvatar = parsedData?.avatar || parsedData?.profilePic || parsedData?.avatarUrl || parsedData?.photo;
+                    if (storedAvatar) {
+                        setUserAvatar(storedAvatar);
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar avatar del localStorage:', error);
+            }
+        } else {
+            setUserAvatar(avatarUrl);
+        }
+    }, [avatarUrl]);
 
     // Usa el estado interno o el externo según las props
     const drawerOpen = externalDrawerOpen !== undefined ? externalDrawerOpen : internalDrawerOpen;
     const setDrawerOpen = externalSetDrawerOpen || setInternalDrawerOpen;
-
-    // Función para manejar el evento de scroll
-    useEffect(() => {
-        if (!isMobile) return;
-
-        const handleScroll = () => {
-            const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-            // Si el scroll es menor a 10px, siempre mostrar la barra
-            if (currentScrollTop < 10) {
-                setIsAppBarVisible(true);
-                setAppBarTransparent(false);
-                setLastScrollTop(currentScrollTop);
-                return;
-            }
-
-            // Detectar dirección del scroll
-            if (currentScrollTop > lastScrollTop) {
-                // Scroll hacia abajo - ocultar barra
-                setIsAppBarVisible(false);
-            } else {
-                // Scroll hacia arriba - mostrar barra
-                setIsAppBarVisible(true);
-
-                // Hacer transparente si sigue haciendo scroll
-                if (currentScrollTop > 50) {
-                    setAppBarTransparent(true);
-                } else {
-                    setAppBarTransparent(false);
-                }
-            }
-
-            setLastScrollTop(currentScrollTop);
-        };
-
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, [isMobile, lastScrollTop]);
 
     const handleNavigation = (path) => {
         router.push(path);
@@ -181,8 +163,20 @@ const SidebarMenu = ({ username, drawerOpen: externalDrawerOpen, setDrawerOpen: 
         }
     };
 
+    // Abrir el diálogo de confirmación para cerrar sesión
+    const handleLogoutConfirmation = () => {
+        setLogoutDialogOpen(true);
+    };
+
+    // Cerrar el diálogo de confirmación
+    const handleCloseDialog = () => {
+        setLogoutDialogOpen(false);
+    };
+
+    // Función que ejecuta el proceso de cerrar sesión después de confirmar
     const handleLogout = async () => {
         try {
+            setLogoutDialogOpen(false);
             await logout();
             router.push('/sign-in-side/Sign-in-side');
         } catch (error) {
@@ -210,7 +204,7 @@ const SidebarMenu = ({ username, drawerOpen: externalDrawerOpen, setDrawerOpen: 
         { text: "Devoluciones", icon: <AssignmentReturnOutlinedIcon />, path: "#", selected: false },
     ];
 
-    // Contenido del sidebar que será reutilizado tanto para desktop como para móvil
+    // Contenido del sidebar
     const sidebarContent = (
         <>
             <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', mb: 3 }}>
@@ -221,7 +215,18 @@ const SidebarMenu = ({ username, drawerOpen: externalDrawerOpen, setDrawerOpen: 
                         </IconButton>
                     </Box>
                 )}
-                <UserAvatar>{userInitial}</UserAvatar>
+                <UserAvatar
+                    src={userAvatar}
+                    alt={username || 'Usuario'}
+                    imgProps={{
+                        onError: (e) => {
+                            e.target.onerror = null;
+                            e.target.style.display = 'none';
+                        }
+                    }}
+                >
+                    {userInitial}
+                </UserAvatar>
                 <Typography
                     variant="h5"
                     component="h1"
@@ -283,7 +288,7 @@ const SidebarMenu = ({ username, drawerOpen: externalDrawerOpen, setDrawerOpen: 
                         variants={listItemVariants}
                     >
                         <StyledListItemButton
-                            onClick={handleLogout}
+                            onClick={handleLogoutConfirmation}
                         >
                             <ListItemIcon>
                                 <LogoutOutlinedIcon />
@@ -302,10 +307,10 @@ const SidebarMenu = ({ username, drawerOpen: externalDrawerOpen, setDrawerOpen: 
                             sx={{
                                 color: vistelicaColors.error,
                                 '&:hover': {
-                                    backgroundColor: 'rgba(211, 47, 47, 0.1)',
-                                },
-                                '& .MuiListItemIcon-root': {
-                                    color: vistelicaColors.error,
+                                    backgroundColor: `${vistelicaColors.error}10`,
+                                    '& .MuiListItemIcon-root': {
+                                        color: vistelicaColors.error,
+                                    }
                                 }
                             }}
                         >
@@ -391,66 +396,79 @@ const SidebarMenu = ({ username, drawerOpen: externalDrawerOpen, setDrawerOpen: 
                     </Box>
                 </Collapse>
             </Box>
+
+            {/* Diálogo de confirmación para cerrar sesión */}
+            <Dialog
+                open={logoutDialogOpen}
+                onClose={handleCloseDialog}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+                PaperProps={{
+                    style: {
+                        borderRadius: '12px',
+                        padding: '8px',
+                        boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)'
+                    }
+                }}
+            >
+                <DialogTitle id="alert-dialog-title" sx={{
+                    fontFamily: typography.fontFamily,
+                    fontWeight: 600,
+                    color: vistelicaColors.primary
+                }}>
+                    Cerrar sesión
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description" sx={{
+                        fontFamily: typography.fontFamily,
+                        color: vistelicaColors.secondary
+                    }}>
+                        ¿Estás seguro de que deseas cerrar la sesión? Tendrás que volver a iniciar sesión para acceder a tu cuenta.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ padding: '16px' }}>
+                    <Button
+                        onClick={handleCloseDialog}
+                        sx={{
+                            fontFamily: typography.fontFamily,
+                            color: vistelicaColors.secondary,
+                            '&:hover': {
+                                backgroundColor: `${vistelicaColors.secondary}10`,
+                            }
+                        }}
+                    >
+                        Cancelar
+                    </Button>
+                    <Button
+                        onClick={handleLogout}
+                        variant="contained"
+                        sx={{
+                            fontFamily: typography.fontFamily,
+                            backgroundColor: vistelicaColors.primary,
+                            '&:hover': {
+                                backgroundColor: vistelicaColors.secondary,
+                            }
+                        }}
+                        autoFocus
+                    >
+                        Cerrar sesión
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 
-    // Para dispositivos móviles, mostramos la AppBar secundaria + Drawer
+    // Para dispositivos móviles, mostramos solo el Drawer
     if (isMobile) {
         return (
             <>
-                {/* AppBar secundaria específica para páginas de cuenta con animación de desvanecimiento */}
-                <Fade in={isAppBarVisible} timeout={{ enter: 400, exit: 300 }}>
-                    <AppBar
-                        position="fixed"
-                        sx={{
-                            backgroundColor: appBarTransparent ? 'rgba(255, 255, 255, 0.85)' : '#fff',
-                            backdropFilter: appBarTransparent ? 'blur(8px)' : 'none',
-                            boxShadow: appBarTransparent ? '0 1px 4px rgba(0,0,0,0.05)' : '0 2px 4px rgba(0,0,0,0.1)',
-                            top: '80px',
-                            zIndex: theme.zIndex.drawer - 1,
-                            transition: 'all 0.3s ease'
-                        }}
-                    >
-                        <Toolbar sx={{ position: 'relative', justifyContent: 'center' }}>
-                            <IconButton
-                                color="inherit"
-                                aria-label="abrir menú"
-                                edge="start"
-                                onClick={() => setDrawerOpen(true)}
-                                sx={{
-                                    color: vistelicaColors.primary,
-                                    position: 'absolute',
-                                    left: 16
-                                }}
-                            >
-                                <MenuIcon />
-                            </IconButton>
-                            <Typography
-                                variant="h6"
-                                component="div"
-                                sx={{
-                                    color: vistelicaColors.primary,
-                                    fontFamily: typography.fontFamily,
-                                    fontWeight: 400,
-                                    textAlign: 'center'
-                                }}
-                            >
-                                Mi Cuenta
-                            </Typography>
-                        </Toolbar>
-                    </AppBar>
-                </Fade>
-
-                {/* Espacio para compensar la altura de la barra secundaria */}
-                <Toolbar sx={{ mt: '70px' }} />
-
                 <Drawer
                     anchor="left"
                     open={drawerOpen}
                     onClose={() => setDrawerOpen(false)}
                     sx={{
                         '& .MuiDrawer-paper': {
-                            width: { xs: '85%', sm: '350px' },
+                            width: { xs: '90%', sm: '400px' },
                             borderRadius: '0 12px 12px 0',
                             p: 2
                         },
@@ -462,11 +480,19 @@ const SidebarMenu = ({ username, drawerOpen: externalDrawerOpen, setDrawerOpen: 
         );
     }
 
-    // Para desktop, mostrar el sidebar normal
+    // Para desktop, mostrar el sidebar normal con margen para evitar solapamiento y posicionado más abajo
     return (
-        <StyledPaper>
-            {sidebarContent}
-        </StyledPaper>
+        <Box sx={{
+            flexShrink: 0,
+            mr: 5, // Margen adicional en contenedor para evitar solapamiento
+            position: 'relative',
+            left: { md: '-20px', lg: '-40px' }, // Desplazamiento hacia la izquierda para evitar solapamiento
+            zIndex: 0 // Asegura que el contenido principal quede por encima
+        }}>
+            <StyledPaper>
+                {sidebarContent}
+            </StyledPaper>
+        </Box>
     );
 };
 

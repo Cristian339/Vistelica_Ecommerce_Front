@@ -24,6 +24,7 @@ const getAddresses = async () => {
         console.log("Respuesta completa:", response.data);
 
         // Si la respuesta es un objeto pero no un array
+
         if (response.data && !Array.isArray(response.data)) {
             // Buscar el array de direcciones en propiedades comunes
             if (response.data.addresses) return response.data.addresses;

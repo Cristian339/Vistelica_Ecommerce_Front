@@ -245,435 +245,451 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
 
     return (
         <Zoom in={!loading} style={{ transitionDelay: '100ms' }}>
-            <Paper elevation={0} sx={{
-                p: { xs: 2, sm: 4 },
-                borderRadius: '16px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-                background: 'linear-gradient(to bottom right, #fdfbf6, #fff)',
-                border: `1px solid ${vistelicaColors.divider}`,
-                overflow: 'hidden',
-                width: '100%',
-                transition: 'all 0.3s ease',
-                maxWidth: isEditing ? '100%' : '95%'
-            }}>
-                <Box sx={{
+            <Box
+                sx={{
                     display: 'flex',
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    alignItems: { xs: 'center', sm: 'flex-start' },
-                    justifyContent: 'space-between',
-                    mb: 3
-                }}>
+                    flexDirection: 'column',
+                    width: '100%',
+                    position: 'relative',
+                    transition: 'all 0.3s ease'
+                }}
+            >
+                <Paper
+                    elevation={0}
+                    sx={{
+                        p: { xs: 2, sm: 4 },
+                        borderRadius: '16px',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                        background: 'linear-gradient(to bottom right, #fdfbf6, #fff)',
+                        border: `1px solid ${vistelicaColors.divider}`,
+                        overflow: 'hidden',
+                        width: isEditing ? { xs: '100%', md: 'calc(100% + 150px)' } : '100%', // Aumentado de 80px a 150px
+                        marginLeft: 10,  // Mantiene su posición a la izquierda
+                        marginRight: isEditing ? { xs: 0, md: '-150px' } : 30, // Aumentado de -80px a -150px
+                        transition: 'all 0.3s ease',
+                        transformOrigin: 'left center',
+                        zIndex: 0,
+                    }}
+                >
                     <Box sx={{
                         display: 'flex',
                         flexDirection: { xs: 'column', sm: 'row' },
-                        alignItems: 'center',
-                        mb: { xs: 2, sm: 0 }
+                        alignItems: { xs: 'center', sm: 'flex-start' },
+                        justifyContent: 'space-between',
+                        mb: 3
                     }}>
-                        <Box sx={{ position: 'relative' }}>
-                            <Avatar
-                                src={isEditing ? avatarPreview : userData?.avatar || userData?.profilePic}
-                                alt={userData?.name || 'Usuario'}
-                                sx={{
-                                    width: 80,
-                                    height: 80,
-                                    border: `2px solid ${vistelicaColors.primary}`, // Borde amarillo
-                                    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-                                    backgroundColor: vistelicaColors.primary,
-                                }}
-                            />
-                            {isEditing && (
-                                <IconButton
-                                    sx={{
-                                        position: 'absolute',
-                                        bottom: 0,
-                                        right: -10,
-                                        backgroundColor: 'white',
-                                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-                                        '&:hover': {
-                                            backgroundColor: vistelicaColors.primary,
-                                            color: 'white'
-                                        },
-                                        width: 30,
-                                        height: 30
-                                    }}
-                                    onClick={handleAvatarMenuClick}
-                                >
-                                    <EditIcon sx={{ fontSize: 16, color: vistelicaColors.primary }} />
-                                </IconButton>
-                            )}
-                            <Menu
-                                anchorEl={avatarMenu}
-                                open={Boolean(avatarMenu)}
-                                onClose={handleAvatarMenuClose}
-                            >
-                                <MenuItem onClick={() => handleAvatarTypeChange('url')}>
-                                    <LinkIcon sx={{ mr: 1, fontSize: 18, color: vistelicaColors.primary }} />
-                                    Usar URL de imagen
-                                </MenuItem>
-                                <MenuItem onClick={() => handleAvatarTypeChange('file')}>
-                                    <ImageIcon sx={{ mr: 1, fontSize: 18, color: vistelicaColors.primary }} />
-                                    Subir imagen
-                                </MenuItem>
-                            </Menu>
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                style={{ display: 'none' }}
-                                onChange={handleFileChange}
-                                accept="image/*"
-                            />
-                        </Box>
-
                         <Box sx={{
-                            ml: { xs: 0, sm: 3 },
-                            mt: { xs: 2, sm: 0 },
-                            textAlign: { xs: 'center', sm: 'left' }
+                            display: 'flex',
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            alignItems: 'center',
+                            mb: { xs: 2, sm: 0 }
                         }}>
-                            <Typography variant="h5" fontWeight="bold">
-                                {userData?.name || 'Usuario'} {userData?.lastName || ''}
-                            </Typography>
-                            <Typography
-                                variant="body2"
-                                sx={{
-                                    color: vistelicaColors.textSecondary,
-                                    mt: 0.5
-                                }}
-                            >
-                                Miembro desde {new Date(userData?.createdAt || new Date()).toLocaleDateString()}
-                            </Typography>
-                        </Box>
-                    </Box>
-
-                    {!isEditing ? (
-                        <Button
-                            startIcon={<EditIcon />}
-                            variant="outlined"
-                            sx={{
-                                borderColor: vistelicaColors.primary,
-                                color: vistelicaColors.primary,
-                                '&:hover': {
-                                    borderColor: vistelicaColors.primary,
-                                    backgroundColor: 'rgba(228, 176, 2, 0.04)',
-                                }
-                            }}
-                            onClick={handleEditClick}
-                        >
-                            Editar perfil
-                        </Button>
-                    ) : (
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Tooltip title={!hasChanges ? "No hay cambios para guardar" : ""}>
-                                <span>
-                                    <Button
-                                        startIcon={saving ? <CircularProgress size={16} /> : <SaveIcon />}
-                                        variant="contained"
-                                        disabled={saving || !hasChanges}
+                            <Box sx={{ position: 'relative' }}>
+                                <Avatar
+                                    src={isEditing ? avatarPreview : userData?.avatar || userData?.profilePic}
+                                    alt={userData?.name || 'Usuario'}
+                                    sx={{
+                                        width: 80,
+                                        height: 80,
+                                        border: `2px solid ${vistelicaColors.primary}`,
+                                        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                                        backgroundColor: vistelicaColors.primary,
+                                    }}
+                                />
+                                {isEditing && (
+                                    <IconButton
                                         sx={{
-                                            backgroundColor: vistelicaColors.primary,
+                                            position: 'absolute',
+                                            bottom: 0,
+                                            right: -10,
+                                            backgroundColor: 'white',
+                                            boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
                                             '&:hover': {
                                                 backgroundColor: vistelicaColors.primary,
+                                                color: 'white'
                                             },
-                                            '&.Mui-disabled': {
-                                                backgroundColor: '#e0e0e0',
-                                                color: '#a0a0a0'
-                                            }
+                                            width: 30,
+                                            height: 30
                                         }}
-                                        onClick={handleSave}
+                                        onClick={handleAvatarMenuClick}
                                     >
-                                        {saving ? 'Guardando' : 'Guardar'}
-                                    </Button>
-                                </span>
-                            </Tooltip>
+                                        <EditIcon sx={{ fontSize: 16, color: vistelicaColors.primary }} />
+                                    </IconButton>
+                                )}
+                                <Menu
+                                    anchorEl={avatarMenu}
+                                    open={Boolean(avatarMenu)}
+                                    onClose={handleAvatarMenuClose}
+                                >
+                                    <MenuItem onClick={() => handleAvatarTypeChange('url')}>
+                                        <LinkIcon sx={{ mr: 1, fontSize: 18, color: vistelicaColors.primary }} />
+                                        Usar URL de imagen
+                                    </MenuItem>
+                                    <MenuItem onClick={() => handleAvatarTypeChange('file')}>
+                                        <ImageIcon sx={{ mr: 1, fontSize: 18, color: vistelicaColors.primary }} />
+                                        Subir imagen
+                                    </MenuItem>
+                                </Menu>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    style={{ display: 'none' }}
+                                    onChange={handleFileChange}
+                                    accept="image/*"
+                                />
+                            </Box>
+
+                            <Box sx={{
+                                ml: { xs: 0, sm: 3 },
+                                mt: { xs: 2, sm: 0 },
+                                textAlign: { xs: 'center', sm: 'left' }
+                            }}>
+                                <Typography variant="h5" fontWeight="bold">
+                                    {userData?.name || 'Usuario'} {userData?.lastName || ''}
+                                </Typography>
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        color: vistelicaColors.textSecondary,
+                                        mt: 0.5
+                                    }}
+                                >
+                                    Miembro desde {new Date(userData?.createdAt || new Date()).toLocaleDateString()}
+                                </Typography>
+                            </Box>
+                        </Box>
+
+                        {!isEditing ? (
                             <Button
-                                startIcon={<CancelIcon />}
+                                startIcon={<EditIcon />}
                                 variant="outlined"
                                 sx={{
-                                    borderColor: '#9e9e9e',
-                                    color: '#757575',
+                                    borderColor: vistelicaColors.primary,
+                                    color: vistelicaColors.primary,
                                     '&:hover': {
-                                        borderColor: '#757575',
-                                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                        borderColor: vistelicaColors.primary,
+                                        backgroundColor: 'rgba(228, 176, 2, 0.04)',
                                     }
                                 }}
-                                onClick={handleCancel}
-                                disabled={saving}
+                                onClick={handleEditClick}
                             >
-                                Cancelar
+                                Editar perfil
                             </Button>
+                        ) : (
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Tooltip title={!hasChanges ? "No hay cambios para guardar" : ""}>
+                                    <span>
+                                        <Button
+                                            startIcon={saving ? <CircularProgress size={16} /> : <SaveIcon />}
+                                            variant="contained"
+                                            disabled={saving || !hasChanges}
+                                            sx={{
+                                                backgroundColor: vistelicaColors.primary,
+                                                '&:hover': {
+                                                    backgroundColor: vistelicaColors.primary,
+                                                },
+                                                '&.Mui-disabled': {
+                                                    backgroundColor: '#e0e0e0',
+                                                    color: '#a0a0a0'
+                                                }
+                                            }}
+                                            onClick={handleSave}
+                                        >
+                                            {saving ? 'Guardando' : 'Guardar'}
+                                        </Button>
+                                    </span>
+                                </Tooltip>
+                                <Button
+                                    startIcon={<CancelIcon />}
+                                    variant="outlined"
+                                    sx={{
+                                        borderColor: '#9e9e9e',
+                                        color: '#757575',
+                                        '&:hover': {
+                                            borderColor: '#757575',
+                                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                        }
+                                    }}
+                                    onClick={handleCancel}
+                                    disabled={saving}
+                                >
+                                    Cancelar
+                                </Button>
+                            </Box>
+                        )}
+                    </Box>
+
+                    {isEditing && avatarType === 'url' && (
+                        <Box sx={{ mb: 3, maxWidth: '400px', mx: 'auto' }}>
+                            <TextField
+                                fullWidth
+                                label="URL de imagen de perfil"
+                                value={formData.avatar || ''}
+                                name="avatar"
+                                onChange={handleAvatarUrlChange}
+                                variant="outlined"
+                                size="small"
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <LinkIcon sx={{ color: vistelicaColors.primary }} />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': {
+                                            borderColor: `${vistelicaColors.divider}`,
+                                        },
+                                        '&:hover fieldset': {
+                                            borderColor: `${vistelicaColors.primary}`,
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: `${vistelicaColors.primary}`,
+                                        },
+                                    }
+                                }}
+                            />
                         </Box>
                     )}
-                </Box>
 
-                {isEditing && avatarType === 'url' && (
-                    <Box sx={{ mb: 3, maxWidth: '400px', mx: 'auto' }}>
-                        <TextField
-                            fullWidth
-                            label="URL de imagen de perfil"
-                            value={formData.avatar || ''}
-                            name="avatar"
-                            onChange={handleAvatarUrlChange}
-                            variant="outlined"
-                            size="small"
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <LinkIcon sx={{ color: vistelicaColors.primary }} />
-                                    </InputAdornment>
-                                ),
-                            }}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    '& fieldset': {
-                                        borderColor: `${vistelicaColors.divider}`,
-                                    },
-                                    '&:hover fieldset': {
-                                        borderColor: `${vistelicaColors.primary}`,
-                                    },
-                                    '&.Mui-focused fieldset': {
-                                        borderColor: `${vistelicaColors.primary}`,
-                                    },
-                                }
-                            }}
-                        />
-                    </Box>
-                )}
+                    <Divider sx={{
+                        my: 3,
+                        borderColor: `${vistelicaColors.divider}`,
+                        opacity: 0.6
+                    }} />
 
-                <Divider sx={{
-                    my: 3,
-                    borderColor: `${vistelicaColors.divider}`,
-                    opacity: 0.6
-                }} />
-
-                <Grid container spacing={4} component={motion.div} // Incrementado spacing de 3 a 4 para más separación
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                >
-                    {/* Nombre */}
-                    <Grid item xs={12} sm={6}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                            <PersonIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
-                            <Typography
-                                variant="subtitle1"
-                                fontWeight="500"
-                                sx={{ color: vistelicaColors.primary }}
-                            >
-                                Nombres
-                            </Typography>
-                        </Box>
-                        {isEditing ? (
-                            <TextField
-                                fullWidth
-                                name="name"
-                                value={formData.name || ''}
-                                onChange={handleChange}
-                                variant="outlined"
-                                size="small"
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        '& fieldset': {
-                                            borderColor: `${vistelicaColors.divider}`,
-                                        },
-                                        '&:hover fieldset': {
-                                            borderColor: `${vistelicaColors.primary}`,
-                                        },
-                                        '&.Mui-focused fieldset': {
-                                            borderColor: `${vistelicaColors.primary}`,
-                                        },
-                                    }
-                                }}
-                            />
-                        ) : (
-                            <Typography variant="body1" sx={{ mt: 1.5, fontSize: '1.05rem' }}> {/* Incrementado mt y tamaño de fuente */}
-                                {userData?.name || 'No especificado'}
-                            </Typography>
-                        )}
-                    </Grid>
-
-                    {/* Apellido */}
-                    <Grid item xs={12} sm={6}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                            <PersonIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
-                            <Typography
-                                variant="subtitle1"
-                                fontWeight="500"
-                                sx={{ color: vistelicaColors.primary }}
-                            >
-                                Apellidos
-                            </Typography>
-                        </Box>
-                        {isEditing ? (
-                            <TextField
-                                fullWidth
-                                name="lastName"
-                                value={formData.lastName || ''}
-                                onChange={handleChange}
-                                variant="outlined"
-                                size="small"
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        '& fieldset': {
-                                            borderColor: `${vistelicaColors.divider}`,
-                                        },
-                                        '&:hover fieldset': {
-                                            borderColor: `${vistelicaColors.primary}`,
-                                        },
-                                        '&.Mui-focused fieldset': {
-                                            borderColor: `${vistelicaColors.primary}`,
-                                        },
-                                    }
-                                }}
-                            />
-                        ) : (
-                            <Typography variant="body1" sx={{ mt: 1.5, fontSize: '1.05rem' }}>
-                                {userData?.lastName || 'No especificado'}
-                            </Typography>
-                        )}
-                    </Grid>
-
-                    {/* Email */}
-                    <Grid item xs={12} sm={6}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                            <EmailIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
-                            <Typography
-                                variant="subtitle1"
-                                fontWeight="500"
-                                sx={{ color: vistelicaColors.primary }}
-                            >
-                                Correo electrónico
-                            </Typography>
-                        </Box>
-                        {isEditing ? (
-                            <TextField
-                                fullWidth
-                                name="email"
-                                value={formData.email || ''}
-                                onChange={handleChange}
-                                variant="outlined"
-                                size="small"
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        '& fieldset': {
-                                            borderColor: `${vistelicaColors.divider}`,
-                                        },
-                                        '&:hover fieldset': {
-                                            borderColor: `${vistelicaColors.primary}`,
-                                        },
-                                        '&.Mui-focused fieldset': {
-                                            borderColor: `${vistelicaColors.primary}`,
-                                        },
-                                    }
-                                }}
-                            />
-                        ) : (
-                            <Typography variant="body1" sx={{ mt: 1.5, fontSize: '1.05rem' }}>
-                                {userData?.email || 'No especificado'}
-                            </Typography>
-                        )}
-                    </Grid>
-
-                    {/* Teléfono */}
-                    <Grid item xs={12} sm={6}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                            <PhoneIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
-                            <Typography
-                                variant="subtitle1"
-                                fontWeight="500"
-                                sx={{ color: vistelicaColors.primary }}
-                            >
-                                Teléfono
-                            </Typography>
-                        </Box>
-                        {isEditing ? (
-                            <TextField
-                                fullWidth
-                                name="phone"
-                                value={formData.phone || ''}
-                                onChange={handleChange}
-                                variant="outlined"
-                                size="small"
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        '& fieldset': {
-                                            borderColor: `${vistelicaColors.divider}`,
-                                        },
-                                        '&:hover fieldset': {
-                                            borderColor: `${vistelicaColors.primary}`,
-                                        },
-                                        '&.Mui-focused fieldset': {
-                                            borderColor: `${vistelicaColors.primary}`,
-                                        },
-                                    }
-                                }}
-                            />
-                        ) : (
-                            <Typography variant="body1" sx={{ mt: 1.5, fontSize: '1.05rem' }}>
-                                {userData?.phone || 'No especificado'}
-                            </Typography>
-                        )}
-                    </Grid>
-
-                    {/* Fecha de nacimiento */}
-                    <Grid item xs={12} sm={6}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                            <CalendarMonthIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
-                            <Typography
-                                variant="subtitle1"
-                                fontWeight="500"
-                                sx={{ color: vistelicaColors.primary }}
-                            >
-                                Fecha de nacimiento
-                            </Typography>
-                        </Box>
-                        {isEditing ? (
-                            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-                                <DatePicker
-                                    label="Fecha de nacimiento"
-                                    value={formData.born_date ? new Date(formData.born_date) : null}
-                                    onChange={handleDateChange}
-                                    slotProps={{
-                                        textField: {
-                                            fullWidth: true,
-                                            variant: "outlined",
-                                            size: "small",
-                                            sx: {
-                                                '& .MuiOutlinedInput-root': {
-                                                    '&:hover fieldset': {borderColor: vistelicaColors.primary},
-                                                    '&.Mui-focused fieldset': {borderColor: vistelicaColors.primary}
-                                                },
-                                                '& .MuiInputLabel-root.Mui-focused': {
-                                                    color: vistelicaColors.primary
-                                                }
-                                            }
+                    <Grid container spacing={4} component={motion.div}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, delay: 0.2 }}
+                    >
+                        {/* Nombre */}
+                        <Grid item xs={12} sm={6}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                <PersonIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
+                                <Typography
+                                    variant="subtitle1"
+                                    fontWeight="500"
+                                    sx={{ color: vistelicaColors.primary }}
+                                >
+                                    Nombres
+                                </Typography>
+                            </Box>
+                            {isEditing ? (
+                                <TextField
+                                    fullWidth
+                                    name="name"
+                                    value={formData.name || ''}
+                                    onChange={handleChange}
+                                    variant="outlined"
+                                    size="small"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: `${vistelicaColors.divider}`,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: `${vistelicaColors.primary}`,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: `${vistelicaColors.primary}`,
+                                            },
                                         }
                                     }}
                                 />
-                            </LocalizationProvider>
-                        ) : (
-                            <Typography variant="body1" sx={{ mt: 1.5, fontSize: '1.05rem' }}>
-                                {userData?.born_date ? new Date(userData.born_date).toLocaleDateString('es-ES') : 'No especificado'}
-                            </Typography>
-                        )}
-                    </Grid>
-                </Grid>
+                            ) : (
+                                <Typography variant="body1" sx={{ mt: 1.5, fontSize: '1.05rem' }}>
+                                    {userData?.name || 'No especificado'}
+                                </Typography>
+                            )}
+                        </Grid>
 
-                {/* Toast de notificación */}
-                <Snackbar
-                    open={toast.open}
-                    autoHideDuration={6000}
-                    onClose={handleToastClose}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-                >
-                    <Alert
+                        {/* Apellido */}
+                        <Grid item xs={12} sm={6}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                <PersonIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
+                                <Typography
+                                    variant="subtitle1"
+                                    fontWeight="500"
+                                    sx={{ color: vistelicaColors.primary }}
+                                >
+                                    Apellidos
+                                </Typography>
+                            </Box>
+                            {isEditing ? (
+                                <TextField
+                                    fullWidth
+                                    name="lastName"
+                                    value={formData.lastName || ''}
+                                    onChange={handleChange}
+                                    variant="outlined"
+                                    size="small"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: `${vistelicaColors.divider}`,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: `${vistelicaColors.primary}`,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: `${vistelicaColors.primary}`,
+                                            },
+                                        }
+                                    }}
+                                />
+                            ) : (
+                                <Typography variant="body1" sx={{ mt: 1.5, fontSize: '1.05rem' }}>
+                                    {userData?.lastName || 'No especificado'}
+                                </Typography>
+                            )}
+                        </Grid>
+
+                        {/* Email */}
+                        <Grid item xs={12} sm={6}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                <EmailIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
+                                <Typography
+                                    variant="subtitle1"
+                                    fontWeight="500"
+                                    sx={{ color: vistelicaColors.primary }}
+                                >
+                                    Correo electrónico
+                                </Typography>
+                            </Box>
+                            {isEditing ? (
+                                <TextField
+                                    fullWidth
+                                    name="email"
+                                    value={formData.email || ''}
+                                    onChange={handleChange}
+                                    variant="outlined"
+                                    size="small"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: `${vistelicaColors.divider}`,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: `${vistelicaColors.primary}`,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: `${vistelicaColors.primary}`,
+                                            },
+                                        }
+                                    }}
+                                />
+                            ) : (
+                                <Typography variant="body1" sx={{ mt: 1.5, fontSize: '1.05rem' }}>
+                                    {userData?.email || 'No especificado'}
+                                </Typography>
+                            )}
+                        </Grid>
+
+                        {/* Teléfono */}
+                        <Grid item xs={12} sm={6}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                <PhoneIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
+                                <Typography
+                                    variant="subtitle1"
+                                    fontWeight="500"
+                                    sx={{ color: vistelicaColors.primary }}
+                                >
+                                    Teléfono
+                                </Typography>
+                            </Box>
+                            {isEditing ? (
+                                <TextField
+                                    fullWidth
+                                    name="phone"
+                                    value={formData.phone || ''}
+                                    onChange={handleChange}
+                                    variant="outlined"
+                                    size="small"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: `${vistelicaColors.divider}`,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: `${vistelicaColors.primary}`,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: `${vistelicaColors.primary}`,
+                                            },
+                                        }
+                                    }}
+                                />
+                            ) : (
+                                <Typography variant="body1" sx={{ mt: 1.5, fontSize: '1.05rem' }}>
+                                    {userData?.phone || 'No especificado'}
+                                </Typography>
+                            )}
+                        </Grid>
+
+                        {/* Fecha de nacimiento */}
+                        <Grid item xs={12} sm={6}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                <CalendarMonthIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
+                                <Typography
+                                    variant="subtitle1"
+                                    fontWeight="500"
+                                    sx={{ color: vistelicaColors.primary }}
+                                >
+                                    Fecha de nacimiento
+                                </Typography>
+                            </Box>
+                            {isEditing ? (
+                                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+                                    <DatePicker
+                                        label="Fecha de nacimiento"
+                                        value={formData.born_date ? new Date(formData.born_date) : null}
+                                        onChange={handleDateChange}
+                                        slotProps={{
+                                            textField: {
+                                                fullWidth: true,
+                                                variant: "outlined",
+                                                size: "small",
+                                                sx: {
+                                                    '& .MuiOutlinedInput-root': {
+                                                        '&:hover fieldset': {borderColor: vistelicaColors.primary},
+                                                        '&.Mui-focused fieldset': {borderColor: vistelicaColors.primary}
+                                                    },
+                                                    '& .MuiInputLabel-root.Mui-focused': {
+                                                        color: vistelicaColors.primary
+                                                    }
+                                                }
+                                            }
+                                        }}
+                                    />
+                                </LocalizationProvider>
+                            ) : (
+                                <Typography variant="body1" sx={{ mt: 1.5, fontSize: '1.05rem' }}>
+                                    {userData?.born_date ? new Date(userData.born_date).toLocaleDateString('es-ES') : 'No especificado'}
+                                </Typography>
+                            )}
+                        </Grid>
+                    </Grid>
+
+                    {/* Toast de notificación */}
+                    <Snackbar
+                        open={toast.open}
+                        autoHideDuration={6000}
                         onClose={handleToastClose}
-                        severity={toast.severity}
-                        variant="filled"
-                        sx={{ width: '100%' }}
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
                     >
-                        {toast.message}
-                    </Alert>
-                </Snackbar>
-            </Paper>
+                        <Alert
+                            onClose={handleToastClose}
+                            severity={toast.severity}
+                            variant="filled"
+                            sx={{ width: '100%' }}
+                        >
+                            {toast.message}
+                        </Alert>
+                    </Snackbar>
+                </Paper>
+            </Box>
         </Zoom>
     );
 };
