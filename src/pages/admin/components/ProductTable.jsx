@@ -1,6 +1,4 @@
-// components/ProductTable.tsx
-import * as React from 'react';
-import { ColorPaletteProp } from '@mui/joy/styles';
+import React, { useState, useEffect } from 'react';
 import Avatar from '@mui/joy/Avatar';
 import Box from '@mui/joy/Box';
 import Button from '@mui/joy/Button';
@@ -9,11 +7,9 @@ import Divider from '@mui/joy/Divider';
 import FormControl from '@mui/joy/FormControl';
 import FormLabel from '@mui/joy/FormLabel';
 import Input from '@mui/joy/Input';
-import Link from '@mui/joy/Link';
 import Table from '@mui/joy/Table';
 import Sheet from '@mui/joy/Sheet';
-import Checkbox from '@mui/joy/Checkbox';
-import IconButton, { iconButtonClasses } from '@mui/joy/IconButton';
+import IconButton from '@mui/joy/IconButton';
 import Typography from '@mui/joy/Typography';
 import Menu from '@mui/joy/Menu';
 import MenuButton from '@mui/joy/MenuButton';
@@ -37,21 +33,20 @@ import ImageIcon from '@mui/icons-material/Image';
 import UndoIcon from '@mui/icons-material/Undo';
 
 export default function ProductTable() {
-    const [products, setProducts] = React.useState([]);
-    const [loading, setLoading] = React.useState(true);
-    const [error, setError] = React.useState(null);
-    const [nameFilter, setNameFilter] = React.useState('');
-    const [selected, setSelected] = React.useState([]);
-    const [editingProduct, setEditingProduct] = React.useState(null);
-    const [categories, setCategories] = React.useState([]);
-    const [subcategories, setSubcategories] = React.useState([]);
-    const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [nameFilter, setNameFilter] = useState('');
+    const [editingProduct, setEditingProduct] = useState(null);
+    const [categories, setCategories] = useState([]);
+    const [subcategories, setSubcategories] = useState([]);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     // Estados para la paginación
-    const [page, setPage] = React.useState(1);
-    const [rowsPerPage] = React.useState(20);
+    const [page, setPage] = useState(1);
+    const rowsPerPage = 20;
 
-    React.useEffect(() => {
+    useEffect(() => {
         const fetchData = async () => {
             try {
                 const [productsData, categoriesData] = await Promise.all([
@@ -71,17 +66,17 @@ export default function ProductTable() {
         fetchData();
     }, []);
 
-    React.useEffect(() => {
-        if (editingProduct?.categoryId) {
+    useEffect(() => {
+        if (editingProduct?.category_id) {
             const fetchSubcategories = async () => {
-                const category = categories.find(c => c.category_id === editingProduct.categoryId);
+                const category = categories.find(c => c.category_id === editingProduct.category_id);
                 if (category) {
                     setSubcategories(category.subcategories || []);
                 }
             };
             fetchSubcategories();
         }
-    }, [editingProduct?.categoryId, categories]);
+    }, [editingProduct?.category_id, categories]);
 
     const handleDeleteProduct = async (id) => {
         try {
@@ -94,18 +89,31 @@ export default function ProductTable() {
 
     const handleCreateProduct = async (productData) => {
         try {
-            const processedData = {
-                ...productData,
-                sizes: typeof productData.sizes === 'string'
-                    ? productData.sizes.split(',').map(s => s.trim())
-                    : productData.sizes,
-                colors: typeof productData.colors === 'string'
-                    ? productData.colors.split(',').map(c => c.trim())
-                    : productData.colors
-            };
+            const formData = new FormData();
 
-            const newProduct = await adminService.createProduct(processedData);
-            setProducts(prev => [...prev, newProduct]);
+            const productJson = {
+                name: productData.name,
+                description: productData.description,
+                price: productData.price,
+                stock_quantity: productData.stock_quantity,
+                category_id: productData.category_id,
+                subcategory_id: productData.subcategory_id,
+                sizes: productData.sizes,
+                colors: productData.colors,
+                discount_percentage: productData.discount_percentage
+            };
+            formData.append('data', JSON.stringify(productJson));
+
+            if (productData.images && productData.images.length > 0) {
+                productData.images.forEach((image, index) => {
+                    if (image instanceof File) {
+                        formData.append('files', image);
+                    }
+                });
+            }
+
+            const response = await adminService.createProduct(formData);
+            setProducts(prev => [...prev, response]);
             setIsCreateModalOpen(false);
         } catch (error) {
             setError(error.message);
@@ -114,23 +122,31 @@ export default function ProductTable() {
 
     const handleUpdateProduct = async (productData) => {
         try {
-            const dataToSend = {
-                ...productData,
-                product_id: Number(productData.product_id),
-                price: Number(productData.price),
-                stock_quantity: Number(productData.stock_quantity),
-                discount_percentage: productData.discount_percentage ? Number(productData.discount_percentage) : null,
-                category_id: Number(productData.category_id),
-                subcategory_id: Number(productData.subcategory_id),
-                sizes: typeof productData.sizes === 'string'
-                    ? productData.sizes.split(',').map(s => s.trim())
-                    : productData.sizes,
-                colors: typeof productData.colors === 'string'
-                    ? productData.colors.split(',').map(c => c.trim())
-                    : productData.colors
-            };
+            const formData = new FormData();
 
-            const updatedProduct = await adminService.updateProduct(dataToSend.product_id, dataToSend);
+            const productJson = {
+                product_id: productData.product_id,
+                name: productData.name,
+                description: productData.description,
+                price: productData.price,
+                stock_quantity: productData.stock_quantity,
+                category_id: productData.category_id,
+                subcategory_id: productData.subcategory_id,
+                sizes: productData.sizes,
+                colors: productData.colors,
+                discount_percentage: productData.discount_percentage
+            };
+            formData.append('data', JSON.stringify(productJson));
+
+            if (productData.images && productData.images.length > 0) {
+                productData.images.forEach((image, index) => {
+                    if (image instanceof File) {
+                        formData.append('images', image);
+                    }
+                });
+            }
+
+            const updatedProduct = await adminService.updateProductWithImages(productData.product_id, formData);
             setProducts(prev => prev.map(p =>
                 p.product_id === updatedProduct.product_id ? updatedProduct : p
             ));
@@ -205,7 +221,7 @@ export default function ProductTable() {
     }
 
     function ProductForm({ product, onSubmit, onCancel }) {
-        const [formData, setFormData] = React.useState({
+        const [formData, setFormData] = useState({
             product_id: product?.product_id || undefined,
             name: product?.name || '',
             description: product?.description || '',
@@ -218,9 +234,24 @@ export default function ProductTable() {
             subcategory_id: product?.subcategory?.subcategory_id || ''
         });
 
-        const [availableSubcategories, setAvailableSubcategories] = React.useState([]);
+        const [imageFiles, setImageFiles] = useState(Array(5).fill(null));
+        const [imagePreviews, setImagePreviews] = useState(Array(5).fill(''));
 
-        React.useEffect(() => {
+        const [availableSubcategories, setAvailableSubcategories] = useState([]);
+
+        useEffect(() => {
+            if (product?.images) {
+                const previews = Array(5).fill('');
+                product.images.forEach((img, index) => {
+                    if (index < 5) {
+                        previews[index] = img.image_url;
+                    }
+                });
+                setImagePreviews(previews);
+            }
+        }, [product]);
+
+        useEffect(() => {
             if (formData.category_id) {
                 const selectedCategory = categories.find(c => c.category_id === formData.category_id);
                 if (selectedCategory && selectedCategory.subcategories) {
@@ -249,16 +280,44 @@ export default function ProductTable() {
             }));
         };
 
-        const handleFileChange = (e) => {
-            setFormData(prev => ({
-                ...prev,
-                image: e.target.files[0]
-            }));
+        const handleImageChange = (index, e) => {
+            if (e.target.files && e.target.files[0]) {
+                const file = e.target.files[0];
+                const newImageFiles = [...imageFiles];
+                newImageFiles[index] = file;
+                setImageFiles(newImageFiles);
+
+                // Crear preview
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const newPreviews = [...imagePreviews];
+                    newPreviews[index] = event.target.result;
+                    setImagePreviews(newPreviews);
+                };
+                reader.readAsDataURL(file);
+            }
         };
 
         const handleSubmit = (e) => {
             e.preventDefault();
-            onSubmit(formData);
+
+            if (!imageFiles[0] && !imagePreviews[0]) {
+                setError('Debe proporcionar al menos la imagen principal');
+                return;
+            }
+
+            const productToSend = {
+                ...formData,
+                sizes: typeof formData.sizes === 'string'
+                    ? formData.sizes.split(',').map(s => s.trim())
+                    : formData.sizes,
+                colors: typeof formData.colors === 'string'
+                    ? formData.colors.split(',').map(c => c.trim())
+                    : formData.colors,
+                images: imageFiles.filter(file => file !== null)
+            };
+
+            onSubmit(productToSend);
         };
 
         return (
@@ -416,21 +475,52 @@ export default function ProductTable() {
                                     )}
                                 </FormControl>
 
-                                <FormControl>
-                                    <FormLabel>Imagen</FormLabel>
-                                    <Input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleFileChange}
-                                        startDecorator={<ImageIcon />}
-                                    />
-                                    {product?.image_url && !formData.image && (
-                                        <Box sx={{ mt: 1 }}>
-                                            <Typography level="body-xs">Imagen actual:</Typography>
-                                            <Avatar src={product.image_url} size="lg" />
-                                        </Box>
-                                    )}
-                                </FormControl>
+                                <Typography level="title-sm" sx={{ mt: 2 }}>Imágenes del Producto</Typography>
+                                <Typography level="body-xs" color="neutral">
+                                    La primera imagen será la principal. Puedes subir hasta 5 imágenes.
+                                </Typography>
+
+                                {Array.from({ length: 5 }).map((_, index) => (
+                                    <FormControl key={index}>
+                                        <FormLabel htmlFor={`image-upload-${index}`}>
+                                            {index === 0 ? 'Imagen Principal' : `Imagen ${index + 1}`}
+                                        </FormLabel>
+
+                                        <Input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => handleImageChange(index, e)}
+                                            sx={{ display: 'none' }}
+                                            id={`image-upload-${index}`}
+                                        />
+
+                                        {/* Botón correctamente enlazado con el input */}
+                                        <label htmlFor={`image-upload-${index}`}>
+                                            <Button
+                                                component="span"
+                                                variant="outlined"
+                                                startDecorator={<ImageIcon />}
+                                                sx={{ width: '100%', mb: 1 }}
+                                            >
+                                                Seleccionar imagen
+                                            </Button>
+                                        </label>
+
+                                        {(imagePreviews[index] || imageFiles[index]) && (
+                                            <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <Avatar
+                                                    src={imagePreviews[index] || ''}
+                                                    size="sm"
+                                                    sx={{ borderRadius: 'sm' }}
+                                                />
+                                                <Typography level="body-xs">
+                                                    {imageFiles[index]?.name || 'Imagen existente'}
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                    </FormControl>
+                                ))}
+
                             </Stack>
                         </form>
                     </DialogContent>
@@ -576,7 +666,6 @@ export default function ProductTable() {
                 </Table>
             </Sheet>
 
-            {/* Custom Pagination */}
             {filteredProducts.length > rowsPerPage && (
                 <Box sx={{
                     display: 'flex',

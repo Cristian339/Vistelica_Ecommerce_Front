@@ -17,7 +17,6 @@ import { useRouter } from 'next/navigation';
 import { isAdmin, getToken } from '@/services/authService';
 import categoryService from '@/services/categoryService';
 import productService from '@/services/productService';
-import {number} from "framer-motion";
 
 const POPULAR_SEARCHES = ['Hombre', 'Mujer', 'Colecciones', 'Ultimas Novedades', 'Chico', 'Chica'];
 const CATEGORY_MAP = {
@@ -84,7 +83,6 @@ export default function Navbar() {
         }
     }, [selectedCategoryIds]);
 
-
     useEffect(() => {
         const timer = setTimeout(() => {
             performSearch(searchQuery);
@@ -96,7 +94,18 @@ export default function Navbar() {
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
-        performSearch(searchQuery);
+        if (searchQuery.trim().length >= 2) {
+            router.push(`/search-results/page?query=${encodeURIComponent(searchQuery)}${selectedCategoryIds.length > 0 ? `&categories=${selectedCategoryIds.join(',')}` : ''}`);
+            setSearchOpen(false);
+            setSearchQuery('');
+            setSearchResults([]);
+            setSelectedCategoryIds([]);
+        }
+    };
+
+    const handleProductClick = (productName) => {
+        setSearchQuery(productName);
+        setSearchResults([]);
     };
 
     const handlePopularSearchClick = (term) => {
@@ -107,18 +116,7 @@ export default function Navbar() {
             prev.includes(categoryId) ? prev : [...prev, categoryId]
         ));
 
-        performSearch(searchQuery); // Mantiene lo que el usuario haya escrito
-    };
-
-
-
-    const handleProductClick = (productId) => {
-        setSearchOpen(false);
-        setSearchQuery('');
-        console.log("seleccionado");
-        setSelectedCategoryIds(null);
-        setSearchResults([]);
-        router.push(`/product-detail/page?id=${productId}`);
+        performSearch(searchQuery);
     };
 
     const handleLogoClick = async () => {
@@ -236,7 +234,6 @@ export default function Navbar() {
                             </Box>
                         </form>
 
-                        {/* Mostrar categorías seleccionadas */}
                         {selectedCategoryIds.length > 0 && (
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mt: 2 }}>
                                 {selectedCategoryIds.map(id => (
@@ -265,16 +262,24 @@ export default function Navbar() {
 
                         {searchResults.length > 0 && (
                             <Paper elevation={3} sx={{
-                                position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10,
-                                maxHeight: '400px', overflowY: 'auto', mt: 1
+                                position: 'absolute',
+                                top: '100%',
+                                left: 0,
+                                right: 0,
+                                zIndex: 10,
+                                maxHeight: '400px',
+                                overflowY: 'auto',
+                                mt: 1
                             }}>
                                 <List>
-                                    {searchResults.map((product) => (
+                                    {searchResults.map((product, index) => (
                                         <ListItem
-                                            key={product.product_product_id}
+                                            key={index}
                                             button={true}
-                                            onClick={() => handleProductClick(product.product_product_id)}
-                                            sx={{ '&:hover': { backgroundColor: '#f5f5f5' } }}
+                                            onClick={() => handleProductClick(product.product_name)}
+                                            sx={{
+                                                '&:hover': { backgroundColor: '#f5f5f5' }
+                                            }}
                                         >
                                             <ListItemText primary={product.product_name} />
                                         </ListItem>
@@ -285,8 +290,8 @@ export default function Navbar() {
 
                         {searchResults.length === 0 && !isSearching && searchQuery.length < 2 && (
                             <Box sx={{ padding: '10px 0' }}>
-                                <Typography variant="h3" sx={{ fontWeight: 'bold', marginBottom: '10px' }}>
-                                    BÚSQUEDAS POPULARES
+                                <Typography variant="h4" sx={{ fontWeight: 'bold', marginBottom: '10px' }}>
+                                    Categorias
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                                     {POPULAR_SEARCHES.map((item, index) => (
@@ -391,5 +396,4 @@ export default function Navbar() {
             </Drawer>
         </>
     );
-
 }

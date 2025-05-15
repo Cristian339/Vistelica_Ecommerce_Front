@@ -102,27 +102,34 @@ const getAllProducts = async () => {
     return response.data;
 };
 
-const createProduct = async (productData) => {
-    const formData = new FormData();
+const createProduct = async (formData) => {
+    try {
 
-    // Agregar campos del producto al FormData
-    Object.keys(productData).forEach(key => {
-        if (key !== 'image') {
-            formData.append(key, productData[key]);
+
+
+        // 3. Enviar petición
+        const response = await axios.post(`${API_URL}/products`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('Error creating product:', error);
+
+        // Mejor manejo de errores
+        if (error.response) {
+            // Error del servidor (4xx, 5xx)
+            throw new Error(error.response.data.message || 'Failed to create product');
+        } else if (error.request) {
+            // Error de red (no llegó al servidor)
+            throw new Error('Network error - please check your connection');
+        } else {
+            // Error en la validación o código
+            throw error;
         }
-    });
-
-    // Si hay imagen, agregarla
-    if (productData.image) {
-        formData.append('image', productData.image);
     }
-
-    const response = await axios.post(`${API_URL}/products`, formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data'
-        }
-    });
-    return response.data;
 };
 
 const updateProduct = async (id, productData) => {

@@ -42,13 +42,18 @@ export default function ProductDetailPage() {
 
                     setProduct(productData);
 
+                    console.log(productData.size);
+
                     // Establecer valores por defecto solo si hay opciones disponibles
-                    if (productData.sizes?.length > 0) {
-                        setSelectedSize(productData.sizes[0]);
+                    if (productData.size?.length > 0) {
+                        setSelectedSize(productData.size[0]);
                     }
                     if (productData.colors?.length > 0) {
                         setSelectedColor(productData.colors[0]);
                     }
+
+                    console.log(selectedSize);
+                    console.log(selectedColor);
 
                     setLoading(false);
                 }
@@ -198,8 +203,8 @@ export default function ProductDetailPage() {
             <Navbar />
             <ProductDetail
                 product={product}
-                availableSizes={product.sizes || []}
-                availableColors={product.colors || []}
+                availableSizes={product.size}
+                availableColors={product.colors}
                 selectedSize={selectedSize}
                 selectedColor={selectedColor}
                 onSizeChange={handleSizeChange}
