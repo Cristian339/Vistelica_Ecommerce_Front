@@ -1,34 +1,43 @@
-'use client'
-import React from 'react';
+'use client';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import styleService from '@/services/styleService'; // Ajusta la ruta según tu proyecto
 
 const StylesShowcase = () => {
-    // Datos de los estilos
-    const styles = [
-        {
-            id: 1,
-            name: 'STREETWEAR',
-            image: 'https://picsum.photos/200/300?random=1',
-            description: 'Estilo urbano inspirado en la cultura callejera'
-        },
-        {
-            id: 2,
-            name: 'CASUAL',
-            image: 'https://picsum.photos/200/300?random=2',
-            description: 'Looks cómodos para el día a día'
-        },
-        {
-            id: 3,
-            name: 'TRENDY',
-            image: 'https://picsum.photos/200/300?random=3',
-            description: 'Las últimas tendencias de la temporada'
-        },
-        {
-            id: 4,
-            name: 'BASIC',
-            image: 'https://picsum.photos/200/300?random=4',
-            description: 'Básicos atemporales para cualquier ocasión'
-        }
-    ];
+    const [styles, setStyles] = useState([]);
+    const router = useRouter();
+
+    useEffect(() => {
+        const fetchStyles = async () => {
+            try {
+                const data = await styleService.getAllStyles();
+                const mapped = data.map(style => {
+                    const mainImage = style.styleImages?.find(img => img.is_main);
+                    return {
+                        id: style.style_id,
+                        name: style.name,
+                        description: style.description,
+                        image: mainImage?.image_url || 'https://via.placeholder.com/300x400?text=No+Image'
+                    };
+                });
+                setStyles(mapped);
+            } catch (error) {
+                console.error('Error al cargar estilos:', error.message);
+            }
+        };
+
+        fetchStyles();
+    }, []);
+
+    // Función para navegar al StylePage con el ID seleccionado
+    const handleStyleClick = (styleId) => {
+        router.push(`/styles/${styleId}`);
+    };
+
+    // Función para ver todos los estilos
+    const handleViewAllStyles = () => {
+        router.push('/styles');
+    };
 
     const componentStyles = {
         container: {
@@ -85,6 +94,11 @@ const StylesShowcase = () => {
             overflow: 'hidden',
             aspectRatio: '3/4',
             scrollSnapAlign: 'start',
+            cursor: 'pointer', // Añadir cursor pointer para indicar que es clickeable
+            transition: 'transform 0.2s ease-in-out',
+            '&:hover': {
+                transform: 'scale(1.03)',
+            },
         },
         styleImage: {
             width: '100%',
@@ -105,18 +119,6 @@ const StylesShowcase = () => {
             backgroundColor: 'rgba(0,0,0,0.3)',
             padding: '10px 0',
         },
-        responsiveContainer: {
-            '@media (max-width: 768px)': {
-                grid: {
-                    gridTemplateColumns: 'repeat(2, 1fr)',
-                },
-            },
-            '@media (max-width: 480px)': {
-                grid: {
-                    gridTemplateColumns: 'repeat(1, 1fr)',
-                },
-            },
-        }
     };
 
     return (
@@ -128,20 +130,29 @@ const StylesShowcase = () => {
                         GET THE LOOK
                     </div>
                     <p style={componentStyles.subtitle}>
-                        INSPÍRATE CON NUESTRA GALERÍA Y COMPARTE TUS LOOKS EN REDES SOCIALES CON @VÍSTELICA.
+                        INSPÍRATE CON NUESTRA ESTILOS ESPECIALES Y COMPARTE TUS LOOKS EN REDES SOCIALES CON @VÍSTELICA.
                     </p>
                 </div>
-                <button style={componentStyles.viewAllButton}>
+                <button
+                    style={componentStyles.viewAllButton}
+                    onClick={handleViewAllStyles}
+                >
                     <p style={componentStyles.subtitle}>
-                        Ver todos los estilos
+                        Ver los estilos
                     </p>
-
                 </button>
             </div>
 
             <div style={componentStyles.grid}>
                 {styles.map((style) => (
-                    <div key={style.id} style={componentStyles.styleCard}>
+                    <div
+                        key={style.id}
+                        style={{
+                            ...componentStyles.styleCard,
+                            cursor: 'pointer',
+                        }}
+                        onClick={() => handleStyleClick(style.id)}
+                    >
                         <img
                             src={style.image}
                             alt={`Estilo ${style.name}`}

@@ -50,21 +50,15 @@ const ClothingCategories = () => {
         localStorage.setItem('selectedCategory', categoryId);
         localStorage.setItem('selectedSubcategory', subcat.subcategory_id);
 
-        console.log("ID de categoría:", categoryId);
-        console.log("ID de subcategoría:", subcat.subcategory_id);
 
-        // Construir la URL con parámetros para la página de productos
-        // Utilizamos los slugs cuando están disponibles, o IDs como respaldo
         const subcategorySlug = subcat.slug || subcat.subcategory_id;
 
-        // Redirigir a la página de productos con los parámetros adecuados
-        // Redirigir a la página de productos con los parámetros adecuados
         router.push(`/product-list/productList?category=${categorySlug}&subcategory=${subcategorySlug}`);
     };
 
 
     return (
-        <Grid container spacing={1} sx={{ backgroundColor: '#ffffff', padding: '20px 0' }}>
+        <Grid container spacing={1} sx={{ backgroundColor: '#ffffff', padding: '20px 0', paddingLeft: '20px', }}>
             {subcategories.map((subcat) => (
                 <Grid
                     item
@@ -77,9 +71,10 @@ const ClothingCategories = () => {
                 >
                     <Box
                         sx={{
+
                             position: 'relative',
                             width: '100%',
-                            height: '180px',
+                            height: '300px',
                             overflow: 'hidden',
                             cursor: 'pointer',
                             transition: 'transform 0.3s ease',

@@ -9,10 +9,10 @@ const Carousel = () => {
 
     // Usando Unsplash Source API para imágenes de moda/streetwear
     const images = [
-        'https://images.unsplash.com/photo-1417325384643-aac51acc9e5d?q=75&fm=jpg&w=200&fit=max',
-        'https://images.unsplash.com/photo-1417325384643-aac51acc9e5d?q=75&fm=jpg&w=200&fit=max',
-        'https://images.unsplash.com/photo-1417325384643-aac51acc9e5d?q=75&fm=jpg&w=200&fit=max',
-        'https://images.unsplash.com/photo-1417325384643-aac51acc9e5d?q=75&fm=jpg&w=200&fit=max',
+        'https://res.cloudinary.com/dhyv4dpk2/image/upload/v1747328777/vistelica/subcategorias/Hombre/Carrusel/npxbcth1ejefmat7ingv.jpg',
+        'https://res.cloudinary.com/dhyv4dpk2/image/upload/v1747328777/vistelica/subcategorias/Hombre/Carrusel/z9t5l4dwrnzeauak6k6l.jpg',
+        'https://res.cloudinary.com/dhyv4dpk2/image/upload/v1747333211/vistelica/subcategorias/Hombre/Carrusel/wstakkltqkvgxwvreqvr.jpg',
+        'https://res.cloudinary.com/dhyv4dpk2/image/upload/v1747333370/vistelica/subcategorias/Hombre/Carrusel/rtpcwdoocjs84aenfzve.jpg',
     ];
 
     const resetProgress = () => {
