@@ -39,36 +39,6 @@ import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import adminService from "@/services/adminService";
 import PersonIcon from '@mui/icons-material/Person';
 
-const initialSuppliers = [
-    {
-        id: 'SUP-001',
-        companyName: 'Tecnologías Avanzadas S.A.',
-        email: 'contacto@tecnologias-avanzadas.com',
-        address: 'Calle Innovación 123, Barcelona, España',
-        phone: '+34 933 456 789',
-        country: 'España',
-        iban: 'ES91 2100 0418 4502 0005 1332'
-    },
-    {
-        id: 'SUP-002',
-        companyName: 'Componentes Globales Ltd.',
-        email: 'info@componentes-globales.com',
-        address: 'Av. Industrial 456, Hamburgo, Alemania',
-        phone: '+49 40 12345678',
-        country: 'Alemania',
-        iban: 'DE89 3704 0044 0532 0130 00'
-    },
-    {
-        id: 'SUP-003',
-        companyName: 'Electrónica del Pacífico',
-        email: 'ventas@electronica-pacifico.cl',
-        address: 'Calle Tecnológica 789, Santiago, Chile',
-        phone: '+56 2 2345 6789',
-        country: 'Chile',
-        iban: 'CL09 1234 5678 9012 3456 7890'
-    },
-];
-
 export default function SupplierTable() {
     const [order, setOrder] = React.useState('desc');
     const [orderBy, setOrderBy] = React.useState('id');
@@ -81,6 +51,10 @@ export default function SupplierTable() {
     const [editingSupplier, setEditingSupplier] = React.useState(null);
     const [formMode, setFormMode] = React.useState('add');
     const [countries] = React.useState(['España', 'Alemania', 'Francia', 'Italia', 'Chile', 'Portugal', 'EE.UU.']);
+
+    // Estados para la paginación
+    const [page, setPage] = React.useState(1);
+    const [rowsPerPage] = React.useState(20);
 
     // Cargar proveedores al montar el componente
     React.useEffect(() => {
@@ -221,6 +195,12 @@ export default function SupplierTable() {
         }
         return 0;
     });
+
+    // Calcular proveedores paginados
+    const startIndex = (page - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    const paginatedSuppliers = sortedSuppliers.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(sortedSuppliers.length / rowsPerPage);
 
     function RowMenu({ supplier }) {
         return (
@@ -548,7 +528,7 @@ export default function SupplierTable() {
                     </tr>
                     </thead>
                     <tbody>
-                    {sortedSuppliers.map((supplier) => (
+                    {paginatedSuppliers.map((supplier) => (
                         <tr key={supplier.id}>
                             <td style={{ textAlign: 'center' }}>
                                 <Checkbox
@@ -601,47 +581,44 @@ export default function SupplierTable() {
                     </tbody>
                 </Table>
             </Sheet>
-            <Box
-                className="Pagination-laptopUp"
-                sx={{
-                    pt: 2,
-                    gap: 1,
-                    [`& .${iconButtonClasses.root}`]: { borderRadius: '50%' },
-                    display: {
-                        xs: 'none',
-                        md: 'flex',
-                    },
-                }}
-            >
-                <Button
-                    size="sm"
-                    variant="outlined"
-                    color="neutral"
-                    startDecorator={<KeyboardArrowLeftIcon />}
-                >
-                    Anterior
-                </Button>
-                <Box sx={{ flex: 1 }} />
-                {['1', '2', '3', '…', '8', '9', '10'].map((page) => (
-                    <IconButton
-                        key={page}
+
+            {/* Custom Pagination */}
+            {sortedSuppliers.length > rowsPerPage && (
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 2,
+                    mt: 2,
+                    p: 1,
+                    borderTop: '1px solid',
+                    borderColor: 'divider'
+                }}>
+                    <Button
+                        variant="outlined"
                         size="sm"
-                        variant={Number(page) ? 'outlined' : 'plain'}
-                        color="neutral"
+                        disabled={page === 1}
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        startDecorator={<KeyboardArrowLeftIcon />}
                     >
-                        {page}
-                    </IconButton>
-                ))}
-                <Box sx={{ flex: 1 }} />
-                <Button
-                    size="sm"
-                    variant="outlined"
-                    color="neutral"
-                    endDecorator={<KeyboardArrowRightIcon />}
-                >
-                    Siguiente
-                </Button>
-            </Box>
+                        Anterior
+                    </Button>
+
+                    <Typography level="body-md">
+                        Página {page} de {totalPages}
+                    </Typography>
+
+                    <Button
+                        variant="outlined"
+                        size="sm"
+                        disabled={page >= totalPages}
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        endDecorator={<KeyboardArrowRightIcon />}
+                    >
+                        Siguiente
+                    </Button>
+                </Box>
+            )}
         </React.Fragment>
     );
 }

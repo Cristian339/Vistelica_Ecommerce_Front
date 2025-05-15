@@ -214,6 +214,30 @@ export const getRandomAccessoryProducts = async () => {
     }
 };
 
+
+/**
+ * Busca productos por nombre y categorías
+ * @param {string} searchText - Texto para buscar en los nombres de productos
+ * @param {Array<number>} [categoryIds] - IDs de categorías para filtrar (opcional)
+ * @returns {Promise<Array>} Lista de productos que coinciden con los criterios
+ */
+const searchProducts = async (searchText, categoryIds = []) => {
+    try {
+        const response = await axios.post(`${API_URL}/products/search`, {
+            searchText,
+            categoryIds
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error al buscar productos:', error);
+        throw new Error(
+            error.response?.data?.message ||
+            'No se pudieron encontrar productos con esos criterios.'
+        );
+    }
+};
+
+
 const productService = {
     getAll,
     getById,
@@ -226,7 +250,8 @@ const productService = {
     createProductReview,
     getRandomFeaturedProducts,
     getTopRatedFeaturedProducts,
-    getRandomAccessoryProducts
+    getRandomAccessoryProducts,
+    searchProducts          // Añadido
 };
 
 export default productService;
