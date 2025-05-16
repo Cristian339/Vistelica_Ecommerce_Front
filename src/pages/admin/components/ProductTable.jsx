@@ -482,10 +482,11 @@ export default function ProductTable() {
 
                                 {Array.from({ length: 5 }).map((_, index) => (
                                     <FormControl key={index}>
-                                        <FormLabel htmlFor={`image-upload-${index}`}>
+                                        <FormLabel>
                                             {index === 0 ? 'Imagen Principal' : `Imagen ${index + 1}`}
                                         </FormLabel>
 
+                                        {/* Input de archivo oculto */}
                                         <Input
                                             type="file"
                                             accept="image/*"
@@ -494,18 +495,20 @@ export default function ProductTable() {
                                             id={`image-upload-${index}`}
                                         />
 
-                                        {/* Botón correctamente enlazado con el input */}
-                                        <label htmlFor={`image-upload-${index}`}>
+                                        {/* Botón personalizado que activa el input */}
+                                        <label htmlFor={`image-upload-${index}`} style={{ display: 'block' }}>
                                             <Button
                                                 component="span"
                                                 variant="outlined"
                                                 startDecorator={<ImageIcon />}
-                                                sx={{ width: '100%', mb: 1 }}
+                                                fullWidth
+                                                sx={{ mb: 1 }}
                                             >
-                                                Seleccionar imagen
+                                                Seleccionar archivo
                                             </Button>
                                         </label>
 
+                                        {/* Vista previa de la imagen */}
                                         {(imagePreviews[index] || imageFiles[index]) && (
                                             <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 <Avatar
@@ -520,7 +523,6 @@ export default function ProductTable() {
                                         )}
                                     </FormControl>
                                 ))}
-
                             </Stack>
                         </form>
                     </DialogContent>
