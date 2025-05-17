@@ -8,13 +8,11 @@ import {
     Typography,
     Box,
     Button,
-    IconButton,
     Tooltip,
     Zoom,
     Skeleton,
     useMediaQuery,
-    useTheme,
-    CardActions
+    useTheme
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import productService from "@/services/productService";
@@ -23,28 +21,32 @@ import { vistelicaColors } from '../../shared-theme/vistelicaColors';
 import { typography } from "@/pages/shared-theme/themePrimitives";
 import { motion } from 'framer-motion';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 
 // Estilos para el componente de tarjeta de producto
+// TAMAÑO FIJO: Estilos actualizados para el componente de tarjeta de producto
 const ProductCardContainer = styled(Card)(({ theme }) => ({
     position: 'relative',
-    height: '700px',
-    maxWidth: '100%',
+    height: '450px', // Altura fija para todas las tarjetas
+    width: '350px', // TAMAÑO FIJO: Ancho fijo para todas las tarjetas
     transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-    margin: '0 auto',
+    margin: '0 auto', // Centrado horizontal
     cursor: 'pointer',
     display: 'flex',
     flexDirection: 'column',
     borderRadius: '10px',
     overflow: 'hidden',
-    border: `1px solid ${vistelicaColors.divider}`,
+    border: `1px solid ${vistelicaColors.primary}`,
     '&:hover': {
         transform: 'translateY(-5px)',
         boxShadow: '0 12px 20px rgba(0,0,0,0.12)',
         '& .product-image': {
             transform: 'scale(1.05)',
+        },
+        '& .hover-info': {
+            transform: 'translateY(0)',
+            opacity: 1
         }
     }
 }));
@@ -52,47 +54,85 @@ const ProductCardContainer = styled(Card)(({ theme }) => ({
 const ImageContainer = styled(Box)(() => ({
     position: 'relative',
     width: '100%',
-    height: '460px',
+    height: '320px', // Altura fija para todas las imágenes
     overflow: 'hidden',
     borderRadius: '8px 8px 0 0',
     paddingLeft: '2.5%',
     paddingRight: '2.5%',
     boxSizing: 'border-box',
+    backgroundColor: '#f8f8f8', // Fondo para todas las imágenes
 }));
 
+// COBERTURA HORIZONTAL: Actualización del estilo de la imagen
 const ProductImage = styled(CardMedia)(() => ({
     position: 'absolute',
     top: 0,
     left: 0,
     width: '100%',
     height: '100%',
-    objectFit: 'cover',
+    objectFit: 'cover', // COBERTURA HORIZONTAL: Cambiado de 'contain' a 'cover' para que la imagen cubra todo el ancho
     transition: 'transform 0.5s ease',
 }));
 
+// Nuevo componente para información en hover
+const HoverInfoOverlay = styled(Box)(() => ({
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    padding: '20px',
+    backdropFilter: 'blur(4px)',
+    transform: 'translateY(100%)',
+    opacity: 0,
+    transition: 'transform 0.4s ease, opacity 0.4s ease',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '15px',
+    borderTop: `1px solid ${vistelicaColors.primary}`,
+    zIndex: 10
+}));
+
 // Componente Skeleton para mostrar durante la carga
+// Componente Skeleton mejorado para mostrar durante la carga
+// TAMAÑO FIJO: Componente Skeleton actualizado para mantener consistencia
 const ProductSkeleton = () => (
     <Card sx={{
-        height: '650px',
+        height: '450px', // Misma altura que ProductCardContainer
+        width: '280px', // TAMAÑO FIJO: Mismo ancho que ProductCardContainer
         display: 'flex',
         flexDirection: 'column',
         borderRadius: '10px',
         overflow: 'hidden',
-        border: `1px solid ${vistelicaColors.divider}`,
+        border: `1px solid ${vistelicaColors.primary}`,
+        margin: '0 auto', // Centrado horizontal
+        backgroundColor: '#fff',
+        boxShadow: '0 4px 8px rgba(0,0,0,0.05)',
     }}>
-        <Skeleton variant="rectangular" width="100%" height={460} animation="wave" />
-        <CardContent sx={{ flexGrow: 1, p: 2, height: '100px' }}>
-            <Skeleton variant="text" width="40%" height={24} animation="wave" />
-            <Skeleton variant="text" width="90%" height={32} animation="wave" />
-            <Skeleton variant="text" width="70%" height={20} animation="wave" />
-            <Box sx={{ mt: 'auto' }}>
-                <Skeleton variant="text" width="30%" height={32} animation="wave" />
+        <Box sx={{
+            position: 'relative',
+            width: '100%',
+            height: '320px', // Misma altura que ImageContainer
+            backgroundColor: '#f8f8f8'
+        }}>
+            <Skeleton
+                variant="rectangular"
+                width="100%"
+                height="100%"
+                animation="wave"
+                sx={{ transform: 'scale(1)', opacity: 0.8 }}
+            />
+            <Box sx={{ position: 'absolute', top: 16, left: 16 }}>
+                <Skeleton variant="rectangular" width={60} height={30} animation="wave" sx={{ borderRadius: '4px' }} />
             </Box>
+        </Box>
+        <CardContent sx={{ p: 2.5, flexGrow: 1, height: '130px' }}>
+            <Skeleton variant="text" width="40%" height={24} animation="wave" />
+            <Box sx={{ mt: 1, mb: 1.5 }}>
+                <Skeleton variant="text" width="85%" height={32} animation="wave" />
+            </Box>
+            <Skeleton variant="text" width="40%" height={28} animation="wave" />
         </CardContent>
-        <CardActions sx={{ p: 1.5, height: '70px', borderTop: `1px solid ${vistelicaColors.divider}` }}>
-            <Skeleton variant="circular" width={45} height={45} animation="wave" />
-            <Skeleton variant="rectangular" width={130} height={42} animation="wave" sx={{ borderRadius: 2 }} />
-        </CardActions>
     </Card>
 );
 
@@ -109,11 +149,6 @@ const ProductCard = ({ product }) => {
         e.stopPropagation();
         e.preventDefault();
         console.log('Añadir al carrito:', productId);
-    };
-
-    const handleViewDetail = (e) => {
-        e.preventDefault();
-        window.location.href = productDetailUrl;
     };
 
     // Generar stars para el rating
@@ -177,15 +212,87 @@ const ProductCard = ({ product }) => {
                             {`-${product.discount}%`}
                         </Box>
                     )}
+
+                    {/* Overlay con información en hover */}
+                    <HoverInfoOverlay className="hover-info">
+                        {/* Precio */}
+                        <Typography
+                            variant="h5"
+                            sx={{
+                                fontWeight: 700,
+                                color: vistelicaColors.primary,
+                                fontFamily: typography.fontFamily,
+                                textAlign: 'center',
+                                backgroundColor: vistelicaColors.tertiary,
+                                py: 1,
+                                px: 2,
+                                borderRadius: '6px',
+                                display: 'block',
+                                margin: '0 auto'
+                            }}
+                        >
+                            ${typeof product.price === 'number' ? product.price.toFixed(2) : (parseFloat(product.price) || 0).toFixed(2)}
+                        </Typography>
+
+                        {/* Reseñas */}
+                        {product.average_rating !== null && product.average_rating !== undefined && (
+                            <Box sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                mb: 0.5
+                            }}>
+                                {renderStars(product.average_rating)}
+                                <Typography variant="body2" component="span" color="text.secondary" ml={1}>
+                                    ({product.reviews_count || 0} reseñas)
+                                </Typography>
+                            </Box>
+                        )}
+
+                        {/* Variantes de color */}
+                        {colorCount > 0 && (
+                            <Typography
+                                variant="body1"
+                                sx={{
+                                    textAlign: 'center',
+                                    color: vistelicaColors.secondary,
+                                    fontFamily: typography.fontFamily
+                                }}
+                            >
+                                {colorCount} {colorCount === 1 ? 'variante de color disponible' : 'variantes de color disponibles'}
+                            </Typography>
+                        )}
+
+                        {/* Botón de añadir al carrito */}
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            onClick={handleAddToCart}
+                            startIcon={<AddShoppingCartIcon />}
+                            sx={{
+                                borderRadius: 2,
+                                py: 1,
+                                mt: 1,
+                                backgroundColor: vistelicaColors.primary,
+                                '&:hover': {
+                                    backgroundColor: vistelicaColors.secondary
+                                },
+                                fontFamily: typography.fontFamily,
+                                textTransform: 'none'
+                            }}
+                        >
+                            Añadir al carrito
+                        </Button>
+                    </HoverInfoOverlay>
                 </ImageContainer>
 
                 <CardContent sx={{
-                    p: { xs: 1, sm: 1.5, md: 2 },
+                    p: { xs: 1.5, sm: 2, md: 2.5 },
                     flexGrow: 1,
                     display: 'flex',
                     flexDirection: 'column',
-                    height: '100px',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    height: '130px', // Altura fija para el contenido
                 }}>
                     <Typography
                         variant="subtitle1"
@@ -210,124 +317,13 @@ const ProductCard = ({ product }) => {
                             textOverflow: 'ellipsis',
                             display: '-webkit-box',
                             WebkitLineClamp: 1,
-                            WebkitBoxOrient: 'vertical'
+                            WebkitBoxOrient: 'vertical',
+                            color: vistelicaColors.primary // Nombre en amarillo
                         }}
                     >
                         {product.name || 'Sin nombre'}
                     </Typography>
-
-                    <Box sx={{
-                        flexGrow: 0,
-                        mb: 0.5,
-                        minHeight: '40px',
-                        overflow: 'visible'
-                    }}>
-                        <Typography
-                            variant="body2"
-                            sx={{
-                                color: vistelicaColors.secondary,
-                                fontFamily: typography.fontFamily,
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                fontSize: { xs: '0.9rem', md: '1rem' },
-                                lineHeight: '1.2em'
-                            }}
-                        >
-                            {product.name || 'Sin nombre de producto'}
-                        </Typography>
-                    </Box>
-
-                    {colorCount > 0 && (
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                            {colorCount} {colorCount === 1 ? 'variante de color' : 'variantes de color'}
-                        </Typography>
-                    )}
-
-                    {product.average_rating !== null && product.average_rating !== undefined && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                            {renderStars(product.average_rating)}
-                            <Typography variant="caption" component="span" color="text.secondary" ml={0.5}>
-                                ({product.reviews_count || 0})
-                            </Typography>
-                        </Box>
-                    )}
-
-                    {/* Precio destacado con fondo de color */}
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            fontWeight: 700,
-                            color: vistelicaColors.primary,
-                            fontFamily: typography.fontFamily,
-                            fontSize: { xs: '1.3rem', md: '1.3rem' },
-                            mt: 'auto',
-                            backgroundColor: vistelicaColors.tertiary,
-                            py: 0.5,
-                            px: 1,
-                            borderRadius: '4px',
-                            display: 'inline-block'
-                        }}
-                    >
-                        ${typeof product.price === 'number' ? product.price.toFixed(2) : (parseFloat(product.price) || 0).toFixed(2)}
-                    </Typography>
                 </CardContent>
-
-                <CardActions
-                    sx={{
-                        justifyContent: 'space-between',
-                        p: { xs: 1, sm: 1.5, md: 1.5 },
-                        height: '70px',
-                        borderTop: `1px solid ${vistelicaColors.divider}`
-                    }}
-                >
-                    <Tooltip title="Añadir al carrito" TransitionComponent={Zoom} arrow>
-                        <IconButton
-                            color="primary"
-                            onClick={handleAddToCart}
-                            size="medium"
-                            sx={{
-                                backgroundColor: vistelicaColors.tertiary,
-                                padding: { xs: '8px', md: '10px' },
-                                borderRadius: '50%',
-                                '&:hover': {
-                                    backgroundColor: vistelicaColors.quaternary,
-                                    transform: 'scale(1.1)'
-                                }
-                            }}
-                        >
-                            <AddShoppingCartIcon fontSize="medium" sx={{ color: vistelicaColors.primary }} />
-                        </IconButton>
-                    </Tooltip>
-
-                    <Tooltip title="Ver detalle" TransitionComponent={Zoom} arrow>
-                        <Button
-                            variant="contained"
-                            size={isMobile ? "medium" : "large"}
-                            color="primary"
-                            onClick={handleViewDetail}
-                            startIcon={<VisibilityIcon />}
-                            sx={{
-                                borderRadius: 2,
-                                px: { xs: 1.5, md: 2 },
-                                py: { xs: 0.8, md: 1 },
-                                backgroundColor: vistelicaColors.primary,
-                                '&:hover': {
-                                    backgroundColor: vistelicaColors.primary,
-                                    opacity: 0.9
-                                },
-                                fontFamily: typography.fontFamily,
-                                textTransform: 'none',
-                                whiteSpace: 'nowrap',
-                                fontSize: { xs: '0.85rem', md: '0.9rem' }
-                            }}
-                        >
-                            Ver detalle
-                        </Button>
-                    </Tooltip>
-                </CardActions>
             </ProductCardContainer>
         </Link>
     );
@@ -343,7 +339,6 @@ const ProductShowcase = () => {
         const fetchFeaturedProducts = async () => {
             try {
                 const data = await productService.getTopRatedFeaturedProducts();
-                // No necesitamos procesar la descripción ahora
                 setProducts(data.slice(0, 8));
             } catch (error) {
                 console.error('Error al cargar productos destacados:', error);
@@ -422,15 +417,15 @@ const ProductShowcase = () => {
                     Productos Destacados
                 </Typography>
 
-                <Grid container spacing={3}>
+                <Grid container spacing={2} sx={{ width: '100%' }}>
                     {loading ?
-                        Array.from(new Array(8)).map((_, index) => (
+                        Array.from(new Array(4)).map((_, index) => (
                             <Grid
                                 item
                                 xs={12}
                                 sm={6}
                                 md={3}
-                                lg={3}
+                                lg={6}
                                 key={`skeleton-${index}`}
                                 component={motion.div}
                                 variants={itemVariants}

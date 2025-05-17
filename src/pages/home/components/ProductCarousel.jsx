@@ -1,146 +1,163 @@
 // ProductCarousel.jsx
 import React, { useState, useRef, useEffect } from 'react';
-import { Button, Box, Typography, CircularProgress } from '@mui/material';
-import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
+import { Button, Box, Typography, CircularProgress, Container, Skeleton, Card } from '@mui/material';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import { motion, AnimatePresence } from 'framer-motion';
 import productService from '../../../services/productService';
 import { useRouter } from 'next/navigation';
+import { vistelicaColors } from '../../shared-theme/vistelicaColors';
+import { typography } from "@/pages/shared-theme/themePrimitives";
 
-
-
-// Estilos CSS con mejoras para móvil
-const styles = {
-    container: {
-        width: '100%',
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '20px 10px', // Reducido padding en móvil
-        fontFamily: 'Arial, sans-serif',
-        boxSizing: 'border-box',
-    },
-    header: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '20px',
-        flexWrap: 'wrap', // Para pantallas muy pequeñas
-    },
-    title: {
-        fontSize: '24px', // Tamaño reducido para móvil
-        fontWeight: 'bold',
-        color: '#1a1a1a',
-        margin: '0',
-    },
-    subtitle: {
-        fontSize: '14px', // Tamaño reducido para móvil
-        color: '#666',
-        marginTop: '5px',
-        margin: '5px 0 0 0',
-    },
-    seeAll: {
-        fontSize: '14px',
-        fontWeight: 'bold',
-        color: '#1a1a1a',
-        textDecoration: 'none',
-        cursor: 'pointer',
-        padding: '5px', // Área táctil más grande
-    },
-    productsContainer: {
-        position: 'relative',
-        overflow: 'hidden',
-        width: '100%',
-    },
-    productsList: {
-        display: 'flex',
-        transition: 'transform 0.5s ease-in-out',
-        gap: '15px', // Gap reducido para móvil
-        margin: '0',
-        padding: '0',
-    },
-    productCard: {
-        flex: '0 0 100%', // Se ajustará según slidesToShow
-        backgroundColor: '#f5f3ef',
-        borderRadius: '8px',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-    },
-    productImage: {
-        width: '100%',
-        height: '200px', // Altura reducida para móvil
-        objectFit: 'cover',
-        backgroundColor: '#f5f3ef',
-    },
-    productInfo: {
-        padding: '12px',
-    },
-    productName: {
-        fontSize: '16px',
-        fontWeight: 'bold',
-        marginBottom: '5px',
-        margin: '0 0 5px 0',
-    },
-    productBrand: {
-        fontSize: '14px',
-        color: '#666',
-        marginBottom: '8px',
-        margin: '0 0 8px 0',
-    },
-    productPrice: {
-        fontSize: '16px',
-        fontWeight: 'bold',
-        margin: '0',
-    },
-    navigationControls: {
-        marginTop: '20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    progressBarContainer: {
-        flex: '1',
-        height: '4px',
-        backgroundColor: '#e0e0e0',
-        position: 'relative',
-        cursor: 'pointer',
-        margin: '0 10px', // Margen reducido para móvil
-    },
-    progressBar: {
-        height: '100%',
-        backgroundColor: '#1a1a1a',
-        transition: 'width 0.3s ease-in-out',
-    },
-    arrowButton: {
-        minWidth: '36px', // Tamaño reducido para móvil
-        width: '36px',
-        height: '36px',
-        borderRadius: '50%',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'transparent',
-        border: '1px solid #e0e0e0',
-        cursor: 'pointer',
-        padding: '0',
-    },
-    loadingContainer: {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '300px',
-        width: '100%',
-    },
-    errorContainer: {
-        textAlign: 'center',
-        padding: '20px',
-        color: '#ff5252',
-    },
+// Componente de tarjeta de producto con animación
+const ProductCard = ({ product, onClick }) => {
+    return (
+        <motion.div
+            whileHover={{
+                y: -10,
+                boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
+                transition: { duration: 0.3 }
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+        >
+            <Card
+                onClick={onClick}
+                sx={{
+                    height: '100%',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    backgroundColor: '#ffffff',
+                    border: 'none',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.04)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transition: 'all 0.3s ease',
+                    position: 'relative',
+                    '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '4px',
+                        backgroundColor: vistelicaColors.primary,
+                        opacity: 0,
+                        transition: 'opacity 0.3s ease',
+                    },
+                    '&:hover::before': {
+                        opacity: 1,
+                    }
+                }}
+            >
+                <Box
+                    sx={{
+                        position: 'relative',
+                        height: { xs: '220px', sm: '260px', md: '320px' },
+                        overflow: 'hidden',
+                        backgroundColor: '#f8f8f8',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <Box
+                        component={motion.img}
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.5 }}
+                        sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            transition: 'transform 0.5s ease',
+                        }}
+                        alt={product.name}
+                        src={product.image || product.main_image || '/api/placeholder/400/300'}
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '/api/placeholder/400/300';
+                        }}
+                    />
+                    {product.discount_percentage > 0 && (
+                        <Box
+                            component={motion.div}
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            sx={{
+                                position: 'absolute',
+                                top: 10,
+                                right: 10,
+                                backgroundColor: vistelicaColors.primary,
+                                color: '#fff',
+                                borderRadius: '50%',
+                                width: 50,
+                                height: 50,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontWeight: 'bold',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                            }}
+                        >
+                            -{product.discount_percentage}%
+                        </Box>
+                    )}
+                </Box>
+                <Box sx={{ p: 2, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                    <Typography
+                        variant="subtitle2"
+                        sx={{
+                            color: vistelicaColors.secondary,
+                            fontFamily: typography.fontFamily,
+                            mb: 0.5,
+                            fontSize: '0.85rem',
+                        }}
+                    >
+                        {product.subcategory_name || product.brand || ''}
+                    </Typography>
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            fontFamily: typography.fontFamily,
+                            fontWeight: 600,
+                            fontSize: { xs: '1rem', md: '1.1rem' },
+                            mb: 1,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            color: '#333',
+                            lineHeight: 1.2,
+                            height: '2.4em',
+                        }}
+                    >
+                        {product.name}
+                    </Typography>
+                    <Box sx={{ mt: 'auto', pt: 1 }}>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                fontFamily: typography.fontFamily,
+                                fontWeight: 700,
+                                color: vistelicaColors.primary,
+                                fontSize: '1.25rem',
+                            }}
+                        >
+                            ${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
+                        </Typography>
+                    </Box>
+                </Box>
+            </Card>
+        </motion.div>
+    );
 };
 
 const ProductCarousel = ({
-                             title = "Explora nuestros productos",
-                             subtitle = "Empieza a ver nuestros productos más impresionantes de nuestro extenso catálogo.",
-
+                             title = "Tendencias de moda",
+                             subtitle = "Descubre las últimas tendencias y los diseños más exclusivos de nuestra colección.",
                              initialSlidesToShow = 4
                          }) => {
     const router = useRouter();
@@ -153,9 +170,10 @@ const ProductCarousel = ({
     const containerRef = useRef(null);
     const progressBarRef = useRef(null);
 
-    const handleProductClick = () => {
-        router.push(`/product-detail/page?id=${product.product_id}`);
+    const handleProductClick = (productId) => {
+        router.push(`/product-detail/page?id=${productId}`);
     };
+
     // Cargar productos destacados desde la API
     useEffect(() => {
         const fetchFeaturedProducts = async () => {
@@ -237,153 +255,268 @@ const ProductCarousel = ({
     // Calcular el porcentaje de progreso
     const progressPercentage = maxIndex === 0 ? 100 : (currentIndex / maxIndex) * 100;
 
-    // Mostrador de carga
-    if (loading) {
-        return (
-            <div style={styles.container}>
-                <div style={styles.header}>
-                    <div>
-                        <h2 style={styles.title}>{title}</h2>
-                        {subtitle && <p style={styles.subtitle}>{subtitle}</p>}
-                    </div>
-                </div>
-                <div style={styles.loadingContainer}>
-                    <CircularProgress />
-                </div>
-            </div>
-        );
-    }
-
-    // Mostrador de error
-    if (error) {
-        return (
-            <div style={styles.container}>
-                <div style={styles.header}>
-                    <div>
-                        <h2 style={styles.title}>{title}</h2>
-                        {subtitle && <p style={styles.subtitle}>{subtitle}</p>}
-                    </div>
-                </div>
-                <div style={styles.errorContainer}>
-                    <p>{error}</p>
-                </div>
-            </div>
-        );
-    }
-
-    // Si no hay productos, no renderizar nada
-    if (!products.length) return null;
-
-
-
     const handleSeeAllClick = () => {
         router.push('/product-list/productList');
-
     };
 
-    const handleProductClickDetail = (productId) => {
-        router.push(`/product-detail/page?id=${productId}`);
-    };
     return (
-        <div style={styles.container} ref={containerRef}>
-            <div style={styles.header}>
-                <div>
-                    <h2 style={styles.title}>{title}</h2>
-                    {subtitle && <p style={styles.subtitle}>{subtitle}</p>}
-                </div>
-                <span style={styles.seeAll} onClick={handleSeeAllClick}>See all</span>
-            </div>
-
-            <div style={styles.productsContainer} >
-                <div
-                    style={{
-                        ...styles.productsList,
-                        transform: `translateX(-${currentIndex * (100 / slidesToShow)}%)`,
+        <Box
+            component={motion.div}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            sx={{
+                py: { xs: 4, md: 6 },
+                px: { xs: 2, md: 4 },
+                background: 'linear-gradient(180deg, #FDFBF6 0%, #FFFFFF 100%)',
+                borderRadius: { xs: '0', md: '16px' },
+                my: { xs: 3, md: 5 },
+                overflow: 'hidden'
+            }}
+        >
+            <Container maxWidth="xl">
+                <Box
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        mb: 4,
+                        flexWrap: { xs: 'wrap', sm: 'nowrap' }
                     }}
+                    component={motion.div}
+                    initial={{ y: -20 }}
+                    animate={{ y: 0 }}
+                    transition={{ duration: 0.5 }}
                 >
-                    {products.map((product) => (
-                        <div
-                            key={product.product_id}
-                            style={{
-                                ...styles.productCard,
-                                flex: `0 0 ${cardWidth}%`, // Ancho dinámico basado en slidesToShow
+                    <Box sx={{ mb: { xs: 2, sm: 0 } }}>
+                        <Typography
+                            variant="h4"
+                            component={motion.h2}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            sx={{
+                                fontFamily: typography.fontFamily,
+                                fontWeight: 600,
+                                color: vistelicaColors.secondary,
+                                position: 'relative',
+                                display: 'inline-block',
+                                '&::after': {
+                                    content: '""',
+                                    position: 'absolute',
+                                    bottom: -8,
+                                    left: 0,
+                                    width: '60px',
+                                    height: '3px',
+                                    backgroundColor: vistelicaColors.primary
+                                }
                             }}
-                            onClick={() => handleProductClickDetail(product.product_id)}
                         >
+                            {title}
+                        </Typography>
+                        {subtitle && (
+                            <Typography
+                                variant="body1"
+                                component={motion.p}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.3 }}
+                                sx={{
+                                    mt: 2,
+                                    color: 'text.secondary',
+                                    maxWidth: '600px',
+                                    fontFamily: typography.fontFamily
+                                }}
+                            >
+                                {subtitle}
+                            </Typography>
+                        )}
+                    </Box>
+                    <Button
+                        variant="text"
+                        component={motion.button}
+                        whileHover={{ scale: 1.05 }}
+                        onClick={handleSeeAllClick}
+                        sx={{
+                            color: vistelicaColors.primary,
+                            fontFamily: typography.fontFamily,
+                            fontWeight: 600,
+                            textTransform: 'none',
+                            '&:hover': {
+                                backgroundColor: 'rgba(255, 214, 0, 0.08)'
+                            }
+                        }}
+                    >
+                        Ver todos
+                    </Button>
+                </Box>
+
+                {loading ? (
+                    <Box sx={{ mt: 2 }}>
+                        <Box sx={{ display: 'flex', gap: 2, overflowX: 'hidden' }}>
+                            {[...Array(4)].map((_, index) => (
+                                <Box key={index} sx={{ width: { xs: '100%', sm: '50%', md: `${100 / initialSlidesToShow}%` }, px: 1 }}>
+                                    <Skeleton variant="rectangular" height={300} sx={{ borderRadius: '12px', mb: 1 }} />
+                                    <Skeleton variant="text" width="70%" height={24} sx={{ mb: 0.5 }} />
+                                    <Skeleton variant="text" width="40%" height={20} />
+                                </Box>
+                            ))}
+                        </Box>
+                    </Box>
+                ) : error ? (
+                    <Box
+                        sx={{
+                            textAlign: 'center',
+                            py: 4,
+                            color: 'error.main',
+                            borderRadius: 2,
+                            backgroundColor: 'error.light',
+                            opacity: 0.7
+                        }}
+                    >
+                        <Typography>{error}</Typography>
+                    </Box>
+                ) : (
+                    <>
+                        <Box
+                            sx={{
+                                position: 'relative',
+                                overflow: 'hidden',
+                                mx: -1
+                            }}
+                        >
+                            <AnimatePresence>
+                                <Box
+                                    component={motion.div}
+                                    animate={{
+                                        x: `-${currentIndex * (100 / slidesToShow)}%`
+                                    }}
+                                    transition={{
+                                        type: 'spring',
+                                        stiffness: 50,
+                                        damping: 20
+                                    }}
+                                    sx={{
+                                        display: 'flex',
+                                        transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    }}
+                                >
+                                    {products.map((product) => (
+                                        <Box
+                                            key={product.product_id}
+                                            sx={{
+                                                width: `${cardWidth}%`,
+                                                flexShrink: 0,
+                                                px: 1
+                                            }}
+                                        >
+                                            <ProductCard
+                                                product={product}
+                                                onClick={() => handleProductClick(product.product_id)}
+                                            />
+                                        </Box>
+                                    ))}
+                                </Box>
+                            </AnimatePresence>
+                        </Box>
+
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                mt: 3,
+                                px: 2
+                            }}
+                            component={motion.div}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                        >
+                            <Button
+                                color="secondary"
+                                sx={{
+                                    minWidth: '44px',
+                                    width: '44px',
+                                    height: '44px',
+                                    borderRadius: '50%',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    border: `1px solid ${vistelicaColors.secondary}`,
+                                    color: vistelicaColors.secondary,
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                                    },
+                                    '&.Mui-disabled': {
+                                        opacity: 0.3,
+                                        color: 'text.disabled'
+                                    }
+                                }}
+                                onClick={handlePrevious}
+                                disabled={currentIndex === 0}
+                            >
+                                <ArrowBackIosNewIcon fontSize="small" />
+                            </Button>
 
                             <Box
                                 sx={{
-                                    height: { xs: '200px', sm: '250px', md: '300px' },
-                                    backgroundColor: '#f5f3ef',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    overflow: 'hidden',
+                                    flex: 1,
+                                    mx: 2,
+                                    height: '4px',
+                                    bgcolor: 'rgba(0, 0, 0, 0.1)',
+                                    borderRadius: '2px',
+                                    position: 'relative',
+                                    cursor: 'pointer'
                                 }}
+                                ref={progressBarRef}
+                                onClick={handleProgressBarClick}
                             >
                                 <Box
-                                    component="img"
+                                    component={motion.div}
+                                    animate={{ width: `${progressPercentage}%` }}
+                                    transition={{ type: 'spring', stiffness: 50 }}
                                     sx={{
-                                        ...styles.productImage,
-                                        height: { xs: '200px', sm: '250px', md: '300px' },
-                                    }}
-                                    alt={product.name}
-                                    src={product.image || product.main_image || '/api/placeholder/400/300'}
-                                    onError={(e) => {
-                                        e.target.onerror = null;
-                                        e.target.src = '/api/placeholder/400/300';
+                                        position: 'absolute',
+                                        left: 0,
+                                        top: 0,
+                                        height: '100%',
+                                        backgroundColor: vistelicaColors.primary,
+                                        borderRadius: '2px'
                                     }}
                                 />
                             </Box>
-                            <div style={styles.productInfo}>
-                                <h3 style={styles.productName}>{product.name}</h3>
-                                {product.subcategory_name && <p style={styles.subcategory_name}>{product.subcategory_name}</p>}
-                                <p style={styles.productPrice}>${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
 
-            <div style={styles.navigationControls}>
-                <Button
-                    variant="outlined"
-                    style={{
-                        ...styles.arrowButton,
-                        opacity: currentIndex === 0 ? 0.5 : 1,
-                    }}
-                    onClick={handlePrevious}
-                    disabled={currentIndex === 0}
-                >
-                    <ArrowBackIosIcon style={{ fontSize: '16px' }} />
-                </Button>
-
-                <div
-                    style={styles.progressBarContainer}
-                    ref={progressBarRef}
-                    onClick={handleProgressBarClick}
-                >
-                    <div
-                        style={{
-                            ...styles.progressBar,
-                            width: `${progressPercentage}%`,
-                        }}
-                    />
-                </div>
-
-                <Button
-                    variant="outlined"
-                    style={{
-                        ...styles.arrowButton,
-                        opacity: currentIndex >= maxIndex ? 0.5 : 1,
-                    }}
-                    onClick={handleNext}
-                    disabled={currentIndex >= maxIndex}
-                >
-                    <ArrowForwardIosIcon style={{ fontSize: '16px' }} />
-                </Button>
-            </div>
-        </div>
+                            <Button
+                                color="secondary"
+                                sx={{
+                                    minWidth: '44px',
+                                    width: '44px',
+                                    height: '44px',
+                                    borderRadius: '50%',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    border: `1px solid ${vistelicaColors.secondary}`,
+                                    color: vistelicaColors.secondary,
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                                    },
+                                    '&.Mui-disabled': {
+                                        opacity: 0.3,
+                                        color: 'text.disabled'
+                                    }
+                                }}
+                                onClick={handleNext}
+                                disabled={currentIndex >= maxIndex}
+                            >
+                                <ArrowForwardIosIcon fontSize="small" />
+                            </Button>
+                        </Box>
+                    </>
+                )}
+            </Container>
+        </Box>
     );
 };
 
