@@ -259,6 +259,23 @@ const getProductsBasicInfo = async (searchText, categoryIds = []) => {
         );
     }
 };
+/**
+ * Obtiene productos con descuento por categoría
+ * @param {string|number} categoryId - ID de la categoría
+ * @returns {Promise<Array>} Lista de productos con descuento en esa categoría
+ */
+const getDiscountedProductsByCategory = async (categoryId) => {
+    try {
+        const response = await axios.get(`${API_URL}/products/discount/${categoryId}`);
+        return response.data;
+    } catch (error) {
+        console.error(`Error al obtener productos con descuento para la categoría ${categoryId}:`, error);
+        throw new Error(
+            error.response?.data?.message ||
+            'No se pudieron cargar los productos con descuento para esta categoría.'
+        );
+    }
+};
 
 
 const productService = {
@@ -275,7 +292,8 @@ const productService = {
     getTopRatedFeaturedProducts,
     getRandomAccessoryProducts,
     searchProducts,
-    getProductsBasicInfo
+    getProductsBasicInfo,
+    getDiscountedProductsByCategory,
 };
 
 export default productService;
