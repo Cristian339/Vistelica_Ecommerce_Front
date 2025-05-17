@@ -12,7 +12,7 @@ import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import productService from '@/services/productService';
-import CircularProgress from "@mui/joy/CircularProgress"; // Importa el servicio de productos
+import CircularProgress from "@mui/joy/CircularProgress";
 
 const ProductGallery = ({ productId }) => {
     const theme = useTheme();
@@ -20,14 +20,11 @@ const ProductGallery = ({ productId }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [images, setImages] = useState([]);
     const [loading, setLoading] = useState(true);
-    console.log(productId);
-    // Obtener todas las imágenes del producto
-    useEffect(() => {
 
+    useEffect(() => {
         const fetchProductImages = async () => {
             try {
                 setLoading(true);
-                console.log(productId);
                 const productImages = await productService.getAllImagesByProductId(productId);
                 setImages(productImages);
             } catch (error) {
@@ -35,13 +32,22 @@ const ProductGallery = ({ productId }) => {
             } finally {
                 setLoading(false);
             }
-
         };
 
-
         fetchProductImages();
-
     }, [productId]);
+
+    const handleNext = () => {
+        setCurrentIndex((prevIndex) =>
+            prevIndex === images.length - 1 ? 0 : prevIndex + 1
+        );
+    };
+
+    const handlePrev = () => {
+        setCurrentIndex((prevIndex) =>
+            prevIndex === 0 ? images.length - 1 : prevIndex - 1
+        );
+    };
 
     if (loading) {
         return (
@@ -101,8 +107,43 @@ const ProductGallery = ({ productId }) => {
                         }}
                     />
 
-                    {/* Resto del componente permanece igual */}
-                    {/* ... */}
+                    {/* Flecha izquierda */}
+                    {images.length > 1 && (
+                        <IconButton
+                            onClick={handlePrev}
+                            sx={{
+                                position: 'absolute',
+                                left: 10,
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                                '&:hover': {
+                                    backgroundColor: 'rgba(255, 255, 255, 0.9)'
+                                }
+                            }}
+                        >
+                            <ChevronLeftIcon fontSize="large" />
+                        </IconButton>
+                    )}
+
+                    {/* Flecha derecha */}
+                    {images.length > 1 && (
+                        <IconButton
+                            onClick={handleNext}
+                            sx={{
+                                position: 'absolute',
+                                right: 10,
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                                '&:hover': {
+                                    backgroundColor: 'rgba(255, 255, 255, 0.9)'
+                                }
+                            }}
+                        >
+                            <ChevronRightIcon fontSize="large" />
+                        </IconButton>
+                    )}
                 </Paper>
 
                 {/* Miniaturas (solo si hay más de 1 imagen) */}
