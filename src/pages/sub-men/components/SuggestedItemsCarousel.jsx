@@ -1,79 +1,37 @@
 'use client'
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import { GlobalStyles } from '@mui/material'; // Importamos GlobalStyles
+import { GlobalStyles } from '@mui/material';
+import  productService  from '@/services/productService'; // Asegúrate de que la ruta es correcta
 
 const SuggestedItemsCarousel = () => {
     const [currentSlide, setCurrentSlide] = useState(0);
+    const [suggestedItems, setSuggestedItems] = useState([]);
     const carouselRef = useRef(null);
 
-    // Datos de productos sugeridos
-    const suggestedItems = [
-        {
-            id: 1,
-            name: 'Sudadera capucha',
-            originalPrice: '19,99 €',
-            salePrice: '13,99 €',
-            image: 'https://picsum.photos/200/300?random=6',
-            category: 'tops',
-            tag: '',
-        },
-        {
-            id: 2,
-            name: 'Pack sudadera y pantalón wide leg',
-            originalPrice: '39,99 €',
-            salePrice: '39,99 €',
-            image: 'https://picsum.photos/200/300?random=7',
-            category: 'sets',
-            tag: 'EXCLUSIVO ONLINE',
-        },
-        {
-            id: 3,
-            name: 'Jeans super baggy',
-            originalPrice: '29,99 €',
-            salePrice: '14,99 €',
-            image: 'https://picsum.photos/200/300?random=8',
-            category: 'jeans',
-            tag: '',
-        },
-        {
-            id: 4,
-            name: 'Chaleco puffy',
-            originalPrice: '29,99 €',
-            salePrice: '14,99 €',
-            image: 'https://picsum.photos/200/300?random=9',
-            category: 'tops',
-            tag: '',
-        },
-        {
-            id: 5,
-            name: 'Sudadera cuello polo',
-            originalPrice: '35,99 €',
-            salePrice: '19,99 €',
-            image: 'https://picsum.photos/200/300?random=11',
-            category: 'tops',
-            tag: '',
-        },
-        {
-            id: 6,
-            name: 'Chaqueta denim oversize',
-            originalPrice: '45,99 €',
-            salePrice: '29,99 €',
-            image: 'https://picsum.photos/200/300?random=12',
-            category: 'outerwear',
-            tag: 'NUEVO',
-        },
-        {
-            id: 7,
-            name: 'Camiseta oversized print',
-            originalPrice: '19,99 €',
-            salePrice: '14,99 €',
-            image: 'https://picsum.photos/200/300?random=13',
-            category: 'tops',
-            tag: '',
-        },
-    ];
+    // Cargar productos con descuento para categoría 1
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const data = await productService.getDiscountedProductsByCategory(1);
+                const mappedItems = data.map(product => ({
+                    id: product.productId,
+                    name: product.name,
+                    originalPrice: `${product.originalPrice} €`,
+                    salePrice: `${product.discountedPrice} €`,
+                    image: product.images.find(img => img.is_main === true)?.image_url || '',
+                    tag: '',
+                }));
+                setSuggestedItems(mappedItems);
+            } catch (error) {
+                console.error('Error cargando productos sugeridos:', error);
+            }
+        };
+
+
+        fetchProducts();
+    }, []);
 
     const nextSlide = () => {
         if (carouselRef.current) {
@@ -142,11 +100,10 @@ const SuggestedItemsCarousel = () => {
             display: 'flex',
             overflowX: 'auto',
             scrollSnapType: 'x mandatory',
-            scrollbarWidth: 'none', // Firefox
-            msOverflowStyle: 'none', // IE
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
             gap: '1px',
         },
-        // Eliminamos carouselTrackScrollbar que causaba el problema
         productCard: {
             flex: '0 0 25%',
             minWidth: '25%',
@@ -181,10 +138,6 @@ const SuggestedItemsCarousel = () => {
         originalPrice: {
             textDecoration: 'line-through',
             color: '#666',
-            fontSize: '14px',
-        },
-        regularPrice: {
-            fontWeight: 'bold',
             fontSize: '14px',
         },
         navButton: {
@@ -223,7 +176,6 @@ const SuggestedItemsCarousel = () => {
 
     return (
         <>
-            {/* Definimos los estilos globales para ocultar la scrollbar */}
             <GlobalStyles
                 styles={{
                     '.hide-scrollbar::-webkit-scrollbar': {
