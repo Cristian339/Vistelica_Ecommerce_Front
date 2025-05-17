@@ -1,4 +1,4 @@
-// ProductCarousel.jsx
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button, Box, Typography, CircularProgress, Container, Skeleton, Card } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
