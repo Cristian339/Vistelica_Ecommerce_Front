@@ -32,4 +32,26 @@ export const updateUserProfile = async (profileData) => {
         console.error('Error updating user profile:', error.response || error);
         throw error;
     }
+
 };
+export const getProfileAndAddresses = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Usuario no autenticado');
+        }
+
+        const response = await axios.get(`${API_URL}/profile-and-addresses`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        return response.data; // Ya devuelve el objeto con perfil y direcciones
+    } catch (error) {
+        console.error('Error al obtener perfil y direcciones del usuario:', error.response || error);
+        throw error; // Lanza el error para que se maneje en el componente
+    }
+};
+
+

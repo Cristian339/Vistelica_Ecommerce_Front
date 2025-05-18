@@ -303,7 +303,27 @@ const cartService = {
         } catch (error) {
             return handleError(error, 'Error al eliminar el carrito');
         }
-    }
+    },
+
+    async getUserOrders() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Usuario no autenticado');
+            }
+
+            const response = await axios.get(`${API_URL}/user-orders`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            return response.data.data || [];
+        } catch (error) {
+            return handleError(error, 'Error al obtener los pedidos del usuario');
+        }
+    },
+
 };
 
 export default cartService;
