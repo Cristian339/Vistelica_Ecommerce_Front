@@ -234,20 +234,14 @@ export default function ProductTable() {
             subcategory_id: product?.subcategory?.subcategory_id || ''
         });
 
-        const [imageFiles, setImageFiles] = useState(Array(5).fill(null));
-        const [imagePreviews, setImagePreviews] = useState(Array(5).fill(''));
+        const [imageFiles, setImageFiles] = useState([]);
+        const [imagePreviews, setImagePreviews] = useState([]);
 
         const [availableSubcategories, setAvailableSubcategories] = useState([]);
 
         useEffect(() => {
             if (product?.images) {
-                const previews = Array(5).fill('');
-                product.images.forEach((img, index) => {
-                    if (index < 5) {
-                        previews[index] = img.image_url;
-                    }
-                });
-                setImagePreviews(previews);
+                setImagePreviews(product.images.map(img => img.image_url));
             }
         }, [product]);
 
@@ -280,29 +274,42 @@ export default function ProductTable() {
             }));
         };
 
-        const handleImageChange = (index, e) => {
+        const handleImageChange = (e) => {
             if (e.target.files && e.target.files[0]) {
                 const file = e.target.files[0];
-                const newImageFiles = [...imageFiles];
-                newImageFiles[index] = file;
+                const newImageFiles = [...imageFiles, file];
                 setImageFiles(newImageFiles);
 
                 // Crear preview
                 const reader = new FileReader();
                 reader.onload = (event) => {
-                    const newPreviews = [...imagePreviews];
-                    newPreviews[index] = event.target.result;
-                    setImagePreviews(newPreviews);
+                    setImagePreviews(prev => [...prev, event.target.result]);
                 };
                 reader.readAsDataURL(file);
+            }
+        };
+
+        const handleRemoveImage = (index) => {
+            const newImageFiles = [...imageFiles];
+            const newImagePreviews = [...imagePreviews];
+
+            // Si es una imagen existente (tiene URL pero no File)
+            if (index < imagePreviews.length && !newImageFiles[index]) {
+                newImagePreviews.splice(index, 1);
+                setImagePreviews(newImagePreviews);
+            } else {
+                newImageFiles.splice(index, 1);
+                newImagePreviews.splice(index, 1);
+                setImageFiles(newImageFiles);
+                setImagePreviews(newImagePreviews);
             }
         };
 
         const handleSubmit = (e) => {
             e.preventDefault();
 
-            if (!imageFiles[0] && !imagePreviews[0]) {
-                setError('Debe proporcionar al menos la imagen principal');
+            if (imagePreviews.length === 0) {
+                setError('Debe proporcionar al menos una imagen');
                 return;
             }
 
@@ -477,52 +484,78 @@ export default function ProductTable() {
 
                                 <Typography level="title-sm" sx={{ mt: 2 }}>Imágenes del Producto</Typography>
                                 <Typography level="body-xs" color="neutral">
-                                    La primera imagen será la principal. Puedes subir hasta 5 imágenes.
+                                    La primera imagen será la principal. Puedes subir tantas imágenes como necesites.
                                 </Typography>
 
-                                {Array.from({ length: 5 }).map((_, index) => (
-                                    <FormControl key={index}>
-                                        <FormLabel>
-                                            {index === 0 ? 'Imagen Principal' : `Imagen ${index + 1}`}
-                                        </FormLabel>
+                                {/* Input de archivo oculto */}
+                                <Input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    sx={{ display: 'none' }}
+                                    id="image-upload"
+                                />
 
-                                        {/* Input de archivo oculto */}
-                                        <Input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={(e) => handleImageChange(index, e)}
-                                            sx={{ display: 'none' }}
-                                            id={`image-upload-${index}`}
-                                        />
+                                {/* Botón personalizado que activa el input */}
+                                <label htmlFor="image-upload" style={{ display: 'block' }}>
+                                    <Button
+                                        component="span"
+                                        variant="outlined"
+                                        startDecorator={<ImageIcon />}
+                                        fullWidth
+                                        sx={{ mb: 1 }}
+                                    >
+                                        {imagePreviews.length === 0 ? 'Añadir imagen de producto' : 'Añadir otra imagen de producto'}
+                                    </Button>
+                                </label>
 
-                                        {/* Botón personalizado que activa el input */}
-                                        <label htmlFor={`image-upload-${index}`} style={{ display: 'block' }}>
-                                            <Button
-                                                component="span"
-                                                variant="outlined"
-                                                startDecorator={<ImageIcon />}
-                                                fullWidth
-                                                sx={{ mb: 1 }}
-                                            >
-                                                Seleccionar archivo
-                                            </Button>
-                                        </label>
-
-                                        {/* Vista previa de la imagen */}
-                                        {(imagePreviews[index] || imageFiles[index]) && (
-                                            <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <Avatar
-                                                    src={imagePreviews[index] || ''}
-                                                    size="sm"
-                                                    sx={{ borderRadius: 'sm' }}
-                                                />
-                                                <Typography level="body-xs">
-                                                    {imageFiles[index]?.name || 'Imagen existente'}
-                                                </Typography>
-                                            </Box>
-                                        )}
-                                    </FormControl>
-                                ))}
+                                {/* Lista de imágenes subidas */}
+                                {imagePreviews.length > 0 && (
+                                    <Box sx={{ mt: 2 }}>
+                                        <Typography level="body-sm" sx={{ mb: 1 }}>
+                                            Imágenes seleccionadas ({imagePreviews.length})
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                                            {imagePreviews.map((preview, index) => (
+                                                <Box key={index} sx={{ position: 'relative' }}>
+                                                    <Avatar
+                                                        src={preview}
+                                                        size="lg"
+                                                        sx={{ borderRadius: 'sm' }}
+                                                    />
+                                                    <IconButton
+                                                        size="sm"
+                                                        color="danger"
+                                                        sx={{
+                                                            position: 'absolute',
+                                                            top: -8,
+                                                            right: -8,
+                                                            borderRadius: '50%',
+                                                            bgcolor: 'background.body'
+                                                        }}
+                                                        onClick={() => handleRemoveImage(index)}
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                    {index === 0 && (
+                                                        <Chip
+                                                            size="sm"
+                                                            color="primary"
+                                                            sx={{
+                                                                position: 'absolute',
+                                                                bottom: -8,
+                                                                left: '50%',
+                                                                transform: 'translateX(-50%)'
+                                                            }}
+                                                        >
+                                                            Principal
+                                                        </Chip>
+                                                    )}
+                                                </Box>
+                                            ))}
+                                        </Box>
+                                    </Box>
+                                )}
                             </Stack>
                         </form>
                     </DialogContent>

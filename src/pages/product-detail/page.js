@@ -96,13 +96,13 @@ export default function ProductDetailPage() {
 
             // Obtener o crear el carrito
             let cart;
-            try {
-                cart = await cartService.getCart(user?.user_id, currentSessionId);
-            } catch (error) {
-                // Si no existe el carrito, crear uno nuevo
+
+            cart = await cartService.getCart(user?.user_id, currentSessionId);
+            if(!cart){
                 cart = await cartService.createCart(user?.user_id, currentSessionId);
             }
 
+            console.log(cart);
             // Validar que tenemos un orderId
             if (!cart?.order_id) {
                 throw new Error('No se pudo obtener el ID del carrito');

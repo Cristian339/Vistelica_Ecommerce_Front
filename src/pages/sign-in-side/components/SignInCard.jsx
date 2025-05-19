@@ -4,7 +4,7 @@ import {
     loginUser,
     registerSocialUser,
     signInWithGoogle,
-    signInWithFacebook
+    signInWithFacebook, getCurrentUser
 } from '../../../services/authService';
 
 // Importaciones de React y hooks
@@ -342,9 +342,12 @@ export default function SignInCard() {
 
             // 4. Redirección según tipo de usuario
             if (result.isNewUser) {
-                setTimeout(() => router.push('/complete-profile'), 1000);
+                // const user = await getCurrentUser();
+
+
+                setTimeout(() => router.push('/home/Home'), 1000);
             } else {
-                setTimeout(() => router.push('/dashboard'), 1000);
+                setTimeout(() => router.push('/home/Home'), 1000);
             }
         } catch (error) {
             console.error('Error al iniciar sesión con Google:', error);

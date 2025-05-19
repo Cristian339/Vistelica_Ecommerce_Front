@@ -22,6 +22,7 @@ import {
 import Head from 'next/head';
 import { useRouter } from 'next/navigation';
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import Image from 'next/image';
 
 // Definición de estilos de fuente
 const titleFont = {
@@ -239,6 +240,15 @@ const MenSizeGuideContent = () => {
                     <Typography variant="h3" component="h2" gutterBottom sx={{ mb: 3, ...titleFont }}>
                         PARTE SUPERIOR
                     </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+                        <Image
+                            src="https://res.cloudinary.com/dhyv4dpk2/image/upload/v1747494646/vistelica/productos/axi8umeoraiw7wxp0ouq.jpg"
+                            alt="Parte superior"
+                            width={500}
+                            height={400}
+                            style={{ objectFit: 'contain' }}
+                        />
+                    </Box>
 
                     {/* Measurement Instructions */}
                     <Box sx={{ backgroundColor: theme.palette.grey[100], p: 3, mb: 4, borderRadius: 1 }}>
@@ -372,6 +382,15 @@ const MenSizeGuideContent = () => {
                     <Typography variant="h3" component="h2" gutterBottom sx={{ mb: 3, ...titleFont }}>
                         PARTE INFERIOR
                     </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+                        <Image
+                            src="https://res.cloudinary.com/dhyv4dpk2/image/upload/v1747494647/vistelica/productos/h4add57bz1av8hnwmrm4.jpg"
+                            alt="Parte inferior"
+                            width={500}
+                            height={400}
+                            style={{ objectFit: 'contain' }}
+                        />
+                    </Box>
 
                     {/* Measurement Instructions */}
                     <Box sx={{ backgroundColor: theme.palette.grey[100], p: 3, mb: 4, borderRadius: 1 }}>
