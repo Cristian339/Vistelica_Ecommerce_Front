@@ -6,6 +6,7 @@ import Box from '@mui/material/Box';
 import MuiCard from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
 import CreditCard from '../paymentMethods/CreaditCard';
+import GooglePayWrapper from "@/pages/checkout/paymentMethods/GooglePayWrapper";
 import CardContent from '@mui/material/CardContent';
 import Checkbox from '@mui/material/Checkbox';
 import FormControl from '@mui/material/FormControl';
@@ -299,19 +300,9 @@ export default function PaymentForm() {
             )}
             {paymentType === 'googlePay' && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Typography variant="body1" gutterBottom>
-                        Pay securely with your Google account.
-                    </Typography>
-                    <GooglePayButton onClick={() => console.log('Google Pay clicked')}>
-                        <img
-                            src="https://www.gstatic.com/instantbuy/svg/googlepay_dark.svg"
-                            alt="Google Pay"
-                            style={{ height: '40px' }}
-                        />
-                    </GooglePayButton>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        You'll be redirected to Google Pay to complete your purchase.
-                    </Typography>
+                    <GooglePayWrapper
+                        amount={0.99}
+                    />
                 </Box>
             )}
         </Stack>

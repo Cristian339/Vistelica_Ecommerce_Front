@@ -59,16 +59,16 @@ export default function CartItem({ item, setCartItems, setTotal, userId, session
 
 
 
-            // Actualizamos el total (podrías usar los datos de updatedItem si el backend los devuelve)
-            const totalData = await cartService.getCartTotal(
-                user.user_id || null,
-                !user.user_id ? sessionId : null
-            );
+            // // Actualizamos el total (podrías usar los datos de updatedItem si el backend los devuelve)
+            // const totalData = await cartService.getCartTotal(
+            //     user.user_id || null,
+            //     !user.user_id ? sessionId : null
+            // );
 
-            setTotal({
-                totalPrice: totalData.totalPrice,
-                itemCount: totalData.itemCount
-            });
+            // setTotal({
+            //     totalPrice: totalData.totalPrice,
+            //     itemCount: totalData.itemCount
+            // });
         } catch (error) {
             console.error("Error al actualizar cantidad:", error);
             // Podrías añadir un toast o alerta para informar al usuario

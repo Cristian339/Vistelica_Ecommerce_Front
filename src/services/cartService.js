@@ -271,7 +271,7 @@ const cartService = {
             });
             return response.data.data || response.data;
         } catch (error) {
-            return handleError(error, 'Error al calcular total del carrito');
+            console.log("No se pudo eliminar");
         }
     },
 

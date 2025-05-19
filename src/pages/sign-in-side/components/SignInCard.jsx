@@ -298,7 +298,7 @@ export default function SignInCard() {
 
                 setTimeout(() => router.push('/home/Home'), 1000);
             } else {
-                setTimeout(() => router.push('/dashboard'), 1000);
+                setTimeout(() => router.push('/home/Home'), 1000);
             }
         } catch (error) {
             console.error('Error al iniciar sesión con Google:', error);
