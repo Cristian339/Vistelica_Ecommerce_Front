@@ -244,8 +244,8 @@ const MenSizeGuideContent = () => {
                         <Image
                             src="https://res.cloudinary.com/dhyv4dpk2/image/upload/v1747494646/vistelica/productos/axi8umeoraiw7wxp0ouq.jpg"
                             alt="Parte superior"
-                            width={300}
-                            height={200}
+                            width={500}
+                            height={400}
                             style={{ objectFit: 'contain' }}
                         />
                     </Box>
@@ -386,8 +386,8 @@ const MenSizeGuideContent = () => {
                         <Image
                             src="https://res.cloudinary.com/dhyv4dpk2/image/upload/v1747494647/vistelica/productos/h4add57bz1av8hnwmrm4.jpg"
                             alt="Parte inferior"
-                            width={300}
-                            height={200}
+                            width={500}
+                            height={400}
                             style={{ objectFit: 'contain' }}
                         />
                     </Box>

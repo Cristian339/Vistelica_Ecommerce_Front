@@ -37,27 +37,47 @@ export default function CartItem({ item, setCartItems, setTotal, userId, session
 
     const handleQuantityChange = async (newQuantity) => {
         try {
-            await cartService.updateCartItem(item.order_detail_id, newQuantity, item.size, item.color);
-            setQuantity(newQuantity);
+            // console.log("ID: " + item.order_detail_id + " Cantidad: " + newQuantity);
 
+            // Llamada actualizada al servicio
+            const updatedItem = await cartService.updateCartItem(
+                item.order_detail_id,
+                newQuantity
+            );
+
+            // Actualizamos el estado local con los datos que devuelve el backend
+            setQuantity(newQuantity);
             setCartItems(prev => prev.map(i =>
                 i.order_detail_id === item.order_detail_id
                     ? { ...i, quantity: newQuantity }
                     : i
             ));
 
-            const totalData = await cartService.getCartTotal(userId || null, !userId ? sessionId : null);
+            console.log(userId);
+            console.log(sessionId);
+
+
+
+
+            // Actualizamos el total (podrías usar los datos de updatedItem si el backend los devuelve)
+            const totalData = await cartService.getCartTotal(
+                user.user_id || null,
+                !user.user_id ? sessionId : null
+            );
+
             setTotal({
                 totalPrice: totalData.totalPrice,
                 itemCount: totalData.itemCount
             });
         } catch (error) {
             console.error("Error al actualizar cantidad:", error);
+            // Podrías añadir un toast o alerta para informar al usuario
         }
     };
 
     const handleRemoveItem = async () => {
         try {
+
             await cartService.removeFromCart(item.order_detail_id);
             setCartItems(prev => prev.filter(i => i.order_detail_id !== item.order_detail_id));
 

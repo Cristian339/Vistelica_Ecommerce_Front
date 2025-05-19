@@ -98,8 +98,6 @@ export default function ProductDetailPage() {
             let cart;
 
             cart = await cartService.getCart(user?.user_id, currentSessionId);
-
-            console.log("Se entro a crear");
             if(!cart){
                 cart = await cartService.createCart(user?.user_id, currentSessionId);
             }

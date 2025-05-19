@@ -260,6 +260,8 @@ export const registerSocialUser = async (userData) => {
 
         const firebaseToken = await currentUser.getIdToken();
 
+
+
         const response = await axios.post(`${API_URL}/social-auth`, userData, {
             headers: {
                 'Authorization': `Bearer ${firebaseToken}`
