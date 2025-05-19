@@ -5,6 +5,8 @@ import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import MuiCard from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
+import CreditCard from '../paymentMethods/CreaditCard';
+import GooglePayWrapper from "@/pages/checkout/paymentMethods/GooglePayWrapper";
 import CardContent from '@mui/material/CardContent';
 import Checkbox from '@mui/material/Checkbox';
 import FormControl from '@mui/material/FormControl';
@@ -19,6 +21,7 @@ import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded
 import CreditCardRoundedIcon from '@mui/icons-material/CreditCardRounded';
 import SimCardRoundedIcon from '@mui/icons-material/SimCardRounded';
 import WarningRoundedIcon from '@mui/icons-material/WarningRounded';
+import GoogleIcon from '@mui/icons-material/Google';
 
 const Card = styled(MuiCard)(({ theme, selected }) => ({
     border: '1px solid',
@@ -71,6 +74,27 @@ const PaymentContainer = styled('div')(({ theme }) => ({
         background:
             'linear-gradient(to right bottom, hsla(220, 30%, 6%, 0.2) 25%, hsla(220, 20%, 25%, 0.2) 100%)',
         boxShadow: '0px 4px 8px hsl(220, 35%, 0%)',
+    }),
+}));
+
+const GooglePayButton = styled('div')(({ theme }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: theme.spacing(2),
+    backgroundColor: theme.palette.common.white,
+    border: '1px solid #ddd',
+    borderRadius: theme.shape.borderRadius,
+    cursor: 'pointer',
+    '&:hover': {
+        backgroundColor: '#f5f5f5',
+    },
+    ...theme.applyStyles('dark', {
+        backgroundColor: '#424242',
+        borderColor: '#555',
+        '&:hover': {
+            backgroundColor: '#333',
+        },
     }),
 }));
 
@@ -188,88 +212,49 @@ export default function PaymentForm() {
                             </CardContent>
                         </CardActionArea>
                     </Card>
+                    <Card selected={paymentType === 'googlePay'}>
+                        <CardActionArea
+                            onClick={() => setPaymentType('googlePay')}
+                            sx={{
+                                '.MuiCardActionArea-focusHighlight': {
+                                    backgroundColor: 'transparent',
+                                },
+                                '&:focus-visible': {
+                                    backgroundColor: 'action.hover',
+                                },
+                            }}
+                        >
+                            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <GoogleIcon
+                                    fontSize="small"
+                                    sx={[
+                                        (theme) => ({
+                                            color: 'grey.400',
+                                            ...theme.applyStyles('dark', {
+                                                color: 'grey.600',
+                                            }),
+                                        }),
+                                        paymentType === 'googlePay' && {
+                                            color: '#4285F4',
+                                        },
+                                    ]}
+                                />
+                                <Typography sx={{ fontWeight: 'medium' }}>Google Pay</Typography>
+                            </CardContent>
+                        </CardActionArea>
+                    </Card>
                 </RadioGroup>
             </FormControl>
             {paymentType === 'creditCard' && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <PaymentContainer>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography variant="subtitle2">Credit card</Typography>
-                            <CreditCardRoundedIcon sx={{ color: 'text.secondary' }} />
-                        </Box>
-                        <SimCardRoundedIcon
-                            sx={{
-                                fontSize: { xs: 48, sm: 56 },
-                                transform: 'rotate(90deg)',
-                                color: 'text.secondary',
-                            }}
-                        />
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                width: '100%',
-                                gap: 2,
-                            }}
-                        >
-                            <FormGrid sx={{ flexGrow: 1 }}>
-                                <FormLabel htmlFor="card-number" required>
-                                    Card number
-                                </FormLabel>
-                                <OutlinedInput
-                                    id="card-number"
-                                    autoComplete="card-number"
-                                    placeholder="0000 0000 0000 0000"
-                                    required
-                                    size="small"
-                                    value={cardNumber}
-                                    onChange={handleCardNumberChange}
-                                />
-                            </FormGrid>
-                            <FormGrid sx={{ maxWidth: '20%' }}>
-                                <FormLabel htmlFor="cvv" required>
-                                    CVV
-                                </FormLabel>
-                                <OutlinedInput
-                                    id="cvv"
-                                    autoComplete="CVV"
-                                    placeholder="123"
-                                    required
-                                    size="small"
-                                    value={cvv}
-                                    onChange={handleCvvChange}
-                                />
-                            </FormGrid>
-                        </Box>
-                        <Box sx={{ display: 'flex', gap: 2 }}>
-                            <FormGrid sx={{ flexGrow: 1 }}>
-                                <FormLabel htmlFor="card-name" required>
-                                    Name
-                                </FormLabel>
-                                <OutlinedInput
-                                    id="card-name"
-                                    autoComplete="card-name"
-                                    placeholder="John Smith"
-                                    required
-                                    size="small"
-                                />
-                            </FormGrid>
-                            <FormGrid sx={{ flexGrow: 1 }}>
-                                <FormLabel htmlFor="card-expiration" required>
-                                    Expiration date
-                                </FormLabel>
-                                <OutlinedInput
-                                    id="card-expiration"
-                                    autoComplete="card-expiration"
-                                    placeholder="MM/YY"
-                                    required
-                                    size="small"
-                                    value={expirationDate}
-                                    onChange={handleExpirationDateChange}
-                                />
-                            </FormGrid>
-                        </Box>
-                    </PaymentContainer>
+                    <CreditCard
+                        cardNumber={cardNumber}
+                        cvv={cvv}
+                        expirationDate={expirationDate}
+                        onCardNumberChange={handleCardNumberChange}
+                        onCvvChange={handleCvvChange}
+                        onExpirationDateChange={handleExpirationDateChange}
+                    />
                     <FormControlLabel
                         control={<Checkbox name="saveCard" />}
                         label="Remember credit card details for next time"
@@ -311,6 +296,13 @@ export default function PaymentForm() {
                             987654321
                         </Typography>
                     </Box>
+                </Box>
+            )}
+            {paymentType === 'googlePay' && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <GooglePayWrapper
+                        amount={0.99}
+                    />
                 </Box>
             )}
         </Stack>

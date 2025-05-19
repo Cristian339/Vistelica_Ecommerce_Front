@@ -229,14 +229,14 @@ const cartService = {
      * @param {string|null} color - Nuevo color (opcional)
      * @returns {Promise<Object>} - Item actualizado
      */
-    async updateCartItem(itemId, quantity, size = null, color = null) {
+    async updateCartItem(itemId, quantity) {
         try {
-            const response = await axios.put(`${API_URL}/cart/items/${itemId}/quantity`, {
-                quantity,
-                size,
-                color
-            });
-            return response.data.data || response.data;
+            console.log("ID:" + itemId + " Cantidad: " + quantity)
+            const response = await axios.put(
+                `${API_URL}/cart/items/${itemId}/quantity`,
+                { quantity } // Solo enviamos quantity según lo que espera el backend
+            );
+            return response.data; // El backend devuelve data directamente en la respuesta
         } catch (error) {
             return handleError(error, 'Error al actualizar cantidad del producto');
         }
@@ -271,7 +271,7 @@ const cartService = {
             });
             return response.data.data || response.data;
         } catch (error) {
-            return handleError(error, 'Error al calcular total del carrito');
+            console.log("No se pudo eliminar");
         }
     },
 

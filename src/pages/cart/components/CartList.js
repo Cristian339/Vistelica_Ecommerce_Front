@@ -4,6 +4,8 @@ import CartItem from './CartItem';
 
 export default function CartList({ cartItems, setCartItems, setTotal, userId, sessionId }) {
     if (!cartItems || cartItems.length === 0) {
+        console.log("List usuario " + user);
+        console.log("List sessionId " + sessionId);
         return (
             <Box sx={{
                 border: '1px solid #e0e0e0',
