@@ -55,31 +55,6 @@ const Card = styled(MuiCard)(({ theme, selected }) => ({
     }),
 }));
 
-const PaymentContainer = styled('div')(({ theme }) => ({
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    width: '100%',
-    height: 375,
-    padding: theme.spacing(3),
-    borderRadius: `calc(${theme.shape.borderRadius}px + 4px)`,
-    border: '1px solid ',
-    borderColor: (theme.vars || theme).palette.divider,
-    background:
-        'linear-gradient(to bottom right, hsla(220, 35%, 97%, 0.3) 25%, hsla(220, 20%, 88%, 0.3) 100%)',
-    boxShadow: '0px 4px 8px hsla(210, 0%, 0%, 0.05)',
-    [theme.breakpoints.up('xs')]: {
-        height: 300,
-    },
-    [theme.breakpoints.up('sm')]: {
-        height: 350,
-    },
-    ...theme.applyStyles('dark', {
-        background:
-            'linear-gradient(to right bottom, hsla(220, 30%, 6%, 0.2) 25%, hsla(220, 20%, 25%, 0.2) 100%)',
-        boxShadow: '0px 4px 8px hsl(220, 35%, 0%)',
-    }),
-}));
 
 const GooglePayButton = styled('div')(({ theme }) => ({
     display: 'flex',
@@ -426,102 +401,6 @@ const PaymentForm = React.forwardRef(({ paymentData, setPaymentData }, ref) => {
                         onCvvChange={handleCvvChange}
                         onExpirationDateChange={handleExpirationDateChange}
                     />
-                    <PaymentContainer>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography variant="subtitle2">Tarjeta de crédito</Typography>
-                            <CreditCardRoundedIcon sx={{ color: 'text.secondary' }} />
-                        </Box>
-                        <SimCardRoundedIcon
-                            sx={{
-                                fontSize: { xs: 48, sm: 56 },
-                                transform: 'rotate(90deg)',
-                                color: 'text.secondary',
-                            }}
-                        />
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                width: '100%',
-                                gap: 2,
-                            }}
-                        >
-                            <FormGrid sx={{ flexGrow: 1 }}>
-                                <FormLabel htmlFor="card-number" required>
-                                    Número de tarjeta
-                                </FormLabel>
-                                <OutlinedInput
-                                    id="card-number"
-                                    autoComplete="card-number"
-                                    placeholder="0000 0000 0000 0000"
-                                    required
-                                    size="small"
-                                    value={cardNumber}
-                                    onChange={handleCardNumberChange}
-                                    error={!!errors.cardNumber}
-                                />
-                                {errors.cardNumber && (
-                                    <FormHelperText error>{errors.cardNumber}</FormHelperText>
-                                )}
-                            </FormGrid>
-                            <FormGrid sx={{ maxWidth: '20%' }}>
-                                <FormLabel htmlFor="cvv" required>
-                                    CVV
-                                </FormLabel>
-                                <OutlinedInput
-                                    id="cvv"
-                                    autoComplete="CVV"
-                                    placeholder="123"
-                                    required
-                                    size="small"
-                                    value={cvv}
-                                    onChange={handleCvvChange}
-                                    error={!!errors.cvv}
-                                />
-                                {errors.cvv && (
-                                    <FormHelperText error>{errors.cvv}</FormHelperText>
-                                )}
-                            </FormGrid>
-                        </Box>
-                        <Box sx={{ display: 'flex', gap: 2 }}>
-                            <FormGrid sx={{ flexGrow: 1 }}>
-                                <FormLabel htmlFor="card-name" required>
-                                    Nombre
-                                </FormLabel>
-                                <OutlinedInput
-                                    id="card-name"
-                                    autoComplete="card-name"
-                                    placeholder="John Smith"
-                                    required
-                                    size="small"
-                                    value={cardName}
-                                    onChange={handleCardNameChange}
-                                    error={!!errors.cardName}
-                                />
-                                {errors.cardName && (
-                                    <FormHelperText error>{errors.cardName}</FormHelperText>
-                                )}
-                            </FormGrid>
-                            <FormGrid sx={{ flexGrow: 1 }}>
-                                <FormLabel htmlFor="card-expiration" required>
-                                    Fecha de expiración
-                                </FormLabel>
-                                <OutlinedInput
-                                    id="card-expiration"
-                                    autoComplete="card-expiration"
-                                    placeholder="MM/YY"
-                                    required
-                                    size="small"
-                                    value={expirationDate}
-                                    onChange={handleExpirationDateChange}
-                                    error={!!errors.expirationDate}
-                                />
-                                {errors.expirationDate && (
-                                    <FormHelperText error>{errors.expirationDate}</FormHelperText>
-                                )}
-                            </FormGrid>
-                        </Box>
-                    </PaymentContainer>
                     <FormControlLabel
                         control={<Checkbox name="saveCard" />}
                         label="Recordar los datos de la tarjeta para la próxima vez"
