@@ -40,9 +40,19 @@ import TermsAndConditions from "../../terms-conditions/TermsConditions";
 // Importaciones de Joy UI
 import Stack from "@mui/joy/Stack";
 
+// Función auxiliar para detectar modo efectivo
+const getSystemPrefersDark = () => {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+};
+
 // Contenedor para pantalla completa
 const FullScreenContainer = styled(Box)(({ theme }) => {
     const { mode } = useColorScheme();
+
+    // Determinar el modo efectivo
+    const effectiveMode = mode === 'system'
+        ? (getSystemPrefersDark() ? 'dark' : 'light')
+        : mode;
 
     return {
         minHeight: '100vh',
@@ -52,7 +62,7 @@ const FullScreenContainer = styled(Box)(({ theme }) => {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: mode === 'dark'
+        backgroundColor: effectiveMode === 'dark'
             ? vistelicaColors.cardBackground.dark
             : vistelicaColors.cardBackground.light,
         overflowY: 'auto',
@@ -65,16 +75,21 @@ const FullScreenContainer = styled(Box)(({ theme }) => {
 const Card = styled(MuiCard)(({ theme }) => {
     const { mode } = useColorScheme();
 
+    // Determinar el modo efectivo
+    const effectiveMode = mode === 'system'
+        ? (getSystemPrefersDark() ? 'dark' : 'light')
+        : mode;
+
     return {
         display: 'flex',
         flexDirection: 'column',
         width: '100%',
         padding: theme.spacing(4),
         gap: theme.spacing(2),
-        backgroundColor: mode === 'dark'
+        backgroundColor: effectiveMode === 'dark'
             ? vistelicaColors.cardBackground.dark
             : vistelicaColors.cardBackground.light,
-        boxShadow: mode === 'dark'
+        boxShadow: effectiveMode === 'dark'
             ? vistelicaColors.cardShadow.dark
             : vistelicaColors.cardShadow.light,
         borderRadius: '16px',
@@ -147,12 +162,23 @@ export default function SignInCard() {
     const { mode } = useColorScheme();
     console.log("Estado del tema:", mode);
 
+    // Función para determinar el modo efectivo (evita mezclas de temas)
+    const getEffectiveMode = () => {
+        if (mode === 'system') {
+            // Detectar preferencia del sistema
+            return getSystemPrefersDark() ? 'dark' : 'light';
+        }
+        return mode;
+    };
+
+    const effectiveMode = React.useMemo(getEffectiveMode, [mode]);
+
     // Aplicar el color de fondo al elemento HTML y body
     React.useEffect(() => {
-        document.documentElement.style.backgroundColor = mode === 'dark'
+        document.documentElement.style.backgroundColor = effectiveMode === 'dark'
             ? vistelicaColors.cardBackground.dark
             : vistelicaColors.cardBackground.light;
-        document.body.style.backgroundColor = mode === 'dark'
+        document.body.style.backgroundColor = effectiveMode === 'dark'
             ? vistelicaColors.cardBackground.dark
             : vistelicaColors.cardBackground.light;
 
@@ -160,7 +186,7 @@ export default function SignInCard() {
             document.documentElement.style.backgroundColor = '';
             document.body.style.backgroundColor = '';
         };
-    }, [mode]);
+    }, [effectiveMode]);
 
     const theme = useTheme();
     const [emailError, setEmailError] = React.useState(false);
@@ -219,25 +245,48 @@ export default function SignInCard() {
 
         try {
             const response = await loginUser(credentials);
-            console.log('Login exitoso:', response);
-            setLoginSuccess(true);
+            console.log('Respuesta login:', response);
 
-            // Redirect after successful login
-            setTimeout(() => {
-                router.push('/home/Home');
-            }, 1000);
+            // Verificar la respuesta de manera más flexible
+            if (response) {
+                // Solo consideramos error si success es explícitamente false
+                if (response.success === false) {
+                    throw new Error(response.message || 'Credenciales inválidas');
+                }
 
+                // Si llegamos aquí, consideramos la autenticación exitosa
+                console.log('Login exitoso:', response);
+                setLoginSuccess(true);
+
+                // Redirect after successful login
+                setTimeout(() => {
+                    router.push('/home/Home');
+                }, 1000);
+            } else {
+                throw new Error('No se recibió respuesta del servidor');
+            }
         } catch (error) {
             console.error('Error al iniciar sesión:', error);
-            setLoginError(
-                error.response?.data?.message ||
-                'Credenciales incorrectas. Por favor, verifica tus datos.'
-            );
+
+            // Mensaje específico para correo no existente
+            if (error.response?.status === 404 ||
+                error.response?.data?.message?.includes('usuario no encontrado') ||
+                error.response?.data?.message?.includes('email not found')) {
+                setLoginError('El correo electrónico no está registrado en nuestro sistema.');
+            } else if (error.response?.status === 401 ||
+                error.response?.data?.message?.includes('password')) {
+                setLoginError('Contraseña incorrecta. Por favor, verifica tus datos.');
+            } else {
+                setLoginError(
+                    error.response?.data?.message ||
+                    error.message ||
+                    'Error al iniciar sesión. Por favor, verifica tus datos.'
+                );
+            }
         } finally {
             setIsSubmitting(false);
         }
     };
-
     const validateInputs = () => {
         const email = document.getElementById('email');
         const password = document.getElementById('password');
@@ -400,7 +449,7 @@ export default function SignInCard() {
                         >
                             <FormControl>
                                 <FormLabel htmlFor="email" sx={{
-                                    color: mode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
+                                    color: effectiveMode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
                                     fontWeight: 500
                                 }}>
                                     Correo electrónico
@@ -433,7 +482,7 @@ export default function SignInCard() {
                             <FormControl>
                                 <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
                                     <FormLabel htmlFor="password" sx={{
-                                        color: mode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
+                                        color: effectiveMode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
                                         fontWeight: 500
                                     }}>
                                         Contraseña
@@ -505,9 +554,9 @@ export default function SignInCard() {
                             )}
 
                             {loginError && (
-                                <Adashboardlert severity="error">
+                                <Alert severity="error">
                                     {loginError}
-                                </Adashboardlert>
+                                </Alert>
                             )}
 
                             {loginSuccess && (
@@ -547,11 +596,11 @@ export default function SignInCard() {
                                 startIcon={<GoogleIcon/>}
                                 sx={{
                                     borderColor: vistelicaColors.primary,
-                                    color: mode === 'dark' ? '#FFFFFF' : '#000000',
+                                    color: effectiveMode === 'dark' ? '#FFFFFF' : '#000000',
                                     fontWeight: 600,
                                     '&:hover': {
                                         borderColor: vistelicaColors.primary,
-                                        backgroundColor: mode === 'dark' ?
+                                        backgroundColor: effectiveMode === 'dark' ?
                                             'rgba(228, 176, 2, 0.15)' : 'rgba(228, 176, 2, 0.08)'
                                     }
                                 }}
@@ -567,11 +616,11 @@ export default function SignInCard() {
                                 startIcon={<FacebookIcon/>}
                                 sx={{
                                     borderColor: vistelicaColors.primary,
-                                    color: mode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
+                                    color: effectiveMode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
                                     fontWeight: 600,
                                     '&:hover': {
                                         borderColor: vistelicaColors.primary,
-                                        backgroundColor: mode === 'dark' ?
+                                        backgroundColor: effectiveMode === 'dark' ?
                                             'rgba(228, 176, 2, 0.15)' : 'rgba(228, 176, 2, 0.08)'
                                     }
                                 }}

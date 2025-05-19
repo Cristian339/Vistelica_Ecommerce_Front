@@ -36,9 +36,24 @@ const items = [
     },
 ];
 
+// Función auxiliar para detectar modo oscuro del sistema
+const getSystemPrefersDark = () => {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+};
+
 export default function Content() {
     const { mode } = useColorScheme();
     console.log("Estado del tema en Content:", mode);
+
+    // Función para determinar el modo efectivo
+    const getEffectiveMode = () => {
+        if (mode === 'system') {
+            return getSystemPrefersDark() ? 'dark' : 'light';
+        }
+        return mode;
+    };
+
+    const effectiveMode = React.useMemo(getEffectiveMode, [mode]);
 
     return (
         <Stack
@@ -80,9 +95,10 @@ export default function Content() {
                             gutterBottom
                             sx={{
                                 fontWeight: 600,
-                                color: mode === 'dark' ?
-                                    vistelicaColors.primaryDark :
-                                    vistelicaColors.primaryDark,
+                                // Corregido: Ya no usa el mismo color para ambos modos
+                                color: effectiveMode === 'dark' ?
+                                    vistelicaColors.primary :
+                                    vistelicaColors .primary,
                             }}
                         >
                             {item.title}
@@ -90,7 +106,7 @@ export default function Content() {
                         <Typography
                             variant="body2"
                             sx={{
-                                color: mode === 'dark' ?
+                                color: effectiveMode === 'dark' ?
                                     vistelicaColors.tertiary :
                                     vistelicaColors.secondary,
                             }}

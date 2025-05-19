@@ -121,7 +121,7 @@ const ProductCard = ({ product, onClick }) => {
                         variant="h6"
                         sx={{
                             fontFamily: typography.fontFamily,
-                            fontWeight: 600,
+                            fontWeight: 400,
                             fontSize: { xs: '1rem', md: '1.1rem' },
                             mb: 1,
                             overflow: 'hidden',
@@ -236,11 +236,23 @@ const ProductCarousel = ({
     }, [initialSlidesToShow, products.length, currentIndex]);
 
     const handlePrevious = () => {
-        setCurrentIndex((prevIndex) => Math.max(0, prevIndex - 1));
+        setCurrentIndex((prevIndex) => {
+            if (prevIndex === 0 && maxIndex > 0) {
+                // Si está en el inicio, ir al final
+                return maxIndex;
+            }
+            return Math.max(0, prevIndex - 1);
+        });
     };
 
     const handleNext = () => {
-        setCurrentIndex((prevIndex) => Math.min(maxIndex, prevIndex + 1));
+        setCurrentIndex((prevIndex) => {
+            if (prevIndex >= maxIndex) {
+                // Si está al final, volver al principio
+                return 0;
+            }
+            return prevIndex + 1;
+        });
     };
 
     const handleProgressBarClick = (e) => {
@@ -392,13 +404,12 @@ const ProductCarousel = ({
                                         x: `-${currentIndex * (100 / slidesToShow)}%`
                                     }}
                                     transition={{
-                                        type: 'spring',
-                                        stiffness: 50,
-                                        damping: 20
+                                        type: 'tween',
+                                        duration: 0.3,
+                                        ease: [0.2, 0, 0.3, 1]  // Curva de aceleración personalizada para un movimiento más natural
                                     }}
                                     sx={{
                                         display: 'flex',
-                                        transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
                                     }}
                                 >
                                     {products.map((product) => (
@@ -447,14 +458,9 @@ const ProductCarousel = ({
                                     color: vistelicaColors.secondary,
                                     '&:hover': {
                                         backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                                    },
-                                    '&.Mui-disabled': {
-                                        opacity: 0.3,
-                                        color: 'text.disabled'
                                     }
                                 }}
                                 onClick={handlePrevious}
-                                disabled={currentIndex === 0}
                             >
                                 <ArrowBackIosNewIcon fontSize="small" />
                             </Button>
@@ -475,7 +481,7 @@ const ProductCarousel = ({
                                 <Box
                                     component={motion.div}
                                     animate={{ width: `${progressPercentage}%` }}
-                                    transition={{ type: 'spring', stiffness: 50 }}
+                                    transition={{ type: 'tween', duration: 0.3, ease: [0.2, 0, 0.3, 1] }}
                                     sx={{
                                         position: 'absolute',
                                         left: 0,
@@ -501,14 +507,9 @@ const ProductCarousel = ({
                                     color: vistelicaColors.secondary,
                                     '&:hover': {
                                         backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                                    },
-                                    '&.Mui-disabled': {
-                                        opacity: 0.3,
-                                        color: 'text.disabled'
                                     }
                                 }}
                                 onClick={handleNext}
-                                disabled={currentIndex >= maxIndex}
                             >
                                 <ArrowForwardIosIcon fontSize="small" />
                             </Button>

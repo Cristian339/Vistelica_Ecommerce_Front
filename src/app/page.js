@@ -18,7 +18,7 @@ import Checkout from "@/pages/checkout/Checkout";
 export default function Home() {
     return (
         <div>
-            <Checkout />
+            <HomePage />
         </div>
     );
 }
