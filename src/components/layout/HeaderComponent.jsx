@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
     AppBar, Toolbar, IconButton, InputBase, Drawer, List, ListItem,
     ListItemText, Collapse, Paper, CircularProgress, Typography, Box
@@ -17,6 +18,8 @@ import { useRouter } from 'next/navigation';
 import { isAdmin, getToken } from '@/services/authService';
 import categoryService from '@/services/categoryService';
 import productService from '@/services/productService';
+import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
+import { typography } from "@/pages/shared-theme/themePrimitives";
 
 const POPULAR_SEARCHES = ['Hombre', 'Mujer', 'Colecciones', 'Ultimas Novedades', 'Chico', 'Chica'];
 const CATEGORY_MAP = {
@@ -153,190 +156,443 @@ export default function Navbar() {
 
     return (
         <>
-            <AppBar position="static" color="transparent" elevation={0} sx={{ backgroundColor: "white", padding: "8px 16px" }}>
+            <AppBar
+                position="sticky"
+                component={motion.header}
+                initial={{ y: -100 }}
+                animate={{ y: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                elevation={1}
+                sx={{
+                    backgroundColor: "white",
+                    borderBottom: `1px solid ${vistelicaColors.neutralLight}`,
+                    padding: "8px 16px",
+                }}
+            >
                 <Toolbar sx={{ display: 'flex', alignItems: 'center', padding: '0 !important' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-                        <IconButton onClick={toggleDrawer(true)} sx={{ color: "#171717" }}>
+                    <Box
+                        component={motion.div}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}
+                    >
+                        <IconButton
+                            onClick={toggleDrawer(true)}
+                            component={motion.button}
+                            whileTap={{ scale: 0.95 }}
+                            sx={{ color: vistelicaColors.secondary }}
+                        >
                             <MenuIcon fontSize="large" />
                         </IconButton>
                         {!isMobile && (
-                            <Typography variant="h1" sx={{
-                                fontSize: "37px", color: "#171717", fontFamily: "'Amethysta', serif",
-                                marginLeft: "16px", cursor: 'pointer'
-                            }} onClick={handleLogoClick}>
+                            <Typography
+                                variant="h1"
+                                component={motion.h1}
+                                whileHover={{
+                                    scale: 1.03,
+                                    textShadow: "0px 0px 8px rgba(0,0,0,0.1)"
+                                }}
+                                sx={{
+                                    fontSize: "37px",
+                                    color: vistelicaColors.secondary,
+                                    fontFamily: typography.fontFamily,
+                                    fontWeight: 700,
+                                    letterSpacing: "1px",
+                                    marginLeft: "16px",
+                                    cursor: 'pointer',
+                                    position: 'relative',
+                                    '&::after': {
+                                        content: '""',
+                                        position: 'absolute',
+                                        bottom: -5,
+                                        left: 0,
+                                        width: '60px',
+                                        height: '2px',
+                                        backgroundColor: vistelicaColors.primary
+                                    }
+                                }}
+                                onClick={handleLogoClick}
+                            >
                                 VÍSTELICA
                             </Typography>
                         )}
-                    </div>
+                    </Box>
 
                     {isMobile && (
-                        <Typography variant="h1" sx={{
-                            fontSize: "37px", color: "#171717", fontFamily: "'Amethysta', serif",
-                            textAlign: 'center', flex: 1, cursor: 'pointer'
-                        }} onClick={handleLogoClick}>
+                        <Typography
+                            variant="h1"
+                            component={motion.h1}
+                            whileHover={{ scale: 1.03 }}
+                            sx={{
+                                fontSize: "37px",
+                                color: vistelicaColors.secondary,
+                                fontFamily: typography.fontFamily,
+                                fontWeight: 700,
+                                letterSpacing: "1px",
+                                textAlign: 'center',
+                                flex: 1,
+                                cursor: 'pointer',
+                                position: 'relative',
+                                '&::after': {
+                                    content: '""',
+                                    position: 'absolute',
+                                    bottom: -5,
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    width: '60px',
+                                    height: '2px',
+                                    backgroundColor: vistelicaColors.primary
+                                }
+                            }}
+                            onClick={handleLogoClick}
+                        >
                             VÍSTELICA
                         </Typography>
                     )}
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                        <IconButton onClick={toggleSearch} sx={{ color: "#171717" }}>
+                    <Box
+                        component={motion.div}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.4 }}
+                        sx={{ display: "flex", alignItems: "center", gap: "16px" }}
+                    >
+                        <IconButton
+                            onClick={toggleSearch}
+                            component={motion.button}
+                            whileHover={{ scale: 1.1, backgroundColor: `${vistelicaColors.primaryLight}30` }}
+                            whileTap={{ scale: 0.95 }}
+                            sx={{ color: vistelicaColors.secondary }}
+                        >
                             <SearchIcon sx={{ fontSize: "34px" }} />
                         </IconButton>
                         {!isMobile && (
                             <>
-                                <IconButton sx={{ color: "#171717" }} onClick={handleAccountClick}>
+                                <IconButton
+                                    component={motion.button}
+                                    whileHover={{ scale: 1.1, backgroundColor: `${vistelicaColors.primaryLight}30` }}
+                                    whileTap={{ scale: 0.95 }}
+                                    sx={{ color: vistelicaColors.secondary }}
+                                    onClick={handleAccountClick}
+                                >
                                     <AccountCircleIcon sx={{ fontSize: "34px" }} />
                                 </IconButton>
-                                <IconButton sx={{ color: "#171717" }} onClick={handlewishlist}>
+                                <IconButton
+                                    component={motion.button}
+                                    whileHover={{ scale: 1.1, backgroundColor: `${vistelicaColors.primaryLight}30` }}
+                                    whileTap={{ scale: 0.95 }}
+                                    sx={{ color: vistelicaColors.secondary }}
+                                    onClick={handlewishlist}
+                                >
                                     <FavoriteBorderIcon sx={{ fontSize: "34px" }} />
                                 </IconButton>
                             </>
                         )}
-                        <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                            <IconButton sx={{ color: "#171717" }} onClick={handleCart}>
+                        <Box sx={{ position: "relative", display: "flex", alignItems: "center" }}>
+                            <IconButton
+                                component={motion.button}
+                                whileHover={{ scale: 1.1, backgroundColor: `${vistelicaColors.primaryLight}30` }}
+                                whileTap={{ scale: 0.95 }}
+                                sx={{ color: vistelicaColors.secondary }}
+                                onClick={handleCart}
+                            >
                                 <ShoppingBagIcon sx={{ fontSize: "34px" }} />
                             </IconButton>
-                            <Box sx={{
-                                position: "absolute", top: 0, right: 0, backgroundColor: "black",
-                                color: "white", fontSize: "12px", borderRadius: "50%", width: "16px", height: "16px",
-                                display: "flex", alignItems: "center", justifyContent: "center"
-                            }}>0</Box>
-                        </div>
-                    </div>
+                            <Box
+                                component={motion.div}
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: "spring", stiffness: 500, delay: 0.6 }}
+                                sx={{
+                                    position: "absolute", top: 0, right: 0,
+                                    backgroundColor: vistelicaColors.primary,
+                                    color: "white",
+                                    fontSize: "12px",
+                                    borderRadius: "50%",
+                                    width: "18px",
+                                    height: "18px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontFamily: typography.fontFamily,
+                                    fontWeight: 600
+                                }}
+                            >0</Box>
+                        </Box>
+                    </Box>
                 </Toolbar>
 
                 {searchOpen && (
-                    <Paper elevation={0} square sx={{
-                        width: '100%', padding: '16px', borderBottom: '1px solid #e0e0e0',
-                        borderTop: '1px solid #e0e0e0', position: 'relative'
-                    }}>
-                        <form onSubmit={handleSearchSubmit}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, marginRight: '16px' }}>
-                                    <SearchIcon sx={{ color: "#171717", fontSize: "24px", marginRight: '8px' }} />
-                                    <InputBase
-                                        autoFocus
-                                        placeholder="¿Qué estás buscando?"
-                                        value={searchQuery}
-                                        onChange={handleSearchChange}
-                                        sx={{ flexGrow: 1, fontSize: '16px', color: "#171717" }}
-                                    />
-                                    {isSearching && <CircularProgress size={20} sx={{ marginLeft: '8px' }} />}
-                                </Box>
-                                <IconButton onClick={() => {
-                                    setSearchOpen(false);
-                                    setSearchQuery('');
-                                    setSelectedCategoryIds([]);
-                                    setSearchResults([]);
-                                }}>
-                                    <CloseIcon />
-                                </IconButton>
-                            </Box>
-                        </form>
-
-                        {selectedCategoryIds.length > 0 && (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mt: 2 }}>
-                                {selectedCategoryIds.map(id => (
-                                    <Box key={id} sx={{
-                                        padding: '6px 10px',
-                                        backgroundColor: '#e0e0e0',
-                                        borderRadius: '16px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        fontSize: '14px'
-                                    }}>
-                                        {Object.keys(CATEGORY_MAP).find(key => CATEGORY_MAP[key] === id)}
-                                        <IconButton
-                                            size="small"
-                                            onClick={() =>
-                                                setSelectedCategoryIds(prev => prev.filter(cid => cid !== id))
-                                            }
-                                            sx={{ ml: 1, padding: '2px' }}
-                                        >
-                                            <CloseIcon fontSize="small" />
-                                        </IconButton>
-                                    </Box>
-                                ))}
-                            </Box>
-                        )}
-
-                        {searchResults.length > 0 && (
-                            <Paper elevation={3} sx={{
-                                position: 'absolute',
-                                top: '100%',
-                                left: 0,
-                                right: 0,
+                    <AnimatePresence>
+                        <Paper
+                            component={motion.div}
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                            elevation={3}
+                            sx={{
+                                width: '100%',
+                                padding: '16px 24px',
+                                borderBottom: `1px solid ${vistelicaColors.neutralLight}`,
+                                position: 'relative',
                                 zIndex: 10,
-                                maxHeight: '400px',
-                                overflowY: 'auto',
-                                mt: 1
-                            }}>
-                                <List>
-                                    {searchResults.map((product, index) => (
-                                        <ListItem
-                                            key={index}
-                                            button={true}
-                                            onClick={() => handleProductClick(product.product_name)}
+                                backgroundColor: 'rgba(255, 255, 255, 0.98)'
+                            }}
+                        >
+                            <form onSubmit={handleSearchSubmit}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, marginRight: '16px' }}>
+                                        <SearchIcon sx={{ color: vistelicaColors.primary, fontSize: "24px", marginRight: '12px' }} />
+                                        <InputBase
+                                            autoFocus
+                                            placeholder="¿Qué estás buscando?"
+                                            value={searchQuery}
+                                            onChange={handleSearchChange}
                                             sx={{
-                                                '&:hover': { backgroundColor: '#f5f5f5' }
+                                                flexGrow: 1,
+                                                fontSize: '18px',
+                                                color: vistelicaColors.secondary,
+                                                fontFamily: typography.fontFamily,
+                                                '& input::placeholder': {
+                                                    color: `${vistelicaColors.secondary}80`,
+                                                    fontFamily: typography.fontFamily,
+                                                    fontStyle: 'italic'
+                                                }
                                             }}
-                                        >
-                                            <ListItemText primary={product.product_name} />
-                                        </ListItem>
-                                    ))}
-                                </List>
-                            </Paper>
-                        )}
+                                        />
+                                        {isSearching && (
+                                            <CircularProgress
+                                                size={22}
+                                                sx={{ marginLeft: '12px', color: vistelicaColors.primary }}
+                                            />
+                                        )}
+                                    </Box>
+                                    <IconButton
+                                        component={motion.button}
+                                        whileHover={{ scale: 1.1, backgroundColor: `${vistelicaColors.primaryLight}30` }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => {
+                                            setSearchOpen(false);
+                                            setSearchQuery('');
+                                            setSelectedCategoryIds([]);
+                                            setSearchResults([]);
+                                        }}
+                                    >
+                                        <CloseIcon />
+                                    </IconButton>
+                                </Box>
+                            </form>
 
-                        {searchResults.length === 0 && !isSearching && searchQuery.length < 2 && (
-                            <Box sx={{ padding: '10px 0' }}>
-                                <Typography variant="h4" sx={{ fontWeight: 'bold', marginBottom: '10px' }}>
-                                    Categorias
-                                </Typography>
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                                    {POPULAR_SEARCHES.map((item, index) => (
+                            {selectedCategoryIds.length > 0 && (
+                                <Box
+                                    component={motion.div}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.1 }}
+                                    sx={{ display: 'flex', flexWrap: 'wrap', gap: '10px', mt: 2 }}
+                                >
+                                    {selectedCategoryIds.map(id => (
                                         <Box
-                                            key={index}
+                                            component={motion.div}
+                                            whileHover={{ scale: 1.05 }}
+                                            key={id}
                                             sx={{
-                                                padding: '8px 12px',
-                                                border: '1px solid #e0e0e0',
+                                                padding: '6px 12px',
+                                                backgroundColor: vistelicaColors.primaryLight,
                                                 borderRadius: '20px',
+                                                display: 'flex',
+                                                alignItems: 'center',
                                                 fontSize: '14px',
-                                                cursor: 'pointer',
-                                                '&:hover': { backgroundColor: '#f5f5f5' }
+                                                color: vistelicaColors.secondary,
+                                                fontFamily: typography.fontFamily,
+                                                fontWeight: 500
                                             }}
-                                            onClick={() => handlePopularSearchClick(item)}
                                         >
-                                            {item}
+                                            {Object.keys(CATEGORY_MAP).find(key => CATEGORY_MAP[key] === id)}
+                                            <IconButton
+                                                component={motion.button}
+                                                whileHover={{ rotate: 90 }}
+                                                size="small"
+                                                onClick={() =>
+                                                    setSelectedCategoryIds(prev => prev.filter(cid => cid !== id))
+                                                }
+                                                sx={{ ml: 1, padding: '2px', color: vistelicaColors.secondary }}
+                                            >
+                                                <CloseIcon fontSize="small" />
+                                            </IconButton>
                                         </Box>
                                     ))}
                                 </Box>
-                            </Box>
-                        )}
+                            )}
 
-                        {searchError && (
-                            <Typography sx={{ color: 'error.main', marginTop: '10px' }}>
-                                {searchError}
-                            </Typography>
-                        )}
+                            <AnimatePresence>
+                                {searchResults.length > 0 && (
+                                    <Paper
+                                        component={motion.div}
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.2 }}
+                                        elevation={4}
+                                        sx={{
+                                            position: 'absolute',
+                                            top: '100%',
+                                            left: 0,
+                                            right: 0,
+                                            zIndex: 10,
+                                            maxHeight: '400px',
+                                            overflowY: 'auto',
+                                            mt: 1,
+                                            borderBottomLeftRadius: '8px',
+                                            borderBottomRightRadius: '8px',
+                                            boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
+                                        }}
+                                    >
+                                        <List>
+                                            {searchResults.map((product, index) => (
+                                                <ListItem
+                                                    component={motion.li}
+                                                    whileHover={{
+                                                        backgroundColor: vistelicaColors.primaryLight,
+                                                        x: 6
+                                                    }}
+                                                    key={index}
+                                                    button={true}
+                                                    onClick={() => handleProductClick(product.product_name)}
+                                                    sx={{
+                                                        fontFamily: typography.fontFamily,
+                                                        transition: 'all 0.2s ease'
+                                                    }}
+                                                >
+                                                    <ListItemText
+                                                        primary={product.product_name}
+                                                        primaryTypographyProps={{
+                                                            fontFamily: typography.fontFamily
+                                                        }}
+                                                    />
+                                                </ListItem>
+                                            ))}
+                                        </List>
+                                    </Paper>
+                                )}
 
-                        {searchResults.length === 0 && searchQuery.length >= 2 && !isSearching && !searchError && (
-                            <Typography sx={{ marginTop: '10px' }}>
-                                No se encontraron resultados para "{searchQuery}"
-                            </Typography>
-                        )}
-                    </Paper>
+                                {searchResults.length === 0 && !isSearching && searchQuery.length < 2 && (
+                                    <Box
+                                        component={motion.div}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 0.1 }}
+                                        sx={{ padding: '16px 0 8px' }}
+                                    >
+                                        <Typography
+                                            variant="h4"
+                                            sx={{
+                                                fontWeight: 600,
+                                                marginBottom: '16px',
+                                                fontFamily: typography.fontFamily,
+                                                color: vistelicaColors.secondary,
+                                                position: 'relative',
+                                                display: 'inline-block',
+                                                '&::after': {
+                                                    content: '""',
+                                                    position: 'absolute',
+                                                    bottom: -5,
+                                                    left: 0,
+                                                    width: '40px',
+                                                    height: '2px',
+                                                    backgroundColor: vistelicaColors.primary
+                                                }
+                                            }}
+                                        >
+                                            Categorías
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                                            {POPULAR_SEARCHES.map((item, index) => (
+                                                <Box
+                                                    component={motion.div}
+                                                    whileHover={{ scale: 1.05, y: -2 }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                    transition={{ type: "spring", stiffness: 400 }}
+                                                    key={index}
+                                                    sx={{
+                                                        padding: '10px 16px',
+                                                        border: `1px solid ${vistelicaColors.neutralLight}`,
+                                                        backgroundColor: 'white',
+                                                        borderRadius: '24px',
+                                                        fontSize: '14px',
+                                                        fontFamily: typography.fontFamily,
+                                                        fontWeight: 500,
+                                                        cursor: 'pointer',
+                                                        boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+                                                        color: vistelicaColors.secondary
+                                                    }}
+                                                    onClick={() => handlePopularSearchClick(item)}
+                                                >
+                                                    {item}
+                                                </Box>
+                                            ))}
+                                        </Box>
+                                    </Box>
+                                )}
+
+                                {searchError && (
+                                    <Typography
+                                        component={motion.p}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        sx={{
+                                            color: 'error.main',
+                                            marginTop: '16px',
+                                            fontFamily: typography.fontFamily
+                                        }}
+                                    >
+                                        {searchError}
+                                    </Typography>
+                                )}
+
+                                {searchResults.length === 0 && searchQuery.length >= 2 && !isSearching && !searchError && (
+                                    <Typography
+                                        component={motion.p}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        sx={{
+                                            marginTop: '16px',
+                                            fontFamily: typography.fontFamily,
+                                            fontStyle: 'italic',
+                                            color: vistelicaColors.secondary
+                                        }}
+                                    >
+                                        No se encontraron resultados para "{searchQuery}"
+                                    </Typography>
+                                )}
+                            </AnimatePresence>
+                        </Paper>
+                    </AnimatePresence>
                 )}
             </AppBar>
 
-            <Drawer anchor="left" open={open} onClose={toggleDrawer(false)}
-                    sx={{
+            <Drawer
+                anchor="left"
+                open={open}
+                onClose={toggleDrawer(false)}
+                sx={{
+                    width: isMobile ? '100%' : '500px',
+                    '& .MuiDrawer-paper': {
                         width: isMobile ? '100%' : '500px',
-                        '& .MuiDrawer-paper': {
-                            width: isMobile ? '100%' : '500px',
-                            height: '100%',
-                        }
-                    }}
+                        height: '100%',
+                        backgroundColor: '#FFFFFF',
+                        boxShadow: '0 0 20px rgba(0,0,0,0.1)',
+                    }
+                }}
+                SlideProps={{
+                    component: motion.div,
+                    initial: { x: "-100%" },
+                    animate: { x: 0 },
+                    exit: { x: "-100%" },
+                    transition: { type: "tween", ease: "easeOut", duration: 0.3 }
+                }}
             >
                 <Box sx={{ width: '100%', height: '100%' }}>
                     <Box className="p-4">

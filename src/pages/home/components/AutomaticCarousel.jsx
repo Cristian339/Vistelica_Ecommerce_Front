@@ -10,9 +10,11 @@ import {
     useTheme,
     GlobalStyles
 } from '@mui/material';
+import { motion } from 'framer-motion';
 import productService from '@/services/productService';
-
 import { useRouter } from 'next/navigation';
+import { vistelicaColors } from '../../shared-theme/vistelicaColors';
+import { typography } from "@/pages/shared-theme/themePrimitives";
 
 const CarouselItem = ({ product }) => {
     const router = useRouter();
@@ -26,62 +28,87 @@ const CarouselItem = ({ product }) => {
     };
 
     return (
-        <Card
-            onClick={() => handleProductClickDetail(product.product_id)}
-            sx={{
-                position: 'relative',
-                height: '275px',
-                minWidth: {
-                    xs: '65%',
-                    sm: '45%',
-                    md: '33%',
-                    lg: '25%'
-                },
-                mx: 1,
-                borderRadius: 2,
-                overflow: 'hidden',
-                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                cursor: 'pointer',
-                '&:hover': {
-                    boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
-                }
-            }}
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            whileHover={{ y: -5 }}
+            transition={{ duration: 0.3 }}
         >
-            <Box sx={{ position: 'relative', height: '85%', width: '100%', overflow: 'hidden' }}>
-                <CardMedia
-                    component="img"
-                    image={product.main_image || product.mainImage}
-                    alt={product.name}
-                    sx={{
-                        objectFit: 'cover',
-                        height: '100%',
-                        width: '100%'
-                    }}
-                />
-            </Box>
-            <CardContent
+            <Card
+                onClick={() => handleProductClickDetail(product.product_id)}
                 sx={{
-                    py: 1.5,
-                    position: 'absolute',
-                    bottom: 0,
-                    width: '100%',
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                    backdropFilter: 'blur(5px)'
+                    position: 'relative',
+                    height: '350px',
+                    width: '350px',
+                    mx: 1.5,
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                    cursor: 'pointer',
+                    '&:hover': {
+                        boxShadow: `0 8px 16px ${vistelicaColors.primary}40`
+                    }
                 }}
             >
-                <Typography variant="subtitle2" noWrap>
-                    {product.name}
-                </Typography>
-                <Typography variant="body2" fontWeight={500} color="primary">
-                    ${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
-                </Typography>
-            </CardContent>
-        </Card>
+                <Box sx={{ position: 'relative', height: '75%', width: '100%', overflow: 'hidden', backgroundColor: '#fff' }}>
+                    <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.4 }}>
+                        <CardMedia
+                            component="img"
+                            image={product.main_image || product.mainImage}
+                            alt={product.name}
+                            loading="eager"
+                            sx={{
+                                objectFit: 'contain',
+                                height: '100%',
+                                width: '100%'
+                            }}
+                        />
+                    </motion.div>
+                </Box>
+                <CardContent
+                    sx={{
+                        py: 1.5,
+                        px: 2,
+                        position: 'absolute',
+                        bottom: 0,
+                        width: '100%',
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(5px)'
+                    }}
+                >
+                    <Typography
+                        variant="subtitle1"
+                        noWrap
+                        sx={{
+                            fontFamily: typography.fontFamily,
+                            fontSize: '1rem',
+                            fontWeight: 500
+                        }}
+                    >
+                        {product.name}
+                    </Typography>
+                    <Typography
+                        variant="body1"
+                        fontWeight={600}
+                        sx={{
+                            color: vistelicaColors.primary,
+                            fontSize: '1.15rem'
+                        }}
+                    >
+                        ${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
+                    </Typography>
+                </CardContent>
+            </Card>
+        </motion.div>
     );
 };
+
 const AutomaticCarouselWithScrollbar = () => {
     const scrollContainerRef = useRef(null);
     const scrollbarRef = useRef(null);
+    const isPausedRef = useRef(false);
+    const animationRef = useRef(null);
+    const isResettingRef = useRef(false);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [scrollPercentage, setScrollPercentage] = useState(0);
@@ -108,18 +135,22 @@ const AutomaticCarouselWithScrollbar = () => {
         fetchProducts();
     }, []);
 
-    // Duplicar productos para crear efecto infinito
-    const carouselProducts = products.length > 0 ? [...products, ...products, ...products] : [];
+    const carouselProducts = products;
 
-    // Lógica para actualizar la posición de la barra de desplazamiento basada en el scroll
+    // Lógica para actualizar la posición de la barra de desplazamiento
     const updateScrollbarPosition = () => {
         const scrollContainer = scrollContainerRef.current;
         if (!scrollContainer) return;
 
         const scrollableWidth = scrollContainer.scrollWidth - scrollContainer.clientWidth;
-        const percentage = scrollableWidth > 0 ? (scrollContainer.scrollLeft / scrollableWidth) : 0;
+        if (scrollableWidth <= 0) return;
 
-        setScrollPercentage(percentage * 100);
+        const percentage = scrollContainer.scrollLeft / scrollableWidth;
+        const scrollbarWidth = 15; // Ancho de la barra (15%)
+        const maxPercentage = 100 - scrollbarWidth;
+
+        // Forzamos la actualización del estado para reflejar el movimiento actual
+        setScrollPercentage(Math.min(percentage * 100, maxPercentage));
     };
 
     // Manejar el scroll automático y actualizar la posición de la barra
@@ -127,63 +158,60 @@ const AutomaticCarouselWithScrollbar = () => {
         const scrollContainer = scrollContainerRef.current;
         if (!scrollContainer || loading || products.length === 0) return;
 
-        let animationFrameId;
-        let lastTime = 0;
-        const speed = isMobile ? 0.5 : 0.7;  // Velocidad más lenta en móviles
-        let isPaused = false;
+        // Resetear posición inicial
+        scrollContainer.scrollLeft = 0;
 
-        // Función para manejar la animación
+        // Velocidad del desplazamiento (pixeles por frame)
+        const pixelsPerFrame = isMobile ? 0.8 : 1.2;
+
+        let lastTimestamp = 0;
         const scrollAnimation = (timestamp) => {
-            if (!lastTime) lastTime = timestamp;
-            const elapsed = timestamp - lastTime;
+            if (!scrollContainerRef.current) return;
 
-            if (!isPaused && !isDragging) {
-                // Aumentar el scroll gradualmente
-                scrollContainer.scrollLeft += speed * (elapsed / 16);
+            const scrollContainer = scrollContainerRef.current;
+            const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
 
-                // Actualizar la posición de la barra
-                updateScrollbarPosition();
-
-                // Reiniciar el scroll cuando llegue al final para crear un bucle
-                if (scrollContainer.scrollLeft >=
-                    (scrollContainer.scrollWidth - scrollContainer.clientWidth) / 2) {
+            // Solo avanzar si no está en pausa y no se está arrastrando
+            if (!isPausedRef.current && !isDragging && !isResettingRef.current) {
+                // Si llegó al final, reiniciar
+                if (scrollContainer.scrollLeft >= maxScroll - 5) {
+                    isResettingRef.current = true;
+                    // Reiniciar al principio inmediatamente
                     scrollContainer.scrollLeft = 0;
+                    // Dar un pequeño tiempo para el reinicio
+                    setTimeout(() => {
+                        isResettingRef.current = false;
+                    }, 100);
+                } else {
+                    // Avanzar normalmente
+                    scrollContainer.scrollLeft += pixelsPerFrame;
                 }
+
+                // Actualizar la posición de la barra cada vez que avanzamos
+                updateScrollbarPosition();
             }
 
-            lastTime = timestamp;
-            animationFrameId = requestAnimationFrame(scrollAnimation);
+            // Seguir animando
+            animationRef.current = requestAnimationFrame(scrollAnimation);
         };
 
         // Iniciar la animación
-        animationFrameId = requestAnimationFrame(scrollAnimation);
+        animationRef.current = requestAnimationFrame(scrollAnimation);
 
-        // Función para actualizar la barra cuando el usuario hace scroll manualmente
-        const handleScroll = () => {
-            updateScrollbarPosition();
-        };
-
-        scrollContainer.addEventListener('scroll', handleScroll);
-
-        // Pausar el carrusel al pasar el mouse por encima
+        // Eventos para pausar al interactuar
         const handleMouseEnter = () => {
-            isPaused = true;
+            isPausedRef.current = true;
         };
 
-        // Reanudar el carrusel al quitar el mouse
         const handleMouseLeave = () => {
-            isPaused = false;
+            isPausedRef.current = false;
         };
 
         scrollContainer.addEventListener('mouseenter', handleMouseEnter);
         scrollContainer.addEventListener('mouseleave', handleMouseLeave);
 
-        // Detener animación cuando el componente se desmonte
         return () => {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-            }
-            scrollContainer.removeEventListener('scroll', handleScroll);
+            cancelAnimationFrame(animationRef.current);
             scrollContainer.removeEventListener('mouseenter', handleMouseEnter);
             scrollContainer.removeEventListener('mouseleave', handleMouseLeave);
         };
@@ -191,37 +219,46 @@ const AutomaticCarouselWithScrollbar = () => {
 
     // Funciones para manejar el arrastre de la barra de desplazamiento
     const handleDragStart = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
         setIsDragging(true);
+        isPausedRef.current = true;
         setDragStartX(e.clientX);
+
         const scrollContainer = scrollContainerRef.current;
         if (scrollContainer) {
             setInitialScrollLeft(scrollContainer.scrollLeft);
         }
-
-        // Prevenir problemas con el drag en dispositivos
-        e.preventDefault();
     };
 
     const handleDrag = (e) => {
         if (!isDragging) return;
 
         const scrollContainer = scrollContainerRef.current;
-        if (scrollContainer) {
-            const scrollbarContainer = scrollbarRef.current.parentElement;
-            const deltaX = e.clientX - dragStartX;
-            const scrollableWidth = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+        if (!scrollContainer) return;
 
-            // Calcular cuánto debe moverse el scroll basado en el arrastre
-            const dragRatio = scrollbarContainer.clientWidth / scrollableWidth;
-            const newScrollLeft = initialScrollLeft + (deltaX / dragRatio);
+        const scrollbarContainer = scrollbarRef.current.parentElement;
+        const deltaX = e.clientX - dragStartX;
+        const scrollableWidth = scrollContainer.scrollWidth - scrollContainer.clientWidth;
 
-            scrollContainer.scrollLeft = newScrollLeft;
-            updateScrollbarPosition();
-        }
+        // Factor de multiplicación para el movimiento del arrastre
+        const moveRatio = scrollableWidth / scrollbarContainer.clientWidth;
+        const newScrollLeft = initialScrollLeft + (deltaX * moveRatio);
+
+        // Limitar el desplazamiento dentro del rango válido
+        scrollContainer.scrollLeft = Math.max(0, Math.min(newScrollLeft, scrollableWidth));
+
+        // Actualizar la barra
+        updateScrollbarPosition();
     };
 
     const handleDragEnd = () => {
         setIsDragging(false);
+        // Pequeño retraso antes de reanudar la animación
+        setTimeout(() => {
+            isPausedRef.current = false;
+        }, 300);
     };
 
     // Configurar eventos de mouse para el arrastre
@@ -249,21 +286,33 @@ const AutomaticCarouselWithScrollbar = () => {
 
     // Manejar clic en la barra de desplazamiento
     const handleScrollbarClick = (e) => {
+        // Ignorar si se hizo clic en el thumb (la barra móvil)
+        if (e.target === scrollbarRef.current) return;
+
         const scrollbarContainer = scrollbarRef.current.parentElement;
         const scrollContainer = scrollContainerRef.current;
+
+        if (!scrollContainer || !scrollbarContainer) return;
 
         const rect = scrollbarContainer.getBoundingClientRect();
         const clickPosition = e.clientX - rect.left;
         const percentage = clickPosition / rect.width;
 
         const scrollableWidth = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+
+        isPausedRef.current = true;
+        scrollContainer.style.scrollBehavior = 'smooth';
         scrollContainer.scrollLeft = percentage * scrollableWidth;
 
-        updateScrollbarPosition();
+        // Restablecer después de completar el desplazamiento
+        setTimeout(() => {
+            scrollContainer.style.scrollBehavior = 'auto';
+            isPausedRef.current = false;
+        }, 500);
     };
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Container maxWidth={false} sx={{ py: 4, px: { xs: 2, md: 4 }, maxWidth: '1800px', mx: 'auto' }}>
             {/* Definimos los estilos globales para ocultar la barra de desplazamiento */}
             <GlobalStyles
                 styles={{
@@ -273,89 +322,137 @@ const AutomaticCarouselWithScrollbar = () => {
                     '.hide-carousel-scrollbar': {
                         msOverflowStyle: 'none',
                         scrollbarWidth: 'none'
+                    },
+                    '@keyframes shimmer': {
+                        '0%': { backgroundPosition: '-468px 0' },
+                        '100%': { backgroundPosition: '468px 0' }
                     }
                 }}
             />
 
-            <Typography variant="h5" component="h2" fontWeight={500} mb={3} sx={{ fontFamily: 'Amethysta, sans-serif' }}>
-                Accesorios variados
-            </Typography>
-
-            <Box
-
-                ref={scrollContainerRef}
-                className="hide-carousel-scrollbar"
-                sx={{
-                    display: 'flex',
-                    width: '100%',
-                    overflowX: 'auto',
-                    scrollBehavior: 'smooth',
-                    pb: 2
-                }}
+            <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
             >
-                {loading ? (
-                    // Mostrar placeholders mientras carga
-                    Array(6).fill(0).map((_, index) => (
-                        <Box
-                            key={index}
-                            sx={{
-                                height: '275px',
-                                minWidth: {
-                                    xs: '65%',
-                                    sm: '45%',
-                                    md: '33%',
-                                    lg: '25%'
-                                },
-                                mx: 1,
-                                borderRadius: 2,
-                                bgcolor: 'rgba(0,0,0,0.05)'
-                            }}
-                        />
-                    ))
-                ) : (
-                    carouselProducts.map((product, index) => (
-                        <CarouselItem
+                <Typography
+                    variant="h5"
+                    component="h2"
+                    fontWeight={500}
+                    mb={3}
+                    sx={{
+                        fontFamily: typography.fontFamily || 'Amethysta, sans-serif',
+                        color: vistelicaColors.secondary,
+                        position: 'relative',
+                        display: 'inline-block',
+                        '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            bottom: -5,
+                            left: 0,
+                            width: '60px',
+                            height: '2px',
+                            backgroundColor: vistelicaColors.primary
+                        }
+                    }}
+                >
+                    Accesorios variados
+                </Typography>
+            </motion.div>
 
-                            key={`${product.id}-${index}`}
-                            product={product}
-
-                        />
-                    ))
-                )}
-            </Box>
-
-            {/* Barra de desplazamiento personalizada estilo minimalista */}
-            <Box
-
-                sx={{
-                    position: 'relative',
-                    height: '4px',
-                    bgcolor: 'rgba(255,255,255,0.2)',
-                    borderRadius: '2px',
-                    mt: 1,
-                    mb: 2,
-                    cursor: 'pointer',
-                    background: 'rgba(158, 158, 158, 0.3)'
-                }}
-                onClick={handleScrollbarClick}
-
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
             >
                 <Box
-                    ref={scrollbarRef}
+                    ref={scrollContainerRef}
+                    className="hide-carousel-scrollbar"
                     sx={{
-                        position: 'absolute',
-                        left: `${scrollPercentage}%`,
-                        transform: 'translateX(-0%)',
-                        height: '100%',
-                        width: '15%',
-                        bgcolor: '#E4B002',
-                        borderRadius: '2px',
-                        transition: isDragging ? 'none' : 'left 0.1s ease',
-                        cursor: 'pointer',
+                        display: 'flex',
+                        width: '100%',
+                        overflowX: 'auto',
+                        scrollBehavior: 'auto',
+                        pb: 2,
+                        gap: 3,
+                        '&::before, &::after': {
+                            content: '""',
+                            minWidth: '160px' // Añadimos espacio en los extremos
+                        },
+                        px: 4 // Padding horizontal adicional
                     }}
-                    onMouseDown={handleDragStart}
-                />
-            </Box>
+                >
+                    {loading ? (
+                        // Mostrar placeholders mientras carga
+                        Array(6).fill(0).map((_, index) => (
+                            <Box
+                                key={index}
+                                sx={{
+                                    height: '350px',
+                                    width: '350px',
+                                    mx: 1.5,
+                                    borderRadius: 2,
+                                    background: 'linear-gradient(to right, #f6f7f8 8%, #edeef1 18%, #f6f7f8 33%)',
+                                    backgroundSize: '800px 104px',
+                                    animation: 'shimmer 1.5s infinite linear'
+                                }}
+                            />
+                        ))
+                    ) : (
+                        carouselProducts.map((product, index) => (
+                            <CarouselItem
+                                key={`${product.product_id || product.id}-${index}`}
+                                product={product}
+                            />
+                        ))
+                    )}
+                </Box>
+            </motion.div>
+
+            {/* Barra de desplazamiento personalizada estilo minimalista */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+            >
+                <Box
+                    sx={{
+                        position: 'relative',
+                        height: '4px',
+                        bgcolor: 'rgba(255,255,255,0.2)',
+                        borderRadius: '2px',
+                        mt: 1,
+                        mb: 2,
+                        cursor: 'pointer',
+                        background: 'rgba(158, 158, 158, 0.3)',
+                        transition: 'height 0.2s ease',
+                        '&:hover': {
+                            height: '6px'
+                        }
+                    }}
+                    onClick={handleScrollbarClick}
+                >
+                    <Box
+                        ref={scrollbarRef}
+                        sx={{
+                            position: 'absolute',
+                            left: `${scrollPercentage}%`,
+                            transform: 'translateX(-0%)',
+                            height: '100%',
+                            width: '15%',
+                            bgcolor: vistelicaColors.primary || '#E4B002',
+                            borderRadius: '2px',
+                            transition: isDragging ? 'none' : 'left 0.1s ease',
+                            cursor: 'grab',
+                            '&:active': {
+                                cursor: 'grabbing'
+                            },
+                            boxShadow: isDragging ? `0 0 8px ${vistelicaColors.primary}` : 'none'
+                        }}
+                        onMouseDown={handleDragStart}
+                    />
+                </Box>
+            </motion.div>
         </Container>
     );
 };
