@@ -133,7 +133,7 @@ const categories = [
         video: 'https://res.cloudinary.com/dhyv4dpk2/video/upload/v1747333744/vistelica/home%20page/Img-Main/Girl/bn4dotyydgmc25nrnmtx.webm',
         type: 'video/webm',
         imageAlt: 'Categoría de moda para adolescentes',
-        path: '/sub-teen/MainLayout-subT',
+        path: '/sub-girl/MainLayout-subG',
         description: 'Frescura y estilo juvenil'
     },
     {
@@ -141,7 +141,7 @@ const categories = [
         video: 'https://res.cloudinary.com/dhyv4dpk2/video/upload/v1747333744/vistelica/home%20page/Img-Main/Boy/dj4xcaojseib3xypqtqa.webm',
         type: 'video/webm',
         imageAlt: 'Categoría de accesorios de moda',
-        path: '/accesorios',
+        path: '/sub-boy/MainLayout-subB',
         description: 'Comodidad y diseño para jóvenes'
     },
 ];
