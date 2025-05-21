@@ -11,7 +11,7 @@ const StylesShowcase = () => {
         const fetchStyles = async () => {
             try {
                 // Usar el nuevo método con ID de categoría hardcodeado a 1
-                const data = await styleService.getStylesByCategoryId(1);
+                const data = await styleService.getStylesByCategoryId(2);
                 const mapped = data.map(style => {
                     const mainImage = style.styleImages?.find(img => img.is_main);
                     return {

@@ -3,15 +3,16 @@ import React from 'react';
 import Carousel from './components/Carousel';
 import ClothingCategories from './components/ClothingCategories';
 import Navbar from "@/components/layout/HeaderComponent";
-import CollectionPreview from "@/pages/sub-men/components/CollectionPreview";
-import StylesShowcase from "@/pages/sub-men/components/StylesShowcase";
-import BannerSection from "@/pages/home/components/BannerSection";
-import SuggestedItemsCarousel from "@/pages/sub-men/components/SuggestedItemsCarousel";
+
+import StylesShowcase from "@/pages/sub-women/components/StylesShowcase";
+
+import SuggestedItemsCarousel from "@/pages/sub-women/components/SuggestedItemsCarousel";
 import FooterComponent from "@/components/layout/FooterComponent";
 import { GlobalStyles } from '@mui/material';
-import BannerVideoSection from "@/components/layout/BannerVideo"; // Importamos GlobalStyles si no lo está ya
+import BannerVideoSection from "@/components/layout/BannerVideo";
+import AdidasGucciCollectionPreview from "@/pages/sub-women/components/AdidasGucciCollectionPreview"; // Importamos GlobalStyles si no lo está ya
 
-const MainLayoutSubM = () => {
+const MainLayoutSubW = () => {
     const styles = {
         container: {
             width: '100%',
@@ -56,7 +57,7 @@ const MainLayoutSubM = () => {
                 <Navbar />
                 <Carousel />
                 <ClothingCategories />
-                <CollectionPreview />
+                <AdidasGucciCollectionPreview />
                 <StylesShowcase />
                 <div style={{marginBottom: '16px'}}>
                     <BannerVideoSection/>
@@ -70,4 +71,4 @@ const MainLayoutSubM = () => {
     );
 };
 
-export default MainLayoutSubM;
+export default MainLayoutSubW;

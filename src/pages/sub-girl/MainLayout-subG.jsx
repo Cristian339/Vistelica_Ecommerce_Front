@@ -3,15 +3,16 @@ import React from 'react';
 import Carousel from './components/Carousel';
 import ClothingCategories from './components/ClothingCategories';
 import Navbar from "@/components/layout/HeaderComponent";
-import CollectionPreview from "@/pages/sub-men/components/CollectionPreview";
-import StylesShowcase from "@/pages/sub-men/components/StylesShowcase";
-import BannerSection from "@/pages/home/components/BannerSection";
-import SuggestedItemsCarousel from "@/pages/sub-men/components/SuggestedItemsCarousel";
+import CollectionPreview from "@/pages/sub-girl/components/StrangerThingsCollectionPreview";
+import StylesShowcase from "@/pages/sub-girl/components/StylesShowcase";
+
+import SuggestedItemsCarousel from "@/pages/sub-girl/components/SuggestedItemsCarousel";
 import FooterComponent from "@/components/layout/FooterComponent";
 import { GlobalStyles } from '@mui/material';
-import BannerVideoSection from "@/components/layout/BannerVideo"; // Importamos GlobalStyles si no lo está ya
+import BannerVideoSection from "@/components/layout/BannerVideo";
+import StrangerThingsCollectionPreview from "@/pages/sub-girl/components/StrangerThingsCollectionPreview";
 
-const MainLayoutSubM = () => {
+const MainLayoutSubW = () => {
     const styles = {
         container: {
             width: '100%',
@@ -53,21 +54,22 @@ const MainLayoutSubM = () => {
             />
 
             <div style={styles.container}>
-                <Navbar />
-                <Carousel />
-                <ClothingCategories />
-                <CollectionPreview />
-                <StylesShowcase />
-                <div style={{marginBottom: '16px'}}>
+                <Navbar/>
+                <Carousel/>
+                <ClothingCategories/>
+                <StrangerThingsCollectionPreview/>
+                <StylesShowcase/>
+                <div style={{marginBottom: '15px'}}>
                     <BannerVideoSection/>
                 </div>
                 <div style={{marginBottom: '15px'}}>
                     <SuggestedItemsCarousel/>
                 </div>
+
                 <FooterComponent/>
             </div>
         </>
     );
 };
 
-export default MainLayoutSubM;
+export default MainLayoutSubW;
