@@ -23,6 +23,9 @@ export default function CartPage() {
                 const user = await getCurrentUser();
                 const sessionId = cartService.getSessionId();
 
+                console.log("Page usuario " + user);
+                console.log("Page sessionId " + sessionId);
+
                 let currentCart = null;
 
                 if (user && sessionId) {
@@ -46,6 +49,9 @@ export default function CartPage() {
                         totalPrice: calculatedTotal,
                         itemCount: items.length
                     });
+
+                    console.log("CArrito" + cart);
+                    console.log("Current" + currentCart);
                 }
             } catch (error) {
                 console.error("Error al cargar el carrito:", error);

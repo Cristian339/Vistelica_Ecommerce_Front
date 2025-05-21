@@ -197,7 +197,10 @@ const ValuesCard = () => {
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 height: '100%',
-                                p: 2,
+                                pt: 1, // Padding superior reducido
+                                pb: 2, // Padding inferior normal
+                                px: 2, // Padding horizontal normal
+                                borderRadius: '12px',
                                 borderRadius: '12px',
                                 transition: 'all 0.4s ease',
                                 '&:hover': {
