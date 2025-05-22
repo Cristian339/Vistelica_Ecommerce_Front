@@ -18,8 +18,9 @@ import {
 } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import GoogleIcon from '@mui/icons-material/Google';
 import paymentService from '@/services/paymentService';
+import AppleIcon from '@mui/icons-material/Apple';
+
 
 const stripePromise = loadStripe("pk_test_51RPncWQc122Tani8pkjulLHNj5pnGssS5aP8eyTIKO7kBECr0X9ndIax3yFYraPQca5Ax6uH4l528N1zzsqLI8Rn00qx93QGQO");
 
@@ -52,7 +53,7 @@ const SuccessContainer = styled('div')(({ theme }) => ({
     textAlign: 'center'
 }));
 
-function GooglePayComponent({ amount }) {
+function ApplePayComponent({ amount }) {
     const stripe = useStripe();
     const elements = useElements();
     const [paymentRequest, setPaymentRequest] = React.useState(null);
@@ -65,6 +66,7 @@ function GooglePayComponent({ amount }) {
 
     React.useEffect(() => {
         if (!stripe || !elements) return;
+
         const pr = stripe.paymentRequest({
             country: 'ES',
             currency: 'eur',
@@ -75,11 +77,14 @@ function GooglePayComponent({ amount }) {
             requestPayerName: true,
             requestPayerEmail: true,
         });
+        console.log(pr);
+
         pr.canMakePayment().then((result) => {
-            if (result) {
+            console.log(result);
+            if (result && result.applePay) {
                 setPaymentRequest(pr);
             } else {
-                console.warn('Google Pay no disponible en este navegador o dispositivo');
+                console.warn('Apple Pay no disponible en este navegador o dispositivo');
             }
         });
 
@@ -99,12 +104,12 @@ function GooglePayComponent({ amount }) {
             } catch (err) {
                 setError('Error al procesar el pago');
                 console.error(err);
+                ev.complete('fail');
             } finally {
                 setLoading(false);
             }
         });
     }, [stripe, elements, amountInCents]);
-
 
     if (success) {
         return (
@@ -114,7 +119,7 @@ function GooglePayComponent({ amount }) {
                     Pago exitoso
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 2 }}>
-                    Tu pago de {(amountInCents / 100).toFixed(2)}€ se ha procesado correctamente con Google Pay.
+                    Tu pago de {(amountInCents / 100).toFixed(2)}€ se ha procesado correctamente con Apple Pay.
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                     Recibirás un correo de confirmación con los detalles.
@@ -132,9 +137,15 @@ function GooglePayComponent({ amount }) {
             </Collapse>
 
             <PaymentContainer>
-                <GoogleIcon sx={{ fontSize: 48, color: '#4285F4', mb: 2 }} />
+                <Box sx={{
+                    mb: 2,
+                    backgroundSize: 'contain',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'center'
+                }} />
+                <AppleIcon sx={{ fontSize: 48, color: '#4285F4', mb: 2 }} />
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'medium' }}>
-                    Pago con Google Pay
+                    Pago con Apple Pay
                 </Typography>
 
                 {loading ? (
@@ -145,20 +156,26 @@ function GooglePayComponent({ amount }) {
                 ) : paymentRequest ? (
                     <>
                         <Typography variant="body2" sx={{ mb: 3, textAlign: 'center' }}>
-                            Paga de forma rápida y segura con tu cuenta de Google.
+                            Paga de forma rápida y segura con tu dispositivo Apple.
                         </Typography>
                         <div style={{ width: '100%', maxWidth: '300px' }}>
-                            <PaymentRequestButtonElement options={{ paymentRequest, style: {
-                                    paymentRequestButton: {
-                                        theme: 'dark',
-                                        height: '48px'
+                            <PaymentRequestButtonElement
+                                options={{
+                                    paymentRequest,
+                                    style: {
+                                        paymentRequestButton: {
+                                            theme: 'dark',
+                                            height: '48px',
+                                            type: 'buy' // Estilo específico para Apple Pay
+                                        }
                                     }
-                                }}} />
+                                }}
+                            />
                         </div>
                     </>
                 ) : (
                     <Typography variant="body2" color="text.secondary">
-                        Cargando opciones de pago...
+                        Apple Pay no está disponible en este dispositivo/navegador
                     </Typography>
                 )}
             </PaymentContainer>
@@ -166,10 +183,10 @@ function GooglePayComponent({ amount }) {
     );
 }
 
-export default function GooglePayWrapper({ amount }) {
+export default function ApplePayWrapper({ amount }) {
     return (
         <Elements stripe={stripePromise}>
-            <GooglePayComponent
+            <ApplePayComponent
                 amount={amount}
             />
         </Elements>

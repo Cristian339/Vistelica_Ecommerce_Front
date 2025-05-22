@@ -67,6 +67,7 @@ const cartService = {
      * @returns {Promise<Object|null>} - Carrito encontrado o null
      */
     async getCart(userId, sessionId) {
+        console.log(userId);
         try {
             const response = await axios.get(`${API_URL}/cart/`, {
                 params: {
@@ -76,9 +77,10 @@ const cartService = {
             });
 
             const cart = response.data.data || response.data;
+            console.log("Carro service" + cart.cartDetails);
             return {
                 ...cart,
-                orderDetails: cart.orderDetails || []
+                cartDetails: cart.cartDetails || []
             };
         } catch (error) {
             if (error.response?.status === 404) {
@@ -163,13 +165,13 @@ const cartService = {
             // Caso 1: Solo existe carrito de sesión
             if (sessionCart && !userCart) {
                 console.log("solo uno");
-                return await this.associateCartToUser(sessionCart.order_id, user.user_id);
+                return await this.associateCartToUser(sessionCart.cart_id, user.user_id);
             }
 
             // Caso 2: Existen ambos carritos
             if (sessionCart && userCart) {
                 console.log("estan ambos");
-                await this.associateCartToUser(sessionCart.order_id, user.user_id);
+                await this.associateCartToUser(sessionCart.cart_id, user.user_id);
                 return await this.getCart(user.user_id); // Obtener el carrito fusionado
             }
 
@@ -191,7 +193,7 @@ const cartService = {
      * @param {string|null} color - Color seleccionado
      * @returns {Promise<Object>} - Item añadido
      */
-    async addToCart(orderId, productId, quantity, price, size = null, color = null) {
+    async addToCart(orderId, productId, quantity, price, size = null, color = null, discount_percentage = null) {
         try {
             const response = await axios.post(`${API_URL}/cart/items`, {
                 orderId,
@@ -199,7 +201,8 @@ const cartService = {
                 quantity,
                 price,
                 size,
-                color
+                color,
+                discount_percentage // Nuevo parámetro añadido
             });
             return response.data.data || response.data;
         } catch (error) {
@@ -263,15 +266,63 @@ const cartService = {
      */
     async getCartTotal(userId = null, sessionId = null) {
         try {
+            const params = {};
+
+            // Añadir userId si está disponible
+            if (userId) {
+                params.userId = userId;
+            }
+
+            // Usar sessionId proporcionado o obtener el de localStorage
+            const effectiveSessionId = sessionId || this.getSessionId();
+            if (effectiveSessionId) {
+                params.sessionId = effectiveSessionId;
+            }
+
+            // Validación mínima de parámetros
+            if (!params.userId && !params.sessionId) {
+                throw new Error('Se requiere userId o sessionId para obtener el total del carrito');
+            }
+
             const response = await axios.get(`${API_URL}/cart/total`, {
-                params: {
-                    userId,
-                    sessionId: sessionId || this.getSessionId()
-                }
+                params,
+                validateStatus: (status) => status < 500
             });
-            return response.data.data || response.data;
+
+            // Verificar si la respuesta tiene la estructura esperada
+            if (!response.data || !Array.isArray(response.data.items)) {
+                throw new Error('La respuesta del servidor no tiene el formato esperado');
+            }
+
+            // Procesar los datos para el frontend
+            const processedData = {
+                items: response.data.items.map(item => ({
+                    id: item.productId,
+                    name: item.name,
+                    quantity: item.quantity,
+                    originalPrice: item.originalPrice,
+                    discountPercentage: item.discountPercentage,
+                    finalPrice: item.discountedPrice,
+                    subtotal: item.subtotal,
+                    savings: item.savings
+                })),
+                summary: {
+                    totalOriginal: response.data.items.reduce((sum, item) => sum + (item.originalPrice * item.quantity), 0),
+                    totalDiscounted: response.data.items.reduce((sum, item) => sum + item.subtotal, 0),
+                    totalSavings: response.data.items.reduce((sum, item) => sum + item.savings, 0)
+                }
+            };
+
+            return processedData;
+
         } catch (error) {
-            console.log("No se pudo eliminar");
+            console.error('Error al obtener el total del carrito:', error);
+
+            // Propagar el error con un mensaje amigable
+            const errorMessage = error.response?.data?.message ||
+                error.message ||
+                'Error al cargar el carrito';
+            throw new Error(errorMessage);
         }
     },
 

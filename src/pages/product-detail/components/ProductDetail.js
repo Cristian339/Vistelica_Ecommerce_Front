@@ -10,7 +10,8 @@ import {
     Box,
     IconButton,
     CircularProgress,
-    Alert
+    Alert,
+    Chip
 } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -61,8 +62,8 @@ const CompactDetailBox = styled(Box)(({ theme }) => ({
 
 const ProductDetail = ({
                            product,
-                           availableSizes,
-                           availableColors,
+                           availableSizes = [],
+                           availableColors = [],
                            selectedSize,
                            selectedColor,
                            onSizeChange,
@@ -78,6 +79,16 @@ const ProductDetail = ({
     const [loadingReviews, setLoadingReviews] = useState(true);
     const [errorReviews, setErrorReviews] = useState(null);
     const [errorMessage, setErrorMessage] = useState(null);
+
+    // Calculate prices correctly
+    const hasDiscount = product.discount_percentage && parseFloat(product.discount_percentage) > 0;
+    const originalPrice = parseFloat(product.price);
+    const discountedPrice = hasDiscount
+        ? (originalPrice * (1 - parseFloat(product.discount_percentage) / 100).toFixed(2))
+            : originalPrice;
+    const discountAmount = hasDiscount
+        ? (originalPrice - parseFloat(discountedPrice)).toFixed(2)
+        : 0;
 
     // Verificar si el producto está en la wishlist al cargar el componente
     useEffect(() => {
@@ -159,10 +170,9 @@ const ProductDetail = ({
     };
 
     const handleAddToCart = async () => {
-        // Validar que se haya seleccionado talla y color si están disponibles
-        if ((availableSizes.length > 0 && !selectedSize) ||
-            (availableColors.length > 0 && !selectedColor)) {
-            setErrorMessage('Por favor selecciona talla y color antes de añadir al carrito');
+        if ((availableSizes?.length > 0 && !selectedSize) ||
+            (availableColors?.length > 0 && !selectedColor)) {
+            setErrorMessage('Por favor selecciona las opciones requeridas antes de añadir al carrito');
             return;
         }
 
@@ -171,9 +181,10 @@ const ProductDetail = ({
             await onAddToCart({
                 productId: product.product_id,
                 quantity: 1,
-                price: parseFloat(product.price),
+                price: parseFloat(hasDiscount ? discountedPrice : originalPrice),
                 size: selectedSize,
-                color: selectedColor
+                color: selectedColor,
+                discount_percentage: hasDiscount ? parseFloat(product.discount_percentage) : null // Añadimos el descuento
             });
         } catch (error) {
             setErrorMessage('Error al añadir al carrito');
@@ -231,26 +242,52 @@ const ProductDetail = ({
                             </IconButton>
                         </Box>
 
-                        <Typography variant="h3" sx={{
-                            color: vistelicaColors.primary,
-                            my: 1
-                        }}>
-                            {product.price}€
-                            {product.discount_percentage !== "0.00" && (
-                                <span style={{
-                                    fontSize: '0.8rem',
-                                    color: 'gray',
-                                    textDecoration: 'line-through',
-                                    marginLeft: '8px'
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {hasDiscount ? (
+                                <>
+                                    <Typography variant="h3" sx={{
+                                        color: vistelicaColors.primary,
+                                        my: 1
+                                    }}>
+                                        {discountedPrice.toFixed(2)}€
+                                    </Typography>
+                                    <Chip
+                                        label={`-${product.discount_percentage}%`}
+                                        color="error"
+                                        size="small"
+                                        sx={{
+                                            fontWeight: 'bold',
+                                            backgroundColor: vistelicaColors.error,
+                                            color: 'white'
+                                        }}
+                                    />
+                                </>
+                            ) : (
+                                <Typography variant="h3" sx={{
+                                    color: vistelicaColors.primary,
+                                    my: 1
                                 }}>
-                                    {(parseFloat(product.price) / (1 - parseFloat(product.discount_percentage) / 100).toFixed(2))}€
-                                </span>
+                                    {originalPrice}€
+                                </Typography>
                             )}
-                        </Typography>
+                        </Box>
+
+                        {hasDiscount && (
+                            <Typography variant="body2" sx={{
+                                color: 'text.secondary',
+                                textDecoration: 'line-through',
+                                mb: 1
+                            }}>
+                                {originalPrice.toFixed(2)}€
+                                <span style={{ marginLeft: '8px', color: vistelicaColors.error }}>
+                                    (Ahorras {discountAmount}€)
+                                </span>
+                            </Typography>
+                        )}
 
                         <Divider sx={{ my: 2 }} />
 
-                        {availableSizes.length > 0 && (
+                        {availableSizes?.length > 0 && (
                             <SizeSelector
                                 sizes={availableSizes}
                                 selectedSize={selectedSize}
@@ -258,7 +295,7 @@ const ProductDetail = ({
                             />
                         )}
 
-                        {availableColors.length > 0 && (
+                        {availableColors?.length > 0 && (
                             <ColorSelector
                                 colors={availableColors}
                                 selectedColor={selectedColor}

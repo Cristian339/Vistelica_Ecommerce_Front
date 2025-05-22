@@ -2,10 +2,8 @@
 import { Box } from '@mui/material';
 import CartItem from './CartItem';
 
-export default function CartList({ cartItems, setCartItems, setTotal, userId, sessionId }) {
+export default function CartList({ cartItems, onUpdate, userId, sessionId }) {
     if (!cartItems || cartItems.length === 0) {
-        console.log("List usuario " + user);
-        console.log("List sessionId " + sessionId);
         return (
             <Box sx={{
                 border: '1px solid #e0e0e0',
@@ -28,10 +26,9 @@ export default function CartList({ cartItems, setCartItems, setTotal, userId, se
         }}>
             {cartItems.map((item) => (
                 <CartItem
-                    key={item.order_detail_id}
+                    key={item.cart_detail_id}
                     item={item}
-                    setCartItems={setCartItems}
-                    setTotal={setTotal}
+                    onUpdate={onUpdate}
                     userId={userId}
                     sessionId={sessionId}
                 />

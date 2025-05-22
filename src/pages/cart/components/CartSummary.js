@@ -2,48 +2,25 @@
 import {Box, Typography, Button, Divider, Tooltip} from '@mui/material';
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import cartService from '@/services/cartService';
 import { getCurrentUser } from '@/services/authService';
 
 export default function CartSummary({
-                                        totalPrice = 0,
+                                        totalPrice = 0, // Este será el total CON descuentos aplicados
                                         itemCount = 0,
+                                        isGuest = false,
                                         onCheckout
                                     }) {
     const router = useRouter();
-    const safeTotalPrice = typeof totalPrice === 'number' ? totalPrice : 0;
 
     // Verificar si el usuario está autenticado
-    const isAuthenticated = localStorage.getItem('token');
-    const sessionId = cartService.getSessionId();
-
-    // Efecto para fusionar carritos al montar el componente si hay ambos (token y sessionId)
-    useEffect(() => {
-        console.log(isAuthenticated);
-        console.log(sessionId);
-        const mergeCartsIfNeeded = async () => {
-            if (isAuthenticated && sessionId) {
-                try {
-                    await cartService.handleCartMergeOnAuth();
-                } catch (error) {
-                    console.error('Error merging carts:', error);
-                }
-            }
-        };
-
-        mergeCartsIfNeeded();
-    }, [isAuthenticated, sessionId]);
+    const isAuthenticated = !!getCurrentUser();
 
     const handleCheckoutClick = () => {
         if (!isAuthenticated) {
-            // Redirigir a login si no está autenticado
             router.push('/sign-in-side/Sign-in-side');
-        } else {
-            // Llamar a la función onCheckout si está autenticado
-            if (onCheckout) {
-                onCheckout();
-            }
+        } else if (onCheckout) {
+            onCheckout();
         }
     };
 
@@ -76,7 +53,7 @@ export default function CartSummary({
                         Subtotal ({itemCount} {itemCount === 1 ? 'artículo' : 'artículos'})
                     </Typography>
                     <Typography sx={{fontFamily: "'Amethysta', serif"}}>
-                        {safeTotalPrice.toFixed(2)}€
+                        {totalPrice.toFixed(2)}€
                     </Typography>
                 </Box>
             </Box>
@@ -89,11 +66,11 @@ export default function CartSummary({
                 alignItems: 'center',
                 mb: 3
             }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold',fontFamily: "'Amethysta', serif" }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', fontFamily: "'Amethysta', serif" }}>
                     TOTAL
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 'bold', fontFamily: "'Amethysta', serif" }}>
-                    {safeTotalPrice.toFixed(2)}€
+                    {totalPrice.toFixed(2)}€
                 </Typography>
             </Box>
 
