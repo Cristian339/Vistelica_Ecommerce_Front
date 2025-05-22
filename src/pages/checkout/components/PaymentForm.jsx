@@ -6,6 +6,7 @@ import Box from '@mui/material/Box';
 import MuiCard from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
 import CreditCard from '../paymentMethods/CreaditCard';
+import ApplePayWrapper from "@/pages/checkout/paymentMethods/ApplePayWrapper";
 import GooglePayWrapper from "@/pages/checkout/paymentMethods/GooglePayWrapper";
 import CardContent from '@mui/material/CardContent';
 import Checkbox from '@mui/material/Checkbox';
@@ -26,7 +27,7 @@ import WarningRoundedIcon from '@mui/icons-material/WarningRounded';
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import PaymentIcon from '@mui/icons-material/Payment';
 import GoogleIcon from '@mui/icons-material/Google';
-
+import AppleIcon from '@mui/icons-material/Apple';
 const Card = styled(MuiCard)(({ theme, selected }) => ({
     border: '1px solid',
     borderColor: (theme.vars || theme).palette.divider,
@@ -325,9 +326,9 @@ const PaymentForm = React.forwardRef(({ paymentData, setPaymentData }, ref) => {
                         </CardActionArea>
                     </Card>
 
-                    <Card selected={paymentType === 'bankTransfer'}>
+                    <Card selected={paymentType === 'applePay'}>
                         <CardActionArea
-                            onClick={() => handlePaymentTypeChange({ target: { value: 'bankTransfer' }})}
+                            onClick={() => handlePaymentTypeChange({ target: { value: 'applePay' }})}
                             sx={{
                                 '.MuiCardActionArea-focusHighlight': {
                                     backgroundColor: 'transparent',
@@ -338,7 +339,7 @@ const PaymentForm = React.forwardRef(({ paymentData, setPaymentData }, ref) => {
                             }}
                         >
                             <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <AccountBalanceRoundedIcon
+                                <AppleIcon
                                     fontSize="small"
                                     sx={[
                                         (theme) => ({
@@ -347,13 +348,12 @@ const PaymentForm = React.forwardRef(({ paymentData, setPaymentData }, ref) => {
                                                 color: 'grey.600',
                                             }),
                                         }),
-                                        paymentType === 'bankTransfer' && {
+                                        paymentType === 'applePay' && {
                                             color: 'primary.main',
                                         },
                                     ]}
                                 />
-                                <Typography sx={{ fontWeight: 'medium' }}>Transferencia</Typography>
-                                <Typography sx={{ fontWeight: 'medium' }}>Bank account</Typography>
+                                <Typography sx={{ fontWeight: 'medium' }}>Apple Pay</Typography>
                             </CardContent>
                         </CardActionArea>
                     </Card>
@@ -433,41 +433,11 @@ const PaymentForm = React.forwardRef(({ paymentData, setPaymentData }, ref) => {
                 </Box>
             )}
 
-            {paymentType === 'bankTransfer' && (
+            {paymentType === 'applePay' && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Alert severity="warning" icon={<WarningRoundedIcon />}>
-                        Tu pedido será procesado una vez que recibamos los fondos.
-                    </Alert>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
-                        Cuenta bancaria
-                    </Typography>
-                    <Typography variant="body1" gutterBottom>
-                        Por favor transfiere el pago a los datos bancarios que se muestran a continuación.
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                            Banco:
-                        </Typography>
-                        <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                            Mastercredit
-                        </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                            Número de cuenta:
-                        </Typography>
-                        <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                            123456789
-                        </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                            Número de ruta:
-                        </Typography>
-                        <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                            987654321
-                        </Typography>
-                    </Box>
+                    <ApplePayWrapper
+                        amount={2.99}
+                    />
                 </Box>
             )}
             {paymentType === 'googlePay' && (

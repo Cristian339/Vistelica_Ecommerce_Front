@@ -12,56 +12,63 @@ import { useRouter } from 'next/navigation';
 export default function CartPage() {
     const [cart, setCart] = useState(null);
     const [cartItems, setCartItems] = useState([]);
-    const [total, setTotal] = useState({ totalPrice: 0, itemCount: 0 });
+    const [cartTotal, setCartTotal] = useState({
+        totalOriginal: 0,
+        totalDiscounted: 0,
+        totalSavings: 0,
+        itemCount: 0
+    });
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
-    useEffect(() => {
-        const initializeCart = async () => {
-            try {
-                setLoading(true);
-                const user = await getCurrentUser();
-                const sessionId = cartService.getSessionId();
+    const loadCartData = async () => {
+        try {
+            setLoading(true);
+            const user = await getCurrentUser();
+            const sessionId = cartService.getSessionId();
 
-                console.log("Page usuario " + user);
-                console.log("Page sessionId " + sessionId);
+            let currentCart = null;
 
-                let currentCart = null;
-
-                if (user && sessionId) {
-                    currentCart = await cartService.handleCartMergeOnAuth();
-                } else {
-                    currentCart = user
-                        ? await cartService.getCart(user.user_id)
-                        : await cartService.getCart(null, sessionId);
-                }
-
-                if (currentCart) {
-                    setCart(currentCart);
-                    const items = currentCart.orderDetails || [];
-                    setCartItems(items);
-
-                    const calculatedTotal = items.reduce((sum, item) => {
-                        return sum + (parseFloat(item.price) * item.quantity);
-                    }, 0);
-
-                    setTotal({
-                        totalPrice: calculatedTotal,
-                        itemCount: items.length
-                    });
-
-                    console.log("CArrito" + cart);
-                    console.log("Current" + currentCart);
-                }
-            } catch (error) {
-                console.error("Error al cargar el carrito:", error);
-            } finally {
-                setLoading(false);
+            if (user && sessionId) {
+                currentCart = await cartService.handleCartMergeOnAuth();
+            } else {
+                currentCart = user
+                    ? await cartService.getCart(user.user_id)
+                    : await cartService.getCart(null, sessionId);
             }
-        };
 
-        initializeCart();
+            if (currentCart) {
+                setCart(currentCart);
+                const items = currentCart.cartDetails || [];
+                setCartItems(items);
+
+                // Obtener totales con descuentos aplicados
+                const totalData = await cartService.getCartTotal(
+                    user?.user_id,
+                    user ? null : sessionId
+                );
+
+                setCartTotal({
+                    totalOriginal: totalData.summary.totalOriginal,
+                    totalDiscounted: totalData.summary.totalDiscounted,
+                    totalSavings: totalData.summary.totalSavings,
+                    itemCount: items.length
+                });
+            }
+        } catch (error) {
+            console.error("Error al cargar el carrito:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadCartData();
     }, []);
+
+    const handleUpdateCart = async () => {
+        await loadCartData();
+    };
 
     const handleCheckout = () => {
         const isGuest = !getCurrentUser() && cartService.getSessionId();
@@ -71,17 +78,6 @@ export default function CartPage() {
             router.push('/checkout');
         }
     };
-
-    if (loading) {
-        return (
-            <>
-                <Navbar />
-                <Container maxWidth="xl" sx={{ my: 4, px: { xs: 2, md: 4 } }}>
-                    <Typography>Cargando carrito...</Typography>
-                </Container>
-            </>
-        );
-    }
 
     if (!cart || cartItems.length === 0) {
         return <EmptyCart />;
@@ -112,37 +108,33 @@ export default function CartPage() {
                     CESTA DE LA COMPRA
                 </Typography>
 
-                {/* Cambiamos a Box con flexbox en lugar de Grid */}
                 <Box sx={{
                     display: 'flex',
                     flexDirection: { xs: 'column', md: 'row' },
                     gap: 3,
                     alignItems: 'flex-start'
                 }}>
-                    {/* CartList - Ocupa todo el espacio disponible */}
                     <Box sx={{
                         flex: 1,
-                        minWidth: 0, // Evita problemas de desbordamiento
+                        minWidth: 0,
                         width: '100%'
                     }}>
                         <CartList
                             cartItems={cartItems}
-                            setCartItems={setCartItems}
-                            setTotal={setTotal}
+                            onUpdate={handleUpdateCart}
                             userId={cart.user?.user_id}
                             sessionId={cart.session_id}
                         />
                     </Box>
 
-                    {/* CartSummary - Ancho fijo a la derecha */}
                     <Box sx={{
                         width: { xs: '100%', md: '350px' },
                         position: { md: 'sticky' },
                         top: 100
                     }}>
                         <CartSummary
-                            totalPrice={total.totalPrice}
-                            itemCount={total.itemCount}
+                            totalPrice={cartTotal.totalDiscounted} // Precio CON descuentos
+                            itemCount={cartTotal.itemCount}
                             isGuest={!cart.user && cart.session_id}
                             onCheckout={handleCheckout}
                         />

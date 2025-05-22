@@ -1,18 +1,52 @@
 'use client';
-import { Box, Typography, IconButton, Avatar, CircularProgress, Chip } from '@mui/material';
+import { Box, Typography, IconButton, Avatar, CircularProgress, Chip, Tooltip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import cartService from '@/services/cartService';
 import productService from '@/services/productService';
 import { useState, useEffect } from 'react';
+import { getCurrentUser } from "@/services/authService";
+import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 
-export default function CartItem({ item, setCartItems, setTotal, userId, sessionId }) {
+// Función para mapear nombres de colores a valores HEX
+const getColorHex = (colorName) => {
+    const colorMap = {
+        RED: '#FF0000',
+        BLACK: '#000000',
+        WHITE: '#FFFFFF',
+        BLUE: '#0000FF',
+        GREEN: '#00FF00',
+        YELLOW: '#FFFF00',
+        ORANGE: '#FFA500',
+        PURPLE: '#800080',
+        BROWN: '#A52A2A',
+        GRAY: '#808080',
+        PINK: '#FFC0CB',
+        BEIGE: '#F5F5DC',
+        GOLD: '#FFD700',
+        SILVER: '#C0C0C0',
+        NAVY: '#000080'
+    };
+    return colorMap[colorName] || '#CCCCCC'; // Color por defecto si no se encuentra
+};
+
+export default function CartItem({ item, onUpdate, userId, sessionId }) {
     const [quantity, setQuantity] = useState(item.quantity);
     const [mainImage, setMainImage] = useState(item.product?.image_url || "https://via.placeholder.com/80");
     const [loadingImage, setLoadingImage] = useState(false);
-    // Asegurarnos que price es un número
-    const price = typeof item.price === 'string' ? parseFloat(item.price) : Number(item.price) || 0;
+    const [loading, setLoading] = useState(false);
+
+    // Verificar si el producto tiene descuento
+    const hasDiscount = item.product?.discount_percentage && parseFloat(item.product.discount_percentage) > 0;
+    const discountPercentage = hasDiscount ? parseFloat(item.product.discount_percentage) : 0;
+
+    // Precios calculados
+    const originalPrice = parseFloat(item.product?.price || item.price);
+    const currentPrice = hasDiscount
+        ? originalPrice * (1 - discountPercentage / 100)
+        : originalPrice;
 
     // Efecto para cargar la imagen principal
     useEffect(() => {
@@ -36,58 +70,34 @@ export default function CartItem({ item, setCartItems, setTotal, userId, session
     }, [item.product?.product_id, item.product?.image_url]);
 
     const handleQuantityChange = async (newQuantity) => {
-        try {
-            // console.log("ID: " + item.order_detail_id + " Cantidad: " + newQuantity);
+        if (newQuantity < 1 || newQuantity > 100) return;
 
-            // Llamada actualizada al servicio
-            const updatedItem = await cartService.updateCartItem(
-                item.order_detail_id,
+        try {
+            setLoading(true);
+            await cartService.updateCartItem(
+                item.cart_detail_id,
                 newQuantity
             );
 
-            // Actualizamos el estado local con los datos que devuelve el backend
             setQuantity(newQuantity);
-            setCartItems(prev => prev.map(i =>
-                i.order_detail_id === item.order_detail_id
-                    ? { ...i, quantity: newQuantity }
-                    : i
-            ));
+            onUpdate && onUpdate();
 
-            console.log(userId);
-            console.log(sessionId);
-
-
-
-
-            // // Actualizamos el total (podrías usar los datos de updatedItem si el backend los devuelve)
-            // const totalData = await cartService.getCartTotal(
-            //     user.user_id || null,
-            //     !user.user_id ? sessionId : null
-            // );
-
-            // setTotal({
-            //     totalPrice: totalData.totalPrice,
-            //     itemCount: totalData.itemCount
-            // });
         } catch (error) {
             console.error("Error al actualizar cantidad:", error);
-            // Podrías añadir un toast o alerta para informar al usuario
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleRemoveItem = async () => {
         try {
-
-            await cartService.removeFromCart(item.order_detail_id);
-            setCartItems(prev => prev.filter(i => i.order_detail_id !== item.order_detail_id));
-
-            const totalData = await cartService.getCartTotal(userId || null, !userId ? sessionId : null);
-            setTotal({
-                totalPrice: totalData.totalPrice,
-                itemCount: totalData.itemCount
-            });
+            setLoading(true);
+            await cartService.removeFromCart(item.cart_detail_id);
+            onUpdate && onUpdate();
         } catch (error) {
             console.error("Error al eliminar producto:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -97,7 +107,9 @@ export default function CartItem({ item, setCartItems, setTotal, userId, session
             alignItems: 'center',
             py: 2,
             borderBottom: '1px solid #eee',
-            gap: 3
+            gap: 3,
+            opacity: loading ? 0.7 : 1,
+            pointerEvents: loading ? 'none' : 'auto'
         }}>
             {loadingImage ? (
                 <Box
@@ -125,16 +137,36 @@ export default function CartItem({ item, setCartItems, setTotal, userId, session
             )}
 
             <Box sx={{ flexGrow: 1 }}>
-                <Typography variant="body1" sx={{
-                    fontWeight: 500,
-                    fontFamily: "'Amethysta', serif",
-                    mb: 1
-                }}>
-                    {item.product?.name || "Producto"}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <Typography variant="body1" sx={{
+                        fontWeight: 500,
+                        fontFamily: "'Amethysta', serif"
+                    }}>
+                        {item.product?.name || "Producto"}
+                    </Typography>
+
+                    {hasDiscount && (
+                        <Tooltip title={`${discountPercentage}% de descuento`} arrow>
+                            <Chip
+                                icon={<LocalOfferIcon fontSize="small" />}
+                                label={`-${discountPercentage}%`}
+                                size="small"
+                                sx={{
+                                    backgroundColor: vistelicaColors.error,
+                                    color: 'white',
+                                    fontWeight: 'bold',
+                                    '& .MuiChip-icon': {
+                                        color: 'white',
+                                        fontSize: '16px'
+                                    }
+                                }}
+                            />
+                        </Tooltip>
+                    )}
+                </Box>
 
                 {/* Mostrar talla y color si existen */}
-                <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                <Box sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center' }}>
                     {item.size && (
                         <Chip
                             label={`Talla: ${item.size}`}
@@ -146,20 +178,51 @@ export default function CartItem({ item, setCartItems, setTotal, userId, session
                         />
                     )}
                     {item.color && (
-                        <Chip
-                            label={`Color: ${item.color}`}
-                            size="small"
-                            sx={{
-                                backgroundColor: '#f5f5f5',
-                                fontFamily: "'Amethysta', serif"
-                            }}
-                        />
+                        <Tooltip title={item.color} arrow>
+                            <Box sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.5
+                            }}>
+                                <Box sx={{
+                                    width: 20,
+                                    height: 20,
+                                    borderRadius: '50%',
+                                    backgroundColor: getColorHex(item.color),
+                                    border: item.color === 'WHITE' ? '1px solid #ccc' : 'none',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                }} />
+                                <Typography variant="caption" sx={{
+                                    fontFamily: "'Amethysta', serif",
+                                    ml: 0.5
+                                }}>
+                                    Color
+                                </Typography>
+                            </Box>
+                        </Tooltip>
                     )}
                 </Box>
 
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {price.toFixed(2)}€ c/u
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body2" sx={{
+                        color: hasDiscount ? vistelicaColors.error : 'text.secondary',
+                        fontWeight: hasDiscount ? 'bold' : 'normal'
+                    }}>
+                        {currentPrice.toFixed(2)}€
+                    </Typography>
+                    {hasDiscount && (
+                        <Typography variant="body2" sx={{
+                            color: 'text.secondary',
+                            textDecoration: 'line-through',
+                            fontSize: '0.8rem'
+                        }}>
+                            {originalPrice.toFixed(2)}€
+                        </Typography>
+                    )}
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        c/u
+                    </Typography>
+                </Box>
             </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
@@ -169,13 +232,14 @@ export default function CartItem({ item, setCartItems, setTotal, userId, session
                     minWidth: 80,
                     textAlign: 'right'
                 }}>
-                    {(price * quantity).toFixed(2)}€
+                    {(currentPrice * quantity).toFixed(2)}€
                 </Typography>
 
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <IconButton
                         size="small"
-                        onClick={() => handleQuantityChange(Math.max(1, quantity - 1))}
+                        onClick={() => handleQuantityChange(quantity - 1)}
+                        disabled={quantity <= 1}
                     >
                         <RemoveIcon />
                     </IconButton>
@@ -185,6 +249,7 @@ export default function CartItem({ item, setCartItems, setTotal, userId, session
                     <IconButton
                         size="small"
                         onClick={() => handleQuantityChange(quantity + 1)}
+                        disabled={quantity >= 100}
                     >
                         <AddIcon />
                     </IconButton>
