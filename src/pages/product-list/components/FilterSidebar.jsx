@@ -16,10 +16,12 @@ import EuroOutlinedIcon from '@mui/icons-material/EuroOutlined';
 import StraightenOutlinedIcon from '@mui/icons-material/StraightenOutlined';
 import {motion} from "framer-motion";
 import Link from 'next/link';
-import {COLORS, BRANDS} from '../constants/filterOptions';
+import {COLORS, } from '../constants/filterOptions';
 import {alpha} from '@mui/material/styles';
 // Importamos los colores del tema global en lugar de definirlos localmente
 import {vistelicaColors} from "@/pages/shared-theme/vistelicaColors";
+
+
 
 // Lista de tallas comunes
 const SIZES = [
@@ -44,6 +46,8 @@ const closeSidebar = () => {
 const FilterSidebar = ({
                            filters,
                            setFilters,
+                           hasDiscount = false,
+                           lowStock= false,
                            categories = [],
                            subcategories = [],
                            loadingSubcategories = false,
@@ -372,77 +376,65 @@ const FilterSidebar = ({
 
                     <Divider sx={{my: 2, opacity: 0.6, bgcolor: vistelicaColors.border}}/>
 
-                    {/* Marcas */}
+                    {/* Stock y descuentos */}
                     <Accordion
-                        expanded={expandedAccordion === 'brands'}
-                        onChange={handleAccordionChange('brands')}
+                        expanded={expandedAccordion === 'stockDiscounts'}
+                        onChange={handleAccordionChange('stockDiscounts')}
                         disableGutters
                     >
                         <AccordionSummary
-                            expandIcon={<ExpandMoreIcon sx={{color: vistelicaColors.primary}}/>}
-                            sx={{px: 2}}
+                            expandIcon={<ExpandMoreIcon sx={{ color: vistelicaColors.primary }} />}
+                            sx={{ px: 2 }}
                         >
-                            <Box sx={{display: 'flex', alignItems: 'center', width: '100%'}}>
-                                <LocalOfferIcon
-                                    sx={{
-                                        mr: 1.5,
-                                        color: vistelicaColors.primary
-                                    }}
-                                />
-                                <Typography
-                                    fontWeight="600"
-                                    sx={{flexGrow: 1, color: "#000000"}}
-                                >
-                                    Marcas
+                            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                <LocalOfferIcon sx={{ mr: 1.5, color: vistelicaColors.primary }} />
+                                <Typography fontWeight="600" sx={{ flexGrow: 1, color: '#000000' }}>
+                                    Stock y Descuentos
                                 </Typography>
 
-                                {getActiveFiltersCount('brands') > 0 && (
+                                {(filters.hasDiscount || filters.lowStock) && (
                                     <Zoom in={true}>
                                         <Badge
-                                            badgeContent={getActiveFiltersCount('brands')}
+                                            badgeContent={(filters.hasDiscount ? 1 : 0) + (filters.lowStock ? 1 : 0)}
                                             color="secondary"
-                                            sx={{ml: 1}}
+                                            sx={{ ml: 1 }}
                                         />
                                     </Zoom>
                                 )}
                             </Box>
                         </AccordionSummary>
+
                         <AccordionDetails>
                             <FormGroup>
-                                {BRANDS && BRANDS.map((brand, index) => (
-                                    <motion.div
-                                        key={brand.id}
-                                        initial={{opacity: 0, y: 10}}
-                                        animate={{opacity: 1, y: 0}}
-                                        transition={{delay: index * 0.03}}
-                                    >
-                                        <FormControlLabel
-                                            control={
-                                                <Checkbox
-                                                    checked={filters.brands.includes(brand.id)}
-                                                    onChange={() => handleCheckbox('brands', brand.id)}
-                                                    name={`brand-${brand.id}`}
-                                                    sx={{color: vistelicaColors.secondary}}
-                                                />
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={filters.lowStock}
+                                            onChange={() =>
+                                                setFilters(prev => ({ ...prev, lowStock: !prev.lowStock }))
                                             }
-                                            label={
-                                                <Typography variant="body2" sx={{color: vistelicaColors.textDark}}>
-                                                    {brand.name}
-                                                </Typography>
-                                            }
-                                            sx={{
-                                                p: 0.5,
-                                                borderRadius: '4px'
-                                            }}
+                                            sx={{ color: vistelicaColors.secondary }}
                                         />
-                                    </motion.div>
-                                ))}
+                                    }
+                                    label={<Typography variant="body2" sx={{ color: vistelicaColors.textDark }}>Poco stock</Typography>}
+                                    sx={{ p: 0.5, borderRadius: '4px' }}
+                                />
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={filters.hasDiscount}
+                                            onChange={() =>
+                                                setFilters(prev => ({ ...prev, hasDiscount: !prev.hasDiscount }))
+                                            }
+                                            sx={{ color: vistelicaColors.secondary }}
+                                        />
+                                    }
+                                    label={<Typography variant="body2" sx={{ color: vistelicaColors.textDark }}>Con descuento</Typography>}
+                                    sx={{ p: 0.5, borderRadius: '4px' }}
+                                />
                             </FormGroup>
                         </AccordionDetails>
                     </Accordion>
-
-                    <Divider sx={{my: 2, opacity: 0.6, bgcolor: vistelicaColors.border}}/>
-
                     {/* Colores */}
                     <Accordion
                         expanded={expandedAccordion === 'colors'}
