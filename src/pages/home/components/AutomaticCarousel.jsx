@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+'use client';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
     Box,
     Container,
@@ -8,7 +9,8 @@ import {
     CardContent,
     useMediaQuery,
     useTheme,
-    GlobalStyles
+    GlobalStyles,
+    Alert
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import productService from '@/services/productService';
@@ -18,6 +20,19 @@ import { typography } from "@/pages/shared-theme/themePrimitives";
 
 const CarouselItem = ({ product }) => {
     const router = useRouter();
+    const [imageError, setImageError] = useState(false);
+
+    // Determina la mejor URL de imagen disponible
+    const getImageUrl = () => {
+        if (imageError) return '/images/placeholder-image.png';
+
+        return product.image_url ||
+            product.main_image ||
+            product.mainImage ||
+            product.image ||
+            product.imageUrl ||
+            '/images/placeholder-image.png';
+    };
 
     const handleProductClickDetail = (productId) => {
         if (router) {
@@ -35,7 +50,7 @@ const CarouselItem = ({ product }) => {
             transition={{ duration: 0.3 }}
         >
             <Card
-                onClick={() => handleProductClickDetail(product.product_id)}
+                onClick={() => handleProductClickDetail(product.product_id || product.id)}
                 sx={{
                     position: 'relative',
                     height: '350px',
@@ -54,13 +69,15 @@ const CarouselItem = ({ product }) => {
                     <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.4 }}>
                         <CardMedia
                             component="img"
-                            image={product.main_image || product.mainImage}
-                            alt={product.name}
-                            loading="eager"
+                            image={getImageUrl()}
+                            alt={product.name || 'Producto'}
+                            loading="lazy"
+                            onError={() => setImageError(true)}
                             sx={{
-                                objectFit: 'contain',
+                                width: '100%',
                                 height: '100%',
-                                width: '100%'
+                                objectFit: 'contain',
+                                p: 1
                             }}
                         />
                     </motion.div>
@@ -80,22 +97,22 @@ const CarouselItem = ({ product }) => {
                         variant="subtitle1"
                         noWrap
                         sx={{
-                            fontFamily: typography.fontFamily,
-                            fontSize: '1rem',
-                            fontWeight: 500
+                            fontWeight: 500,
+                            color: vistelicaColors.secondary,
+                            fontFamily: typography.fontFamily || 'Amethysta, sans-serif',
                         }}
                     >
-                        {product.name}
+                        {product.name || 'Producto sin nombre'}
                     </Typography>
                     <Typography
                         variant="body1"
                         fontWeight={600}
                         sx={{
                             color: vistelicaColors.primary,
-                            fontSize: '1.15rem'
+                            fontFamily: typography.fontFamily || 'Amethysta, sans-serif',
                         }}
                     >
-                        ${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
+                        ${typeof product.price === 'number' ? product.price.toFixed(2) : product.price || '0.00'}
                     </Typography>
                 </CardContent>
             </Card>
@@ -105,246 +122,208 @@ const CarouselItem = ({ product }) => {
 
 const AutomaticCarouselWithScrollbar = () => {
     const scrollContainerRef = useRef(null);
-    const scrollbarRef = useRef(null);
     const isPausedRef = useRef(false);
     const animationRef = useRef(null);
     const isResettingRef = useRef(false);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const [scrollPercentage, setScrollPercentage] = useState(0);
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragStartX, setDragStartX] = useState(0);
-    const [initialScrollLeft, setInitialScrollLeft] = useState(0);
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // Cargar productos desde la API
+    const NUM_DOTS = 5; // Número de puntos para el indicador
+    const [activeDotIndex, setActiveDotIndex] = useState(0);
+
+    const updateActiveDotIndicator = useCallback(() => {
+        const scrollContainer = scrollContainerRef.current;
+        if (!scrollContainer) return;
+
+        const scrollableWidth = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+
+        if (scrollableWidth <= 0) {
+            setActiveDotIndex(0);
+            return;
+        }
+
+        const currentScroll = scrollContainer.scrollLeft;
+        let dotIndex;
+
+        if (currentScroll >= scrollableWidth - 1) { // Al final
+            dotIndex = NUM_DOTS - 1;
+        } else if (currentScroll <= 0) { // Al principio
+            dotIndex = 0;
+        } else {
+            const segmentWidth = scrollableWidth / NUM_DOTS;
+            dotIndex = Math.floor(currentScroll / segmentWidth);
+        }
+
+        setActiveDotIndex(Math.max(0, Math.min(dotIndex, NUM_DOTS - 1)));
+    }, [NUM_DOTS]);
+
     useEffect(() => {
         const fetchProducts = async () => {
             try {
                 setLoading(true);
+                setError(null);
                 const data = await productService.getRandomAccessoryProducts();
-                setProducts(data);
+
+                // Aseguramos que data es un array
+                const processedData = Array.isArray(data) ? data : [];
+
+                // Normalizamos los datos para asegurar consistencia
+                const normalizedProducts = processedData.map((product, index) => ({
+                    ...product,
+                    product_id: product.product_id || product.id || `temp-id-${index}`,
+                    name: product.name || `Producto ${index + 1}`,
+                    price: product.price || 0,
+                    // Aseguramos que haya una URL de imagen
+                    image_url: product.image_url ||
+                        product.main_image ||
+                        product.mainImage ||
+                        product.image ||
+                        product.imageUrl ||
+                        '/images/placeholder-image.png'
+                }));
+
+                setProducts(normalizedProducts);
             } catch (error) {
                 console.error('Error al cargar los accesorios:', error);
+                setError('No se pudieron cargar los productos. Por favor, intente más tarde.');
+                setProducts([]);
             } finally {
                 setLoading(false);
             }
         };
-
         fetchProducts();
     }, []);
 
-    const carouselProducts = products;
+    const carouselProducts = products || [];
 
-    // Lógica para actualizar la posición de la barra de desplazamiento
-    const updateScrollbarPosition = () => {
+    const handleScroll = useCallback(() => {
+        if (!isResettingRef.current) {
+            updateActiveDotIndicator();
+        }
+    }, [updateActiveDotIndicator]);
+
+    useEffect(() => {
+        const scrollContainer = scrollContainerRef.current;
+        if (!scrollContainer || loading || carouselProducts.length === 0) {
+            if (animationRef.current) {
+                cancelAnimationFrame(animationRef.current);
+            }
+            return;
+        }
+
+        scrollContainer.scrollLeft = 0;
+        setActiveDotIndex(0); // Inicializa el punto activo
+        isResettingRef.current = false;
+
+        const pixelsPerFrame = isMobile ? 0.8 : 1.2;
+
+        const scrollAnimation = () => {
+            const currentScrollContainer = scrollContainerRef.current;
+            if (!currentScrollContainer) {
+                animationRef.current = requestAnimationFrame(scrollAnimation);
+                return;
+            }
+
+            const maxScroll = currentScrollContainer.scrollWidth - currentScrollContainer.clientWidth;
+
+            if (maxScroll <= 0) {
+                if (!isResettingRef.current) setActiveDotIndex(0);
+                animationRef.current = requestAnimationFrame(scrollAnimation);
+                return;
+            }
+
+            if (!isPausedRef.current && !isResettingRef.current) {
+                if (currentScrollContainer.scrollLeft >= maxScroll - 1) {
+                    isResettingRef.current = true;
+                    currentScrollContainer.scrollLeft = 0;
+                    setActiveDotIndex(0); // Resetea el punto activo
+                    setTimeout(() => {
+                        isResettingRef.current = false;
+                    }, 100);
+                } else {
+                    currentScrollContainer.scrollLeft += pixelsPerFrame;
+                    updateActiveDotIndicator(); // Actualiza el punto activo durante la animación
+                }
+            }
+            animationRef.current = requestAnimationFrame(scrollAnimation);
+        };
+
+        if (scrollContainer.scrollWidth > scrollContainer.clientWidth) {
+            animationRef.current = requestAnimationFrame(scrollAnimation);
+        } else {
+            setActiveDotIndex(0);
+        }
+
+        const handleMouseEnter = () => { isPausedRef.current = true; };
+        const handleMouseLeave = () => { isPausedRef.current = false; };
+
+        scrollContainer.addEventListener('mouseenter', handleMouseEnter);
+        scrollContainer.addEventListener('mouseleave', handleMouseLeave);
+        scrollContainer.addEventListener('scroll', handleScroll);
+
+        return () => {
+            if (animationRef.current) {
+                cancelAnimationFrame(animationRef.current);
+            }
+            if (scrollContainer) {
+                scrollContainer.removeEventListener('mouseenter', handleMouseEnter);
+                scrollContainer.removeEventListener('mouseleave', handleMouseLeave);
+                scrollContainer.removeEventListener('scroll', handleScroll);
+            }
+        };
+    }, [loading, carouselProducts, isMobile, updateActiveDotIndicator, handleScroll]);
+
+    const handleDotClick = (index) => {
         const scrollContainer = scrollContainerRef.current;
         if (!scrollContainer) return;
 
         const scrollableWidth = scrollContainer.scrollWidth - scrollContainer.clientWidth;
         if (scrollableWidth <= 0) return;
 
-        const percentage = scrollContainer.scrollLeft / scrollableWidth;
-        const scrollbarWidth = 15; // Ancho de la barra (15%)
-        const maxPercentage = 100 - scrollbarWidth;
-
-        // Forzamos la actualización del estado para reflejar el movimiento actual
-        setScrollPercentage(Math.min(percentage * 100, maxPercentage));
-    };
-
-    // Manejar el scroll automático y actualizar la posición de la barra
-    useEffect(() => {
-        const scrollContainer = scrollContainerRef.current;
-        if (!scrollContainer || loading || products.length === 0) return;
-
-        // Resetear posición inicial
-        scrollContainer.scrollLeft = 0;
-
-        // Velocidad del desplazamiento (pixeles por frame)
-        const pixelsPerFrame = isMobile ? 0.8 : 1.2;
-
-        let lastTimestamp = 0;
-        const scrollAnimation = (timestamp) => {
-            if (!scrollContainerRef.current) return;
-
-            const scrollContainer = scrollContainerRef.current;
-            const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
-
-            // Solo avanzar si no está en pausa y no se está arrastrando
-            if (!isPausedRef.current && !isDragging && !isResettingRef.current) {
-                // Si llegó al final, reiniciar
-                if (scrollContainer.scrollLeft >= maxScroll - 5) {
-                    isResettingRef.current = true;
-                    // Reiniciar al principio inmediatamente
-                    scrollContainer.scrollLeft = 0;
-                    // Dar un pequeño tiempo para el reinicio
-                    setTimeout(() => {
-                        isResettingRef.current = false;
-                    }, 100);
-                } else {
-                    // Avanzar normalmente
-                    scrollContainer.scrollLeft += pixelsPerFrame;
-                }
-
-                // Actualizar la posición de la barra cada vez que avanzamos
-                updateScrollbarPosition();
-            }
-
-            // Seguir animando
-            animationRef.current = requestAnimationFrame(scrollAnimation);
-        };
-
-        // Iniciar la animación
-        animationRef.current = requestAnimationFrame(scrollAnimation);
-
-        // Eventos para pausar al interactuar
-        const handleMouseEnter = () => {
-            isPausedRef.current = true;
-        };
-
-        const handleMouseLeave = () => {
-            isPausedRef.current = false;
-        };
-
-        scrollContainer.addEventListener('mouseenter', handleMouseEnter);
-        scrollContainer.addEventListener('mouseleave', handleMouseLeave);
-
-        return () => {
-            cancelAnimationFrame(animationRef.current);
-            scrollContainer.removeEventListener('mouseenter', handleMouseEnter);
-            scrollContainer.removeEventListener('mouseleave', handleMouseLeave);
-        };
-    }, [isMobile, isDragging, loading, products]);
-
-    // Funciones para manejar el arrastre de la barra de desplazamiento
-    const handleDragStart = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        setIsDragging(true);
-        isPausedRef.current = true;
-        setDragStartX(e.clientX);
-
-        const scrollContainer = scrollContainerRef.current;
-        if (scrollContainer) {
-            setInitialScrollLeft(scrollContainer.scrollLeft);
+        let targetScrollLeft;
+        if (index === NUM_DOTS - 1) {
+            targetScrollLeft = scrollableWidth;
+        } else {
+            targetScrollLeft = (index / NUM_DOTS) * scrollableWidth;
         }
-    };
-
-    const handleDrag = (e) => {
-        if (!isDragging) return;
-
-        const scrollContainer = scrollContainerRef.current;
-        if (!scrollContainer) return;
-
-        const scrollbarContainer = scrollbarRef.current.parentElement;
-        const deltaX = e.clientX - dragStartX;
-        const scrollableWidth = scrollContainer.scrollWidth - scrollContainer.clientWidth;
-
-        // Factor de multiplicación para el movimiento del arrastre
-        const moveRatio = scrollableWidth / scrollbarContainer.clientWidth;
-        const newScrollLeft = initialScrollLeft + (deltaX * moveRatio);
-
-        // Limitar el desplazamiento dentro del rango válido
-        scrollContainer.scrollLeft = Math.max(0, Math.min(newScrollLeft, scrollableWidth));
-
-        // Actualizar la barra
-        updateScrollbarPosition();
-    };
-
-    const handleDragEnd = () => {
-        setIsDragging(false);
-        // Pequeño retraso antes de reanudar la animación
-        setTimeout(() => {
-            isPausedRef.current = false;
-        }, 300);
-    };
-
-    // Configurar eventos de mouse para el arrastre
-    useEffect(() => {
-        const handleGlobalMouseMove = (e) => {
-            if (isDragging) {
-                handleDrag(e);
-            }
-        };
-
-        const handleGlobalMouseUp = () => {
-            if (isDragging) {
-                handleDragEnd();
-            }
-        };
-
-        document.addEventListener('mousemove', handleGlobalMouseMove);
-        document.addEventListener('mouseup', handleGlobalMouseUp);
-
-        return () => {
-            document.removeEventListener('mousemove', handleGlobalMouseMove);
-            document.removeEventListener('mouseup', handleGlobalMouseUp);
-        };
-    }, [isDragging]);
-
-    // Manejar clic en la barra de desplazamiento
-    const handleScrollbarClick = (e) => {
-        // Ignorar si se hizo clic en el thumb (la barra móvil)
-        if (e.target === scrollbarRef.current) return;
-
-        const scrollbarContainer = scrollbarRef.current.parentElement;
-        const scrollContainer = scrollContainerRef.current;
-
-        if (!scrollContainer || !scrollbarContainer) return;
-
-        const rect = scrollbarContainer.getBoundingClientRect();
-        const clickPosition = e.clientX - rect.left;
-        const percentage = clickPosition / rect.width;
-
-        const scrollableWidth = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+        targetScrollLeft = Math.max(0, Math.min(targetScrollLeft, scrollableWidth));
 
         isPausedRef.current = true;
         scrollContainer.style.scrollBehavior = 'smooth';
-        scrollContainer.scrollLeft = percentage * scrollableWidth;
+        scrollContainer.scrollLeft = targetScrollLeft;
 
-        // Restablecer después de completar el desplazamiento
         setTimeout(() => {
             scrollContainer.style.scrollBehavior = 'auto';
             isPausedRef.current = false;
+            updateActiveDotIndicator(); // Asegura la sincronización final
         }, 500);
     };
 
     return (
         <Container maxWidth={false} sx={{ py: 4, px: { xs: 2, md: 4 }, maxWidth: '1800px', mx: 'auto' }}>
-            {/* Definimos los estilos globales para ocultar la barra de desplazamiento */}
             <GlobalStyles
                 styles={{
-                    '.hide-carousel-scrollbar::-webkit-scrollbar': {
-                        display: 'none'
-                    },
-                    '.hide-carousel-scrollbar': {
-                        msOverflowStyle: 'none',
-                        scrollbarWidth: 'none'
-                    },
+                    '.hide-carousel-scrollbar::-webkit-scrollbar': { display: 'none' },
+                    '.hide-carousel-scrollbar': { msOverflowStyle: 'none', scrollbarWidth: 'none' },
                     '@keyframes shimmer': {
                         '0%': { backgroundPosition: '-468px 0' },
                         '100%': { backgroundPosition: '468px 0' }
                     }
                 }}
             />
-
             <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
             >
                 <Typography
-                    variant="h5"
-                    component="h2"
-                    fontWeight={500}
-                    mb={3}
+                    variant="h5" component="h2" fontWeight={500} mb={3}
                     sx={{
                         fontFamily: typography.fontFamily || 'Amethysta, sans-serif',
-                        color: vistelicaColors.secondary,
-                        position: 'relative',
-                        display: 'inline-block',
+                        color: vistelicaColors.secondary, position: 'relative', display: 'inline-block',
                         '&::after': {
                             content: '""',
                             position: 'absolute',
@@ -365,28 +344,30 @@ const AutomaticCarouselWithScrollbar = () => {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
             >
+                {error && (
+                    <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+                )}
+
+                {!loading && carouselProducts.length === 0 && !error && (
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                        No hay accesorios disponibles en este momento.
+                    </Alert>
+                )}
+
                 <Box
                     ref={scrollContainerRef}
                     className="hide-carousel-scrollbar"
                     sx={{
-                        display: 'flex',
-                        width: '100%',
-                        overflowX: 'auto',
-                        scrollBehavior: 'auto',
-                        pb: 2,
-                        gap: 3,
-                        '&::before, &::after': {
-                            content: '""',
-                            minWidth: '160px' // Añadimos espacio en los extremos
-                        },
-                        px: 4 // Padding horizontal adicional
+                        display: 'flex', width: '100%', overflowX: 'auto', scrollBehavior: 'auto',
+                        pb: 2, gap: 3,
+                        '&::before, &::after': { content: '""', minWidth: '1px' },
+                        px: { xs: 0, md: 1 }
                     }}
                 >
                     {loading ? (
-                        // Mostrar placeholders mientras carga
-                        Array(6).fill(0).map((_, index) => (
+                        Array(isMobile ? 2 : 6).fill(0).map((_, index) => (
                             <Box
-                                key={index}
+                                key={`skeleton-${index}`}
                                 sx={{
                                     height: '350px',
                                     width: '350px',
@@ -401,7 +382,7 @@ const AutomaticCarouselWithScrollbar = () => {
                     ) : (
                         carouselProducts.map((product, index) => (
                             <CarouselItem
-                                key={`${product.product_id || product.id}-${index}`}
+                                key={`${product.product_id || product.id || index}`}
                                 product={product}
                             />
                         ))
@@ -409,50 +390,29 @@ const AutomaticCarouselWithScrollbar = () => {
                 </Box>
             </motion.div>
 
-            {/* Barra de desplazamiento personalizada estilo minimalista */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-            >
-                <Box
-                    sx={{
-                        position: 'relative',
-                        height: '4px',
-                        bgcolor: 'rgba(255,255,255,0.2)',
-                        borderRadius: '2px',
-                        mt: 1,
-                        mb: 2,
-                        cursor: 'pointer',
-                        background: 'rgba(158, 158, 158, 0.3)',
-                        transition: 'height 0.2s ease',
-                        '&:hover': {
-                            height: '6px'
-                        }
-                    }}
-                    onClick={handleScrollbarClick}
-                >
-                    <Box
-                        ref={scrollbarRef}
-                        sx={{
-                            position: 'absolute',
-                            left: `${scrollPercentage}%`,
-                            transform: 'translateX(-0%)',
-                            height: '100%',
-                            width: '15%',
-                            bgcolor: vistelicaColors.primary || '#E4B002',
-                            borderRadius: '2px',
-                            transition: isDragging ? 'none' : 'left 0.1s ease',
-                            cursor: 'grab',
-                            '&:active': {
-                                cursor: 'grabbing'
-                            },
-                            boxShadow: isDragging ? `0 0 8px ${vistelicaColors.primary}` : 'none'
-                        }}
-                        onMouseDown={handleDragStart}
-                    />
+            {/* Indicador de Puntos */}
+            {!loading && carouselProducts.length > 0 && (scrollContainerRef.current && scrollContainerRef.current.scrollWidth > scrollContainerRef.current.clientWidth) && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2, mb: 2 }}>
+                    {[...Array(NUM_DOTS).keys()].map((index) => (
+                        <Box
+                            key={`dot-${index}`}
+                            onClick={() => handleDotClick(index)}
+                            sx={{
+                                width: activeDotIndex === index ? '12px' : '8px',
+                                height: activeDotIndex === index ? '12px' : '8px',
+                                borderRadius: '50%',
+                                bgcolor: activeDotIndex === index ? (vistelicaColors.primary || '#E4B002') : 'rgba(158, 158, 158, 0.5)',
+                                mx: '4px',
+                                cursor: 'pointer',
+                                transition: 'width 0.3s ease, height 0.3s ease, background-color 0.3s ease',
+                                '&:hover': {
+                                    bgcolor: activeDotIndex === index ? (vistelicaColors.primary || '#E4B002') : 'rgba(158, 158, 158, 0.8)',
+                                }
+                            }}
+                        />
+                    ))}
                 </Box>
-            </motion.div>
+            )}
         </Container>
     );
 };
