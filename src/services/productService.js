@@ -277,6 +277,22 @@ const getDiscountedProductsByCategory = async (categoryId) => {
         );
     }
 };
+/**
+ * Obtiene productos con stock bajo (stock entre 1 y 10)
+ * @returns {Promise<Array>} Lista de productos con bajo stock
+ */
+const getLowStockProducts = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/low-stock`);
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener productos con stock bajo:', error);
+        throw new Error(
+            error.response?.data?.message ||
+            'No se pudieron cargar los productos con stock bajo.'
+        );
+    }
+};
 
 
 const productService = {
@@ -295,6 +311,7 @@ const productService = {
     searchProducts,
     getProductsBasicInfo,
     getDiscountedProductsByCategory,
+    getLowStockProducts,
 };
 
 export default productService;
