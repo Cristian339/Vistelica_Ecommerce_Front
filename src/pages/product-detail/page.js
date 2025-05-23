@@ -86,7 +86,6 @@ export default function ProductDetailPage() {
             const user = await getCurrentUser();
             let currentSessionId = sessionId;
 
-            // Si no hay usuario ni sesión, crear una nueva
             if (!user && !currentSessionId) {
                 currentSessionId = Math.random().toString(36).substring(2, 15);
                 localStorage.setItem('sessionId', currentSessionId);
@@ -94,21 +93,15 @@ export default function ProductDetailPage() {
                 toast.info("Se ha creado una nueva sesión para tu carrito");
             }
 
-            // Obtener o crear el carrito
-            let cart;
-
-            cart = await cartService.getCart(user?.user_id, currentSessionId);
+            let cart = await cartService.getCart(user?.user_id, currentSessionId);
             if(!cart){
                 cart = await cartService.createCart(user?.user_id, currentSessionId);
             }
 
-            console.log(cart);
-            // Validar que tenemos un orderId
-            if (!cart?.order_id) {
+            if (!cart?.cart_id) {
                 throw new Error('No se pudo obtener el ID del carrito');
             }
 
-            // Validar selección de talla y color si el producto los requiere
             const requiresSize = product.sizes?.length > 0;
             const requiresColor = product.colors?.length > 0;
 
@@ -116,14 +109,15 @@ export default function ProductDetailPage() {
                 throw new Error('Por favor selecciona talla y color');
             }
 
-            // Añadir producto al carrito
+            // Añadir producto al carrito con descuento si existe
             await cartService.addToCart(
-                cart.order_id,
+                cart.cart_id,
                 product.product_id,
                 1,
                 parseFloat(product.price),
                 selectedSize,
-                selectedColor
+                selectedColor,
+                product.discount_percentage // Añadimos el descuento aquí
             );
 
             toast.success('✅ Producto añadido al carrito', {

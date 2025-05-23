@@ -54,7 +54,7 @@ const ProductCardContainer = styled(Card)(({ theme }) => ({
 const ImageContainer = styled(Box)(() => ({
     position: 'relative',
     width: '100%',
-    height: '320px', // Altura fija para todas las imágenes
+    height: '420px', // Altura fija para todas las imágenes
     overflow: 'hidden',
     borderRadius: '8px 8px 0 0',
     paddingLeft: '2.5%',
@@ -130,6 +130,7 @@ const ProductSkeleton = () => (
             <Skeleton variant="text" width="40%" height={24} animation="wave" />
             <Box sx={{ mt: 1, mb: 1.5 }}>
                 <Skeleton variant="text" width="85%" height={32} animation="wave" />
+                <Skeleton variant="text" width="65%" height={32} animation="wave" />
             </Box>
             <Skeleton variant="text" width="40%" height={28} animation="wave" />
         </CardContent>
@@ -264,25 +265,7 @@ const ProductCard = ({ product }) => {
                         )}
 
                         {/* Botón de añadir al carrito */}
-                        <Button
-                            fullWidth
-                            variant="contained"
-                            onClick={handleAddToCart}
-                            startIcon={<AddShoppingCartIcon />}
-                            sx={{
-                                borderRadius: 2,
-                                py: 1,
-                                mt: 1,
-                                backgroundColor: vistelicaColors.primary,
-                                '&:hover': {
-                                    backgroundColor: vistelicaColors.secondary
-                                },
-                                fontFamily: typography.fontFamily,
-                                textTransform: 'none'
-                            }}
-                        >
-                            Añadir al carrito
-                        </Button>
+
                     </HoverInfoOverlay>
                 </ImageContainer>
 
@@ -292,7 +275,8 @@ const ProductCard = ({ product }) => {
                     display: 'flex',
                     flexDirection: 'column',
                     overflow: 'hidden',
-                    height: '130px', // Altura fija para el contenido
+
+
                 }}>
                     <Typography
                         variant="subtitle1"
@@ -316,9 +300,11 @@ const ProductCard = ({ product }) => {
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             display: '-webkit-box',
-                            WebkitLineClamp: 1,
+                            WebkitLineClamp: 2, // Cambiado de 1 a 2 para permitir 2 líneas
                             WebkitBoxOrient: 'vertical',
-                            color: vistelicaColors.primary // Nombre en amarillo
+                            color: vistelicaColors.primary, // Nombre en amarillo
+                            lineHeight: 1.2, // Ajustar el espaciado entre líneas
+                            minHeight: '3rem' // Altura mínima para acomodar 2 líneas
                         }}
                     >
                         {product.name || 'Sin nombre'}

@@ -253,15 +253,21 @@ export default function SignInCard() {
                 if (response.success === false) {
                     throw new Error(response.message || 'Credenciales inválidas');
                 }
+                const ban = await getCurrentUser();
 
-                // Si llegamos aquí, consideramos la autenticación exitosa
-                console.log('Login exitoso:', response);
-                setLoginSuccess(true);
+                if(ban.banned === false){
+                    // Si llegamos aquí, consideramos la autenticación exitosa
+                    console.log('Login exitoso:', response);
+                    setLoginSuccess(true);
 
-                // Redirect after successful login
-                setTimeout(() => {
-                    router.push('/home/Home');
-                }, 1000);
+                    // Redirect after successful login
+                    setTimeout(() => {
+                        router.push('/home/Home');
+                    }, 1000);
+                }else{
+                    setLoginError(`Este usuario esta baneado por el siguiente motivo: \n
+                                    ${ban.ban_reason}`)
+                }
             } else {
                 throw new Error('No se recibió respuesta del servidor');
             }
@@ -338,17 +344,22 @@ export default function SignInCard() {
             const backendResponse = await registerSocialUser(userData);
             console.log('Usuario registrado en backend:', backendResponse);
 
-            setLoginSuccess(true);
+            // 4. Comprobamos si esta baneado o no
+            const ban = await getCurrentUser();
 
-            // 4. Redirección según tipo de usuario
-            if (result.isNewUser) {
-                // const user = await getCurrentUser();
+            if(ban.banned === false){
+                // Si llegamos aquí, consideramos la autenticación exitosa
+                setLoginSuccess(true);
 
-
-                setTimeout(() => router.push('/home/Home'), 1000);
-            } else {
-                setTimeout(() => router.push('/home/Home'), 1000);
+                // Redirect after successful login
+                setTimeout(() => {
+                    router.push('/home/Home');
+                }, 1000);
+            }else{
+                setLoginError(`Este usuario esta baneado por el siguiente motivo: \n
+                                    ${ban.ban_reason}`)
             }
+
         } catch (error) {
             console.error('Error al iniciar sesión con Google:', error);
 
@@ -384,14 +395,23 @@ export default function SignInCard() {
 
             // 3. Registrar en el backend
             await registerSocialUser(userData);
-            setLoginSuccess(true);
 
-            // 4. Redirección según tipo de usuario
-            if (result.isNewUser) {
-                setTimeout(() => router.push('/complete-profile'), 1000);
-            } else {
-                setTimeout(() => router.push('/dashboard'), 1000);
+            // 4. Comprobamos si esta baneado o no
+            const ban = await getCurrentUser();
+
+            if(ban.banned === false){
+                // Si llegamos aquí, consideramos la autenticación exitosa
+                setLoginSuccess(true);
+
+                // Redirect after successful login
+                setTimeout(() => {
+                    router.push('/home/Home');
+                }, 1000);
+            }else{
+                setLoginError(`Este usuario esta baneado por el siguiente motivo: \n
+                                    ${ban.ban_reason}`)
             }
+
         } catch (error) {
             console.error('Error al iniciar sesión con Facebook:', error);
 

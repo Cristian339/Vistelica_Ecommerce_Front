@@ -29,6 +29,7 @@ const getById = async (id) => {
     try {
         console.log("El id usado fue: "+id);
         const response = await axios.get(`${API_URL}/products/${id}`);
+        console.log("Info producto: " + JSON.stringify(response));
         return response.data;
     } catch (error) {
         console.error(`Error al obtener producto con ID ${id}:`, error);
