@@ -217,24 +217,69 @@ export const getRandomAccessoryProducts = async () => {
 
 
 /**
- * Busca productos por nombre y categorías
- * @param {string} searchText - Texto para buscar en los nombres de productos
- * @param {Array<number>} [categoryIds] - IDs de categorías para filtrar (opcional)
- * @returns {Promise<Array>} Lista de productos que coinciden con los criterios
+ * Busca productos por nombre y/o categorías
+ * @param {string} [searchText] - Texto para buscar (opcional)
+ * @param {number[]} [categoryIds] - IDs de categorías para filtrar (opcional)
+ * @returns {Promise<Array<{id: number, name: string, image: string|null}>>} - Lista de productos
+ * @throws {Error} - Cuando hay errores en la búsqueda
  */
 const searchProducts = async (searchText, categoryIds = []) => {
     try {
-        const response = await axios.post(`${API_URL}/products/search`, {
-            searchText,
-            categoryIds
+        // Validar que al menos haya un criterio de búsqueda
+        if ((!searchText || searchText.trim().length < 2) && (!categoryIds || categoryIds.length === 0)) {
+            throw new Error('Ingrese un término de búsqueda (mínimo 2 caracteres) o seleccione categorías');
+        }
+
+        // Preparar el cuerpo de la petición
+        const body = {};
+
+        if (searchText && searchText.trim().length >= 2) {
+            body.searchText = searchText.trim();
+        }
+
+        if (categoryIds && categoryIds.length > 0) {
+            // Filtrar y asegurar que los IDs sean números válidos
+            body.categoryIds = categoryIds
+                .map(id => parseInt(id))
+                .filter(id => !isNaN(id) && id > 0);
+        }
+
+        const response = await axios.post(`${API_URL}/products/search`, body, {
+            headers: {
+                'Content-Type': 'application/json',
+            }
         });
-        return response.data;
+
+        // Verificar si la respuesta fue exitosa
+        if (!response.data.success) {
+            throw new Error(response.data.message || 'La búsqueda no devolvió resultados');
+        }
+
+        // Mapear los resultados para asegurar consistencia
+        return response.data.data.map(product => ({
+            id: product.id,
+            name: product.name,
+            image: product.image || null
+        }));
+
     } catch (error) {
-        console.error('Error al buscar productos:', error);
-        throw new Error(
-            error.response?.data?.message ||
-            'No se pudieron encontrar productos con esos criterios.'
-        );
+        console.error('Error en searchProducts:', error);
+
+        // Manejar diferentes tipos de errores
+        let errorMessage = 'Error al buscar productos';
+
+        if (error.response) {
+            // Error de respuesta del servidor
+            errorMessage = error.response.data.message || errorMessage;
+        } else if (error.request) {
+            // Error de conexión
+            errorMessage = 'No se pudo conectar al servidor';
+        } else if (error.message) {
+            // Error lanzado manualmente
+            errorMessage = error.message;
+        }
+
+        throw new Error(errorMessage);
     }
 };
 
