@@ -2,8 +2,6 @@
 
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import Checkbox from '@mui/material/Checkbox';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import FormLabel from '@mui/material/FormLabel';
 import Grid from '@mui/material/Grid';
 import OutlinedInput from '@mui/material/OutlinedInput';
@@ -47,8 +45,7 @@ export default function AddressForm() {
         city: '',
         state: '',
         zip: '',
-        country: '',
-        saveAddress: false
+        country: ''
     });
     const [openDialog, setOpenDialog] = useState(false);
     const [addresses, setAddresses] = useState([]);
@@ -79,8 +76,7 @@ export default function AddressForm() {
                         city: defaultAddress.city || '',
                         state: defaultAddress.state || '',
                         zip: defaultAddress.postal_code || '',
-                        country: defaultAddress.country || '',
-                        saveAddress: false
+                        country: defaultAddress.country || ''
                     });
                 } else {
                     // Si no hay dirección predeterminada, al menos establecer nombre y apellido
@@ -103,10 +99,10 @@ export default function AddressForm() {
     }, []);
 
     const handleChange = (event) => {
-        const { name, value, checked, type } = event.target;
+        const { name, value } = event.target;
         setFormData(prev => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : value
+            [name]: value
         }));
     };
 
@@ -172,29 +168,7 @@ export default function AddressForm() {
     return (
         <>
             <Grid container spacing={3}>
-                <Grid item xs={12}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                        <Typography variant="h6" component="h2">
-                            Datos de envío
-                        </Typography>
-                        <Button
-                            variant="outlined"
-                            color="primary"
-                            onClick={handleOpenDialog}
-                            startIcon={<SearchIcon />}
-                            sx={{
-                                borderColor: '#E4B002',
-                                color: '#E4B002',
-                                '&:hover': {
-                                    borderColor: '#A67D00',
-                                    backgroundColor: 'rgba(228, 176, 2, 0.04)',
-                                }
-                            }}
-                        >
-                            Buscar mis direcciones
-                        </Button>
-                    </Box>
-                </Grid>
+
                 <FormGrid item xs={12} md={6}>
                     <FormLabel htmlFor="firstName" required>
                         Nombre
@@ -320,18 +294,27 @@ export default function AddressForm() {
                         onChange={handleChange}
                     />
                 </FormGrid>
-                <FormGrid item xs={12}>
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                name="saveAddress"
-                                checked={formData.saveAddress}
-                                onChange={handleChange}
-                            />
-                        }
-                        label="Usar esta dirección para los detalles de pago"
-                    />
-                </FormGrid>
+                <Grid item xs={12}>
+                    <Box display="flex" justifyContent="center" mt={2}>
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            onClick={handleOpenDialog}
+                            startIcon={<SearchIcon />}
+                            sx={{
+                                borderColor: '#E4B002',
+                                color: '#E4B002',
+                                fontWeight: 'bold',
+                                '&:hover': {
+                                    borderColor: '#A67D00',
+                                    backgroundColor: 'rgba(228, 176, 2, 0.04)',
+                                }
+                            }}
+                        >
+                            Buscar mis direcciones
+                        </Button>
+                    </Box>
+                </Grid>
             </Grid>
 
             {/* Modal para seleccionar direcciones */}

@@ -58,7 +58,9 @@ const ProductList = () => {
         ratings: [],
         priceMin: '',
         priceMax: '',
-        subcategories: []
+        subcategories: [],
+        lowStock: false,
+        hasDiscount: false,
     });
     const [loading, setLoading] = useState(true);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -548,14 +550,22 @@ const ProductList = () => {
         if (filters.priceMax !== '') {
             result = result.filter(p => p.price <= parseFloat(filters.priceMax));
         }
+        // Para productos con descuento
+        if (filters.hasDiscount) {
+            result = result.filter(product => parseFloat(product.discount_percentage) > 0);
+        }
 
+        // Filtrar productos con stock bajo
+        if (filters.lowStock) {
+            result = result.filter(product => product.stock_quantity <= 15);
+        }
         // Aplicar ordenamiento
         if (sortOption !== 'relevancia') {
             result = sortProducts(result, sortOption);
         }
 
         setFilteredProducts(result);
-    }, [filters.brands, filters.colors, filters.ratings, filters.priceMin, filters.priceMax, sortOption, products]);
+    }, [filters.brands, filters.colors, filters.ratings, filters.priceMin, filters.priceMax, filters.hasDiscount, filters.lowStock, sortOption, products]);
 
     // Resetear filtros
     const resetFilters = () => {
@@ -565,7 +575,9 @@ const ProductList = () => {
             ratings: [],
             priceMin: '',
             priceMax: '',
-            subcategories: []
+            subcategories: [],
+            lowStock: false,
+            hasDiscount: false,
         });
         setSortOption('relevancia');
     };

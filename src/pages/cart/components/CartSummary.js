@@ -20,7 +20,7 @@ export default function CartSummary({
         if (!isAuthenticated) {
             router.push('/sign-in-side/Sign-in-side');
         } else if (onCheckout) {
-            onCheckout();
+            router.push('/checkout/Checkout');
         }
     };
 

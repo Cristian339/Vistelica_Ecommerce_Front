@@ -53,7 +53,7 @@ export default function SearchFilter({ isOpen, onClose, router }) {
             console.log("Buscando con categorías:", selectedCategoryIds);
             const results = await productService.searchProducts(query, selectedCategoryIds);
             console.log("Resultados:", results);
-            setSearchResults(results || []);
+            setSearchResults(results);
         } catch (error) {
             console.error('Error en la búsqueda:', error);
             setSearchError(error.message || 'Error al realizar la búsqueda');
@@ -123,14 +123,11 @@ export default function SearchFilter({ isOpen, onClose, router }) {
 
     // Función para extraer la imagen del producto si está disponible
     const getProductImage = (product) => {
-        if (product?.images_url?.length > 0) {
-            return product.images_url[0];
-        } else if (product?.images && product.images.length > 0) {
-            return product.images[0];
-        } else if (product?.image_url) {
-            return product.image_url;
+        if(product?.image != null){
+            return product.image;
+        }else {
+            return null;
         }
-        return null;
     };
 
     // Función para formatear el precio
@@ -301,9 +298,9 @@ export default function SearchFilter({ isOpen, onClose, router }) {
 
                                     <List sx={{ padding: 0 }}>
                                         {searchResults.map((product, index) => (
-                                            <React.Fragment key={`product-${product.product_id || index}`}>
+                                            <React.Fragment key={`product-${product.id || index}`}>
                                                 <ListItemButton
-                                                    onClick={() => handleProductClick(product.product_id, index)}
+                                                    onClick={() => handleProductClick(product.id, index)}
                                                     selected={selectedItemIndex === index}
                                                     sx={{
                                                         cursor: 'pointer',
@@ -319,7 +316,7 @@ export default function SearchFilter({ isOpen, onClose, router }) {
                                                     <ListItemAvatar>
                                                         <Avatar
                                                             src={getProductImage(product)}
-                                                            alt={product.product_name}
+                                                            alt={product.name}
                                                             variant="rounded"
                                                             sx={{
                                                                 width: 60,
@@ -328,12 +325,12 @@ export default function SearchFilter({ isOpen, onClose, router }) {
                                                                 borderRadius: '8px'
                                                             }}
                                                         >
-                                                            {product.product_name?.charAt(0) || 'P'}
+                                                            {product.name?.charAt(0) || 'P'}
                                                         </Avatar>
                                                     </ListItemAvatar>
 
                                                     <ListItemText
-                                                        primary={product.product_name}
+                                                        primary={product.name}
                                                         primaryTypographyProps={{
                                                             fontWeight: 600,
                                                             fontFamily: typography.fontFamily,
