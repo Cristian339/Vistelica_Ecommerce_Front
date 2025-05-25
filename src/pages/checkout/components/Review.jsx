@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from 'react';
+import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Grid from '@mui/material/Grid';
@@ -9,132 +10,155 @@ import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+import cartService from '@/services/cartService';
+import { getProfileAndAddresses } from '@/services/profileService';
 
+export default function Review({ paymentData, shippingData = null }) {
+    const [cartData, setCartData] = useState(null);
+    const [addressData, setAddressData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-const addresses = ['1 MUI Drive', 'Reactville', 'Anytown', '99999', 'USA'];
-const cardPayments = [
-    { name: 'Tipo de tarjeta:', detail: 'Visa' },
-    { name: 'Titular:', detail: 'Sr. John Smith' },
-    { name: 'Número de tarjeta:', detail: 'xxxx-xxxx-xxxx-1234' },
-    { name: 'Fecha de expiración:', detail: '04/2024' },
-];
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
 
-export default function Review({ paymentData }) {
-    const renderPaymentDetails = () => {
-        if (paymentData && paymentData.type === 'paypal') {
-            return (
-                <Grid container>
-                    <Stack direction="column" spacing={1} sx={{ width: '100%' }}>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                                Método de pago:
-                            </Typography>
-                            <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                                PayPal
-                            </Typography>
-                        </Box>
+                // Obtener datos del carrito
+                const products = await cartService.getCurrentCartProducts();
+                setCartData({ products });
 
-                        {paymentData.details && paymentData.details.email && (
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                                <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                                    Email:
-                                </Typography>
-                                <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                                    {paymentData.details.email}
-                                </Typography>
-                            </Box>
-                        )}
+                // Obtener datos de dirección si no se proporcionan
+                if (!shippingData) {
+                    const profileData = await getProfileAndAddresses();
+                    const defaultAddress = profileData.addresses.find(address => address.is_default === true) ||
+                        (profileData.addresses.length > 0 ? profileData.addresses[0] : null);
 
-                        {paymentData.details && paymentData.details.id && (
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                                <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                                    ID de transacción:
-                                </Typography>
-                                <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                                    {paymentData.details.id}
-                                </Typography>
-                            </Box>
-                        )}
+                    setAddressData({
+                        firstName: profileData.name || '',
+                        lastName: profileData.lastName || '',
+                        address: defaultAddress
+                    });
+                } else {
+                    setAddressData(shippingData);
+                }
 
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                                Estado:
-                            </Typography>
-                            <Typography variant="body1" sx={{ fontWeight: 'medium', color: 'success.main' }}>
-                                Completado
-                            </Typography>
-                        </Box>
-                    </Stack>
-                </Grid>
-            );
-        } else if (paymentData && paymentData.type === 'bankTransfer') {
-            return (
-                <Grid container>
-                    <React.Fragment>
-                        <Stack direction="column" spacing={1} sx={{ width: '100%' }}>
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                                <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                                    Método de pago:
-                                </Typography>
-                                <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                                    Transferencia bancaria
-                                </Typography>
-                            </Box>
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                                <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                                    Banco:
-                                </Typography>
-                                <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                                    Mastercredit
-                                </Typography>
-                            </Box>
-                        </Stack>
-                    </React.Fragment>
-                </Grid>
-            );
-        } else {
-            // Default: creditCard o sin datos de pago
-            return (
-                <Grid container>
-                    {cardPayments.map((payment) => (
-                        <React.Fragment key={payment.name}>
-                            <Stack
-                                direction="row"
-                                spacing={1}
-                                useFlexGap
-                                sx={{ width: '100%', mb: 1 }}
-                            >
-                                <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                                    {payment.name}
-                                </Typography>
-                                <Typography variant="body2">{payment.detail}</Typography>
-                            </Stack>
-                        </React.Fragment>
-                    ))}
-                </Grid>
-            );
+                setLoading(false);
+            } catch (err) {
+                console.error('Error fetching data:', err);
+                setError('Error al cargar los datos');
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [shippingData]);
+
+    // Función para calcular el precio con descuento
+    const calculateDiscountedPrice = (price, discountPercentage) => {
+        const originalPrice = parseFloat(price);
+        const discount = parseFloat(discountPercentage);
+        return originalPrice * (1 - discount / 100);
+    };
+
+    // Función para calcular el subtotal
+    const calculateSubtotal = (products) => {
+        if (!products || products.length === 0) return 0;
+        return products.reduce((sum, item) => {
+            const finalPrice = calculateDiscountedPrice(item.price, item.discount_percentage);
+            return sum + (finalPrice * item.quantity);
+        }, 0);
+    };
+
+    // Función para calcular los gastos de envío
+    const calculateShippingCost = (subtotal) => {
+        return subtotal >= 50 ? 0 : 4.99;
+    };
+
+    // Función para formatear precios
+    const formatPrice = (price) => {
+        return Number(price).toFixed(2) + " €";
+    };
+
+    // Función simplificada para obtener el nombre del método de pago
+    const getPaymentMethodName = () => {
+        if (!paymentData || !paymentData.type) {
+            return 'Tarjeta de crédito'; // Default
+        }
+
+        switch (paymentData.type) {
+            case 'creditCard':
+                return 'Tarjeta de crédito';
+            case 'paypal':
+                return 'PayPal';
+            case 'applePay':
+                return 'Apple Pay';
+            case 'googlePay':
+                return 'Google Pay';
+            case 'bankTransfer':
+                return 'Transferencia bancaria';
+            default:
+                return 'Método de pago seleccionado';
         }
     };
+
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (error) {
+        return (
+            <Alert severity="error">{error}</Alert>
+        );
+    }
+
+    if (!cartData || !cartData.products || cartData.products.length === 0) {
+        return (
+            <Alert severity="warning">No hay productos en el carrito</Alert>
+        );
+    }
+
+    const subtotal = calculateSubtotal(cartData.products);
+    const shippingCost = calculateShippingCost(subtotal);
+    const totalPrice = subtotal + shippingCost;
+    const totalProducts = cartData.products.reduce((sum, item) => sum + item.quantity, 0);
 
     return (
         <Stack spacing={2}>
             <List disablePadding>
+                {/* Resumen de costos */}
                 <ListItem sx={{ py: 1, px: 0 }}>
-                    <ListItemText primary="Productos" secondary="4 seleccionados" />
-                    <Typography variant="body2">$134.98</Typography>
+                    <ListItemText
+                        primary="Productos"
+                        secondary={`${totalProducts} producto${totalProducts !== 1 ? 's' : ''} seleccionado${totalProducts !== 1 ? 's' : ''}`}
+                    />
+                    <Typography variant="body2">{formatPrice(subtotal)}</Typography>
                 </ListItem>
+
                 <ListItem sx={{ py: 1, px: 0 }}>
-                    <ListItemText primary="Envío" secondary="Más impuestos" />
-                    <Typography variant="body2">$9.99</Typography>
+                    <ListItemText
+                        primary="Envío"
+                        secondary={subtotal >= 50 ? "Envío gratuito" : "Gastos de envío"}
+                    />
+                    <Typography variant="body2">{formatPrice(shippingCost)}</Typography>
                 </ListItem>
+
                 <ListItem sx={{ py: 1, px: 0 }}>
                     <ListItemText primary="Total" />
                     <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                        $144.97
+                        {formatPrice(totalPrice)}
                     </Typography>
                 </ListItem>
             </List>
+
             <Divider />
+
             <Stack
                 direction="column"
                 divider={<Divider flexItem />}
@@ -145,18 +169,52 @@ export default function Review({ paymentData }) {
                     <Typography variant="subtitle2" gutterBottom>
                         Detalles de envío
                     </Typography>
-                    <Typography gutterBottom>John Smith</Typography>
-                    <Typography gutterBottom sx={{ color: 'text.secondary' }}>
-                        {addresses.join(', ')}
-                    </Typography>
+                    {addressData ? (
+                        <>
+                            <Typography gutterBottom>
+                                {addressData.firstName} {addressData.lastName}
+                            </Typography>
+                            {addressData.address ? (
+                                <Typography gutterBottom sx={{ color: 'text.secondary' }}>
+                                    {addressData.address.street}
+                                    {addressData.address.label && `, ${addressData.address.label}`}
+                                    <br />
+                                    {addressData.address.city}, {addressData.address.state}, {addressData.address.postal_code}
+                                    <br />
+                                    {addressData.address.country || 'España'}
+                                </Typography>
+                            ) : (
+                                <Typography gutterBottom sx={{ color: 'text.secondary' }}>
+                                    Dirección no disponible
+                                </Typography>
+                            )}
+                        </>
+                    ) : (
+                        <Typography gutterBottom sx={{ color: 'text.secondary' }}>
+                            Cargando datos de envío...
+                        </Typography>
+                    )}
                 </div>
+
+                {/* Sección simplificada de método de pago */}
                 <div>
                     <Typography variant="subtitle2" gutterBottom>
-                        Detalles de pago
+                        Método de pago
                     </Typography>
-                    {renderPaymentDetails()}
+                    <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                        {getPaymentMethodName()}
+                    </Typography>
+
+                    {/* Mostrar información adicional solo si es necesario */}
+                    {paymentData?.type === 'paypal' && paymentData?.details?.email && (
+                        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                            Email: {paymentData.details.email}
+                        </Typography>
+                    )}
                 </div>
             </Stack>
+
+
         </Stack>
     );
 }

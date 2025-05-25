@@ -2,19 +2,13 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-const createOrder = async (userId, products) => {
+const createOrder = async (orderData) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.post(`${API_URL}/orders`, {
-            userId,
-            products: products.map(p => ({
-                productId: p.id,
-                quantity: p.quantity,
-                price: p.price
-            }))
-        }, {
+        const response = await axios.post(`${API_URL}/order/create`, orderData, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
         });
         return response.data;
@@ -27,20 +21,20 @@ const createOrder = async (userId, products) => {
     }
 };
 
-const getOrdersByUser = async (userId) => {
+
+const getOrdersByUser = async () => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`${API_URL}/orders/user/${userId}`, {
+        const response = await axios.get(`${API_URL}/order/user`, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                Authorization: `Bearer ${token}`
             }
         });
         return response.data;
     } catch (error) {
         console.error('Error fetching user orders:', error);
         throw new Error(
-            error.response?.data?.message ||
-            'No se pudieron cargar los pedidos. Inténtalo más tarde.'
+            error.response?.data?.message || 'No se pudieron cargar los pedidos. Inténtalo más tarde.'
         );
     }
 };
@@ -48,17 +42,16 @@ const getOrdersByUser = async (userId) => {
 const getOrderDetails = async (orderId) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`${API_URL}/orders/${orderId}/details`, {
+        const response = await axios.get(`${API_URL}/order/${orderId}`, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                Authorization: `Bearer ${token}`
             }
         });
         return response.data;
     } catch (error) {
         console.error('Error fetching order details:', error);
         throw new Error(
-            error.response?.data?.message ||
-            'No se pudieron cargar los detalles del pedido.'
+            error.response?.data?.message || 'No se pudieron cargar los detalles del pedido.'
         );
     }
 };
@@ -103,23 +96,7 @@ const cancelOrder = async (orderId) => {
     }
 };
 
-const getAllOrders = async () => {
-    try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`${API_URL}/orders`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching all orders:', error);
-        throw new Error(
-            error.response?.data?.message ||
-            'No se pudieron cargar los pedidos. Inténtalo más tarde.'
-        );
-    }
-};
+
 
 export const orderService = {
     createOrder,
@@ -127,5 +104,5 @@ export const orderService = {
     getOrderDetails,
     updateOrderStatus,
     cancelOrder,
-    getAllOrders
+
 };

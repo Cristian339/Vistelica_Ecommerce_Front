@@ -359,7 +359,7 @@ const PaymentForm = React.forwardRef(({ paymentData, setPaymentData }, ref) => {
                     </Card>
                     <Card selected={paymentType === 'googlePay'}>
                         <CardActionArea
-                            onClick={() => setPaymentType('googlePay')}
+                            onClick={() => handlePaymentTypeChange({ target: { value: 'googlePay' }})}
                             sx={{
                                 '.MuiCardActionArea-focusHighlight': {
                                     backgroundColor: 'transparent',

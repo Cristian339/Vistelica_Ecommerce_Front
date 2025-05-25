@@ -198,7 +198,7 @@ const SidebarMenu = ({ username, drawerOpen: externalDrawerOpen, setDrawerOpen: 
 
     const menuItems = [
         { text: "Mi cuenta", icon: <PersonOutlineIcon />, path: "/account/AccountLayout", selected: currentPath === "/account/AccountLayout" },
-        { text: "Pedidos", icon: <LocalShippingOutlinedIcon />, path: "/order-history/AccountLayout", selected: currentPath === "/order-history/AccountLayout" },
+        { text: "Pedidos", icon: <LocalShippingOutlinedIcon />, path: "/account/order-history/UserOrdersPage", selected: currentPath === "/order-history/AccountLayout" },
         { text: "Direcciones", icon: <LocationOnOutlinedIcon />, path: "/account/AccountAddresses", selected: currentPath === "/account/AccountAddresses" },
         { text: "Métodos de pago", icon: <PaymentOutlinedIcon />, path: "#", selected: false },
         { text: "Devoluciones", icon: <AssignmentReturnOutlinedIcon />, path: "#", selected: false },

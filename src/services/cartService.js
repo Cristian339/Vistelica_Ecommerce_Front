@@ -356,22 +356,31 @@ const cartService = {
         }
     },
 
-    async getUserOrders() {
+
+    /**
+     * Obtiene los productos del carrito actual del usuario
+     * @returns {Promise<Array>} - Lista de productos del carrito
+     */
+    async getCurrentCartProducts() {
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error('Usuario no autenticado');
+            const user = await getCurrentUser();
+            const userId = user?.user_id || null;
+            const sessionId = this.getSessionId();
+
+            // Obtener el carrito actual
+            const cart = await this.getCart(userId, sessionId);
+
+            if (!cart) {
+                return [];
             }
 
-            const response = await axios.get(`${API_URL}/user-orders`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            // Obtener los items del carrito
+            const cartItems = await this.getCartItems(cart.cart_id);
+            return cartItems || [];
 
-            return response.data.data || [];
         } catch (error) {
-            return handleError(error, 'Error al obtener los pedidos del usuario');
+            console.error('Error al obtener productos del carrito actual:', error);
+            throw new Error('Error al obtener los productos del carrito');
         }
     },
 
