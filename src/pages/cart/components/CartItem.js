@@ -21,7 +21,7 @@ const getColorHex = (colorName) => {
         YELLOW: '#FFFF00',
         ORANGE: '#FFA500',
         PURPLE: '#800080',
-        BROWN: '#A52A2A',
+        BROWN: '#715638',
         GRAY: '#808080',
         PINK: '#FFC0CB',
         BEIGE: '#F5F5DC',

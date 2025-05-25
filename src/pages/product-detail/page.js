@@ -8,6 +8,7 @@ import { getCurrentUser } from '@/services/authService';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Navbar from "@/components/layout/HeaderComponent";
+import Footer from "@/components/layout/FooterComponent";
 import { CircularProgress } from '@mui/material';
 
 export default function ProductDetailPage() {
@@ -42,18 +43,16 @@ export default function ProductDetailPage() {
 
                     setProduct(productData);
 
-                    console.log(productData.size);
-
                     // Establecer valores por defecto solo si hay opciones disponibles
-                    if (productData.size?.length > 0) {
-                        setSelectedSize(productData.size[0]);
-                    }
-                    if (productData.colors?.length > 0) {
-                        setSelectedColor(productData.colors[0]);
-                    }
+                    const productSizes = productData.sizes || productData.size || [];
+                    const productColors = productData.colors || [];
 
-                    console.log(selectedSize);
-                    console.log(selectedColor);
+                    if (productSizes.length > 0) {
+                        setSelectedSize(productSizes[0]);
+                    }
+                    if (productColors.length > 0) {
+                        setSelectedColor(productColors[0]);
+                    }
 
                     setLoading(false);
                 }
@@ -83,6 +82,18 @@ export default function ProductDetailPage() {
         setAddingToCart(true);
 
         try {
+            // Usamos las propiedades correctas del producto
+            const sizes = product.sizes || product.size || [];
+            const colors = product.colors || [];
+
+            const requiresSize = sizes.length > 0;
+            const requiresColor = colors.length > 0;
+
+            if ((requiresSize && !selectedSize) || (requiresColor && !selectedColor)) {
+                throw new Error('Por favor selecciona talla y color');
+            }
+
+            // Obtenemos el usuario o creamos una sesión
             const user = await getCurrentUser();
             let currentSessionId = sessionId;
 
@@ -90,26 +101,32 @@ export default function ProductDetailPage() {
                 currentSessionId = Math.random().toString(36).substring(2, 15);
                 localStorage.setItem('sessionId', currentSessionId);
                 setSessionId(currentSessionId);
-                toast.info("Se ha creado una nueva sesión para tu carrito");
             }
 
-            let cart = await cartService.getCart(user?.user_id, currentSessionId);
-            if(!cart){
-                cart = await cartService.createCart(user?.user_id, currentSessionId);
+            // Intentamos obtener el carrito con manejo de errores mejorado
+            let cart = null;
+            try {
+                cart = await cartService.getCart(user?.user_id, currentSessionId);
+            } catch (cartError) {
+                console.warn("Error al obtener el carrito, intentando crear uno nuevo:", cartError);
+                // Si falla la obtención, intentamos crear uno nuevo
+            }
+
+            // Si no hay carrito, intentamos crearlo
+            if (!cart) {
+                try {
+                    cart = await cartService.createCart(user?.user_id, currentSessionId);
+                } catch (createError) {
+                    console.error("Error al crear el carrito:", createError);
+                    throw new Error("No se pudo crear un carrito nuevo");
+                }
             }
 
             if (!cart?.cart_id) {
                 throw new Error('No se pudo obtener el ID del carrito');
             }
 
-            const requiresSize = product.sizes?.length > 0;
-            const requiresColor = product.colors?.length > 0;
-
-            if ((requiresSize && !selectedSize) || (requiresColor && !selectedColor)) {
-                throw new Error('Por favor selecciona talla y color');
-            }
-
-            // Añadir producto al carrito con descuento si existe
+            // Añadimos el producto al carrito
             await cartService.addToCart(
                 cart.cart_id,
                 product.product_id,
@@ -117,7 +134,8 @@ export default function ProductDetailPage() {
                 parseFloat(product.price),
                 selectedSize,
                 selectedColor,
-                product.discount_percentage // Añadimos el descuento aquí
+                product.discount_percentage,
+                product.image_url || product.img_url || product.images?.[0]
             );
 
             toast.success('✅ Producto añadido al carrito', {
@@ -170,6 +188,7 @@ export default function ProductDetailPage() {
                         Volver a la página principal
                     </button>
                 </div>
+                <Footer />
             </div>
         );
     }
@@ -188,24 +207,28 @@ export default function ProductDetailPage() {
                         Volver a la página principal
                     </button>
                 </div>
+                <Footer />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen flex flex-col">
             <Navbar />
-            <ProductDetail
-                product={product}
-                availableSizes={product.size}
-                availableColors={product.colors}
-                selectedSize={selectedSize}
-                selectedColor={selectedColor}
-                onSizeChange={handleSizeChange}
-                onColorChange={handleColorChange}
-                onAddToCart={handleAddToCart}
-                addingToCart={addingToCart}
-            />
+            <div className="flex-grow">
+                <ProductDetail
+                    product={product}
+                    availableSizes={product.sizes || product.size || []}
+                    availableColors={product.colors || []}
+                    selectedSize={selectedSize}
+                    selectedColor={selectedColor}
+                    onSizeChange={handleSizeChange}
+                    onColorChange={handleColorChange}
+                    onAddToCart={handleAddToCart}
+                    addingToCart={addingToCart}
+                />
+            </div>
+            <Footer />
             <ToastContainer
                 position="bottom-right"
                 autoClose={5000}
