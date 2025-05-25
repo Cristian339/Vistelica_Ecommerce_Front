@@ -45,6 +45,7 @@ export const setLocalWishlist = (products) => {
  * @returns {Array} - Lista actualizada de favoritos
  */
 export const addToLocalWishlist = (product) => {
+    console.log(product)
     if (!product || !product.id) {
         console.error('Producto inválido para añadir a favoritos');
         return getLocalWishlist();
@@ -60,6 +61,44 @@ export const addToLocalWishlist = (product) => {
             name: product.name || 'Producto sin nombre',
             price: product.price || 0,
             image: product.image || product.images?.[0] || '',
+            description: product.description || '',
+            slug: product.slug || `product-${product.id}`
+        };
+
+        const updatedWishlist = [...wishlist, productToAdd];
+        setLocalWishlist(updatedWishlist);
+        return updatedWishlist;
+    }
+
+    return wishlist;
+};
+
+
+
+
+
+/**
+ * Añade un producto a la lista de deseos
+ * @param {Object} product - Producto a añadir
+ * @returns {Array} - Lista actualizada de favoritos
+ */
+export const addToLocalWishlist2 = (product) => {
+    console.log(product)
+    if (!product || !product.product_id) {
+        console.error('Producto inválido para añadir a favoritos');
+        return getLocalWishlist();
+    }
+
+    const wishlist = getLocalWishlist();
+
+    // Verificar si el producto ya existe por id o product_id
+    if (!wishlist.some(item => (item.id === product.id || item.product_id === product.id))) {
+        const productToAdd = {
+            id: product.product_id,
+            product_id: product.product_id,
+            name: product.name || 'Producto sin nombre',
+            price: product.price || 0,
+            image: product.image_url || product.image_url?.[0] || '',
             description: product.description || '',
             slug: product.slug || `product-${product.id}`
         };
@@ -95,7 +134,9 @@ export const removeFromLocalWishlist = (productId) => {
  * @returns {boolean} - true si el producto está en favoritos
  */
 export const isInLocalWishlist = (productId) => {
+    console.log("ID pasado" + productId);
     if (!productId) return false;
+
 
     const wishlist = getLocalWishlist();
     return wishlist.some(product =>

@@ -1,5 +1,5 @@
 "use client";
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 import {
@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import productService from '@/services/productService'
+import productService from '@/services/productService';
 import ProductGallery from './ProductGallery';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ShareIcon from '@mui/icons-material/Share';
@@ -26,6 +26,11 @@ import ShippingInfo from './ShippingInfo';
 import ProductReviews from './ProductReviews';
 import wishlistService from '@/services/wishlistService';
 import { getToken } from '@/services/authService';
+import {
+    isInLocalWishlist,
+    addToLocalWishlist2,
+    removeFromLocalWishlist
+} from '@/utils/localStorageHelpers';
 
 const ProductDetailContainer = styled('div')(({ theme }) => ({
     padding: theme.spacing(2),
@@ -80,21 +85,32 @@ const ProductDetail = ({
     const [errorReviews, setErrorReviews] = useState(null);
     const [errorMessage, setErrorMessage] = useState(null);
 
-    // Calculate prices correctly
+    // Calcular precios
     const hasDiscount = product.discount_percentage && parseFloat(product.discount_percentage) > 0;
     const originalPrice = parseFloat(product.price);
     const discountedPrice = hasDiscount
-        ? (originalPrice * (1 - parseFloat(product.discount_percentage) / 100).toFixed(2))
-            : originalPrice;
+        ? (originalPrice * (1 - parseFloat(product.discount_percentage) / 100)).toFixed(2)
+        : originalPrice;
     const discountAmount = hasDiscount
         ? (originalPrice - parseFloat(discountedPrice)).toFixed(2)
         : 0;
 
-    // Verificar si el producto está en la wishlist al cargar el componente
+    // Verificar estado de la lista de deseos al cargar
     useEffect(() => {
         let isMounted = true;
 
         const checkWishlistStatus = async () => {
+            const token = getToken();
+
+            if (!token) {
+                // Para usuarios invitados: verificar localStorage
+                const inWishlist = isInLocalWishlist(product.product_id);
+                if (isMounted) setIsFavorite(inWishlist);
+                setInitialized(true);
+                return;
+            }
+
+            // Para usuarios registrados: verificar API
             try {
                 setLoadingWishlist(true);
                 const inWishlist = await wishlistService.checkProductInWishlist(product.product_id);
@@ -107,7 +123,7 @@ const ProductDetail = ({
                     if (isMounted) setIsFavorite(inWishlist);
                 }
             } catch (error) {
-                console.error('Error verificando wishlist:', error);
+                console.error('Error al verificar lista de deseos:', error);
             } finally {
                 if (isMounted) {
                     setLoadingWishlist(false);
@@ -129,7 +145,7 @@ const ProductDetail = ({
             const reviewsData = await productService.getReviewsByProductId(product?.product_id);
             setReviews(reviewsData);
         } catch (error) {
-            console.error("Error fetching reviews:", error);
+            console.error("Error al cargar reseñas:", error);
             setErrorReviews(error.message || "Error al cargar las reseñas");
         } finally {
             setLoadingReviews(false);
@@ -148,12 +164,21 @@ const ProductDetail = ({
 
     const handleToggleFavorite = async () => {
         const token = getToken();
+
         if (!token) {
-            // Redirigir a login o mostrar modal
-            console.log('Usuario no autenticado');
+            // Para usuarios invitados: usar localStorage
+            const newFavStatus = !isFavorite;
+            setIsFavorite(newFavStatus);
+
+            if (newFavStatus) {
+                addToLocalWishlist2(product);
+            } else {
+                removeFromLocalWishlist(product.product_id);
+            }
             return;
         }
 
+        // Para usuarios registrados: usar API
         try {
             setLoadingWishlist(true);
             if (isFavorite) {
@@ -163,7 +188,7 @@ const ProductDetail = ({
             }
             setIsFavorite(!isFavorite);
         } catch (error) {
-            console.error('Error actualizando wishlist:', error);
+            console.error('Error al actualizar lista de deseos:', error);
         } finally {
             setLoadingWishlist(false);
         }
@@ -184,16 +209,20 @@ const ProductDetail = ({
                 price: parseFloat(hasDiscount ? discountedPrice : originalPrice),
                 size: selectedSize,
                 color: selectedColor,
-                discount_percentage: hasDiscount ? parseFloat(product.discount_percentage) : null // Añadimos el descuento
+                discount_percentage: hasDiscount ? parseFloat(product.discount_percentage) : null
             });
         } catch (error) {
             setErrorMessage('Error al añadir al carrito');
-            console.error('Error adding to cart:', error);
+            console.error('Error al añadir al carrito:', error);
         }
     };
 
     if (!initialized) {
-        return <CircularProgress />;
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+                <CircularProgress />
+            </Box>
+        );
     }
 
     return (
@@ -222,7 +251,7 @@ const ProductDetail = ({
                             </Typography>
 
                             <IconButton
-                                aria-label={isFavorite ? "Eliminar de favoritos" : "Añadir a favoritos"}
+                                aria-label={isFavorite ? "Quitar de favoritos" : "Añadir a favoritos"}
                                 onClick={handleToggleFavorite}
                                 disabled={loadingWishlist}
                                 sx={{
@@ -249,7 +278,7 @@ const ProductDetail = ({
                                         color: vistelicaColors.primary,
                                         my: 1
                                     }}>
-                                        {discountedPrice.toFixed(2)}€
+                                        {discountedPrice}€
                                     </Typography>
                                     <Chip
                                         label={`-${product.discount_percentage}%`}
@@ -267,7 +296,7 @@ const ProductDetail = ({
                                     color: vistelicaColors.primary,
                                     my: 1
                                 }}>
-                                    {originalPrice}€
+                                    {originalPrice.toFixed(2)}€
                                 </Typography>
                             )}
                         </Box>
@@ -309,7 +338,7 @@ const ProductDetail = ({
                             </Alert>
                         )}
 
-                        <ProductInfo description={product.description} sx={{maxWidth: 90}}/>
+                        <ProductInfo description={product.description} sx={{ maxWidth: 90 }} />
 
                         <Box sx={{
                             display: 'flex',
@@ -356,7 +385,7 @@ const ProductDetail = ({
                     </CompactDetailBox>
                 </Grid>
 
-                <Grid item xs={12} sx={{ mt: { xs: 2, md: 0 } , width: '100%'}}>
+                <Grid item xs={12} sx={{ mt: { xs: 2, md: 0 }, width: '100%' }}>
                     <ProductReviews
                         reviews={reviews}
                         productId={product.product_id}

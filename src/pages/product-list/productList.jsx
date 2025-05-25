@@ -1,16 +1,18 @@
 "use client"
 
-import React, { useEffect, useState,useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     Box, Typography, Button, Divider, Chip, IconButton, GlobalStyles,
     Tooltip, Breadcrumbs, Link as MuiLink, CircularProgress,
-    Snackbar, Alert
+    Snackbar, Alert, Select, MenuItem, FormControl, InputLabel
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import ViewComfyIcon from '@mui/icons-material/ViewComfy';
 import HomeIcon from '@mui/icons-material/Home';
+import ChevronLeft from '@mui/icons-material/ChevronLeft';
+import ChevronRight from '@mui/icons-material/ChevronRight';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import Link from 'next/link';
@@ -23,7 +25,7 @@ import wishlistService from '@/services/wishlistService';
 import productService from '@/services/productService';
 import categoryService from '@/services/categoryService';
 import { sortProducts } from './components/SortUtils';
-import { COLORS, BRANDS } from './constants/filterOptions';
+import { COLORS, BRANDS, SIZES } from './constants/filterOptions';
 // Componentes
 import ProductGrid from './components/ProductGrid';
 import SortDropdown from './components/SortDropdown';
@@ -56,6 +58,7 @@ const ProductList = () => {
         brands: [],
         colors: [],
         ratings: [],
+        sizes: [],
         priceMin: '',
         priceMax: '',
         subcategories: [],
@@ -69,7 +72,35 @@ const ProductList = () => {
     const [sessionId, setSessionId] = useState(null);
     const [favoriteIds, setFavoriteIds] = useState([]);
 
+    // Estados para paginación
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
 
+    // Calcular productos paginados
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
+    // Funciones para manejar cambios de página
+    const nextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
+    const prevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
+    // Resetear página cuando cambian los filtros
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filters, sortOption, itemsPerPage]);
 
     // Función para cambiar la vista de cuadrícula
     const toggleGridView = () => {
@@ -152,7 +183,7 @@ const ProductList = () => {
         }
     };
 
-//  useEffect para cargar favoritos actuales
+    // Cargar favoritos actuales
     useEffect(() => {
         const loadFavorites = async () => {
             if (isAuthenticated) {
@@ -160,10 +191,8 @@ const ProductList = () => {
                     const wishlistItems = await wishlistService.getWishlist();
                     const ids = wishlistItems.map(item => item.product_id);
                     setFavoriteIds(ids);
-                    console.log("IDs de favoritos cargados:", ids);
                 } catch (error) {
                     console.error("Error al cargar favoritos:", error);
-                    // Fallar silenciosamente
                 }
             } else {
                 const localWishlist = JSON.parse(localStorage.getItem('vistelica_wishlist') || '[]');
@@ -175,20 +204,13 @@ const ProductList = () => {
         loadFavorites();
     }, [isAuthenticated]);
 
-
-
-// Función para manejar agregar a favoritos
+    // Función para manejar agregar a favoritos
     const handleAddToWishlist = useCallback(async (product, isRemove) => {
-        console.log("===== INICIO handleAddToWishlist =====");
-        console.log("Producto recibido:", product);
-        console.log("¿Eliminar de favoritos?:", isRemove);
-
         const productId = product.id || product.product_id;
 
         try {
             if (isAuthenticated) {
                 if (isRemove) {
-                    // Eliminar de favoritos
                     await wishlistService.removeFromWishlist(productId);
                     setFavoriteIds(prev => prev.filter(id => id !== productId));
                     setToast({
@@ -197,41 +219,26 @@ const ProductList = () => {
                         severity: 'info'
                     });
                 } else {
-                    // Añadir a favoritos
                     try {
                         await wishlistService.addToWishlist(productId);
-
-                        // Actualizar el estado favoriteIds
                         if (!favoriteIds.includes(productId)) {
                             setFavoriteIds(prev => [...prev, productId]);
                         }
-
                         setToast({
                             open: true,
                             message: 'Producto añadido a favoritos',
                             severity: 'success'
                         });
                     } catch (error) {
-                        console.error("Error en wishlistService:", error);
-                        // Ignorar el error de producto duplicado
-                        if (!error.message?.includes("ya está en la lista de deseos")) {
-                            setToast({
-                                open: true,
-                                message: 'Error al añadir a favoritos',
-                                severity: 'error'
-                            });
-                        } else if (!favoriteIds.includes(productId)) {
-                            // Si el error es por duplicado pero no lo tenemos en el state, añadirlo
+                        if (!error.message?.includes("ya está en la lista de deseos") && !favoriteIds.includes(productId)) {
                             setFavoriteIds(prev => [...prev, productId]);
                         }
                     }
                 }
             } else {
-                // Usuario no autenticado: usar localStorage
                 const localWishlist = JSON.parse(localStorage.getItem('vistelica_wishlist') || '[]');
 
                 if (isRemove) {
-                    // Eliminar de favoritos
                     const updatedWishlist = localWishlist.filter(
                         item => (item.id || item.product_id) !== productId
                     );
@@ -243,9 +250,7 @@ const ProductList = () => {
                         severity: 'info'
                     });
                 } else {
-                    // Verificar si ya existe
                     if (!localWishlist.some(item => (item.id || item.product_id) === productId)) {
-                        // Guardar solo la información necesaria
                         const wishlistItem = {
                             id: productId,
                             product_id: productId,
@@ -275,23 +280,18 @@ const ProductList = () => {
                 severity: 'error'
             });
         }
-
-        console.log("===== FIN handleAddToWishlist =====");
     }, [isAuthenticated, sessionId, favoriteIds]);
 
     // Verificar autenticación al cargar la página
     useEffect(() => {
         const initializeUserSession = () => {
-            // Verificar si existe un token (usuario autenticado)
             const token = localStorage.getItem('token');
             setIsAuthenticated(!!token);
 
-            // Para usuarios no autenticados, gestionar sessionId
             if (!token) {
                 let sessionId = localStorage.getItem('sessionId');
 
                 if (!sessionId) {
-                    // Generar nuevo sessionId si no existe
                     sessionId = typeof crypto !== 'undefined' && crypto.randomUUID
                         ? crypto.randomUUID()
                         : ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
@@ -330,20 +330,14 @@ const ProductList = () => {
                 let imagesMap = {};
                 try {
                     const images = await productService.getMainProductImages();
-                    console.log("Imágenes recibidas del backend:", images);
-
-                    // Convertir el array de imágenes a un objeto para acceso rápido
                     if (Array.isArray(images)) {
                         images.forEach(img => {
-                            // Asegurar que usamos el ID correcto como clave
                             const productId = String(img.product_id);
-                            // Verificar si la URL de la imagen es completa o necesita prefijo
                             const imageUrl = img.image_url.startsWith('http')
                                 ? img.image_url
                                 : `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${img.image_url}`;
 
                             imagesMap[productId] = imageUrl;
-                            //console.log(`Imagen mapeada: Producto ${productId} -> ${imageUrl}`);
                         });
                     }
                 } catch (imgError) {
@@ -357,18 +351,12 @@ const ProductList = () => {
 
                 // Si tenemos subcategoría específica en la URL
                 if (subcategory) {
-                    console.log("Filtrando por subcategoría ID:", subcategory);
-
-                    // Encontrar la subcategoría por ID
                     foundSubcategory = subcategories.find(s =>
                         s.subcategory_id === parseInt(subcategory) ||
                         s.slug === subcategory
                     );
 
                     if (foundSubcategory) {
-                        console.log("Subcategoría encontrada:", foundSubcategory.name);
-
-                        // Buscar la categoría padre
                         parentCategory = categories.find(c =>
                             c.category_id === foundSubcategory.parentCategoryId ||
                             c.subcategories?.some(s =>
@@ -378,16 +366,13 @@ const ProductList = () => {
                         );
 
                         if (parentCategory && foundSubcategory) {
-                            // Usar la nueva API para obtener productos por categoría y subcategoría
                             try {
                                 data = await productService.getByCategoryAndSubcategory(
                                     parentCategory.category_id,
                                     foundSubcategory.subcategory_id
                                 );
-                                console.log(`Productos obtenidos con getByCategoryAndSubcategory: ${data.length}`);
                             } catch (err) {
                                 console.error("Error al obtener productos por categoría/subcategoría:", err);
-                                // Fallback a filtrado manual si la API falla
                                 data = await productService.getAll();
                                 data = data.filter(product => {
                                     const productSubcategory = product.subcategory ?
@@ -401,7 +386,6 @@ const ProductList = () => {
                                 });
                             }
                         } else {
-                            // Fallback si no tenemos la información completa
                             data = await productService.getAll();
                             data = data.filter(p => {
                                 const pSubcat = p.subcategory ? String(p.subcategory).toLowerCase() : '';
@@ -409,7 +393,6 @@ const ProductList = () => {
                             });
                         }
                     } else {
-                        // Si no encontramos la subcategoría en nuestra memoria caché
                         data = await productService.getAll();
                         data = data.filter(p => {
                             const pSubcat = p.subcategory ? String(p.subcategory).toLowerCase() : '';
@@ -431,7 +414,6 @@ const ProductList = () => {
                     );
 
                     if (categoryObj) {
-                        // Si tenemos un filtro de subcategorías, aplicarlo
                         if (filters.subcategories && filters.subcategories.length > 0) {
                             const allProducts = [];
                             for (const subcat of filters.subcategories) {
@@ -446,9 +428,7 @@ const ProductList = () => {
                                 }
                             }
                             data = allProducts;
-                        }
-                        // Si no, cargar todos los productos de esa categoría
-                        else {
+                        } else {
                             data = await productService.getAll();
                             data = data.filter(p =>
                                 (typeof p.category === 'string' ?
@@ -480,17 +460,10 @@ const ProductList = () => {
                 }
 
                 if (isMounted) {
-                    console.log(`Productos finales obtenidos: ${data.length}`);
-
                     // Asociar las imágenes a los productos correctamente
                     const productsWithImages = data.map(product => {
-                        // Probar con diferentes formatos de ID para mayor compatibilidad
                         const productId = String(product.product_id || product._id);
                         const imageUrl = imagesMap[productId];
-
-                        console.log(`Producto ${productId}: ${product.name || 'sin nombre'}`);
-                        console.log(`- ID usado para buscar imagen: ${productId}`);
-                        console.log(`- Imagen encontrada: ${imageUrl || 'NO ENCONTRADA'}`);
 
                         return {
                             ...product,
@@ -538,6 +511,12 @@ const ProductList = () => {
             );
         }
 
+        if (filters.sizes.length > 0) {
+            result = result.filter(p =>
+                p.sizes && p.sizes.some(s => filters.sizes.includes(s))
+            );
+        }
+
         if (filters.ratings.length > 0) {
             const minRating = Math.min(...filters.ratings);
             result = result.filter(p => p.rating >= minRating);
@@ -550,28 +529,29 @@ const ProductList = () => {
         if (filters.priceMax !== '') {
             result = result.filter(p => p.price <= parseFloat(filters.priceMax));
         }
-        // Para productos con descuento
+
         if (filters.hasDiscount) {
             result = result.filter(product => parseFloat(product.discount_percentage) > 0);
         }
 
-        // Filtrar productos con stock bajo
         if (filters.lowStock) {
             result = result.filter(product => product.stock_quantity <= 15);
         }
+
         // Aplicar ordenamiento
         if (sortOption !== 'relevancia') {
             result = sortProducts(result, sortOption);
         }
 
         setFilteredProducts(result);
-    }, [filters.brands, filters.colors, filters.ratings, filters.priceMin, filters.priceMax, filters.hasDiscount, filters.lowStock, sortOption, products]);
+    }, [filters, sortOption, products]);
 
     // Resetear filtros
     const resetFilters = () => {
         setFilters({
             brands: [],
             colors: [],
+            sizes: [],
             ratings: [],
             priceMin: '',
             priceMax: '',
@@ -586,6 +566,7 @@ const ProductList = () => {
     const hasActiveFilters = () => {
         return filters.brands.length > 0 ||
             filters.colors.length > 0 ||
+            filters.sizes.length > 0 ||
             filters.ratings.length > 0 ||
             filters.priceMin !== '' ||
             filters.priceMax !== '' ||
@@ -593,7 +574,7 @@ const ProductList = () => {
             sortOption !== 'relevancia';
     };
 
-    // Obtener título para la página - solo la subcategoría si existe
+    // Obtener título para la página
     const getPageTitle = () => {
         if (selectedSubcategory && selectedSubcategory.name) {
             return selectedSubcategory.name;
@@ -624,7 +605,7 @@ const ProductList = () => {
                 display: 'flex',
                 position: 'relative'
             }}>
-                {/* Sidebar con filtros - Corregido para buen funcionamiento del scroll */}
+                {/* Sidebar con filtros */}
                 <Box
                     sx={{
                         position: { xs: 'fixed', md: 'sticky' },
@@ -839,6 +820,23 @@ const ProductList = () => {
                                 );
                             })}
 
+                            {filters.sizes.map(sizeId => {
+                                const size = SIZES.find(s => s.id === sizeId);
+                                return (
+                                    <Chip
+                                        key={sizeId}
+                                        label={size?.label || sizeId}
+                                        size="small"
+                                        onDelete={() => {
+                                            setFilters(prev => ({
+                                                ...prev,
+                                                sizes: prev.sizes.filter(s => s !== sizeId)
+                                            }));
+                                        }}
+                                    />
+                                );
+                            })}
+
                             {filters.ratings.map(rating => (
                                 <Chip
                                     key={rating}
@@ -878,12 +876,65 @@ const ProductList = () => {
                             <Typography>Cargando productos...</Typography>
                         </Box>
                     ) : filteredProducts.length > 0 ? (
-                        <ProductGrid
-                            products={filteredProducts}
-                            gridView={gridView}
-                            onAddToWishlist={handleAddToWishlist}
-                            favoriteIds={favoriteIds}
-                        />
+                        <>
+                            <ProductGrid
+                                products={currentItems}
+                                gridView={gridView}
+                                onAddToWishlist={handleAddToWishlist}
+                                favoriteIds={favoriteIds}
+                            />
+
+                            {/* Controles de paginación */}
+                            <Box sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                mt: 4,
+                                flexDirection: { xs: 'column', sm: 'row' },
+                                gap: 2
+                            }}>
+                                {/* Selector de items por página */}
+                                <FormControl sx={{ minWidth: 120 }} size="small">
+                                    <InputLabel id="items-per-page-label">Por página</InputLabel>
+                                    <Select
+                                        labelId="items-per-page-label"
+                                        value={itemsPerPage}
+                                        label="Por página"
+                                        onChange={(e) => setItemsPerPage(e.target.value)}
+                                    >
+                                        <MenuItem value={10}>10</MenuItem>
+                                        <MenuItem value={15}>15</MenuItem>
+                                        <MenuItem value={20}>20</MenuItem>
+                                        <MenuItem value={25}>25</MenuItem>
+                                    </Select>
+                                </FormControl>
+
+                                {/* Contador de páginas */}
+                                <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+                                    Página {currentPage} de {totalPages} - {filteredProducts.length} productos totales
+                                </Typography>
+
+                                {/* Botones de navegación */}
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <Button
+                                        variant="outlined"
+                                        startIcon={<ChevronLeft />}
+                                        onClick={prevPage}
+                                        disabled={currentPage === 1}
+                                    >
+                                        Anterior
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        endIcon={<ChevronRight />}
+                                        onClick={nextPage}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        Siguiente
+                                    </Button>
+                                </Box>
+                            </Box>
+                        </>
                     ) : (
                         <Box sx={{ textAlign: 'center', py: 6 }}>
                             <Typography>No se encontraron productos con los filtros seleccionados</Typography>

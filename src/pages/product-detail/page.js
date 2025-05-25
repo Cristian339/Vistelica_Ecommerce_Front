@@ -42,11 +42,11 @@ export default function ProductDetailPage() {
 
                     setProduct(productData);
 
-                    console.log(productData.size);
+                    console.log(productData.sizes);
 
                     // Establecer valores por defecto solo si hay opciones disponibles
-                    if (productData.size?.length > 0) {
-                        setSelectedSize(productData.size[0]);
+                    if (productData.sizes?.length > 0) {
+                        setSelectedSize(productData.sizes[0]);
                     }
                     if (productData.colors?.length > 0) {
                         setSelectedColor(productData.colors[0]);
@@ -90,7 +90,6 @@ export default function ProductDetailPage() {
                 currentSessionId = Math.random().toString(36).substring(2, 15);
                 localStorage.setItem('sessionId', currentSessionId);
                 setSessionId(currentSessionId);
-                toast.info("Se ha creado una nueva sesión para tu carrito");
             }
 
             let cart = await cartService.getCart(user?.user_id, currentSessionId);
@@ -197,7 +196,7 @@ export default function ProductDetailPage() {
             <Navbar />
             <ProductDetail
                 product={product}
-                availableSizes={product.size}
+                availableSizes={product.sizes}
                 availableColors={product.colors}
                 selectedSize={selectedSize}
                 selectedColor={selectedColor}

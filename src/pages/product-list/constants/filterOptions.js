@@ -12,8 +12,30 @@ export const COLORS = [
 ];
 
 export const BRANDS = [
-    { id: '`puma`', name: 'Puma' },
+    { id: 'puma', name: 'Puma' },
     { id: 'bershka', name: 'Bershka' },
-    { id: 'alvaro Moreno', name: 'Álvaro Moreno' },
+    { id: 'alvaro_moreno', name: 'Álvaro Moreno' },
     { id: 'mango', name: 'Mango' }
+];
+
+export const SIZES = [
+    // Tallas estándar
+    { id: 'XS', label: 'XS' },
+    { id: 'S', label: 'S' },
+    { id: 'M', label: 'M' },
+    { id: 'L', label: 'L' },
+    { id: 'XL', label: 'XL' },
+    { id: 'XXL', label: 'XXL' },
+    { id: 'XXXL', label: 'XXXL' },
+
+    // Tallas numéricas (ropa)
+    { id: '36', label: '36' },
+    { id: '38', label: '38' },
+    { id: '40', label: '40' },
+    { id: '42', label: '42' },
+    { id: '44', label: '44' },
+    { id: '46', label: '46' },
+    { id: '48', label: '48' },
+    { id: '50', label: '50' },
+
 ];

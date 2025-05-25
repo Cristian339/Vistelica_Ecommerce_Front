@@ -8,7 +8,6 @@ import { getUserProfile } from '@/services/profileService';
 import Navbar from "@/components/layout/HeaderComponent";
 import MenuIcon from '@mui/icons-material/Menu';
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from '@/pages/shared-theme/themePrimitives';
 import { motion } from 'framer-motion';
 
 const AccountLayout = () => {
@@ -23,8 +22,16 @@ const AccountLayout = () => {
                 setLoading(true);
                 const profile = await getUserProfile();
                 setUserData(profile);
+
+                // Guardar datos en localStorage para persistencia
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('userData', JSON.stringify({
+                        name: profile.name,
+                        avatar: profile.avatar || profile.profilePic
+                    }));
+                }
             } catch (error) {
-                console.error('Error al cargar el perfil:', error);
+                console.error('Error loading profile:', error);
             } finally {
                 setLoading(false);
             }
@@ -33,34 +40,34 @@ const AccountLayout = () => {
         fetchUserProfile();
     }, []);
 
-    // Animación para el contenido principal
     const contentVariants = {
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
     };
 
+    // Datos del usuario para pasar a los componentes
+    const userAvatar = userData?.avatar || userData?.profilePic;
+    const userName = userData?.name || 'Usuario';
+
     return (
         <div>
             <Navbar />
             <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
-                <Grid container spacing={2} sx={{
-                    flexWrap: { xs: 'wrap', md: 'nowrap' }
-                }}>
-                    {/* Sidebar solo visible en desktop */}
+                <Grid container spacing={2} sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
+                    {/* Sidebar para desktop */}
                     {!isMobile && (
                         <Grid item md={3} lg={3}>
-                            <SidebarMenu username={userData?.name || 'Usuario'} />
+                            <SidebarMenu
+                                username={userName}
+                                avatarUrl={userAvatar}
+                                key="desktop-sidebar"
+                            />
                         </Grid>
                     )}
 
-                    {/* Contenido principal - ancho completo en móviles */}
+                    {/* Contenido principal */}
                     <Grid item xs={12} md={9} lg={9}>
-                        <Box
-                            component={motion.div}
-                            initial="hidden"
-                            animate="visible"
-                            variants={contentVariants}
-                        >
+                        <Box component={motion.div} initial="hidden" animate="visible" variants={contentVariants}>
                             <AccountInfo
                                 userData={userData}
                                 setUserData={setUserData}
@@ -71,7 +78,7 @@ const AccountLayout = () => {
                 </Grid>
             </Container>
 
-            {/* Botón flotante para mostrar sidebar en móvil */}
+            {/* Botón flotante para móvil */}
             {isMobile && (
                 <Fab
                     color="primary"
@@ -82,9 +89,7 @@ const AccountLayout = () => {
                         bottom: 16,
                         right: 16,
                         backgroundColor: vistelicaColors.primary,
-                        '&:hover': {
-                            backgroundColor: vistelicaColors.secondary
-                        },
+                        '&:hover': { backgroundColor: vistelicaColors.secondary },
                         zIndex: 1050
                     }}
                 >
@@ -92,12 +97,14 @@ const AccountLayout = () => {
                 </Fab>
             )}
 
-            {/* SidebarMenu para móvil como drawer */}
+            {/* Sidebar para móvil */}
             {isMobile && (
                 <SidebarMenu
-                    username={userData?.name || 'Usuario'}
+                    username={userName}
+                    avatarUrl={userAvatar}
                     drawerOpen={sidebarOpen}
                     setDrawerOpen={setSidebarOpen}
+                    key="mobile-sidebar"
                 />
             )}
         </div>

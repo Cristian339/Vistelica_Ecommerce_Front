@@ -16,7 +16,7 @@ export default function CartPage() {
         totalOriginal: 0,
         totalDiscounted: 0,
         totalSavings: 0,
-        itemCount: 0
+        itemCount: 0 // Este ahora será la suma de las cantidades (quantity)
     });
     const [loading, setLoading] = useState(true);
     const router = useRouter();
@@ -48,11 +48,17 @@ export default function CartPage() {
                     user ? null : sessionId
                 );
 
+                // Obtener el conteo total de productos sumando las cantidades
+                const totalItemCount = await cartService.getCartItemCount(
+                    user?.user_id,
+                    user ? null : sessionId
+                );
+
                 setCartTotal({
                     totalOriginal: totalData.summary.totalOriginal,
                     totalDiscounted: totalData.summary.totalDiscounted,
                     totalSavings: totalData.summary.totalSavings,
-                    itemCount: items.length
+                    itemCount: totalItemCount // Usamos el conteo que suma las cantidades
                 });
             }
         } catch (error) {
@@ -134,7 +140,7 @@ export default function CartPage() {
                     }}>
                         <CartSummary
                             totalPrice={cartTotal.totalDiscounted} // Precio CON descuentos
-                            itemCount={cartTotal.itemCount}
+                            itemCount={cartTotal.itemCount} // Total de items sumando cantidades
                             isGuest={!cart.user && cart.session_id}
                             onCheckout={handleCheckout}
                         />
