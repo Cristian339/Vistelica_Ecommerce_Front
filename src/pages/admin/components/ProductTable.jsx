@@ -663,7 +663,7 @@ export default function ProductTable() {
                             </td>
                             <td>
                                 <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', maxWidth: 120 }}>
-                                    {product.sizes?.map((size, index) => (
+                                    {product.size?.map((size, index) => (
                                         <Chip key={index} size="sm" variant="outlined">
                                             {size}
                                         </Chip>

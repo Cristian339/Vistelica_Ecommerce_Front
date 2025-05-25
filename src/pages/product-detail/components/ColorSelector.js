@@ -16,7 +16,7 @@ const ColorSelector = ({ colors, selectedColor, onColorChange }) => {
             YELLOW: '#ffff00',
             ORANGE: '#ffa500',
             PURPLE: '#800080',
-            BROWN: '#431515',
+            BROWN: '#715638',
             GRAY: '#808080',
             PINK: '#ffc0cb',
             BEIGE: '#f5f5dc',

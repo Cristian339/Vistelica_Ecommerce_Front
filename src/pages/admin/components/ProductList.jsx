@@ -223,7 +223,7 @@ export default function ProductList() {
 
     const filteredProducts = products.filter(product => {
         const matchesName = product.name.toLowerCase().includes(nameFilter.toLowerCase());
-        const matchesSize = sizeFilter ? product.size === sizeFilter : true;
+        const matchesSize = sizeFilter ? product.sizes === sizeFilter : true;
         const matchesCategory = categoryFilter ? product.category === categoryFilter : true;
         const matchesSubcategory = subcategoryFilter ? product.subcategory === subcategoryFilter : true;
 
