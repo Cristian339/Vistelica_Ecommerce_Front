@@ -320,8 +320,59 @@ export const logout = async () => {
 
         localStorage.removeItem('token');
         localStorage.removeItem('firebaseToken');
+        localStorage.removeItem('sessionInitialized');
     } catch (error) {
         console.error("Error al cerrar sesión:", error);
         throw error;
+    }
+};
+
+
+/**
+ * Elimina permanentemente la cuenta del usuario y todos sus datos asociados
+ * @param {string} password - Contraseña actual del usuario para verificación
+ * @returns {Promise<Object>} - Respuesta del servidor
+ */
+export const deleteAccount = async (password) => {
+    try {
+        const token = getToken();
+        if (!token) {
+            throw new Error('No hay sesión activa');
+        }
+
+        const response = await axios.delete(`${API_URL}/user`, {
+            data: { password },
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        // Limpiar datos locales después de eliminar la cuenta
+        if (response.data.success) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('firebaseToken');
+        }
+
+        return response.data;
+    } catch (error) {
+        console.error('Error al eliminar cuenta:', error);
+
+        // Manejo de errores específicos
+        if (error.response) {
+            const { status, data } = error.response;
+
+            if (status === 401) {
+                throw new Error('No autorizado - sesión inválida o expirada');
+            } else if (status === 400) {
+                throw new Error(data.message || 'Contraseña incorrecta o datos inválidos');
+            } else {
+                throw new Error(data.message || 'Error al eliminar la cuenta');
+            }
+        } else if (error.request) {
+            throw new Error('No se recibió respuesta del servidor');
+        } else {
+            throw new Error('Error al configurar la solicitud');
+        }
     }
 };

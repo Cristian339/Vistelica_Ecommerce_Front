@@ -16,21 +16,18 @@ import EuroOutlinedIcon from '@mui/icons-material/EuroOutlined';
 import StraightenOutlinedIcon from '@mui/icons-material/StraightenOutlined';
 import {motion} from "framer-motion";
 import Link from 'next/link';
-import {COLORS, } from '../constants/filterOptions';
+import {COLORS} from '../constants/filterOptions';
 import {alpha} from '@mui/material/styles';
-// Importamos los colores del tema global en lugar de definirlos localmente
 import {vistelicaColors} from "@/pages/shared-theme/vistelicaColors";
-
-
 
 // Lista de tallas comunes
 const SIZES = [
-    {id: 'xs', label: 'XS'},
-    {id: 's', label: 'S'},
-    {id: 'm', label: 'M'},
-    {id: 'l', label: 'L'},
-    {id: 'xl', label: 'XL'},
-    {id: 'xxl', label: 'XXL'},
+    {id: 'XS', label: 'XS'},
+    {id: 'S', label: 'S'},
+    {id: 'M', label: 'M'},
+    {id: 'L', label: 'L'},
+    {id: 'XL', label: 'XL'},
+    {id: 'XXL', label: 'XXL'},
     {id: '36', label: '36'},
     {id: '38', label: '38'},
     {id: '40', label: '40'},
@@ -47,7 +44,7 @@ const FilterSidebar = ({
                            filters,
                            setFilters,
                            hasDiscount = false,
-                           lowStock= false,
+                           lowStock = false,
                            categories = [],
                            subcategories = [],
                            loadingSubcategories = false,
@@ -341,6 +338,14 @@ const FilterSidebar = ({
                                         animate={{opacity: 1, scale: 1}}
                                         transition={{delay: index * 0.05}}
                                         onClick={() => handleSizeCheckbox(size.id)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                handleSizeCheckbox(size.id);
+                                            }
+                                        }}
+                                        role="button"
+                                        aria-pressed={filters.sizes?.includes(size.id)}
+                                        tabIndex={0}
                                         sx={{
                                             width: 44,
                                             height: 44,
@@ -364,6 +369,10 @@ const FilterSidebar = ({
                                             '&:hover': {
                                                 borderColor: vistelicaColors.secondary,
                                                 bgcolor: alpha(vistelicaColors.secondary, 0.05)
+                                            },
+                                            '&:focus-visible': {
+                                                outline: `2px solid ${vistelicaColors.secondary}`,
+                                                outlineOffset: '2px'
                                             }
                                         }}
                                     >
@@ -383,12 +392,12 @@ const FilterSidebar = ({
                         disableGutters
                     >
                         <AccordionSummary
-                            expandIcon={<ExpandMoreIcon sx={{ color: vistelicaColors.primary }} />}
-                            sx={{ px: 2 }}
+                            expandIcon={<ExpandMoreIcon sx={{color: vistelicaColors.primary}}/>}
+                            sx={{px: 2}}
                         >
-                            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                                <LocalOfferIcon sx={{ mr: 1.5, color: vistelicaColors.primary }} />
-                                <Typography fontWeight="600" sx={{ flexGrow: 1, color: '#000000' }}>
+                            <Box sx={{display: 'flex', alignItems: 'center', width: '100%'}}>
+                                <LocalOfferIcon sx={{mr: 1.5, color: vistelicaColors.primary}}/>
+                                <Typography fontWeight="600" sx={{flexGrow: 1, color: '#000000'}}>
                                     Stock y Descuentos
                                 </Typography>
 
@@ -397,7 +406,7 @@ const FilterSidebar = ({
                                         <Badge
                                             badgeContent={(filters.hasDiscount ? 1 : 0) + (filters.lowStock ? 1 : 0)}
                                             color="secondary"
-                                            sx={{ ml: 1 }}
+                                            sx={{ml: 1}}
                                         />
                                     </Zoom>
                                 )}
@@ -411,26 +420,28 @@ const FilterSidebar = ({
                                         <Checkbox
                                             checked={filters.lowStock}
                                             onChange={() =>
-                                                setFilters(prev => ({ ...prev, lowStock: !prev.lowStock }))
+                                                setFilters(prev => ({...prev, lowStock: !prev.lowStock}))
                                             }
-                                            sx={{ color: vistelicaColors.secondary }}
+                                            sx={{color: vistelicaColors.secondary}}
                                         />
                                     }
-                                    label={<Typography variant="body2" sx={{ color: vistelicaColors.textDark }}>Poco stock</Typography>}
-                                    sx={{ p: 0.5, borderRadius: '4px' }}
+                                    label={<Typography variant="body2" sx={{color: vistelicaColors.textDark}}>Poco
+                                        stock</Typography>}
+                                    sx={{p: 0.5, borderRadius: '4px'}}
                                 />
                                 <FormControlLabel
                                     control={
                                         <Checkbox
                                             checked={filters.hasDiscount}
                                             onChange={() =>
-                                                setFilters(prev => ({ ...prev, hasDiscount: !prev.hasDiscount }))
+                                                setFilters(prev => ({...prev, hasDiscount: !prev.hasDiscount}))
                                             }
-                                            sx={{ color: vistelicaColors.secondary }}
+                                            sx={{color: vistelicaColors.secondary}}
                                         />
                                     }
-                                    label={<Typography variant="body2" sx={{ color: vistelicaColors.textDark }}>Con descuento</Typography>}
-                                    sx={{ p: 0.5, borderRadius: '4px' }}
+                                    label={<Typography variant="body2" sx={{color: vistelicaColors.textDark}}>Con
+                                        descuento</Typography>}
+                                    sx={{p: 0.5, borderRadius: '4px'}}
                                 />
                             </FormGroup>
                         </AccordionDetails>
@@ -751,7 +762,9 @@ const FilterSidebar = ({
                                     sizes: [],
                                     ratings: [],
                                     priceMin: '',
-                                    priceMax: ''
+                                    priceMax: '',
+                                    hasDiscount: false,
+                                    lowStock: false
                                 });
                             }}
                         >

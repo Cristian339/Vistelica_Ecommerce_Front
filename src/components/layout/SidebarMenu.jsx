@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import {
     Typography,
@@ -12,10 +12,6 @@ import {
     ListItemButton,
     Paper,
     Avatar,
-    Collapse,
-    styled,
-    useMediaQuery,
-    useTheme,
     Drawer,
     IconButton,
     Dialog,
@@ -23,7 +19,9 @@ import {
     DialogContent,
     DialogContentText,
     DialogActions,
-    Button
+    Button,
+    TextField,
+    CircularProgress
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
@@ -33,15 +31,14 @@ import PaymentOutlinedIcon from '@mui/icons-material/PaymentOutlined';
 import AssignmentReturnOutlinedIcon from '@mui/icons-material/AssignmentReturnOutlined';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
-import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
-import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
-import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
 import CloseIcon from '@mui/icons-material/Close';
-import { logout } from '../../services/authService';
+import { logout, deleteAccount } from '../../services/authService';
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 import { typography } from '@/pages/shared-theme/themePrimitives';
+import { useSnackbar } from 'notistack';
+import {styled, useTheme} from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
-// Componentes estilizados
 const StyledPaper = styled(Paper)(({ theme }) => ({
     border: `1px solid ${vistelicaColors.border}`,
     borderRadius: '12px',
@@ -53,7 +50,7 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
     boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.05)',
     position: 'relative',
     overflow: 'hidden',
-    margin: theme.spacing(0, 4, 0, 0), // Aumentado el margen derecho
+    margin: theme.spacing(0, 4, 0, 0),
     '&::before': {
         content: '""',
         position: 'absolute',
@@ -90,97 +87,65 @@ const StyledListItemButton = styled(ListItemButton)(({ theme, selected }) => ({
 const UserAvatar = styled(Avatar)(({ theme }) => ({
     width: 80,
     height: 80,
-    backgroundColor: vistelicaColors.tertiary,
-    color: vistelicaColors.primary,
+    border: `2px solid ${vistelicaColors.primary}`,
+    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+    backgroundColor: vistelicaColors.primary,
+    color: 'white',
     fontFamily: typography.fontFamily,
     fontWeight: 600,
     fontSize: '1.5rem',
     marginBottom: theme.spacing(2),
-    border: `2px solid ${vistelicaColors.secondary}`,
-    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
 }));
 
-const HelpButton = styled('a')(({ theme }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    textDecoration: 'none',
-    color: 'inherit',
-    borderRadius: '8px',
-    padding: theme.spacing(1.5),
-    marginBottom: theme.spacing(1),
-    transition: 'all 0.3s ease',
-    '&:hover': {
-        backgroundColor: `${vistelicaColors.tertiary}20`,
-        transform: 'translateX(5px)',
-    },
-}));
-
-const MotionBox = styled(motion.div)({
-    width: '100%',
-});
-
-const SidebarMenu = ({ username, drawerOpen: externalDrawerOpen, setDrawerOpen: externalSetDrawerOpen, avatarUrl }) => {
+const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    const [internalDrawerOpen, setInternalDrawerOpen] = useState(false);
-    const [helpOpen, setHelpOpen] = useState(false);
     const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [password, setPassword] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
     const router = useRouter();
+    const { enqueueSnackbar } = useSnackbar();
     const currentPath = router.pathname;
     const userInitial = username ? username.charAt(0).toUpperCase() : 'U';
 
-    // Estado para manejar la URL del avatar
-    const [userAvatar, setUserAvatar] = useState(avatarUrl || '');
-
-    // Buscar avatar en localStorage si no se proporciona por props
-    useEffect(() => {
-        if (!avatarUrl) {
-            try {
-                const userData = localStorage.getItem('userData');
-                if (userData) {
-                    const parsedData = JSON.parse(userData);
-                    const storedAvatar = parsedData?.avatar || parsedData?.profilePic || parsedData?.avatarUrl || parsedData?.photo;
-                    if (storedAvatar) {
-                        setUserAvatar(storedAvatar);
-                    }
-                }
-            } catch (error) {
-                console.error('Error al cargar avatar del localStorage:', error);
-            }
-        } else {
-            setUserAvatar(avatarUrl);
-        }
-    }, [avatarUrl]);
-
-    // Usa el estado interno o el externo según las props
-    const drawerOpen = externalDrawerOpen !== undefined ? externalDrawerOpen : internalDrawerOpen;
-    const setDrawerOpen = externalSetDrawerOpen || setInternalDrawerOpen;
-
     const handleNavigation = (path) => {
         router.push(path);
-        if (isMobile) {
+        if (isMobile && setDrawerOpen) {
             setDrawerOpen(false);
         }
     };
 
-    // Abrir el diálogo de confirmación para cerrar sesión
-    const handleLogoutConfirmation = () => {
-        setLogoutDialogOpen(true);
-    };
-
-    // Cerrar el diálogo de confirmación
-    const handleCloseDialog = () => {
-        setLogoutDialogOpen(false);
-    };
-
-    // Función que ejecuta el proceso de cerrar sesión después de confirmar
     const handleLogout = async () => {
         try {
-            setLogoutDialogOpen(false);
             await logout();
             router.push('/sign-in-side/Sign-in-side');
         } catch (error) {
-            console.error("Error al cerrar sesión:", error);
+            console.error("Logout error:", error);
+            enqueueSnackbar('Error al cerrar sesión', { variant: 'error' });
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!password) {
+            enqueueSnackbar('Por favor ingresa tu contraseña', { variant: 'warning' });
+            return;
+        }
+
+        setIsDeleting(true);
+        try {
+            const success = await deleteAccount(password);
+            if (success) {
+                enqueueSnackbar('Cuenta eliminada correctamente', { variant: 'success' });
+                router.push('/home/Home');
+            }
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Contraseña incorrecta';
+            enqueueSnackbar(errorMessage, { variant: 'error' });
+        } finally {
+            setIsDeleting(false);
+            setPassword('');
+            setDeleteDialogOpen(false);
         }
     };
 
@@ -189,10 +154,7 @@ const SidebarMenu = ({ username, drawerOpen: externalDrawerOpen, setDrawerOpen: 
         visible: i => ({
             opacity: 1,
             x: 0,
-            transition: {
-                delay: i * 0.1,
-                duration: 0.5
-            }
+            transition: { delay: i * 0.1, duration: 0.5 }
         })
     };
 
@@ -204,7 +166,23 @@ const SidebarMenu = ({ username, drawerOpen: externalDrawerOpen, setDrawerOpen: 
         { text: "Devoluciones", icon: <AssignmentReturnOutlinedIcon />, path: "#", selected: false },
     ];
 
-    // Contenido del sidebar
+    const renderAvatar = () => (
+        <Box sx={{ position: 'relative' }}>
+            <UserAvatar
+                src={avatarUrl}
+                alt={username || 'Usuario'}
+                imgProps={{
+                    onError: (e) => {
+                        e.target.onerror = null;
+                        e.target.style.display = 'none';
+                    }
+                }}
+            >
+                {!avatarUrl && userInitial}
+            </UserAvatar>
+        </Box>
+    );
+
     const sidebarContent = (
         <>
             <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', mb: 3 }}>
@@ -215,280 +193,126 @@ const SidebarMenu = ({ username, drawerOpen: externalDrawerOpen, setDrawerOpen: 
                         </IconButton>
                     </Box>
                 )}
-                <UserAvatar
-                    src={userAvatar}
-                    alt={username || 'Usuario'}
-                    imgProps={{
-                        onError: (e) => {
-                            e.target.onerror = null;
-                            e.target.style.display = 'none';
-                        }
-                    }}
-                >
-                    {userInitial}
-                </UserAvatar>
-                <Typography
-                    variant="h5"
-                    component="h1"
-                    fontWeight="600"
-                    fontFamily={typography.fontFamily}
-                    sx={{
-                        color: vistelicaColors.primary,
-                        textAlign: 'center',
-                        mb: 1
-                    }}
-                >
+                {renderAvatar()}
+                <Typography variant="h5" component="h1" fontWeight="600" fontFamily={typography.fontFamily}
+                            sx={{ color: vistelicaColors.primary, textAlign: 'center', mb: 1 }}>
                     Hola {username || '—'}
                 </Typography>
-                <Typography
-                    variant="body2"
-                    sx={{
-                        color: vistelicaColors.secondary,
-                        textAlign: 'center'
-                    }}
-                >
+                <Typography variant="body2" sx={{ color: vistelicaColors.secondary, textAlign: 'center' }}>
                     Bienvenido a tu espacio personal
                 </Typography>
             </Box>
 
-            <Divider sx={{
-                mb: 2,
-                borderColor: `${vistelicaColors.divider}`,
-                '&::before, &::after': {
-                    borderColor: `${vistelicaColors.divider}`,
-                }
-            }} />
+            <Divider sx={{ mb: 2, borderColor: vistelicaColors.divider }} />
 
             <Box sx={{ px: { xs: 0, sm: 1 } }}>
                 <List disablePadding>
                     {menuItems.map((item, index) => (
-                        <MotionBox
-                            key={item.text}
-                            custom={index}
-                            initial={!isMobile && "hidden"}
-                            animate={!isMobile && "visible"}
-                            variants={listItemVariants}
-                        >
-                            <StyledListItemButton
-                                selected={item.selected}
-                                onClick={() => handleNavigation(item.path)}
-                            >
-                                <ListItemIcon>
-                                    {item.icon}
-                                </ListItemIcon>
+                        <motion.div key={item.text} custom={index} initial="hidden" animate="visible" variants={listItemVariants}>
+                            <StyledListItemButton selected={item.selected} onClick={() => handleNavigation(item.path)}>
+                                <ListItemIcon>{item.icon}</ListItemIcon>
                                 <ListItemText primary={item.text} />
                             </StyledListItemButton>
-                        </MotionBox>
+                        </motion.div>
                     ))}
 
-                    <MotionBox
-                        custom={menuItems.length}
-                        initial={!isMobile && "hidden"}
-                        animate={!isMobile && "visible"}
-                        variants={listItemVariants}
-                    >
-                        <StyledListItemButton
-                            onClick={handleLogoutConfirmation}
-                        >
-                            <ListItemIcon>
-                                <LogoutOutlinedIcon />
-                            </ListItemIcon>
+                    <motion.div custom={menuItems.length} initial="hidden" animate="visible" variants={listItemVariants}>
+                        <StyledListItemButton onClick={() => setLogoutDialogOpen(true)}>
+                            <ListItemIcon><LogoutOutlinedIcon /></ListItemIcon>
                             <ListItemText primary="Cerrar sesión" />
                         </StyledListItemButton>
-                    </MotionBox>
+                    </motion.div>
 
-                    <MotionBox
-                        custom={menuItems.length + 1}
-                        initial={!isMobile && "hidden"}
-                        animate={!isMobile && "visible"}
-                        variants={listItemVariants}
-                    >
+                    <motion.div custom={menuItems.length + 1} initial="hidden" animate="visible" variants={listItemVariants}>
                         <StyledListItemButton
-                            sx={{
-                                color: vistelicaColors.error,
-                                '&:hover': {
-                                    backgroundColor: `${vistelicaColors.error}10`,
-                                    '& .MuiListItemIcon-root': {
-                                        color: vistelicaColors.error,
-                                    }
-                                }
-                            }}
+                            onClick={() => setDeleteDialogOpen(true)}
+                            sx={{ color: 'error.main' }}
                         >
-                            <ListItemIcon>
-                                <DeleteOutlineOutlinedIcon />
-                            </ListItemIcon>
-                            <ListItemText primary="Eliminar cuenta" />
+                            <ListItemIcon sx={{ color: 'error.main' }}><DeleteOutlineOutlinedIcon /></ListItemIcon>
+                            <ListItemText
+                                primary="Eliminar cuenta"
+                                primaryTypographyProps={{ color: 'error' }}
+                            />
                         </StyledListItemButton>
-                    </MotionBox>
+                    </motion.div>
                 </List>
             </Box>
 
-            <Divider sx={{
-                my: 3,
-                borderColor: `${vistelicaColors.divider}`,
-            }} />
-
-            <Box sx={{ px: { xs: 0, sm: 1 } }}>
-                <Typography
-                    variant="h6"
-                    component="h2"
-                    fontWeight="500"
-                    fontFamily={typography.fontFamily}
-                    sx={{
-                        mb: 2,
-                        color: vistelicaColors.primary,
-                        display: 'flex',
-                        alignItems: 'center',
-                        cursor: 'pointer',
-                    }}
-                    onClick={() => setHelpOpen(!helpOpen)}
-                >
-                    <HelpOutlineOutlinedIcon sx={{ mr: 1 }} />
-                    ¿Necesitas ayuda?
-                </Typography>
-
-                <Collapse in={helpOpen || true}>
-                    <Box
-                        component={motion.div}
-                        initial={!isMobile && { opacity: 0 }}
-                        animate={!isMobile && { opacity: 1 }}
-                        transition={{ duration: 0.5 }}
-                        sx={{
-                            backgroundColor: `${vistelicaColors.tertiary}10`,
-                            borderRadius: '12px',
-                            p: 2,
-                            mb: 2,
-                        }}
-                    >
-                        <HelpButton href="/faq">
-                            <HelpOutlineOutlinedIcon sx={{ color: vistelicaColors.secondary, mr: 2 }} />
-                            <Typography fontFamily={typography.fontFamily}>FAQs</Typography>
-                        </HelpButton>
-
-                        <HelpButton href="tel:+34624581440">
-                            <PhoneOutlinedIcon sx={{ color: vistelicaColors.secondary, mr: 2 }} />
-                            <Typography fontFamily={typography.fontFamily}>+34 624 58 14 40</Typography>
-                        </HelpButton>
-
-                        <HelpButton
-                            href="mailto:vistelica.company@gmail.com"
-                            sx={{
-                                '&:hover': {
-                                    '& .email-text': {
-                                        color: vistelicaColors.primary
-                                    }
-                                }
-                            }}
-                        >
-                            <EmailOutlinedIcon sx={{ color: vistelicaColors.secondary, mr: 2 }} />
-                            <Typography
-                                className="email-text"
-                                fontFamily={typography.fontFamily}
-                                sx={{
-                                    wordBreak: 'break-word',
-                                    fontSize: '0.875rem',
-                                    transition: 'color 0.3s ease',
-                                }}
-                            >
-                                vistelica.company@gmail.com
-                            </Typography>
-                        </HelpButton>
-                    </Box>
-                </Collapse>
-            </Box>
-
-            {/* Diálogo de confirmación para cerrar sesión */}
-            <Dialog
-                open={logoutDialogOpen}
-                onClose={handleCloseDialog}
-                aria-labelledby="alert-dialog-title"
-                aria-describedby="alert-dialog-description"
-                PaperProps={{
-                    style: {
-                        borderRadius: '12px',
-                        padding: '8px',
-                        boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)'
-                    }
-                }}
-            >
-                <DialogTitle id="alert-dialog-title" sx={{
-                    fontFamily: typography.fontFamily,
-                    fontWeight: 600,
-                    color: vistelicaColors.primary
-                }}>
-                    Cerrar sesión
-                </DialogTitle>
+            {/* Diálogo para cerrar sesión */}
+            <Dialog open={logoutDialogOpen} onClose={() => setLogoutDialogOpen(false)}>
+                <DialogTitle>Cerrar sesión</DialogTitle>
                 <DialogContent>
-                    <DialogContentText id="alert-dialog-description" sx={{
-                        fontFamily: typography.fontFamily,
-                        color: vistelicaColors.secondary
-                    }}>
-                        ¿Estás seguro de que deseas cerrar la sesión? Tendrás que volver a iniciar sesión para acceder a tu cuenta.
+                    <DialogContentText>
+                        ¿Estás seguro de que deseas cerrar la sesión?
                     </DialogContentText>
                 </DialogContent>
-                <DialogActions sx={{ padding: '16px' }}>
-                    <Button
-                        onClick={handleCloseDialog}
-                        sx={{
-                            fontFamily: typography.fontFamily,
-                            color: vistelicaColors.secondary,
-                            '&:hover': {
-                                backgroundColor: `${vistelicaColors.secondary}10`,
-                            }
-                        }}
-                    >
+                <DialogActions>
+                    <Button onClick={() => setLogoutDialogOpen(false)}>Cancelar</Button>
+                    <Button onClick={handleLogout} color="primary" variant="contained">
+                        Cerrar sesión
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Diálogo para eliminar cuenta */}
+            <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+                <DialogTitle>Eliminar cuenta permanentemente</DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ mb: 2 }}>
+                        Esta acción eliminará todos tus datos de forma permanente. Para confirmar, ingresa tu contraseña:
+                    </DialogContentText>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Contraseña"
+                        type="password"
+                        fullWidth
+                        variant="outlined"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => {
+                        setDeleteDialogOpen(false);
+                        setPassword('');
+                    }}>
                         Cancelar
                     </Button>
                     <Button
-                        onClick={handleLogout}
-                        variant="contained"
-                        sx={{
-                            fontFamily: typography.fontFamily,
-                            backgroundColor: vistelicaColors.primary,
-                            '&:hover': {
-                                backgroundColor: vistelicaColors.secondary,
-                            }
-                        }}
-                        autoFocus
+                        onClick={handleDeleteAccount}
+                        color="error"
+                        disabled={isDeleting}
+                        startIcon={isDeleting ? <CircularProgress size={20} /> : null}
                     >
-                        Cerrar sesión
+                        {isDeleting ? 'Eliminando...' : 'Eliminar cuenta'}
                     </Button>
                 </DialogActions>
             </Dialog>
         </>
     );
 
-    // Para dispositivos móviles, mostramos solo el Drawer
     if (isMobile) {
         return (
-            <>
-                <Drawer
-                    anchor="left"
-                    open={drawerOpen}
-                    onClose={() => setDrawerOpen(false)}
-                    sx={{
-                        '& .MuiDrawer-paper': {
-                            width: { xs: '90%', sm: '400px' },
-                            borderRadius: '0 12px 12px 0',
-                            p: 2
-                        },
-                    }}
-                >
-                    {sidebarContent}
-                </Drawer>
-            </>
+            <Drawer
+                anchor="left"
+                open={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
+                sx={{
+                    '& .MuiDrawer-paper': {
+                        width: { xs: '90%', sm: '400px' },
+                        borderRadius: '0 12px 12px 0',
+                        p: 2
+                    },
+                }}
+            >
+                {sidebarContent}
+            </Drawer>
         );
     }
 
-    // Para desktop, mostrar el sidebar normal con margen para evitar solapamiento y posicionado más abajo
     return (
-        <Box sx={{
-            flexShrink: 0,
-            mr: 5, // Margen adicional en contenedor para evitar solapamiento
-            position: 'relative',
-            left: { md: '-20px', lg: '-40px' }, // Desplazamiento hacia la izquierda para evitar solapamiento
-            zIndex: 0 // Asegura que el contenido principal quede por encima
-        }}>
+        <Box sx={{ flexShrink: 0, mr: 5, position: 'relative', left: { md: '-20px', lg: '-40px' }, zIndex: 0 }}>
             <StyledPaper>
                 {sidebarContent}
             </StyledPaper>

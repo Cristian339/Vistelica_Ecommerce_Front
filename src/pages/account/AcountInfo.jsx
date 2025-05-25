@@ -52,11 +52,18 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
         severity: 'success'
     });
 
+
+    useEffect(() => {
+        if (userData) {
+            console.log('Datos del usuario originales:', userData);
+        }
+    }, [userData]);
+
     // Transforma los nombres de campos para que coincidan con lo que espera el backend
     const extractUserData = (data) => {
         if (!data) return {};
         const userObj = data.user || data || {};
-
+        console.log("Foto" + userObj.avatar);
         return {
             name: userObj.name || userObj.nombre || '',
             lastName: userObj.lastName || userObj.apellido || '',
@@ -66,13 +73,10 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
             avatar: userObj.avatar || userObj.profilePic || '',
             address: userObj.address || '',
         };
+
     };
 
-    useEffect(() => {
-        if (userData) {
-            console.log('Datos del usuario originales:', userData);
-        }
-    }, [userData]);
+
 
     const handleEditClick = () => {
         const extractedData = extractUserData(userData);
