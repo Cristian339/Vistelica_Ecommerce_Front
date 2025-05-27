@@ -90,6 +90,35 @@ const cartService = {
         }
     },
 
+
+    /**
+     * Obtiene los IDs de productos que han sido entregados al usuario
+     * @returns {Promise<number[]>} - Array de IDs de productos entregados
+     */
+    async getDeliveredProductsIds() {
+        try {
+            const response = await axios.get(`${API_URL}/cart/delivered-products`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            return response.data.product_ids || [];
+        } catch (error) {
+            if (error.response?.status === 401) {
+                // Token inválido o expirado
+                console.error('Error de autenticación:', error);
+                throw new Error('Por favor, inicia sesión nuevamente');
+            }
+
+            console.error('Error al obtener productos entregados:', error);
+            throw new Error(
+                error.response?.data?.message ||
+                'Error al obtener los productos entregados'
+            );
+        }
+    },
+
     /**
      * Asocia un carrito de sesión a un usuario registrado
      * @param {number} orderId - ID del pedido

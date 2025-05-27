@@ -14,13 +14,6 @@ import {
 import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
 import { typography } from "@/pages/shared-theme/themePrimitives";
 import productService from '@/services/productService';
-import wishlistService from '@/services/wishlistService';
-import { getToken } from '@/services/authService';
-
-// Importar componentes
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import productService from '@/services/productService';
 import ProductGallery from './ProductGallery';
 import ProductInfo from './ProductInfo';
 import CompositionCare from './CompositionCare';
@@ -31,44 +24,7 @@ import SocialShare from './SocialShare';
 import ProductBreadcrumb from './ProductBreadcrumb';
 import wishlistService from '@/services/wishlistService';
 import { getToken } from '@/services/authService';
-import {
-    isInLocalWishlist,
-    addToLocalWishlist2,
-    removeFromLocalWishlist
-} from '@/utils/localStorageHelpers';
 
-const ProductDetailContainer = styled('div')(({ theme }) => ({
-    padding: theme.spacing(2),
-    [theme.breakpoints.up('md')]: {
-        padding: theme.spacing(3),
-    },
-}));
-
-const CompactDetailBox = styled(Box)(({ theme }) => ({
-    fontFamily: "'Amethysta', serif",
-    '& .MuiTypography-root': {
-        fontFamily: "'Amethysta', serif !important",
-    },
-    '& .MuiButton-root': {
-        fontFamily: "'Amethysta', serif !important",
-    },
-    '& .MuiChip-label': {
-        fontFamily: "'Amethysta', serif !important",
-    },
-    '& .MuiTypography-h4': {
-        fontSize: '1.3rem',
-        fontWeight: 600,
-        [theme.breakpoints.up('md')]: {
-            fontSize: '1.4rem'
-        }
-    },
-    '& .MuiTypography-h3': {
-        fontSize: '1.5rem',
-        [theme.breakpoints.up('md')]: {
-            fontSize: '1.6rem'
-        }
-    },
-}));
 
 const ProductDetail = ({
                            product,
@@ -108,17 +64,6 @@ const ProductDetail = ({
         let isMounted = true;
 
         const checkWishlistStatus = async () => {
-            const token = getToken();
-
-            if (!token) {
-                // Para usuarios invitados: verificar localStorage
-                const inWishlist = isInLocalWishlist(product.product_id);
-                if (isMounted) setIsFavorite(inWishlist);
-                setInitialized(true);
-                return;
-            }
-
-            // Para usuarios registrados: verificar API
             try {
                 setLoadingWishlist(true);
                 const inWishlist = await wishlistService.checkProductInWishlist(product.product_id);
@@ -158,7 +103,7 @@ const ProductDetail = ({
             const reviewsData = await productService.getReviewsByProductId(product?.product_id);
             setReviews(reviewsData);
         } catch (error) {
-            console.error("Error al cargar reseñas:", error);
+            console.error("Error fetching reviews:", error);
             setErrorReviews(error.message || "Error al cargar las reseñas");
         } finally {
             setLoadingReviews(false);
@@ -196,22 +141,12 @@ const ProductDetail = ({
     // Gestionar favoritos
     const handleFavoriteToggle = async () => {
         const token = getToken();
-
         if (!token) {
             setToast({
                 open: true,
                 message: 'Inicia sesión para guardar productos en favoritos',
                 severity: 'warning'
             });
-            // Para usuarios invitados: usar localStorage
-            const newFavStatus = !isFavorite;
-            setIsFavorite(newFavStatus);
-
-            if (newFavStatus) {
-                addToLocalWishlist2(product);
-            } else {
-                removeFromLocalWishlist(product.product_id);
-            }
             return;
         }
 
@@ -275,7 +210,7 @@ const ProductDetail = ({
             });
         } catch (error) {
             setErrorMessage('Error al añadir al carrito');
-            console.error('Error al añadir al carrito:', error);
+            console.error('Error adding to cart:', error);
         }
     };
 

@@ -11,7 +11,6 @@ import MainLayoutSubM from "@/pages/sub-men/MainLayout-subM";
 import App from "@/pages/product-detail/page";
 import CartPage from "@/pages/cart/page";
 import ProductList from "@/pages/product-list/productList";
-import OrderHistory from "@/pages/order-history/AccountLayout"
 import Checkout from "@/pages/checkout/Checkout";
   // Ruta del componente HomePage
 
