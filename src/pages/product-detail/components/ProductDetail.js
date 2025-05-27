@@ -13,13 +13,12 @@ import {
 } from '@mui/icons-material';
 import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
 import { typography } from "@/pages/shared-theme/themePrimitives";
-import productService from '@/services/productService';
-import wishlistService from '@/services/wishlistService';
-import { getToken } from '@/services/authService';
+
 
 // Importar componentes
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import { styled } from '@mui/material/styles';
 import productService from '@/services/productService';
 import ProductGallery from './ProductGallery';
 import ProductInfo from './ProductInfo';

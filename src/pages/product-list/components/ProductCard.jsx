@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Rating, styled, IconButton } from '@mui/material';
+import { Box, Typography, Rating, styled, IconButton, Chip } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import Link from 'next/link';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -71,11 +71,40 @@ const FavoriteButton = styled(IconButton)(({ theme }) => ({
     }
 }));
 
+const DiscountBadge = styled(Box)(({ theme }) => ({
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    backgroundColor: theme.palette.error.main,
+    color: 'white',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    fontSize: '0.75rem',
+    fontWeight: 'bold',
+    zIndex: 10,
+}));
+
 const ActionButton = styled(IconButton)(({ theme }) => ({
     transition: 'all 0.2s ease',
     '&:hover': {
         transform: 'scale(1.1)'
     },
+}));
+
+const SizesContainer = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '4px',
+    marginTop: '8px',
+    marginBottom: '8px',
+}));
+
+const SizeChip = styled(Chip)(({ theme }) => ({
+    fontSize: '0.7rem',
+    height: '20px',
+    '& .MuiChip-label': {
+        padding: '0 6px',
+    }
 }));
 
 const ProductCard = ({ product, largeView = false, onAddToWishlist, onRemove, onAddToCart, isWishlistPage = false }) => {
@@ -113,8 +142,23 @@ const ProductCard = ({ product, largeView = false, onAddToWishlist, onRemove, on
     // ID del producto para el enlace - usar cualquier formato disponible
     const productId = product.product_id || product.id || product._id || '';
 
+    // Calcular precios y descuento
+    const originalPrice = parseFloat(product.price) || 0;
+    const discountPercentage = parseFloat(product.discount_percentage) || 0;
+    const hasDiscount = discountPercentage > 0;
+
+    const discountedPrice = hasDiscount
+        ? originalPrice * (1 - discountPercentage / 100)
+        : originalPrice;
+
     return (
         <ProductCardContainer largeView={largeView}>
+            {hasDiscount && (
+                <DiscountBadge>
+                    -{discountPercentage}%
+                </DiscountBadge>
+            )}
+
             {!isWishlistPage && (
                 <FavoriteButton
                     className={`heart-icon ${isInFavorites ? 'active' : ''}`}
@@ -168,6 +212,7 @@ const ProductCard = ({ product, largeView = false, onAddToWishlist, onRemove, on
                         >
                             {product.name || 'Producto sin nombre'}
                         </Typography>
+
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                             <Rating
                                 value={product.rating || 0}
@@ -179,14 +224,67 @@ const ProductCard = ({ product, largeView = false, onAddToWishlist, onRemove, on
                                 ({product.numReviews || 0})
                             </Typography>
                         </Box>
-                        <Typography
-                            variant={largeView ? "h5" : "h6"}
-                            fontWeight="bold"
-                            color="primary"
-                            sx={{ fontSize: largeView ? '1.5rem' : '1.1rem' }}
-                        >
-                            {(parseFloat(product.price) || 0).toFixed(2)}€
-                        </Typography>
+
+                        {/* Precios con descuento */}
+                        <Box sx={{ mb: 1 }}>
+                            {hasDiscount ? (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Typography
+                                        variant={largeView ? "h5" : "h6"}
+                                        fontWeight="bold"
+                                        sx={{
+                                            fontSize: largeView ? '1.5rem' : '1.1rem',
+                                            color: '#E4B002'
+                                        }}
+                                    >
+                                        {discountedPrice.toFixed(2)}€
+                                    </Typography>
+                                    <Typography
+                                        variant={largeView ? "body1" : "body2"}
+                                        color="text.secondary"
+                                        sx={{
+                                            textDecoration: 'line-through',
+                                            fontSize: largeView ? '1rem' : '0.85rem'
+                                        }}
+                                    >
+                                        {originalPrice.toFixed(2)}€
+                                    </Typography>
+                                </Box>
+                            ) : (
+                                <Typography
+                                    variant={largeView ? "h5" : "h6"}
+                                    fontWeight="bold"
+                                    sx={{
+                                        fontSize: largeView ? '1.5rem' : '1.1rem',
+                                        color: '#E4B002'
+                                    }}
+                                >
+                                    {originalPrice.toFixed(2)}€
+                                </Typography>
+                            )}
+                        </Box>
+
+                        {/* Tallas disponibles */}
+                        {product.sizes && product.sizes.length > 0 && (
+                            <SizesContainer>
+                                <Typography variant="caption" color="text.secondary" sx={{ mr: 1, alignSelf: 'center' }}>
+                                    Tallas:
+                                </Typography>
+                                {product.sizes.slice(0, largeView ? 6 : 4).map((size, index) => (
+                                    <SizeChip
+                                        key={index}
+                                        label={size}
+                                        size="small"
+                                        variant="outlined"
+                                    />
+                                ))}
+                                {product.sizes.length > (largeView ? 6 : 4) && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ alignSelf: 'center' }}>
+                                        +{product.sizes.length - (largeView ? 6 : 4)} más
+                                    </Typography>
+                                )}
+                            </SizesContainer>
+                        )}
 
                         {largeView && product.description && (
                             <Typography
