@@ -235,16 +235,6 @@ const ProductCard = ({ product, onRemoveFromWishlist, showRemoveWishlist }) => {
                 height: '100px',
                 overflow: 'hidden'
             }}>
-                <Typography
-                    variant="subtitle1"
-                    color="text.secondary"
-                    sx={{
-                        fontSize: { xs: '0.85rem', md: '0.95rem' },
-                        mb: 0.5
-                    }}
-                >
-                    {product.brand || 'Marca no disponible'}
-                </Typography>
 
                 <Typography
                     variant="h6"

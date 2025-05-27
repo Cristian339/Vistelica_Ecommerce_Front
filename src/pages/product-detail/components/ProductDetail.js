@@ -28,11 +28,6 @@ import SocialShare from './SocialShare';
 import ProductBreadcrumb from './ProductBreadcrumb';
 import wishlistService from '@/services/wishlistService';
 import { getToken } from '@/services/authService';
-import {
-    isInLocalWishlist,
-    addToLocalWishlist2,
-    removeFromLocalWishlist
-} from '@/utils/localStorageHelpers';
 
 
 
@@ -124,7 +119,7 @@ const ProductDetail = ({
             const reviewsData = await productService.getReviewsByProductId(product?.product_id);
             setReviews(reviewsData);
         } catch (error) {
-            console.error("Error al cargar reseñas:", error);
+            console.error("Error fetching reviews:", error);
             setErrorReviews(error.message || "Error al cargar las reseñas");
         } finally {
             setLoadingReviews(false);
@@ -162,7 +157,6 @@ const ProductDetail = ({
     // Gestionar favoritos
     const handleFavoriteToggle = async () => {
         const token = getToken();
-
         if (!token) {
             setToast({
                 open: true,
@@ -241,7 +235,7 @@ const ProductDetail = ({
             });
         } catch (error) {
             setErrorMessage('Error al añadir al carrito');
-            console.error('Error al añadir al carrito:', error);
+            console.error('Error adding to cart:', error);
         }
     };
 

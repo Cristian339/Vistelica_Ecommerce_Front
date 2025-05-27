@@ -22,7 +22,6 @@ import HeaderComponent from '@/components/layout/HeaderComponent';
 
 // Servicios y utilidades
 import wishlistService from '@/services/wishlistService';
-import productService from '@/services/productService';
 import categoryService from '@/services/categoryService';
 import { sortProducts } from './components/SortUtils';
 import { COLORS, BRANDS, SIZES } from './constants/filterOptions';
