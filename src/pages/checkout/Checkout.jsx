@@ -376,11 +376,12 @@ export default function Checkout(props) {
                                     <Button
                                         variant="contained"
                                         endIcon={<ChevronRightRoundedIcon />}
-                                        onClick={handleNext}
+                                        onClick={activeStep === steps.length - 1 ? createOrder : handleNext}
                                         sx={{ width: { xs: '100%', sm: 'fit-content' } }}
                                     >
                                         {activeStep === steps.length - 1 ? 'Realizar pedido' : 'Siguiente'}
                                     </Button>
+
                                 </Box>
                             </React.Fragment>
                         )}

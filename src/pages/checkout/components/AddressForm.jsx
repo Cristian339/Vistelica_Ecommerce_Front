@@ -34,9 +34,10 @@ const FormGrid = styled(Grid)(({ theme }) => ({
     flexDirection: 'column',
 }));
 
-export default function AddressForm() {
+export default function AddressForm({ onDataChange }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [selectedAddressId, setSelectedAddressId] = useState(null); // Nuevo estado para la ID
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -50,6 +51,16 @@ export default function AddressForm() {
     const [openDialog, setOpenDialog] = useState(false);
     const [addresses, setAddresses] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Función para enviar datos al componente padre
+    const sendDataToParent = (addressId, formDataToSend) => {
+        if (onDataChange) {
+            onDataChange({
+                selectedAddressId: addressId,
+                formData: formDataToSend
+            });
+        }
+    };
 
     useEffect(() => {
         const loadUserData = async () => {
@@ -68,7 +79,7 @@ export default function AddressForm() {
                     (data.addresses.length > 0 ? data.addresses[0] : null);
 
                 if (defaultAddress) {
-                    setFormData({
+                    const newFormData = {
                         firstName: name || '',
                         lastName: lastName || '',
                         address1: defaultAddress.street || '',
@@ -77,14 +88,28 @@ export default function AddressForm() {
                         state: defaultAddress.state || '',
                         zip: defaultAddress.postal_code || '',
                         country: defaultAddress.country || ''
-                    });
+                    };
+
+                    setFormData(newFormData);
+                    setSelectedAddressId(defaultAddress.id); // Guardar la ID de la dirección predeterminada
+
+                    // Enviar datos al componente padre
+                    sendDataToParent(defaultAddress.id, newFormData);
                 } else {
                     // Si no hay dirección predeterminada, al menos establecer nombre y apellido
-                    setFormData(prev => ({
-                        ...prev,
+                    const newFormData = {
                         firstName: name || '',
-                        lastName: lastName || ''
-                    }));
+                        lastName: lastName || '',
+                        address1: '',
+                        address2: '',
+                        city: '',
+                        state: '',
+                        zip: '',
+                        country: ''
+                    };
+
+                    setFormData(newFormData);
+                    sendDataToParent(null, newFormData);
                 }
 
                 setLoading(false);
@@ -100,10 +125,17 @@ export default function AddressForm() {
 
     const handleChange = (event) => {
         const { name, value } = event.target;
-        setFormData(prev => ({
-            ...prev,
+        const newFormData = {
+            ...formData,
             [name]: value
-        }));
+        };
+
+        setFormData(newFormData);
+
+        // Cuando el usuario modifica manualmente el formulario,
+        // consideramos que ya no está usando una dirección guardada
+        setSelectedAddressId(null);
+        sendDataToParent(null, newFormData);
     };
 
     const handleOpenDialog = () => {
@@ -116,15 +148,22 @@ export default function AddressForm() {
     };
 
     const handleSelectAddress = (address) => {
-        setFormData(prev => ({
-            ...prev,
+        const newFormData = {
+            ...formData,
             address1: address.street || '',
             address2: address.label || '',
             city: address.city || '',
             state: address.state || '',
             zip: address.postal_code || '',
             country: address.country || '',
-        }));
+        };
+
+        setFormData(newFormData);
+        setSelectedAddressId(address.id); // Guardar la ID de la dirección seleccionada
+
+        // Enviar datos al componente padre con la ID de la dirección
+        sendDataToParent(address.id, newFormData);
+
         handleCloseDialog();
     };
 
@@ -315,6 +354,22 @@ export default function AddressForm() {
                         </Button>
                     </Box>
                 </Grid>
+
+                {/* Mostrar información de la dirección seleccionada */}
+                {selectedAddressId && (
+                    <Grid item xs={12}>
+                        <Box sx={{
+                            p: 2,
+                            bgcolor: 'rgba(228, 176, 2, 0.08)',
+                            borderRadius: 1,
+                            border: '1px solid rgba(228, 176, 2, 0.3)'
+                        }}>
+                            <Typography variant="body2" color="text.secondary">
+                                ✓ Usando dirección guardada (ID: {selectedAddressId})
+                            </Typography>
+                        </Box>
+                    </Grid>
+                )}
             </Grid>
 
             {/* Modal para seleccionar direcciones */}
@@ -450,6 +505,9 @@ export default function AddressForm() {
                                                         </Typography>
                                                         <Typography variant="body2" color="text.secondary">
                                                             {address.country || 'España'}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.disabled">
+                                                            ID: {address.id}
                                                         </Typography>
                                                     </Box>
                                                 </Box>
