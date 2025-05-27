@@ -13,9 +13,6 @@ import {
 } from '@mui/icons-material';
 import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
 import { typography } from "@/pages/shared-theme/themePrimitives";
-import productService from '@/services/productService';
-import wishlistService from '@/services/wishlistService';
-import { getToken } from '@/services/authService';
 
 // Importar componentes
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -37,38 +34,7 @@ import {
     removeFromLocalWishlist
 } from '@/utils/localStorageHelpers';
 
-const ProductDetailContainer = styled('div')(({ theme }) => ({
-    padding: theme.spacing(2),
-    [theme.breakpoints.up('md')]: {
-        padding: theme.spacing(3),
-    },
-}));
 
-const CompactDetailBox = styled(Box)(({ theme }) => ({
-    fontFamily: "'Amethysta', serif",
-    '& .MuiTypography-root': {
-        fontFamily: "'Amethysta', serif !important",
-    },
-    '& .MuiButton-root': {
-        fontFamily: "'Amethysta', serif !important",
-    },
-    '& .MuiChip-label': {
-        fontFamily: "'Amethysta', serif !important",
-    },
-    '& .MuiTypography-h4': {
-        fontSize: '1.3rem',
-        fontWeight: 600,
-        [theme.breakpoints.up('md')]: {
-            fontSize: '1.4rem'
-        }
-    },
-    '& .MuiTypography-h3': {
-        fontSize: '1.5rem',
-        [theme.breakpoints.up('md')]: {
-            fontSize: '1.6rem'
-        }
-    },
-}));
 
 const ProductDetail = ({
                            product,

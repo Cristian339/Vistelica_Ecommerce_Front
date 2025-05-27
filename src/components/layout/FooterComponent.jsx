@@ -265,7 +265,7 @@ const FooterComponent = () => {
                           animate={{ opacity: 1 }}
                           transition={{ delay: 0.6 }}>
                         <CopyrightText>
-                            ©2024 VÍSTELICA. Todos los derechos reservados.
+                            ©2024 VÍSTELICA.
                         </CopyrightText>
                     </Grid>
                 </Grid>
