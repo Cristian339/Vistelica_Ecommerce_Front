@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button, Box, Typography, CircularProgress, Container, Skeleton, Card } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
@@ -83,25 +82,19 @@ const ProductCard = ({ product, onClick }) => {
                     {product.discount_percentage > 0 && (
                         <Box
                             component={motion.div}
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.8 }}
                             sx={{
-                                position: 'absolute',
-                                top: 10,
-                                right: 10,
-                                backgroundColor: vistelicaColors.primary,
-                                color: '#fff',
-                                borderRadius: '50%',
-                                width: 50,
-                                height: 50,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 'bold',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                                p: 0,
+                                m: 0,
+                                background: '#ffffff',
+                                borderRadius: 0,
+                                overflow: 'hidden'
                             }}
                         >
-                            -{product.discount_percentage}%
+
+                        -{product.discount_percentage}%
                         </Box>
                     )}
                 </Box>
@@ -280,11 +273,12 @@ const ProductCarousel = ({
             sx={{
                 py: { xs: 4, md: 6 },
                 px: { xs: 2, md: 4 },
-                background: 'linear-gradient(180deg, #FDFBF6 0%, #FFFFFF 100%)',
+                background: '#ffffff',
                 borderRadius: { xs: '0', md: '16px' },
-                my: { xs: 3, md: 5 },
+                mt: { xs: 3, md: 5 }, // Solo margen superior
                 overflow: 'hidden'
             }}
+
         >
             <Container maxWidth="xl">
                 <Box

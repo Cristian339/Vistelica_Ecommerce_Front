@@ -315,6 +315,8 @@ const ProductCard = ({ product }) => {
     );
 };
 
+
+
 const ProductShowcase = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -370,7 +372,7 @@ const ProductShowcase = () => {
             variants={containerVariants}
             sx={{
                 py: { xs: 4, md: 6 },
-                backgroundColor: '#FDFBF6',
+                backgroundColor: '#ffffff',
                 borderRadius: { xs: 0, md: '20px' },
                 my: { xs: 2, md: 4 },
                 px: { xs: 2, md: 4 }
@@ -450,7 +452,7 @@ const ProductShowcase = () => {
                         <Button
                             variant="outlined"
                             component={Link}
-                            href="/products"
+                            href="/product-list/productList?filter=topRated"
                             sx={{
                                 borderColor: vistelicaColors.primary,
                                 color: vistelicaColors.primary,
@@ -463,7 +465,7 @@ const ProductShowcase = () => {
                                 }
                             }}
                         >
-                            Ver más productos
+                            Ver más productos destacados
                         </Button>
                     </Box>
                 )}

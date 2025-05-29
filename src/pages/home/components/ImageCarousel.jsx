@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Button, Container } from '@mui/material';
+import Link from 'next/link';
 
 const ProgressBarCarousel = () => {
     const [currentSlide, setCurrentSlide] = useState(0);
@@ -8,25 +9,31 @@ const ProgressBarCarousel = () => {
     const intervalRef = useRef(null);
     const progressIntervalRef = useRef(null);
 
-    // Definición de las imágenes del carrusel
+    // Definición de las imágenes del carrusel con enlaces específicos
     const slides = [
         {
             src: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743791584/vistelica/Carrusel/hslrccwjzkmexfjv2sc8.jpg",
             alt: "Monstera leaf close-up",
             title: "Colecciones exclusivas",
-            subtitle: "Explora nuestra amplia gama de productos, colaborarando con los mejores proveedores del país."
+            subtitle: "Explora nuestra amplia gama de productos, colaborando con los mejores proveedores del país.",
+            buttonText: "Explorar",
+            link: "/product-list/productList"
         },
         {
             src: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743791584/vistelica/Carrusel/kpr9ii8oqevnneudgzno.webp",
             alt: "Indoor plants",
-            title: "Gran variedad",
-            subtitle: " Encuentra lo que buscas, desde pijamas para estar por casa hasta cazadoras para irte al polo norte."
+            title: "Últimas unidades",
+            subtitle: "¡Aprovecha! Productos con poco stock disponible. No te quedes sin el tuyo.",
+            buttonText: "Ver productos",
+            link: "/product-list/productList?filter=lowStock" // Enlace para productos con poco stock
         },
         {
             src: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743791578/vistelica/Carrusel/ctidxlquiebnqas0ivxk.jpg",
             alt: "Tropical leaf",
             title: "Grandes ofertas",
-            subtitle: " Aprovecha nuestras ofertas y descuentos exclusivos en productos seleccionados."
+            subtitle: "Aprovecha nuestras ofertas y descuentos exclusivos en productos seleccionados.",
+            buttonText: "Ver ofertas",
+            link: "/product-list/productList?filter=hasDiscount" // Enlace para productos con descuento
         }
     ];
 
@@ -165,6 +172,8 @@ const ProgressBarCarousel = () => {
                                     {slide.subtitle}
                                 </Typography>
                                 <Button
+                                    component={Link}
+                                    href={slide.link}
                                     variant="contained"
                                     sx={{
                                         backgroundColor: 'white',
@@ -174,12 +183,13 @@ const ProgressBarCarousel = () => {
                                         fontSize: '0.9rem',
                                         fontWeight: 'bold',
                                         textTransform: 'none',
+                                        textDecoration: 'none',
                                         '&:hover': {
                                             backgroundColor: '#f0f0f0',
                                         }
                                     }}
                                 >
-                                    Explorar
+                                    {slide.buttonText}
                                 </Button>
                             </Box>
                         </Container>
@@ -187,7 +197,7 @@ const ProgressBarCarousel = () => {
                 </Box>
             ))}
 
-            {/* Indicadores de progreso en la parte inferior - igual que en la imagen */}
+            {/* Indicadores de progreso en la parte inferior */}
             <Box
                 sx={{
                     position: 'absolute',

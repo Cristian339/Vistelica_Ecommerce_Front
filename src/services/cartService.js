@@ -413,6 +413,35 @@ const cartService = {
         }
     },
 
+    /**
+     * Limpia todos los productos del carrito eliminándolos uno por uno
+     * @returns {Promise<void>}
+     */
+    async clearCartByItems() {
+        try {
+            // Obtener los productos actuales del carrito
+            const products = await this.getCurrentCartProducts();
+
+            if (!products || products.length === 0) {
+                console.log('El carrito ya está vacío');
+                return;
+            }
+
+            // Eliminar cada producto individualmente
+            const deletePromises = products.map(item =>
+                this.removeFromCart(item.cart_detail_id)
+            );
+
+            // Esperar a que se eliminen todos los productos
+            await Promise.all(deletePromises);
+
+            console.log('Carrito limpiado exitosamente');
+
+        } catch (error) {
+            console.error('Error al limpiar el carrito:', error);
+            throw new Error('No se pudo limpiar el carrito');
+        }
+    },
 };
 
 export default cartService;
