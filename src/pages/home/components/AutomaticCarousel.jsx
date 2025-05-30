@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import {
     Box,
     Container,
@@ -10,7 +10,8 @@ import {
     useMediaQuery,
     useTheme,
     GlobalStyles,
-    Alert
+    Alert,
+    Skeleton
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import productService from '@/services/productService';
@@ -18,12 +19,14 @@ import { useRouter } from 'next/navigation';
 import { vistelicaColors } from '../../shared-theme/vistelicaColors';
 import { typography } from "@/pages/shared-theme/themePrimitives";
 
-const CarouselItem = ({ product }) => {
+// Componente optimizado con React.memo
+const CarouselItem = React.memo(({ product }) => {
     const router = useRouter();
     const [imageError, setImageError] = useState(false);
+    const [imageLoaded, setImageLoaded] = useState(false);
 
-    // Determina la mejor URL de imagen disponible
-    const getImageUrl = () => {
+    // Optimizado con useMemo
+    const imageUrl = useMemo(() => {
         if (imageError) return '/images/placeholder-image.png';
 
         return product.image_url ||
@@ -32,15 +35,27 @@ const CarouselItem = ({ product }) => {
             product.image ||
             product.imageUrl ||
             '/images/placeholder-image.png';
-    };
+    }, [product, imageError]);
 
-    const handleProductClickDetail = (productId) => {
+    // Optimizado con useCallback
+    const handleProductClickDetail = useCallback((productId) => {
         if (router) {
             router.push(`/product-detail/page?id=${productId}`);
         } else {
             console.error('Router is not available.');
         }
-    };
+    }, [router]);
+
+    // Optimizado con useCallback
+    const handleImageError = useCallback(() => {
+        setImageError(true);
+        setImageLoaded(true);
+    }, []);
+
+    // Optimizado con useCallback
+    const handleImageLoad = useCallback(() => {
+        setImageLoaded(true);
+    }, []);
 
     return (
         <motion.div
@@ -66,13 +81,26 @@ const CarouselItem = ({ product }) => {
                 }}
             >
                 <Box sx={{ position: 'relative', height: '75%', width: '100%', overflow: 'hidden', backgroundColor: '#fff' }}>
-                    <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.4 }}>
+                    {!imageLoaded && (
+                        <Skeleton
+                            variant="rectangular"
+                            width="100%"
+                            height="100%"
+                            animation="wave"
+                        />
+                    )}
+                    <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.4 }}
+                        style={{ opacity: imageLoaded ? 1 : 0 }}
+                    >
                         <CardMedia
                             component="img"
-                            image={getImageUrl()}
+                            image={imageUrl}
                             alt={product.name || 'Producto'}
                             loading="lazy"
-                            onError={() => setImageError(true)}
+                            onError={handleImageError}
+                            onLoad={handleImageLoad}
                             sx={{
                                 width: '100%',
                                 height: '100%',
@@ -118,20 +146,25 @@ const CarouselItem = ({ product }) => {
             </Card>
         </motion.div>
     );
-};
+});
 
+// Componente principal optimizado
 const AutomaticCarouselWithScrollbar = () => {
     const scrollContainerRef = useRef(null);
     const isPausedRef = useRef(false);
     const animationRef = useRef(null);
     const isResettingRef = useRef(false);
+    const touchStartXRef = useRef(null);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [manuallyPaused, setManuallyPaused] = useState(false);
 
-    const NUM_DOTS = 5; // Número de puntos para el indicador
+    // Número de puntos adaptable según el dispositivo
+    const NUM_DOTS = useMemo(() => isMobile ? 3 : 5, [isMobile]);
     const [activeDotIndex, setActiveDotIndex] = useState(0);
 
     const updateActiveDotIndicator = useCallback(() => {
@@ -148,9 +181,9 @@ const AutomaticCarouselWithScrollbar = () => {
         const currentScroll = scrollContainer.scrollLeft;
         let dotIndex;
 
-        if (currentScroll >= scrollableWidth - 1) { // Al final
+        if (currentScroll >= scrollableWidth - 1) {
             dotIndex = NUM_DOTS - 1;
-        } else if (currentScroll <= 0) { // Al principio
+        } else if (currentScroll <= 0) {
             dotIndex = 0;
         } else {
             const segmentWidth = scrollableWidth / NUM_DOTS;
@@ -160,12 +193,18 @@ const AutomaticCarouselWithScrollbar = () => {
         setActiveDotIndex(Math.max(0, Math.min(dotIndex, NUM_DOTS - 1)));
     }, [NUM_DOTS]);
 
+    // Fetch optimizado con mejor manejo de errores
     useEffect(() => {
+        let isMounted = true;
+        const abortController = new AbortController();
+
         const fetchProducts = async () => {
             try {
                 setLoading(true);
                 setError(null);
                 const data = await productService.getRandomAccessoryProducts();
+
+                if (!isMounted) return;
 
                 // Aseguramos que data es un array
                 const processedData = Array.isArray(data) ? data : [];
@@ -187,17 +226,27 @@ const AutomaticCarouselWithScrollbar = () => {
 
                 setProducts(normalizedProducts);
             } catch (error) {
+                if (!isMounted) return;
                 console.error('Error al cargar los accesorios:', error);
                 setError('No se pudieron cargar los productos. Por favor, intente más tarde.');
                 setProducts([]);
             } finally {
-                setLoading(false);
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
         };
+
         fetchProducts();
+
+        return () => {
+            isMounted = false;
+            abortController.abort();
+        };
     }, []);
 
-    const carouselProducts = products || [];
+    // Memoizamos productos para evitar re-renders innecesarios
+    const carouselProducts = useMemo(() => products || [], [products]);
 
     const handleScroll = useCallback(() => {
         if (!isResettingRef.current) {
@@ -205,6 +254,7 @@ const AutomaticCarouselWithScrollbar = () => {
         }
     }, [updateActiveDotIndicator]);
 
+    // Efecto optimizado para la animación del carrusel
     useEffect(() => {
         const scrollContainer = scrollContainerRef.current;
         if (!scrollContainer || loading || carouselProducts.length === 0) {
@@ -215,10 +265,11 @@ const AutomaticCarouselWithScrollbar = () => {
         }
 
         scrollContainer.scrollLeft = 0;
-        setActiveDotIndex(0); // Inicializa el punto activo
+        setActiveDotIndex(0);
         isResettingRef.current = false;
 
-        const pixelsPerFrame = isMobile ? 0.8 : 1.2;
+        // Velocidad adaptativa según dispositivo
+        const pixelsPerFrame = isMobile ? 0.6 : isTablet ? 0.9 : 1.2;
 
         const scrollAnimation = () => {
             const currentScrollContainer = scrollContainerRef.current;
@@ -235,17 +286,20 @@ const AutomaticCarouselWithScrollbar = () => {
                 return;
             }
 
-            if (!isPausedRef.current && !isResettingRef.current) {
+            if (!isPausedRef.current && !isResettingRef.current && !manuallyPaused) {
                 if (currentScrollContainer.scrollLeft >= maxScroll - 1) {
                     isResettingRef.current = true;
                     currentScrollContainer.scrollLeft = 0;
-                    setActiveDotIndex(0); // Resetea el punto activo
+                    setActiveDotIndex(0);
                     setTimeout(() => {
                         isResettingRef.current = false;
                     }, 100);
                 } else {
                     currentScrollContainer.scrollLeft += pixelsPerFrame;
-                    updateActiveDotIndicator(); // Actualiza el punto activo durante la animación
+                    // Actualizamos los indicadores solo cada 10 frames para mejor rendimiento
+                    if (Math.floor(currentScrollContainer.scrollLeft) % 10 === 0) {
+                        updateActiveDotIndicator();
+                    }
                 }
             }
             animationRef.current = requestAnimationFrame(scrollAnimation);
@@ -257,11 +311,28 @@ const AutomaticCarouselWithScrollbar = () => {
             setActiveDotIndex(0);
         }
 
+        // Manejo optimizado de eventos de interacción
         const handleMouseEnter = () => { isPausedRef.current = true; };
         const handleMouseLeave = () => { isPausedRef.current = false; };
 
+        // Manejo de eventos táctiles
+        const handleTouchStart = (e) => {
+            touchStartXRef.current = e.touches[0].clientX;
+            isPausedRef.current = true;
+        };
+
+        const handleTouchEnd = () => {
+            touchStartXRef.current = null;
+            // Pequeño retraso antes de reanudar el desplazamiento automático
+            setTimeout(() => {
+                isPausedRef.current = false;
+            }, 1000);
+        };
+
         scrollContainer.addEventListener('mouseenter', handleMouseEnter);
         scrollContainer.addEventListener('mouseleave', handleMouseLeave);
+        scrollContainer.addEventListener('touchstart', handleTouchStart);
+        scrollContainer.addEventListener('touchend', handleTouchEnd);
         scrollContainer.addEventListener('scroll', handleScroll);
 
         return () => {
@@ -271,12 +342,15 @@ const AutomaticCarouselWithScrollbar = () => {
             if (scrollContainer) {
                 scrollContainer.removeEventListener('mouseenter', handleMouseEnter);
                 scrollContainer.removeEventListener('mouseleave', handleMouseLeave);
+                scrollContainer.removeEventListener('touchstart', handleTouchStart);
+                scrollContainer.removeEventListener('touchend', handleTouchEnd);
                 scrollContainer.removeEventListener('scroll', handleScroll);
             }
         };
-    }, [loading, carouselProducts, isMobile, updateActiveDotIndicator, handleScroll]);
+    }, [loading, carouselProducts, isMobile, isTablet, updateActiveDotIndicator, handleScroll, manuallyPaused]);
 
-    const handleDotClick = (index) => {
+    // Navegación optimizada con indicadores
+    const handleDotClick = useCallback((index) => {
         const scrollContainer = scrollContainerRef.current;
         if (!scrollContainer) return;
 
@@ -298,9 +372,23 @@ const AutomaticCarouselWithScrollbar = () => {
         setTimeout(() => {
             scrollContainer.style.scrollBehavior = 'auto';
             isPausedRef.current = false;
-            updateActiveDotIndicator(); // Asegura la sincronización final
+            updateActiveDotIndicator();
         }, 500);
-    };
+    }, [NUM_DOTS, updateActiveDotIndicator]);
+
+    // Estilos memoizados para evitar recálculos
+    const dotStyles = useMemo(() => (index) => ({
+        width: activeDotIndex === index ? '12px' : '8px',
+        height: activeDotIndex === index ? '12px' : '8px',
+        borderRadius: '50%',
+        bgcolor: activeDotIndex === index ? (vistelicaColors.primary || '#E4B002') : 'rgba(158, 158, 158, 0.5)',
+        mx: '4px',
+        cursor: 'pointer',
+        transition: 'width 0.3s ease, height 0.3s ease, background-color 0.3s ease',
+        '&:hover': {
+            bgcolor: activeDotIndex === index ? (vistelicaColors.primary || '#E4B002') : 'rgba(158, 158, 158, 0.8)',
+        }
+    }), [activeDotIndex]);
 
     return (
         <Container maxWidth={false} sx={{ py: 4, px: { xs: 2, md: 4 }, maxWidth: '1800px', mx: 'auto' }}>
@@ -357,6 +445,8 @@ const AutomaticCarouselWithScrollbar = () => {
                 <Box
                     ref={scrollContainerRef}
                     className="hide-carousel-scrollbar"
+                    role="region"
+                    aria-label="Carrusel de accesorios"
                     sx={{
                         display: 'flex', width: '100%', overflowX: 'auto', scrollBehavior: 'auto',
                         pb: 2, gap: 3,
@@ -390,25 +480,27 @@ const AutomaticCarouselWithScrollbar = () => {
                 </Box>
             </motion.div>
 
-            {/* Indicador de Puntos */}
+            {/* Indicador de Puntos optimizado */}
             {!loading && carouselProducts.length > 0 && (scrollContainerRef.current && scrollContainerRef.current.scrollWidth > scrollContainerRef.current.clientWidth) && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2, mb: 2 }}>
+                <Box
+                    sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2, mb: 2 }}
+                    role="tablist"
+                    aria-label="Navegación del carrusel"
+                >
                     {[...Array(NUM_DOTS).keys()].map((index) => (
                         <Box
                             key={`dot-${index}`}
                             onClick={() => handleDotClick(index)}
-                            sx={{
-                                width: activeDotIndex === index ? '12px' : '8px',
-                                height: activeDotIndex === index ? '12px' : '8px',
-                                borderRadius: '50%',
-                                bgcolor: activeDotIndex === index ? (vistelicaColors.primary || '#E4B002') : 'rgba(158, 158, 158, 0.5)',
-                                mx: '4px',
-                                cursor: 'pointer',
-                                transition: 'width 0.3s ease, height 0.3s ease, background-color 0.3s ease',
-                                '&:hover': {
-                                    bgcolor: activeDotIndex === index ? (vistelicaColors.primary || '#E4B002') : 'rgba(158, 158, 158, 0.8)',
+                            role="tab"
+                            tabIndex={0}
+                            aria-selected={activeDotIndex === index}
+                            aria-label={`Página ${index + 1} de ${NUM_DOTS}`}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    handleDotClick(index);
                                 }
                             }}
+                            sx={dotStyles(index)}
                         />
                     ))}
                 </Box>
@@ -416,5 +508,8 @@ const AutomaticCarouselWithScrollbar = () => {
         </Container>
     );
 };
+
+// Añadimos displayName para mejor depuración
+CarouselItem.displayName = 'CarouselItem';
 
 export default AutomaticCarouselWithScrollbar;

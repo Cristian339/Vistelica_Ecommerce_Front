@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
     Box,
     Container,
@@ -22,6 +22,77 @@ import TwitterIcon from '@mui/icons-material/Twitter';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
 import { typography } from "@/pages/shared-theme/themePrimitives";
+
+// Componentes optimizados
+const FooterSection = React.memo(({ title, links, delay = 0 }) => {
+    return (
+        <Grid item xs={4} sm={4} md={2} component={motion.div}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay }}
+        >
+            <FooterTitle variant="h6" component={motion.div}
+                         whileHover={{ scale: 1.03 }}
+            >
+                {title}
+            </FooterTitle>
+            <Box component={motion.div}
+                 initial={{ opacity: 0 }}
+                 animate={{ opacity: 1 }}
+                 transition={{ staggerChildren: 0.1, delayChildren: 0.3 }}
+                 role="navigation"
+                 aria-label={`Navegación de ${title}`}
+            >
+                {links.map((link, index) => (
+                    <FooterLink
+                        key={index}
+                        href={link.href}
+                        component={motion.a}
+                        whileHover={{ x: 5 }}
+                    >
+                        {link.text}
+                    </FooterLink>
+                ))}
+            </Box>
+        </Grid>
+    );
+});
+
+const SocialSection = React.memo(({ socials, delay = 0.4 }) => {
+    return (
+        <Grid item xs={4} sm={4} md={3} component={motion.div}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay }}
+        >
+            <FooterTitle variant="h6" component={motion.div}
+                         whileHover={{ scale: 1.03 }}
+            >
+                Síguenos
+            </FooterTitle>
+            <Box
+                component={motion.div}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}
+            >
+                {socials.map((social, index) => (
+                    <Tooltip key={index} title={social.name}>
+                        <SocialIconButton
+                            component={motion.button}
+                            whileHover={{ y: -3 }}
+                            whileTap={{ scale: 0.9 }}
+                            aria-label={social.name}
+                        >
+                            {social.icon}
+                        </SocialIconButton>
+                    </Tooltip>
+                ))}
+            </Box>
+        </Grid>
+    );
+});
 
 // Estilos
 const FooterContainer = styled(Box)(({ theme }) => ({
@@ -69,15 +140,16 @@ const FooterLink = styled(Link)(({ theme }) => ({
     fontSize: '0.9rem',
     fontFamily: typography.fontFamily,
     transition: 'transform 0.2s ease, color 0.2s ease',
+    textAlign: 'left', // Garantiza alineación consistente
     '&:hover': {
-        color: '#FFD700', // Color amarillo dorado para el hover
+        color: '#FFD700',
         transform: 'translateX(3px)',
     },
 }));
 
 const SocialIconButton = styled(IconButton)(({ theme }) => ({
     backgroundColor: vistelicaColors.backgroundLight,
-    color: '#F1C40F', // Color amarillo en lugar de vistelicaColors.text
+    color: '#F1C40F',
     border: `1px solid ${vistelicaColors.divider}`,
     margin: theme.spacing(0.5),
     transition: 'all 0.3s ease',
@@ -105,150 +177,89 @@ const CopyrightText = styled(Typography)(({ theme }) => ({
     },
 }));
 
-const GridItem = styled(Grid)({
-    opacity: 0,
-});
-
 const FooterComponent = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    const [hoveredSection, setHoveredSection] = useState(null);
 
-    const scrollToTop = () => {
+    // Enlaces de cada sección del footer (memoizados)
+    const footerSections = useMemo(() => [
+        {
+            title: "Guía de compra",
+            links: [
+                { href: "/envios", text: "Envíos" },
+                { href: "/pagos", text: "Pagos" },
+                { href: "/cambios-devoluciones", text: "Cambios y devoluciones" },
+                { href: "/tarjeta-regalo", text: "Tarjeta Regalo" },
+                { href: "/pack-trajearte", text: "Pack Trajearte" },
+                { href: "/vestuario-laboral", text: "Vestuario Laboral" }
+            ]
+        },
+        {
+            title: "Ayuda",
+            links: [
+                { href: "/preguntas-frecuentes", text: "Preguntas frecuentes" },
+                { href: "/guia-tallas", text: "Guía de tallas" },
+                { href: "/cambio-devolucion", text: "Cambios/devoluciones como invitado" },
+                { href: "/contacto", text: "Contacto" },
+                { href: "/bases-sorteo", text: "Bases Sorteo" },
+                { href: "/condiciones-promocionales", text: "Condiciones Promocionales" }
+            ]
+        },
+        {
+            title: "Mi Cuenta", // Reemplazado "Tiendas" por "Mi Cuenta" más relevante para tienda online
+            links: [
+                { href: "/mi-cuenta", text: "Iniciar sesión" },
+                { href: "/pedidos", text: "Mis pedidos" },
+                { href: "/favoritos", text: "Lista de deseos" },
+                { href: "/direcciones", text: "Mis direcciones" },
+                { href: "/programa-fidelizacion", text: "Programa de puntos" },
+                { href: "/newsletter", text: "Suscripción a novedades" }
+            ]
+        },
+        {
+            title: "Legal",
+            links: [
+                { href: "/aviso-legal", text: "Aviso legal" },
+                { href: "/politica-privacidad", text: "Política de privacidad" },
+                { href: "/politica-cookies", text: "Política de Cookies" },
+                { href: "/datos-seguros", text: "Sus datos seguros" },
+                { href: "/condiciones-uso", text: "Condiciones de uso" }
+            ]
+        }
+    ], []);
+
+    // Redes sociales (memoizadas)
+    const socialMedias = useMemo(() => [
+        { name: "Facebook", icon: <FacebookIcon /> },
+        { name: "Instagram", icon: <InstagramIcon /> },
+        { name: "YouTube", icon: <YouTubeIcon /> },
+        { name: "Twitter", icon: <TwitterIcon /> },
+        {
+            name: "TikTok",
+            icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 015.25 5C3.8 5.6 3 7.15 3 8.76v6.5a3.79 3.79 0 003.4 3.73 3.94 3.94 0 003.35-.73 4.37 4.37 0 001.14-1.35 3.8 3.8 0 00.37-2.55v-4.4h3.45c.28 0 1.16-.2 1.93-.85a3.37 3.37 0 001.27-2.48c0-2.2-1.43-4-3.98-4h-.47z" />
+            </svg>
+        }
+    ], []);
+
+    const scrollToTop = useCallback(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+    }, []);
 
     return (
-        <FooterContainer component="footer">
+        <FooterContainer component="footer" role="contentinfo" aria-label="Pie de página">
             <Container maxWidth="lg">
                 <Grid container spacing={4} sx={{ width: '100%' }} columns={{ xs: 4, sm: 8, md: 12 }}>
-                    <Grid item xs={4} sm={4} md={2} component={motion.div}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.5 }}>
-                        <FooterTitle variant="h6" component={motion.div}
-                                     whileHover={{ scale: 1.03 }}>
-                            Guía de compra
-                        </FooterTitle>
-                        <Box component={motion.div}
-                             initial={{ opacity: 0 }}
-                             animate={{ opacity: 1 }}
-                             transition={{ staggerChildren: 0.1, delayChildren: 0.3 }}>
-                            <FooterLink href="/envios" component={motion.a} whileHover={{ x: 5 }}>Envíos</FooterLink>
-                            <FooterLink href="/pagos" component={motion.a} whileHover={{ x: 5 }}>Pagos</FooterLink>
-                            <FooterLink href="/cambios-devoluciones" component={motion.a} whileHover={{ x: 5 }}>Cambios y devoluciones</FooterLink>
-                            <FooterLink href="/tarjeta-regalo" component={motion.a} whileHover={{ x: 5 }}>Tarjeta Regalo</FooterLink>
-                            <FooterLink href="/pack-trajearte" component={motion.a} whileHover={{ x: 5 }}>Pack Trajearte</FooterLink>
-                            <FooterLink href="/vestuario-laboral" component={motion.a} whileHover={{ x: 5 }}>Vestuario Laboral</FooterLink>
-                        </Box>
-                    </Grid>
+                    {footerSections.map((section, index) => (
+                        <FooterSection
+                            key={section.title}
+                            title={section.title}
+                            links={section.links}
+                            delay={index * 0.1}
+                        />
+                    ))}
 
-                    <Grid item xs={4} sm={4} md={2} component={motion.div}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.5, delay: 0.1 }}>
-                        <FooterTitle variant="h6" component={motion.div}
-                                     whileHover={{ scale: 1.03 }}>
-                            Ayuda
-                        </FooterTitle>
-                        <Box component={motion.div}
-                             initial={{ opacity: 0 }}
-                             animate={{ opacity: 1 }}
-                             transition={{ staggerChildren: 0.1, delayChildren: 0.3 }}>
-                            <FooterLink href="/preguntas-frecuentes" component={motion.a} whileHover={{ x: 5 }}>Preguntas frecuentes</FooterLink>
-                            <FooterLink href="/guia-tallas" component={motion.a} whileHover={{ x: 5 }}>Guía de tallas</FooterLink>
-                            <FooterLink href="/cambio-devolucion" component={motion.a} whileHover={{ x: 5 }}>Cambios/devoluciones como invitado</FooterLink>
-                            <FooterLink href="/contacto" component={motion.a} whileHover={{ x: 5 }}>Contacto</FooterLink>
-                            <FooterLink href="/bases-sorteo" component={motion.a} whileHover={{ x: 5 }}>Bases Sorteo</FooterLink>
-                            <FooterLink href="/condiciones-promocionales" component={motion.a} whileHover={{ x: 5 }}>Condiciones Promocionales</FooterLink>
-                        </Box>
-                    </Grid>
-
-                    <Grid item xs={4} sm={4} md={2} component={motion.div}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.5, delay: 0.2 }}>
-                        <FooterTitle variant="h6" component={motion.div}
-                                     whileHover={{ scale: 1.03 }}>
-                            Tiendas
-                        </FooterTitle>
-                        <Box component={motion.div}
-                             initial={{ opacity: 0 }}
-                             animate={{ opacity: 1 }}
-                             transition={{ staggerChildren: 0.1, delayChildren: 0.3 }}>
-                            <FooterLink href="/nuestras-tiendas" component={motion.a} whileHover={{ x: 5 }}>Nuestras tiendas</FooterLink>
-                            <FooterLink href="/trabaja-con-nosotros" component={motion.a} whileHover={{ x: 5 }}>Trabaja con nosotros</FooterLink>
-                            <FooterLink href="/quienes-somos" component={motion.a} whileHover={{ x: 5 }}>¿Quiénes somos?</FooterLink>
-                            <FooterLink href="/empresa-alma" component={motion.a} whileHover={{ x: 5 }}>Empresa con ALMA</FooterLink>
-                            <FooterLink href="/descuento-familias" component={motion.a} whileHover={{ x: 5 }}>Descuento Familias Numerosas</FooterLink>
-                            <FooterLink href="/sii" component={motion.a} whileHover={{ x: 5 }}>SII</FooterLink>
-                        </Box>
-                    </Grid>
-
-                    <Grid item xs={4} sm={4} md={3} component={motion.div}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.5, delay: 0.3 }}>
-                        <FooterTitle variant="h6" component={motion.div}
-                                     whileHover={{ scale: 1.03 }}>
-                            Legal
-                        </FooterTitle>
-                        <Box component={motion.div}
-                             initial={{ opacity: 0 }}
-                             animate={{ opacity: 1 }}
-                             transition={{ staggerChildren: 0.1, delayChildren: 0.3 }}>
-                            <FooterLink href="/aviso-legal" component={motion.a} whileHover={{ x: 5 }}>Aviso legal</FooterLink>
-                            <FooterLink href="/politica-privacidad" component={motion.a} whileHover={{ x: 5 }}>Política de privacidad</FooterLink>
-                            <FooterLink href="/politica-cookies" component={motion.a} whileHover={{ x: 5 }}>Política de Cookies</FooterLink>
-                            <FooterLink href="/datos-seguros" component={motion.a} whileHover={{ x: 5 }}>Sus datos seguros</FooterLink>
-                            <FooterLink href="/condiciones-uso" component={motion.a} whileHover={{ x: 5 }}>Condiciones de uso</FooterLink>
-                        </Box>
-                    </Grid>
-
-                    <Grid item xs={4} sm={4} md={3} component={motion.div}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.5, delay: 0.4 }}>
-                        <FooterTitle variant="h6" component={motion.div}
-                                     whileHover={{ scale: 1.03 }}>
-                            Síguenos
-                        </FooterTitle>
-                        <Box
-                            component={motion.div}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.5 }}
-                            sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}
-                        >
-                            <Tooltip title="Facebook">
-                                <SocialIconButton component={motion.button} whileHover={{ y: -3 }} whileTap={{ scale: 0.9 }} aria-label="Facebook">
-                                    <FacebookIcon />
-                                </SocialIconButton>
-                            </Tooltip>
-                            <Tooltip title="Instagram">
-                                <SocialIconButton component={motion.button} whileHover={{ y: -3 }} whileTap={{ scale: 0.9 }} aria-label="Instagram">
-                                    <InstagramIcon />
-                                </SocialIconButton>
-                            </Tooltip>
-                            <Tooltip title="YouTube">
-                                <SocialIconButton component={motion.button} whileHover={{ y: -3 }} whileTap={{ scale: 0.9 }} aria-label="YouTube">
-                                    <YouTubeIcon />
-                                </SocialIconButton>
-                            </Tooltip>
-                            <Tooltip title="Twitter">
-                                <SocialIconButton component={motion.button} whileHover={{ y: -3 }} whileTap={{ scale: 0.9 }} aria-label="Twitter">
-                                    <TwitterIcon />
-                                </SocialIconButton>
-                            </Tooltip>
-                            <Tooltip title="TikTok">
-                                <SocialIconButton component={motion.button} whileHover={{ y: -3 }} whileTap={{ scale: 0.9 }} aria-label="TikTok">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                                        <path fill="currentColor" d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 015.25 5C3.8 5.6 3 7.15 3 8.76v6.5a3.79 3.79 0 003.4 3.73 3.94 3.94 0 003.35-.73 4.37 4.37 0 001.14-1.35 3.8 3.8 0 00.37-2.55v-4.4h3.45c.28 0 1.16-.2 1.93-.85a3.37 3.37 0 001.27-2.48c0-2.2-1.43-4-3.98-4h-.47z" />
-                                    </svg>
-                                </SocialIconButton>
-                            </Tooltip>
-                        </Box>
-                    </Grid>
+                    <SocialSection socials={socialMedias} />
                 </Grid>
 
                 <Divider sx={{
@@ -265,7 +276,7 @@ const FooterComponent = () => {
                           animate={{ opacity: 1 }}
                           transition={{ delay: 0.6 }}>
                         <CopyrightText>
-                            ©2024 VÍSTELICA.
+                            ©2024 VÍSTELICA. Todos los derechos reservados.
                         </CopyrightText>
                     </Grid>
                 </Grid>
@@ -283,6 +294,7 @@ const FooterComponent = () => {
             >
                 <IconButton
                     onClick={scrollToTop}
+                    aria-label="Volver arriba"
                     sx={{
                         backgroundColor: vistelicaColors.primary,
                         color: '#fff',
@@ -298,4 +310,8 @@ const FooterComponent = () => {
     );
 };
 
-export default FooterComponent;
+// Añadir displayNames para mejor depuración
+FooterSection.displayName = 'FooterSection';
+SocialSection.displayName = 'SocialSection';
+
+export default React.memo(FooterComponent);

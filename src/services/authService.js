@@ -23,6 +23,23 @@ export const registerUser = async (userData) => {
     }
 };
 
+
+/**
+ * Obtiene los encabezados de autenticación para las peticiones HTTP
+ * @returns {Object} Objeto con los headers incluyendo el token si existe
+ */
+export const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return {};
+
+    return {
+        Authorization: `Bearer ${token}`
+    };
+};
+
+
+
+
 /**
  * Obtiene los datos del usuario actualmente autenticado
  * @returns {Promise<Object|null>} - Datos del usuario o null si no hay sesión

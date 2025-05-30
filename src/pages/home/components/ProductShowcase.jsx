@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+'use client';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
     Container,
     Grid,
@@ -24,8 +25,7 @@ import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 
-// Estilos para el componente de tarjeta de producto
-// TAMAÑO FIJO: Estilos actualizados para el componente de tarjeta de producto
+// Manteniendo los estilos exactamente igual que antes
 const ProductCardContainer = styled(Card)(({ theme }) => ({
     position: 'relative',
     height: '450px', // Altura fija para todas las tarjetas
@@ -63,18 +63,16 @@ const ImageContainer = styled(Box)(() => ({
     backgroundColor: '#f8f8f8', // Fondo para todas las imágenes
 }));
 
-// COBERTURA HORIZONTAL: Actualización del estilo de la imagen
 const ProductImage = styled(CardMedia)(() => ({
     position: 'absolute',
     top: 0,
     left: 0,
     width: '100%',
     height: '100%',
-    objectFit: 'cover', // COBERTURA HORIZONTAL: Cambiado de 'contain' a 'cover' para que la imagen cubra todo el ancho
+    objectFit: 'cover', // COBERTURA HORIZONTAL
     transition: 'transform 0.5s ease',
 }));
 
-// Nuevo componente para información en hover
 const HoverInfoOverlay = styled(Box)(() => ({
     position: 'absolute',
     bottom: 0,
@@ -93,13 +91,43 @@ const HoverInfoOverlay = styled(Box)(() => ({
     zIndex: 10
 }));
 
-// Componente Skeleton para mostrar durante la carga
-// Componente Skeleton mejorado para mostrar durante la carga
-// TAMAÑO FIJO: Componente Skeleton actualizado para mantener consistencia
-const ProductSkeleton = () => (
+// Componente de Estrellas de Valoración memoizado
+const RatingStars = React.memo(({ rating }) => {
+    const renderStars = useMemo(() => {
+        const stars = [];
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating - fullStars >= 0.5;
+
+        for (let i = 0; i < fullStars; i++) {
+            stars.push(
+                <StarIcon key={`full-${i}`} sx={{ color: vistelicaColors.primary, fontSize: '1rem' }} />
+            );
+        }
+
+        if (hasHalfStar) {
+            stars.push(
+                <StarIcon key="half" sx={{ color: vistelicaColors.primary, fontSize: '1rem' }} />
+            );
+        }
+
+        const emptyStars = 5 - stars.length;
+        for (let i = 0; i < emptyStars; i++) {
+            stars.push(
+                <StarBorderIcon key={`empty-${i}`} sx={{ color: vistelicaColors.primary, fontSize: '1rem' }} />
+            );
+        }
+
+        return stars;
+    }, [rating]);
+
+    return <>{renderStars}</>;
+});
+
+// Componente Skeleton memoizado
+const ProductSkeleton = React.memo(() => (
     <Card sx={{
         height: '450px', // Misma altura que ProductCardContainer
-        width: '280px', // TAMAÑO FIJO: Mismo ancho que ProductCardContainer
+        width: '350px', // TAMAÑO FIJO mantenido
         display: 'flex',
         flexDirection: 'column',
         borderRadius: '10px',
@@ -135,84 +163,98 @@ const ProductSkeleton = () => (
             <Skeleton variant="text" width="40%" height={28} animation="wave" />
         </CardContent>
     </Card>
-);
+));
 
-const ProductCard = ({ product }) => {
+// Componente de badge de descuento memoizado
+const DiscountBadge = React.memo(({ discount }) => {
+    if (!discount || discount <= 0) return null;
+
+    return (
+        <Box
+            sx={{
+                position: 'absolute',
+                top: 10,
+                left: 10,
+                backgroundColor: vistelicaColors.primary,
+                color: 'white',
+                px: 1.5,
+                py: 0.5,
+                borderRadius: '4px',
+                fontWeight: 'bold',
+                fontSize: '0.8rem'
+            }}
+        >
+            {`-${discount}%`}
+        </Box>
+    );
+});
+
+// Hook personalizado para manejar productos
+const useProductData = () => {
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchFeaturedProducts = async () => {
+            try {
+                const data = await productService.getTopRatedFeaturedProducts();
+                setProducts(data.slice(0, 8));
+            } catch (error) {
+                console.error('Error al cargar productos destacados:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchFeaturedProducts();
+    }, []);
+
+    return { products, loading };
+};
+
+// Componente de tarjeta de producto memoizado
+const ProductCard = React.memo(({ product }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [imageError, setImageError] = useState(false);
-    const colorCount = product.colors ? product.colors.replace(/[{}]/g, '').split(',').length : 0;
+
+    const colorCount = useMemo(() =>
+            product.colors ? product.colors.replace(/[{}]/g, '').split(',').length : 0
+        , [product.colors]);
 
     const productId = product.product_id || product.id || product._id;
     const productDetailUrl = `/product-detail/page?id=${productId}`;
 
-    const handleAddToCart = (e) => {
+    const handleAddToCart = useCallback((e) => {
         e.stopPropagation();
         e.preventDefault();
         console.log('Añadir al carrito:', productId);
-    };
-
-    // Generar stars para el rating
-    const renderStars = (rating) => {
-        const stars = [];
-        const fullStars = Math.floor(rating);
-        const hasHalfStar = rating - fullStars >= 0.5;
-
-        for (let i = 0; i < fullStars; i++) {
-            stars.push(
-                <StarIcon key={`full-${i}`} sx={{ color: vistelicaColors.primary, fontSize: '1rem' }} />
-            );
-        }
-
-        if (hasHalfStar) {
-            stars.push(
-                <StarIcon key="half" sx={{ color: vistelicaColors.primary, fontSize: '1rem' }} />
-            );
-        }
-
-        const emptyStars = 5 - stars.length;
-        for (let i = 0; i < emptyStars; i++) {
-            stars.push(
-                <StarBorderIcon key={`empty-${i}`} sx={{ color: vistelicaColors.primary, fontSize: '1rem' }} />
-            );
-        }
-
-        return stars;
-    };
+    }, [productId]);
 
     const imageUrl = !imageError ?
         (product.main_image || product.image_url || product.image || product.images?.[0] || "/images/placeholder-product.jpg") :
         "/images/placeholder-product.jpg";
 
+    const handleImageError = useCallback(() => setImageError(true), []);
+
     return (
         <Link href={productDetailUrl} passHref style={{ textDecoration: 'none' }}>
-            <ProductCardContainer component={motion.div} whileHover={{ scale: 1.02 }}>
+            <ProductCardContainer
+                component={motion.div}
+                whileHover={{ scale: 1.02 }}
+                role="article"
+                aria-label={`Producto: ${product.name || 'Sin nombre'}`}
+            >
                 <ImageContainer>
                     <ProductImage
                         component="img"
                         className="product-image"
                         image={imageUrl}
                         alt={product.name || 'Producto'}
-                        onError={() => setImageError(true)}
+                        onError={handleImageError}
+                        loading="lazy"
                     />
-                    {product.discount > 0 && (
-                        <Box
-                            sx={{
-                                position: 'absolute',
-                                top: 10,
-                                left: 10,
-                                backgroundColor: vistelicaColors.primary,
-                                color: 'white',
-                                px: 1.5,
-                                py: 0.5,
-                                borderRadius: '4px',
-                                fontWeight: 'bold',
-                                fontSize: '0.8rem'
-                            }}
-                        >
-                            {`-${product.discount}%`}
-                        </Box>
-                    )}
+                    <DiscountBadge discount={product.discount} />
 
                     {/* Overlay con información en hover */}
                     <HoverInfoOverlay className="hover-info">
@@ -243,7 +285,7 @@ const ProductCard = ({ product }) => {
                                 justifyContent: 'center',
                                 mb: 0.5
                             }}>
-                                {renderStars(product.average_rating)}
+                                <RatingStars rating={product.average_rating} />
                                 <Typography variant="body2" component="span" color="text.secondary" ml={1}>
                                     ({product.reviews_count || 0} reseñas)
                                 </Typography>
@@ -263,9 +305,6 @@ const ProductCard = ({ product }) => {
                                 {colorCount} {colorCount === 1 ? 'variante de color disponible' : 'variantes de color disponibles'}
                             </Typography>
                         )}
-
-                        {/* Botón de añadir al carrito */}
-
                     </HoverInfoOverlay>
                 </ImageContainer>
 
@@ -275,8 +314,6 @@ const ProductCard = ({ product }) => {
                     display: 'flex',
                     flexDirection: 'column',
                     overflow: 'hidden',
-
-
                 }}>
                     <Typography
                         variant="subtitle1"
@@ -300,11 +337,11 @@ const ProductCard = ({ product }) => {
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             display: '-webkit-box',
-                            WebkitLineClamp: 2, // Cambiado de 1 a 2 para permitir 2 líneas
+                            WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
-                            color: vistelicaColors.primary, // Nombre en amarillo
-                            lineHeight: 1.2, // Ajustar el espaciado entre líneas
-                            minHeight: '3rem' // Altura mínima para acomodar 2 líneas
+                            color: vistelicaColors.primary,
+                            lineHeight: 1.2,
+                            minHeight: '3rem'
                         }}
                     >
                         {product.name || 'Sin nombre'}
@@ -313,31 +350,15 @@ const ProductCard = ({ product }) => {
             </ProductCardContainer>
         </Link>
     );
-};
+});
 
+// Componente principal
 const ProductShowcase = () => {
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { products, loading } = useProductData();
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-    useEffect(() => {
-        const fetchFeaturedProducts = async () => {
-            try {
-                const data = await productService.getTopRatedFeaturedProducts();
-                setProducts(data.slice(0, 8));
-            } catch (error) {
-                console.error('Error al cargar productos destacados:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchFeaturedProducts();
-    }, []);
-
-    // Animación para el contenedor
-    const containerVariants = {
+    // Animaciones memoizadas
+    const containerVariants = useMemo(() => ({
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
@@ -346,10 +367,9 @@ const ProductShowcase = () => {
                 staggerChildren: 0.1
             }
         }
-    };
+    }), []);
 
-    // Animación para cada elemento
-    const itemVariants = {
+    const itemVariants = useMemo(() => ({
         hidden: { y: 20, opacity: 0 },
         visible: {
             y: 0,
@@ -360,7 +380,7 @@ const ProductShowcase = () => {
                 duration: 0.4
             }
         }
-    };
+    }), []);
 
     return (
         <Box
@@ -403,7 +423,7 @@ const ProductShowcase = () => {
                     Productos Destacados
                 </Typography>
 
-                <Grid container spacing={2} sx={{ width: '100%' }}>
+                <Grid container spacing={2} sx={{ width: '100%' }} role="list">
                     {loading ?
                         Array.from(new Array(4)).map((_, index) => (
                             <Grid
@@ -411,10 +431,12 @@ const ProductShowcase = () => {
                                 xs={12}
                                 sm={6}
                                 md={3}
-                                lg={6}
+                                lg={3}
                                 key={`skeleton-${index}`}
                                 component={motion.div}
                                 variants={itemVariants}
+                                role="listitem"
+                                aria-label="Cargando producto"
                             >
                                 <ProductSkeleton />
                             </Grid>
@@ -430,6 +452,7 @@ const ProductShowcase = () => {
                                 key={product.product_id || index}
                                 component={motion.div}
                                 variants={itemVariants}
+                                role="listitem"
                             >
                                 <ProductCard product={product} />
                             </Grid>
@@ -462,6 +485,7 @@ const ProductShowcase = () => {
                                     backgroundColor: vistelicaColors.tertiary
                                 }
                             }}
+                            aria-label="Ver más productos"
                         >
                             Ver más productos
                         </Button>
@@ -472,4 +496,10 @@ const ProductShowcase = () => {
     );
 };
 
-export default ProductShowcase;
+// Añadimos displayNames para mejor depuración
+RatingStars.displayName = 'RatingStars';
+ProductSkeleton.displayName = 'ProductSkeleton';
+DiscountBadge.displayName = 'DiscountBadge';
+ProductCard.displayName = 'ProductCard';
+
+export default React.memo(ProductShowcase);
