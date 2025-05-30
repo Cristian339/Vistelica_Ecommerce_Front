@@ -37,7 +37,7 @@ const FormGrid = styled(Grid)(({ theme }) => ({
 export default function AddressForm({ onDataChange }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [selectedAddressId, setSelectedAddressId] = useState(null); // Nuevo estado para la ID
+    const [selectedAddressId, setSelectedAddressId] = useState(null);
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -46,7 +46,10 @@ export default function AddressForm({ onDataChange }) {
         city: '',
         state: '',
         zip: '',
-        country: ''
+        country: '',
+        block: '',
+        floor: '',
+        door: ''
     });
     const [openDialog, setOpenDialog] = useState(false);
     const [addresses, setAddresses] = useState([]);
@@ -87,13 +90,14 @@ export default function AddressForm({ onDataChange }) {
                         city: defaultAddress.city || '',
                         state: defaultAddress.state || '',
                         zip: defaultAddress.postal_code || '',
-                        country: defaultAddress.country || ''
+                        country: defaultAddress.country || '',
+                        block: defaultAddress.block || '',
+                        floor: defaultAddress.floor || '',
+                        door: defaultAddress.door || ''
                     };
 
                     setFormData(newFormData);
-                    setSelectedAddressId(defaultAddress.id); // Guardar la ID de la dirección predeterminada
-
-                    // Enviar datos al componente padre
+                    setSelectedAddressId(defaultAddress.id);
                     sendDataToParent(defaultAddress.id, newFormData);
                 } else {
                     // Si no hay dirección predeterminada, al menos establecer nombre y apellido
@@ -105,7 +109,10 @@ export default function AddressForm({ onDataChange }) {
                         city: '',
                         state: '',
                         zip: '',
-                        country: ''
+                        country: '',
+                        block: '',
+                        floor: '',
+                        door: ''
                     };
 
                     setFormData(newFormData);
@@ -156,12 +163,13 @@ export default function AddressForm({ onDataChange }) {
             state: address.state || '',
             zip: address.postal_code || '',
             country: address.country || '',
+            block: address.block || '',
+            floor: address.floor || '',
+            door: address.door || ''
         };
 
         setFormData(newFormData);
-        setSelectedAddressId(address.id); // Guardar la ID de la dirección seleccionada
-
-        // Enviar datos al componente padre con la ID de la dirección
+        setSelectedAddressId(address.id);
         sendDataToParent(address.id, newFormData);
 
         handleCloseDialog();
@@ -186,7 +194,10 @@ export default function AddressForm({ onDataChange }) {
             (address.label && address.label.toLowerCase().includes(searchLower)) ||
             (address.street && address.street.toLowerCase().includes(searchLower)) ||
             (address.city && address.city.toLowerCase().includes(searchLower)) ||
-            (address.state && address.state.toLowerCase().includes(searchLower))
+            (address.state && address.state.toLowerCase().includes(searchLower)) ||
+            (address.block && address.block.toLowerCase().includes(searchLower)) ||
+            (address.floor && address.floor.toLowerCase().includes(searchLower)) ||
+            (address.door && address.door.toLowerCase().includes(searchLower))
         );
     });
 
@@ -333,6 +344,42 @@ export default function AddressForm({ onDataChange }) {
                         onChange={handleChange}
                     />
                 </FormGrid>
+                <FormGrid item xs={12} md={4}>
+                    <FormLabel htmlFor="block">Bloque</FormLabel>
+                    <OutlinedInput
+                        id="block"
+                        name="block"
+                        type="text"
+                        placeholder="Bloque (opcional)"
+                        size="small"
+                        value={formData.block}
+                        onChange={handleChange}
+                    />
+                </FormGrid>
+                <FormGrid item xs={12} md={4}>
+                    <FormLabel htmlFor="floor">Piso</FormLabel>
+                    <OutlinedInput
+                        id="floor"
+                        name="floor"
+                        type="text"
+                        placeholder="Piso (opcional)"
+                        size="small"
+                        value={formData.floor}
+                        onChange={handleChange}
+                    />
+                </FormGrid>
+                <FormGrid item xs={12} md={4}>
+                    <FormLabel htmlFor="door">Puerta</FormLabel>
+                    <OutlinedInput
+                        id="door"
+                        name="door"
+                        type="text"
+                        placeholder="Puerta (opcional)"
+                        size="small"
+                        value={formData.door}
+                        onChange={handleChange}
+                    />
+                </FormGrid>
                 <Grid item xs={12}>
                     <Box display="flex" justifyContent="center" mt={2}>
                         <Button
@@ -356,6 +403,20 @@ export default function AddressForm({ onDataChange }) {
                 </Grid>
 
 
+                {selectedAddressId && (
+                    <Grid item xs={12}>
+                        <Box sx={{
+                            p: 2,
+                            bgcolor: 'rgba(228, 176, 2, 0.08)',
+                            borderRadius: 1,
+                            border: '1px solid rgba(228, 176, 2, 0.3)'
+                        }}>
+                            <Typography variant="body2" color="text.secondary">
+                                ✓ Usando dirección guardada (ID: {selectedAddressId})
+                            </Typography>
+                        </Box>
+                    </Grid>
+                )}
             </Grid>
 
             {/* Modal para seleccionar direcciones */}
@@ -492,6 +553,21 @@ export default function AddressForm({ onDataChange }) {
                                                         <Typography variant="body2" color="text.secondary">
                                                             {address.country || 'España'}
                                                         </Typography>
+                                                        {address.block && (
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                <Box component="span" sx={{ fontWeight: 600 }}>Bloque:</Box> {address.block}
+                                                            </Typography>
+                                                        )}
+                                                        {address.floor && (
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                <Box component="span" sx={{ fontWeight: 600 }}>Piso:</Box> {address.floor}
+                                                            </Typography>
+                                                        )}
+                                                        {address.door && (
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                <Box component="span" sx={{ fontWeight: 600 }}>Puerta:</Box> {address.door}
+                                                            </Typography>
+                                                        )}
                                                         <Typography variant="caption" color="text.disabled">
                                                             ID: {address.id}
                                                         </Typography>
