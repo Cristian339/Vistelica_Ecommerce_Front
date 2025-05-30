@@ -71,7 +71,6 @@ const NavigationMenu = ({ open, onClose, router }) => {
             open={open}
             onClose={onClose}
             variant="temporary"
-            square={false}
             sx={{
                 width: isMobile ? '100%' : '500px',
                 '& .MuiDrawer-paper': {
