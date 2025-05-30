@@ -52,7 +52,7 @@ const SuccessContainer = styled('div')(({ theme }) => ({
     textAlign: 'center'
 }));
 
-function GooglePayComponent({ amount }) {
+function GooglePayComponent({ amount, onPaymentSuccess, onPaymentMethodChange }) {
     const stripe = useStripe();
     const elements = useElements();
     const [paymentRequest, setPaymentRequest] = React.useState(null);
@@ -65,6 +65,10 @@ function GooglePayComponent({ amount }) {
 
     React.useEffect(() => {
         if (!stripe || !elements) return;
+
+        // Notificar cambio de método de pago
+        onPaymentMethodChange();
+
         const pr = stripe.paymentRequest({
             country: 'ES',
             currency: 'eur',
@@ -75,11 +79,13 @@ function GooglePayComponent({ amount }) {
             requestPayerName: true,
             requestPayerEmail: true,
         });
+
         pr.canMakePayment().then((result) => {
             if (result) {
                 setPaymentRequest(pr);
             } else {
                 console.warn('Google Pay no disponible en este navegador o dispositivo');
+                setError('Google Pay no está disponible');
             }
         });
 
@@ -91,20 +97,20 @@ function GooglePayComponent({ amount }) {
                 const paymentResult = await paymentService.payWithCard(ev.paymentMethod.id, amountInCents);
                 if (paymentResult) {
                     setSuccess(true);
+                    onPaymentSuccess(); // Notificar éxito al componente padre
                     ev.complete('success');
                 } else {
                     setError('No se pudo procesar el pago');
                     ev.complete('fail');
                 }
             } catch (err) {
-                setError('Error al procesar el pago');
+                setError('Error al procesar el pago: ' + err.message);
                 console.error(err);
             } finally {
                 setLoading(false);
             }
         });
-    }, [stripe, elements, amountInCents]);
-
+    }, [stripe, elements, amountInCents, onPaymentSuccess, onPaymentMethodChange]);
 
     if (success) {
         return (
@@ -148,12 +154,15 @@ function GooglePayComponent({ amount }) {
                             Paga de forma rápida y segura con tu cuenta de Google.
                         </Typography>
                         <div style={{ width: '100%', maxWidth: '300px' }}>
-                            <PaymentRequestButtonElement options={{ paymentRequest, style: {
+                            <PaymentRequestButtonElement options={{
+                                paymentRequest,
+                                style: {
                                     paymentRequestButton: {
                                         theme: 'dark',
                                         height: '48px'
                                     }
-                                }}} />
+                                }
+                            }} />
                         </div>
                     </>
                 ) : (
@@ -166,11 +175,13 @@ function GooglePayComponent({ amount }) {
     );
 }
 
-export default function GooglePayWrapper({ amount }) {
+export default function GooglePayWrapper({ amount, onPaymentSuccess, onPaymentMethodChange }) {
     return (
         <Elements stripe={stripePromise}>
             <GooglePayComponent
                 amount={amount}
+                onPaymentSuccess={onPaymentSuccess}
+                onPaymentMethodChange={onPaymentMethodChange}
             />
         </Elements>
     );

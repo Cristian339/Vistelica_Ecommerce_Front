@@ -66,12 +66,15 @@ const AccountAddresses = () => {
         alias: '',
         street: '',
         number: '',
-        postalCode: '',
+        postal_code: '',
         city: '',
         province: '',
         country: 'España',
         description: '',
-        isDefault: false
+        isDefault: false,
+        block: '',
+        floor: '',
+        door: ''
     });
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -138,12 +141,15 @@ const AccountAddresses = () => {
                 alias: address.label || '',
                 street: street,
                 number: number,
-                postalCode: address.postal_code || '',
+                postal_code: address.postal_code || '',
                 city: address.city || '',
                 province: address.state || '',
                 country: address.country || 'España',
                 description: address.description || '',
-                isDefault: address.is_default || false
+                isDefault: address.is_default || false,
+                block: address.block || '',
+                floor: address.floor || '',
+                door: address.door || ''
             });
         } else {
             setEditingAddress(null);
@@ -151,12 +157,15 @@ const AccountAddresses = () => {
                 alias: '',
                 street: '',
                 number: '',
-                postalCode: '',
+                postal_code: '',
                 city: '',
                 province: '',
                 country: 'España',
                 description: '',
-                isDefault: false
+                isDefault: false,
+                block: '',
+                floor: '',
+                door: ''
             });
         }
         setOpenDialog(true);
@@ -203,6 +212,7 @@ const AccountAddresses = () => {
                     severity: 'success'
                 });
             } else {
+                console.log("Datos pasados " + JSON.stringify(formData) );
                 // Crear nueva dirección
                 const newAddress = await addressService.addAddress(formData);
 
@@ -469,6 +479,34 @@ const AccountAddresses = () => {
                                                                     >
                                                                         <StarIcon fontSize="small" sx={{mr: 0.5}}/>
                                                                         Predeterminada
+                                                                    </Box>
+                                                                )}
+                                                                {/* Dentro del CardContent, después del campo de calle */}
+                                                                {address.block && (
+                                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                                                        <Typography variant="body2" color="text.secondary">
+                                                                            <Box component="span" sx={{ color: vistelicaColors.primary, fontWeight: 600 }}>
+                                                                                Bloque:
+                                                                            </Box> {address.block}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                )}
+                                                                {address.floor && (
+                                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                                                        <Typography variant="body2" color="text.secondary">
+                                                                            <Box component="span" sx={{ color: vistelicaColors.primary, fontWeight: 600 }}>
+                                                                                Piso:
+                                                                            </Box> {address.floor}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                )}
+                                                                {address.door && (
+                                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                                                        <Typography variant="body2" color="text.secondary">
+                                                                            <Box component="span" sx={{ color: vistelicaColors.primary, fontWeight: 600 }}>
+                                                                                Puerta:
+                                                                            </Box> {address.door}
+                                                                        </Typography>
                                                                     </Box>
                                                                 )}
                                                             </Box>
@@ -799,9 +837,9 @@ const AccountAddresses = () => {
                             </Grid>
                             <Grid item xs={12} sm={4}>
                                 <TextField
-                                    name="postalCode"
+                                    name="postal_code"
                                     label="Código postal"
-                                    value={formData.postalCode}
+                                    value={formData.postal_code}
                                     onChange={handleChange}
                                     fullWidth
                                     required
@@ -824,6 +862,61 @@ const AccountAddresses = () => {
                                     onChange={handleChange}
                                     fullWidth
                                     required
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '&:hover fieldset': {borderColor: vistelicaColors.primary},
+                                            '&.Mui-focused fieldset': {borderColor: vistelicaColors.primary}
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: vistelicaColors.primary
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            {/* Dentro del Grid container del DialogContent, después del campo de número */}
+                            <Grid item xs={12} sm={4}>
+                                <TextField
+                                    name="block"
+                                    label="Bloque"
+                                    value={formData.block}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '&:hover fieldset': {borderColor: vistelicaColors.primary},
+                                            '&.Mui-focused fieldset': {borderColor: vistelicaColors.primary}
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: vistelicaColors.primary
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={4}>
+                                <TextField
+                                    name="floor"
+                                    label="Piso"
+                                    value={formData.floor}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '&:hover fieldset': {borderColor: vistelicaColors.primary},
+                                            '&.Mui-focused fieldset': {borderColor: vistelicaColors.primary}
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: vistelicaColors.primary
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={4}>
+                                <TextField
+                                    name="door"
+                                    label="Puerta"
+                                    value={formData.door}
+                                    onChange={handleChange}
+                                    fullWidth
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             '&:hover fieldset': {borderColor: vistelicaColors.primary},

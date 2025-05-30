@@ -37,7 +37,7 @@ const FormGrid = styled(Grid)(({ theme }) => ({
 export default function AddressForm({ onDataChange }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [selectedAddressId, setSelectedAddressId] = useState(null); // Nuevo estado para la ID
+    const [selectedAddressId, setSelectedAddressId] = useState(null);
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -46,13 +46,15 @@ export default function AddressForm({ onDataChange }) {
         city: '',
         state: '',
         zip: '',
-        country: ''
+        country: '',
+        block: '',
+        floor: '',
+        door: ''
     });
     const [openDialog, setOpenDialog] = useState(false);
     const [addresses, setAddresses] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Función para enviar datos al componente padre
     const sendDataToParent = (addressId, formDataToSend) => {
         if (onDataChange) {
             onDataChange({
@@ -67,14 +69,10 @@ export default function AddressForm({ onDataChange }) {
             try {
                 setLoading(true);
                 const data = await getProfileAndAddresses();
-
-                // Extraer el nombre y apellido del perfil
                 const { name, lastName } = data;
 
-                // Guardar todas las direcciones para usar en el modal
                 setAddresses(data.addresses || []);
 
-                // Encontrar la dirección predeterminada
                 const defaultAddress = data.addresses.find(address => address.is_default === true) ||
                     (data.addresses.length > 0 ? data.addresses[0] : null);
 
@@ -87,16 +85,16 @@ export default function AddressForm({ onDataChange }) {
                         city: defaultAddress.city || '',
                         state: defaultAddress.state || '',
                         zip: defaultAddress.postal_code || '',
-                        country: defaultAddress.country || ''
+                        country: defaultAddress.country || '',
+                        block: defaultAddress.block || '',
+                        floor: defaultAddress.floor || '',
+                        door: defaultAddress.door || ''
                     };
 
                     setFormData(newFormData);
-                    setSelectedAddressId(defaultAddress.id); // Guardar la ID de la dirección predeterminada
-
-                    // Enviar datos al componente padre
+                    setSelectedAddressId(defaultAddress.id);
                     sendDataToParent(defaultAddress.id, newFormData);
                 } else {
-                    // Si no hay dirección predeterminada, al menos establecer nombre y apellido
                     const newFormData = {
                         firstName: name || '',
                         lastName: lastName || '',
@@ -105,7 +103,10 @@ export default function AddressForm({ onDataChange }) {
                         city: '',
                         state: '',
                         zip: '',
-                        country: ''
+                        country: '',
+                        block: '',
+                        floor: '',
+                        door: ''
                     };
 
                     setFormData(newFormData);
@@ -131,9 +132,6 @@ export default function AddressForm({ onDataChange }) {
         };
 
         setFormData(newFormData);
-
-        // Cuando el usuario modifica manualmente el formulario,
-        // consideramos que ya no está usando una dirección guardada
         setSelectedAddressId(null);
         sendDataToParent(null, newFormData);
     };
@@ -156,20 +154,19 @@ export default function AddressForm({ onDataChange }) {
             state: address.state || '',
             zip: address.postal_code || '',
             country: address.country || '',
+            block: address.block || '',
+            floor: address.floor || '',
+            door: address.door || ''
         };
 
         setFormData(newFormData);
-        setSelectedAddressId(address.id); // Guardar la ID de la dirección seleccionada
-
-        // Enviar datos al componente padre con la ID de la dirección
+        setSelectedAddressId(address.id);
         sendDataToParent(address.id, newFormData);
-
         handleCloseDialog();
     };
 
     const getAddressIcon = (alias) => {
         if (!alias) return <LocationOnIcon />;
-
         const normalizedAlias = alias.toLowerCase();
         if (normalizedAlias.includes('casa') || normalizedAlias.includes('hogar')) {
             return <HomeIcon />;
@@ -186,7 +183,10 @@ export default function AddressForm({ onDataChange }) {
             (address.label && address.label.toLowerCase().includes(searchLower)) ||
             (address.street && address.street.toLowerCase().includes(searchLower)) ||
             (address.city && address.city.toLowerCase().includes(searchLower)) ||
-            (address.state && address.state.toLowerCase().includes(searchLower))
+            (address.state && address.state.toLowerCase().includes(searchLower)) ||
+            (address.block && address.block.toLowerCase().includes(searchLower)) ||
+            (address.floor && address.floor.toLowerCase().includes(searchLower)) ||
+            (address.door && address.door.toLowerCase().includes(searchLower))
         );
     });
 
@@ -199,15 +199,12 @@ export default function AddressForm({ onDataChange }) {
     }
 
     if (error) {
-        return (
-            <Alert severity="error">{error}</Alert>
-        );
+        return <Alert severity="error">{error}</Alert>;
     }
 
     return (
         <>
             <Grid container spacing={3}>
-
                 <FormGrid item xs={12} md={6}>
                     <FormLabel htmlFor="firstName" required>
                         Nombre
@@ -333,6 +330,42 @@ export default function AddressForm({ onDataChange }) {
                         onChange={handleChange}
                     />
                 </FormGrid>
+                <FormGrid item xs={12} md={4}>
+                    <FormLabel htmlFor="block">Bloque</FormLabel>
+                    <OutlinedInput
+                        id="block"
+                        name="block"
+                        type="text"
+                        placeholder="Bloque (opcional)"
+                        size="small"
+                        value={formData.block}
+                        onChange={handleChange}
+                    />
+                </FormGrid>
+                <FormGrid item xs={12} md={4}>
+                    <FormLabel htmlFor="floor">Piso</FormLabel>
+                    <OutlinedInput
+                        id="floor"
+                        name="floor"
+                        type="text"
+                        placeholder="Piso (opcional)"
+                        size="small"
+                        value={formData.floor}
+                        onChange={handleChange}
+                    />
+                </FormGrid>
+                <FormGrid item xs={12} md={4}>
+                    <FormLabel htmlFor="door">Puerta</FormLabel>
+                    <OutlinedInput
+                        id="door"
+                        name="door"
+                        type="text"
+                        placeholder="Puerta (opcional)"
+                        size="small"
+                        value={formData.door}
+                        onChange={handleChange}
+                    />
+                </FormGrid>
                 <Grid item xs={12}>
                     <Box display="flex" justifyContent="center" mt={2}>
                         <Button
@@ -355,7 +388,6 @@ export default function AddressForm({ onDataChange }) {
                     </Box>
                 </Grid>
 
-                {/* Mostrar información de la dirección seleccionada */}
                 {selectedAddressId && (
                     <Grid item xs={12}>
                         <Box sx={{
@@ -372,7 +404,6 @@ export default function AddressForm({ onDataChange }) {
                 )}
             </Grid>
 
-            {/* Modal para seleccionar direcciones */}
             <Dialog
                 open={openDialog}
                 onClose={handleCloseDialog}
@@ -506,6 +537,21 @@ export default function AddressForm({ onDataChange }) {
                                                         <Typography variant="body2" color="text.secondary">
                                                             {address.country || 'España'}
                                                         </Typography>
+                                                        {address.block && (
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                <Box component="span" sx={{ fontWeight: 600 }}>Bloque:</Box> {address.block}
+                                                            </Typography>
+                                                        )}
+                                                        {address.floor && (
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                <Box component="span" sx={{ fontWeight: 600 }}>Piso:</Box> {address.floor}
+                                                            </Typography>
+                                                        )}
+                                                        {address.door && (
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                <Box component="span" sx={{ fontWeight: 600 }}>Puerta:</Box> {address.door}
+                                                            </Typography>
+                                                        )}
                                                         <Typography variant="caption" color="text.disabled">
                                                             ID: {address.id}
                                                         </Typography>

@@ -162,7 +162,7 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
         { text: "Mi cuenta", icon: <PersonOutlineIcon />, path: "/account/AccountLayout", selected: currentPath === "/account/AccountLayout" },
         { text: "Pedidos", icon: <LocalShippingOutlinedIcon />, path: "/account/order-history/UserOrdersPage", selected: currentPath === "/order-history/AccountLayout" },
         { text: "Direcciones", icon: <LocationOnOutlinedIcon />, path: "/account/AccountAddresses", selected: currentPath === "/account/AccountAddresses" },
-        { text: "Métodos de pago", icon: <PaymentOutlinedIcon />, path: "#", selected: false },
+        { text: "Métodos de pago", icon: <PaymentOutlinedIcon />, path: "/account/AccountPaymentMethods", selected: currentPath === "/account/AccountPaymentMethods" },
         { text: "Devoluciones", icon: <AssignmentReturnOutlinedIcon />, path: "#", selected: false },
     ];
 

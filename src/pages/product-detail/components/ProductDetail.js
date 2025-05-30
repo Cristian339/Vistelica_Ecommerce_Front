@@ -28,6 +28,7 @@ import SocialShare from './SocialShare';
 import ProductBreadcrumb from './ProductBreadcrumb';
 import wishlistService from '@/services/wishlistService';
 import { getToken } from '@/services/authService';
+import {isInLocalWishlist} from "@/utils/localStorageHelpers";
 
 
 

@@ -31,20 +31,23 @@ export default function Review({ paymentData, shippingData = null }) {
                 setCartData({ products });
 
                 // Obtener datos de dirección si no se proporcionan
+                let newAddressData;
+
                 if (!shippingData) {
                     const profileData = await getProfileAndAddresses();
                     const defaultAddress = profileData.addresses.find(address => address.is_default === true) ||
                         (profileData.addresses.length > 0 ? profileData.addresses[0] : null);
 
-                    setAddressData({
+                    newAddressData = {
                         firstName: profileData.name || '',
                         lastName: profileData.lastName || '',
                         address: defaultAddress
-                    });
+                    };
                 } else {
-                    setAddressData(shippingData);
+                    newAddressData = shippingData;
                 }
 
+                setAddressData(newAddressData);
                 setLoading(false);
             } catch (err) {
                 console.error('Error fetching data:', err);
@@ -55,6 +58,45 @@ export default function Review({ paymentData, shippingData = null }) {
 
         fetchData();
     }, [shippingData]);
+
+    // Función para mostrar los detalles adicionales de dirección
+    const renderAddressDetails = () => {
+
+
+        const address = addressData;
+        console.log("Direccion");
+        console.log(JSON.stringify(address));
+        const hasAdditionalDetails = address.formData.block || address.formData.floor || address.formData.door;
+
+        return (
+            <>
+                <Typography gutterBottom sx={{color: 'text.secondary'}}>
+                    {address.formData.street}
+                    <br/>
+                    {address.formData.city}, {address.formData.state}, {address.formData.zip}
+                    <br/>
+                    {hasAdditionalDetails && (
+                        <Typography variant="body2" sx={{ color: 'text.secondary'}}>
+                            {`Bloque: ${address.formData.block}`}
+                            {`, Piso: ${address.formData.floor}`}
+                            {`, Puerta: ${address.formData.door}`}
+                        </Typography>
+                    )}
+                    {address.formData.country || 'España'}
+                </Typography>
+
+
+
+            </>
+        );
+    };
+
+    useEffect(() => {
+        if (addressData) {
+            console.log("Datos de dirección actualizados:", addressData);
+            // Aquí puedes hacer lo que necesites con los datos actualizados
+        }
+    }, [addressData]);
 
     // Función para calcular el precio con descuento
     const calculateDiscountedPrice = (price, discountPercentage) => {
@@ -172,17 +214,10 @@ export default function Review({ paymentData, shippingData = null }) {
                     {addressData ? (
                         <>
                             <Typography gutterBottom>
-                                {addressData.firstName} {addressData.lastName}
+                                {addressData.formData.firstName} {addressData.formData.lastName}
                             </Typography>
-                            {addressData.address ? (
-                                <Typography gutterBottom sx={{ color: 'text.secondary' }}>
-                                    {addressData.address.street}
-                                    {addressData.address.label && `, ${addressData.address.label}`}
-                                    <br />
-                                    {addressData.address.city}, {addressData.address.state}, {addressData.address.postal_code}
-                                    <br />
-                                    {addressData.address.country || 'España'}
-                                </Typography>
+                            {addressData.formData ? (
+                                renderAddressDetails()
                             ) : (
                                 <Typography gutterBottom sx={{ color: 'text.secondary' }}>
                                     Dirección no disponible
@@ -213,8 +248,6 @@ export default function Review({ paymentData, shippingData = null }) {
                     )}
                 </div>
             </Stack>
-
-
         </Stack>
     );
 }

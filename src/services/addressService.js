@@ -51,6 +51,8 @@ const getAddresses = async () => {
  */
 const addAddress = async (addressData) => {
     try {
+
+        console.log(JSON.stringify(addressData));
         const response = await axios.post(
             `${API_URL}/addresses`,
             addressData,

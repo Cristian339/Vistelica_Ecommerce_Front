@@ -39,6 +39,7 @@ const paypalOptions = {
 };
 
 export default function Checkout(props) {
+    const paymentFormRef = React.useRef(null);
     const [activeStep, setActiveStep] = React.useState(0);
     const router = useRouter();
     const [paymentData, setPaymentData] = React.useState({
@@ -47,6 +48,8 @@ export default function Checkout(props) {
     });
     const [cartData, setCartData] = React.useState(null);
     const [shippingData, setShippingData] = React.useState(null);
+    const [isPaymentCompleted, setIsPaymentCompleted] = React.useState(false);
+
     // useEffect para obtener los datos del carrito
     React.useEffect(() => {
         const fetchCartData = async () => {
@@ -158,7 +161,13 @@ export default function Checkout(props) {
             case 0:
                 return <AddressForm onDataChange={handleShippingData} />;
             case 1:
-                return <PaymentForm paymentData={paymentData} setPaymentData={setPaymentData} />;
+                return <PaymentForm
+                    paymentData={paymentData}
+                    setPaymentData={setPaymentData}
+                    onPaymentSuccess={() => setIsPaymentCompleted(true)}
+                    onPaymentMethodChange={() => setIsPaymentCompleted(false)}
+                    ref={paymentFormRef}
+                />;
             case 2:
                 return <Review paymentData={paymentData} shippingData={shippingData} />;
             default:
@@ -377,6 +386,7 @@ export default function Checkout(props) {
                                         variant="contained"
                                         endIcon={<ChevronRightRoundedIcon />}
                                         onClick={activeStep === steps.length - 1 ? createOrder : handleNext}
+                                        disabled={activeStep === 1 && !isPaymentCompleted} // Nuevo disabled
                                         sx={{ width: { xs: '100%', sm: 'fit-content' } }}
                                     >
                                         {activeStep === steps.length - 1 ? 'Realizar pedido' : 'Siguiente'}
