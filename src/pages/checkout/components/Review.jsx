@@ -30,8 +30,29 @@ export default function Review({ paymentData, shippingData = null }) {
                 const products = await cartService.getCurrentCartProducts();
                 setCartData({ products });
 
-                // Obtener datos de dirección si no se proporcionan
-                if (!shippingData) {
+                // Procesar datos de dirección
+                if (shippingData) {
+                    // Si shippingData viene del AddressForm, puede tener la estructura { selectedAddressId, formData }
+                    if (shippingData.formData) {
+                        // Estructura del AddressForm
+                        setAddressData({
+                            firstName: shippingData.formData.firstName || '',
+                            lastName: shippingData.formData.lastName || '',
+                            address: {
+                                street: shippingData.formData.address1 || '',
+                                label: shippingData.formData.address2 || '',
+                                city: shippingData.formData.city || '',
+                                state: shippingData.formData.state || '',
+                                postal_code: shippingData.formData.zip || '',
+                                country: shippingData.formData.country || 'España'
+                            }
+                        });
+                    } else {
+                        // Estructura directa
+                        setAddressData(shippingData);
+                    }
+                } else {
+                    // Obtener dirección por defecto del perfil
                     const profileData = await getProfileAndAddresses();
                     const defaultAddress = profileData.addresses.find(address => address.is_default === true) ||
                         (profileData.addresses.length > 0 ? profileData.addresses[0] : null);
@@ -41,8 +62,6 @@ export default function Review({ paymentData, shippingData = null }) {
                         lastName: profileData.lastName || '',
                         address: defaultAddress
                     });
-                } else {
-                    setAddressData(shippingData);
                 }
 
                 setLoading(false);
@@ -212,9 +231,9 @@ export default function Review({ paymentData, shippingData = null }) {
                         </Typography>
                     )}
                 </div>
+
+
             </Stack>
-
-
         </Stack>
     );
 }

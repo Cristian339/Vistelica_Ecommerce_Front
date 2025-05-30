@@ -1,10 +1,10 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box, Typography, Divider, Avatar, Rating, Button,
     Grid, Dialog, DialogTitle, DialogContent, DialogActions,
     IconButton, Snackbar, Alert, Paper, Chip, CircularProgress,
-    Card, CardContent, Container
+    Card, CardContent, Container, Pagination, Stack, Tooltip, TextField
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import CreateIcon from '@mui/icons-material/Create';
@@ -13,9 +13,9 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import StarIcon from '@mui/icons-material/Star';
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 import productService from '@/services/productService';
-import TextField from "@mui/material/TextField";
 import { getCurrentUser } from "@/services/authService";
 import { motion, AnimatePresence } from "framer-motion";
+import cartService from '@/services/cartService';
 
 const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
     const [openModal, setOpenModal] = useState(false);
@@ -28,50 +28,31 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
         message: '',
         severity: 'success'
     });
+    const [currentPage, setCurrentPage] = useState(1);
+    const [hasPurchasedProduct, setHasPurchasedProduct] = useState(false);
+    const [loadingPurchaseStatus, setLoadingPurchaseStatus] = useState(true);
 
-    // Verificar si hay token en el localStorage
+    const reviewsPerPage = 10;
     const hasToken = typeof window !== 'undefined' && localStorage.getItem('token');
 
-    const calculateStats = () => {
-        if (reviews.length === 0) {
-            return {
-                average: 0,
-                totalRatings: 0,
-                breakdown: [
-                    { stars: 5, count: 0, percentage: 0 },
-                    { stars: 4, count: 0, percentage: 0 },
-                    { stars: 3, count: 0, percentage: 0 },
-                    { stars: 2, count: 0, percentage: 0 },
-                    { stars: 1, count: 0, percentage: 0 }
-                ]
-            };
-        }
-
-        const total = reviews.length;
-        const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
-        const average = sum / total;
-
-        const breakdown = [5, 4, 3, 2, 1].map(star => {
-            const count = reviews.filter(r => Math.round(r.rating) === star).length;
-            return {
-                stars: star,
-                count,
-                percentage: Math.round((count / total) * 100)
-            };
-        });
-
-        return {
-            average,
-            totalRatings: total,
-            breakdown
+    useEffect(() => {
+        const checkProductDelivery = async () => {
+            try {
+                const deliveredProducts = await cartService.getDeliveredProductsIds();
+                setHasPurchasedProduct(deliveredProducts.includes(Number(productId)));
+            } catch (error) {
+                console.error("Error verificando entrega:", error);
+            } finally {
+                setLoadingPurchaseStatus(false);
+            }
         };
-    };
 
-    const ratingStats = calculateStats();
-
-    // Solo mostrar 3 reseñas inicialmente
-    const displayedReviews = reviews.slice(0, 3);
-    const hasMoreReviews = reviews.length > 3;
+        if (hasToken) {
+            checkProductDelivery();
+        } else {
+            setLoadingPurchaseStatus(false);
+        }
+    }, [productId, hasToken]);
 
     const handleOpenModal = () => {
         if (!hasToken) {
@@ -124,6 +105,59 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
         setSnackbar(prev => ({ ...prev, open: false }));
     };
 
+    const calculateStats = () => {
+        if (reviews.length === 0) {
+            return {
+                average: 0,
+                totalRatings: 0,
+                breakdown: [
+                    { stars: 5, count: 0, percentage: 0 },
+                    { stars: 4, count: 0, percentage: 0 },
+                    { stars: 3, count: 0, percentage: 0 },
+                    { stars: 2, count: 0, percentage: 0 },
+                    { stars: 1, count: 0, percentage: 0 }
+                ]
+            };
+        }
+
+        const total = reviews.length;
+        const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+        const average = sum / total;
+
+        const breakdown = [5, 4, 3, 2, 1].map(star => {
+            const count = reviews.filter(r => Math.round(r.rating) === star).length;
+            return {
+                stars: star,
+                count,
+                percentage: Math.round((count / total) * 100)
+            };
+        });
+
+        return {
+            average,
+            totalRatings: total,
+            breakdown
+        };
+    };
+
+    const ratingStats = calculateStats();
+
+    const displayedReviews = reviews.slice(0, 3);
+    const hasMoreReviews = reviews.length > 3;
+
+    const indexOfLastReview = currentPage * reviewsPerPage;
+    const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
+    const currentReviews = reviews.slice(indexOfFirstReview, indexOfLastReview);
+    const totalPages = Math.ceil(reviews.length / reviewsPerPage);
+
+    const handlePageChange = (event, value) => {
+        setCurrentPage(value);
+        const reviewsSection = document.getElementById('reviews-section');
+        if (reviewsSection) {
+            reviewsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
     const formatDate = (dateString) => {
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         return new Date(dateString).toLocaleDateString('es-ES', options);
@@ -143,9 +177,11 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                 <Card
                     elevation={1}
                     sx={{
-                        mb: 2,
+                        mb: 3,
                         borderRadius: 2,
                         transition: "transform 0.3s, box-shadow 0.3s",
+                        width: 700,
+                        maxWidth: 'none',
                         '&:hover': {
                             boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
                             transform: 'translateY(-2px)'
@@ -155,8 +191,8 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                     <CardContent>
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                             <Avatar sx={{
-                                width: 40,
-                                height: 40,
+                                width: 44,
+                                height: 44,
                                 mr: 2,
                                 backgroundColor: vistelicaColors.primary
                             }}>
@@ -183,7 +219,6 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                             </Typography>
                         </Box>
 
-                        {/* Reemplazo del Box con pseudo-elemento por un componente explícito */}
                         <Box sx={{ display: 'flex', mt: 1 }}>
                             <FormatQuoteIcon
                                 sx={{
@@ -203,7 +238,45 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
         );
     };
 
-    // Vista previa compacta
+    const renderReviewButton = (isFirstReview = false) => {
+        if (loadingPurchaseStatus) {
+            return <CircularProgress size={24} />;
+        }
+
+        const buttonText = hasPurchasedProduct
+            ? (isFirstReview ? 'Sé el primero en opinar' : 'Escribir opinión')
+            : 'Compra el producto para opinar';
+
+        return (
+            <Tooltip
+                title={!hasPurchasedProduct ? "Debes haber recibido este producto para dejar una reseña" : ""}
+                placement="top"
+            >
+                <span>
+                    <Button
+                        variant="contained"
+                        onClick={handleOpenModal}
+                        startIcon={<CreateIcon />}
+                        disabled={!hasPurchasedProduct || !hasToken}
+                        sx={{
+                            bgcolor: vistelicaColors.primary,
+                            color: 'white',
+                            '&:hover': {
+                                bgcolor: vistelicaColors.primaryDark
+                            },
+                            '&:disabled': {
+                                bgcolor: '#e0e0e0',
+                                color: '#9e9e9e'
+                            }
+                        }}
+                    >
+                        {buttonText}
+                    </Button>
+                </span>
+            </Tooltip>
+        );
+    };
+
     if (!showAllReviews) {
         return (
             <motion.div
@@ -278,22 +351,7 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                                         </motion.div>
                                     )}
 
-                                    <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                                        <Button
-                                            variant="contained"
-                                            onClick={handleOpenModal}
-                                            startIcon={<CreateIcon />}
-                                            sx={{
-                                                bgcolor: vistelicaColors.primary,
-                                                color: 'white',
-                                                '&:hover': {
-                                                    bgcolor: vistelicaColors.primaryDark
-                                                }
-                                            }}
-                                        >
-                                            Escribir opinión
-                                        </Button>
-                                    </motion.div>
+                                    {renderReviewButton()}
                                 </Box>
                             </>
                         ) : (
@@ -307,28 +365,12 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                                 <Typography variant="body1" gutterBottom>
                                     Este producto aún no tiene opiniones
                                 </Typography>
-                                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                                    <Button
-                                        variant="contained"
-                                        onClick={handleOpenModal}
-                                        startIcon={<CreateIcon />}
-                                        sx={{
-                                            mt: 2,
-                                            bgcolor: vistelicaColors.primary,
-                                            '&:hover': {
-                                                bgcolor: vistelicaColors.primaryDark
-                                            }
-                                        }}
-                                    >
-                                        Sé el primero en opinar
-                                    </Button>
-                                </motion.div>
+                                {renderReviewButton(true)}
                             </Box>
                         )}
                     </AnimatePresence>
                 </Box>
 
-                {/* Modal para dejar reseña */}
                 <Dialog
                     open={openModal}
                     onClose={handleCloseModal}
@@ -420,7 +462,6 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                     </motion.div>
                 </Dialog>
 
-                {/* Snackbar para mensajes */}
                 <Snackbar
                     open={snackbar.open}
                     autoHideDuration={6000}
@@ -439,7 +480,6 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
         );
     }
 
-    // Vista completa expandida con todas las reseñas y estadísticas
     return (
         <Dialog
             fullScreen
@@ -474,7 +514,6 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
 
                 <Container maxWidth="lg" sx={{ py: 4 }}>
                     <Grid container spacing={4}>
-                        {/* Columna izquierda - Estadísticas de valoraciones */}
                         <Grid item xs={12} md={5} lg={4}>
                             <motion.div
                                 initial={{ opacity: 0, x: -20 }}
@@ -576,48 +615,87 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                                         ))}
                                     </Box>
 
-                                    <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                                        <Button
-                                            variant="contained"
-                                            fullWidth
-                                            onClick={handleOpenModal}
-                                            startIcon={<CreateIcon />}
-                                            sx={{
-                                                mt: 4,
-                                                py: 1.5,
-                                                bgcolor: vistelicaColors.primary,
-                                                color: 'white',
-                                                fontSize: '1.1rem',
-                                                '&:hover': {
-                                                    bgcolor: vistelicaColors.primaryDark
-                                                }
-                                            }}
-                                        >
-                                            Escribir opinión
-                                        </Button>
-                                    </motion.div>
+                                    {renderReviewButton()}
                                 </Paper>
                             </motion.div>
                         </Grid>
 
-                        {/* Columna derecha - Lista de opiniones */}
                         <Grid item xs={12} md={7} lg={8}>
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 0.5 }}
                             >
-                                <Box>
-                                    {reviews.map((review, index) => renderReview(review, index))}
+                                <Box sx={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    height: 'calc(100vh - 200px)'
+                                }}>
+                                    <Box sx={{
+                                        flex: 1,
+                                        overflowY: 'auto',
+                                        pr: 2,
+                                        mb: 2,
+                                        '&::-webkit-scrollbar': {
+                                            width: '6px'
+                                        },
+                                        '&::-webkit-scrollbar-track': {
+                                            background: '#f1f1f1',
+                                            borderRadius: '10px'
+                                        },
+                                        '&::-webkit-scrollbar-thumb': {
+                                            background: vistelicaColors.primary,
+                                            borderRadius: '10px',
+                                            '&:hover': {
+                                                background: vistelicaColors.primaryDark
+                                            }
+                                        }
+                                    }} id="reviews-section">
+                                        {currentReviews.map((review, index) => renderReview(review, index))}
 
-                                    {reviews.length === 0 && (
-                                        <Box sx={{ textAlign: 'center', py: 6 }}>
-                                            <Typography variant="h6" gutterBottom>
-                                                Sin opiniones aún
-                                            </Typography>
-                                            <Typography color="text.secondary">
-                                                Sé el primero en dejar tu opinión
-                                            </Typography>
+                                        {reviews.length === 0 && (
+                                            <Box sx={{ textAlign: 'center', py: 6 }}>
+                                                <Typography variant="h6" gutterBottom>
+                                                    Sin opiniones aún
+                                                </Typography>
+                                                <Typography color="text.secondary">
+                                                    Sé el primero en dejar tu opinión
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                    </Box>
+
+                                    {reviews.length > reviewsPerPage && (
+                                        <Box sx={{
+                                            py: 2,
+                                            position: 'sticky',
+                                            bottom: 0,
+                                            backgroundColor: 'background.paper',
+                                            borderTop: '1px solid',
+                                            borderColor: 'divider',
+                                            zIndex: 1
+                                        }}>
+                                            <Pagination
+                                                count={totalPages}
+                                                page={currentPage}
+                                                onChange={handlePageChange}
+                                                color="primary"
+                                                sx={{
+                                                    '& .MuiPaginationItem-root': {
+                                                        color: vistelicaColors.primary,
+                                                        '&.Mui-selected': {
+                                                            backgroundColor: vistelicaColors.primary,
+                                                            color: 'white',
+                                                            '&:hover': {
+                                                                backgroundColor: vistelicaColors.primaryDark
+                                                            }
+                                                        },
+                                                        '&:hover': {
+                                                            backgroundColor: 'rgba(0, 118, 253, 0.1)'
+                                                        }
+                                                    }
+                                                }}
+                                            />
                                         </Box>
                                     )}
                                 </Box>
@@ -627,7 +705,6 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                 </Container>
             </motion.div>
 
-            {/* Snackbar para mensajes */}
             <Snackbar
                 open={snackbar.open}
                 autoHideDuration={6000}

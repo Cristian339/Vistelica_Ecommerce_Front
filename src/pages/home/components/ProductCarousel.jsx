@@ -120,6 +120,24 @@ const ProductCard = React.memo(({ product, onClick }) => {
                         loading="lazy"
                     />
                     <DiscountBadge discountPercentage={product.discount_percentage} />
+                    {product.discount_percentage > 0 && (
+                        <Box
+                            component={motion.div}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.8 }}
+                            sx={{
+                                p: 0,
+                                m: 0,
+                                background: '#ffffff',
+                                borderRadius: 0,
+                                overflow: 'hidden'
+                            }}
+                        >
+
+                        -{product.discount_percentage}%
+                        </Box>
+                    )}
                 </Box>
                 <Box sx={{ p: 2, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                     <Typography
@@ -217,6 +235,7 @@ const useResponsiveSlider = (initialSlidesToShow, products, currentIndex, setCur
             Math.max(0, products.length - slidesToShow),
         [products.length, slidesToShow]);
 
+    // Efecto para manejar el resize y ajustar el número de slides
     useEffect(() => {
         const handleResize = () => {
             let newSlidesToShow;
@@ -414,9 +433,9 @@ const ProductCarousel = React.memo(({
             sx={{
                 py: { xs: 4, md: 6 },
                 px: { xs: 2, md: 4 },
-                background: 'linear-gradient(180deg, #FDFBF6 0%, #FFFFFF 100%)',
+                background: '#ffffff',
                 borderRadius: { xs: '0', md: '16px' },
-                my: { xs: 3, md: 5 },
+                mt: { xs: 3, md: 5 }, // Solo margen superior
                 overflow: 'hidden'
             }}
             ref={containerRef}
@@ -424,6 +443,7 @@ const ProductCarousel = React.memo(({
             tabIndex={0}
             role="region"
             aria-label="Carrusel de productos destacados"
+
         >
             <Container maxWidth="xl">
                 <Box

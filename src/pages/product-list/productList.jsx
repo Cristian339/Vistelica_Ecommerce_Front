@@ -22,7 +22,6 @@ import HeaderComponent from '@/components/layout/HeaderComponent';
 
 // Servicios y utilidades
 import wishlistService from '@/services/wishlistService';
-import productService from '@/services/productService';
 import categoryService from '@/services/categoryService';
 import { sortProducts } from './components/SortUtils';
 import { COLORS, BRANDS, SIZES } from './constants/filterOptions';
@@ -31,6 +30,7 @@ import ProductGrid from './components/ProductGrid';
 import SortDropdown from './components/SortDropdown';
 import FilterSidebar from './components/FilterSidebar';
 import { vistelicaColors } from '../shared-theme/vistelicaColors';
+import productService from "@/services/productService";
 
 const ProductList = () => {
     const router = useRouter();
@@ -73,7 +73,7 @@ const ProductList = () => {
     const [favoriteIds, setFavoriteIds] = useState([]);
 
     // Estados para paginación
-    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [itemsPerPage, setItemsPerPage] = useState(12);
     const [currentPage, setCurrentPage] = useState(1);
 
     // Calcular productos paginados
@@ -81,7 +81,7 @@ const ProductList = () => {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-
+    const [topRatedProducts, setTopRatedProducts] = useState([]);
     // Funciones para manejar cambios de página
     const nextPage = () => {
         if (currentPage < totalPages) {
@@ -96,8 +96,85 @@ const ProductList = () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
+// En el componente ProductList, agrega este useEffect después de los otros useEffect existentes:
 
+    useEffect(() => {
+        // Aplicar filtros automáticamente basados en los parámetros de la URL
+        const urlFilter = searchParams.get('filter');
+
+        if (urlFilter && products.length > 0) {
+            setFilters(prevFilters => {
+                const newFilters = { ...prevFilters };
+
+                switch (urlFilter) {
+                    case 'lowStock':
+                        newFilters.lowStock = true;
+                        break;
+                    case 'hasDiscount':
+                        newFilters.hasDiscount = true;
+                        break;
+                    case 'topRated':
+
+                        loadTopRatedProducts();
+                        break;
+                    default:
+                        break;
+                }
+
+                return newFilters;
+            });
+        }
+    }, [searchParams, products.length]);
     // Resetear página cuando cambian los filtros
+    const clearURLFilters = () => {
+        const currentURL = new URL(window.location);
+        currentURL.searchParams.delete('filter');
+        window.history.replaceState({}, '', currentURL.toString());
+    };
+
+    const loadTopRatedProducts = async () => {
+        try {
+            setLoading(true);
+            const topRated = await productService.getTopRatedFeaturedProducts();
+
+            // Cargar imágenes para estos productos también
+            let imagesMap = {};
+            try {
+                const images = await productService.getMainProductImages();
+                if (Array.isArray(images)) {
+                    images.forEach(img => {
+                        const productId = String(img.product_id);
+                        const imageUrl = img.image_url.startsWith('http')
+                            ? img.image_url
+                            : `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${img.image_url}`;
+                        imagesMap[productId] = imageUrl;
+                    });
+                }
+            } catch (imgError) {
+                console.error("Error al cargar imágenes:", imgError);
+            }
+
+            // Asociar imágenes a productos
+            const productsWithImages = topRated.map(product => {
+                const productId = String(product.product_id || product._id);
+                const imageUrl = imagesMap[productId];
+                return {
+                    ...product,
+                    imageUrl: imageUrl || '/images/placeholder-product.jpg'
+                };
+            });
+
+            setTopRatedProducts(productsWithImages);
+            setFilteredProducts(productsWithImages);
+            setProducts(productsWithImages);
+
+        } catch (error) {
+            console.error('Error al cargar productos mejor valorados:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         setCurrentPage(1);
     }, [filters, sortOption, itemsPerPage]);
@@ -496,6 +573,12 @@ const ProductList = () => {
 
     // Aplicar filtros al cambiar los criterios
     useEffect(() => {
+        const urlFilter = searchParams.get('filter');
+
+        // Si estamos mostrando productos mejor valorados, no aplicar filtros adicionales
+        if (urlFilter === 'topRated') {
+            return;
+        }
         if (products.length === 0) return;
 
         let result = [...products];
@@ -544,7 +627,7 @@ const ProductList = () => {
         }
 
         setFilteredProducts(result);
-    }, [filters, sortOption, products]);
+    }, [filters, sortOption, products, searchParams]);
 
     // Resetear filtros
     const resetFilters = () => {
@@ -560,6 +643,12 @@ const ProductList = () => {
             hasDiscount: false,
         });
         setSortOption('relevancia');
+        clearURLFilters();
+        const urlFilter = searchParams.get('filter');
+        if (urlFilter === 'topRated') {
+            // Recargar productos normales
+            window.location.href = '/product-list/productList';
+        }
     };
 
     // Verificar si hay filtros activos
@@ -576,7 +665,15 @@ const ProductList = () => {
 
     // Obtener título para la página
     const getPageTitle = () => {
-        if (selectedSubcategory && selectedSubcategory.name) {
+        const urlFilter = searchParams.get('filter');
+
+        if (urlFilter === 'topRated') {
+            return 'Productos Mejor Valorados';
+        } else if (urlFilter === 'lowStock') {
+            return 'Últimas Unidades';
+        } else if (urlFilter === 'hasDiscount') {
+            return 'Productos en Oferta';
+        } else if (selectedSubcategory && selectedSubcategory.name) {
             return selectedSubcategory.name;
         } else if (selectedCategory && selectedCategory.name) {
             return selectedCategory.name;
@@ -891,7 +988,12 @@ const ProductList = () => {
                                 alignItems: 'center',
                                 mt: 4,
                                 flexDirection: { xs: 'column', sm: 'row' },
-                                gap: 2
+                                gap: 2,
+                                background: 'linear-gradient(to right, #fff8e1, #fff3e0)', // fondo suave
+                                borderRadius: 2,
+                                px: 2,
+                                py: 2,
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
                             }}>
                                 {/* Selector de items por página */}
                                 <FormControl sx={{ minWidth: 120 }} size="small">
@@ -901,39 +1003,77 @@ const ProductList = () => {
                                         value={itemsPerPage}
                                         label="Por página"
                                         onChange={(e) => setItemsPerPage(e.target.value)}
+                                        sx={{
+                                            background: 'white',
+                                            borderRadius: 1,
+                                            '& .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: '#FFD700',
+                                            },
+                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: '#FFC107',
+                                            },
+                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: '#FFA000',
+                                            },
+                                        }}
                                     >
-                                        <MenuItem value={10}>10</MenuItem>
-                                        <MenuItem value={15}>15</MenuItem>
+                                        <MenuItem value={12}>12</MenuItem>
+                                        <MenuItem value={16}>16</MenuItem>
                                         <MenuItem value={20}>20</MenuItem>
-                                        <MenuItem value={25}>25</MenuItem>
+                                        <MenuItem value={28}>28</MenuItem>
                                     </Select>
                                 </FormControl>
 
                                 {/* Contador de páginas */}
-                                <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                                    Página {currentPage} de {totalPages} - {filteredProducts.length} productos totales
+                                <Typography variant="body1" sx={{ color: '#8B6F00', fontWeight: 'bold' }}>
+                                    Página {currentPage} de {totalPages} - {filteredProducts.length} productos
                                 </Typography>
 
                                 {/* Botones de navegación */}
                                 <Box sx={{ display: 'flex', gap: 1 }}>
                                     <Button
-                                        variant="outlined"
+                                        variant="contained"
                                         startIcon={<ChevronLeft />}
                                         onClick={prevPage}
                                         disabled={currentPage === 1}
+                                        sx={{
+                                            background: 'linear-gradient(to right, #FFD700, #FFA000)',
+                                            color: '#000',
+                                            fontWeight: 'bold',
+                                            '&:hover': {
+                                                background: 'linear-gradient(to right, #FFC107, #FFB300)',
+                                            },
+                                            '&:disabled': {
+                                                background: '#E0E0E0',
+                                                color: '#9E9E9E',
+                                            }
+                                        }}
                                     >
                                         Anterior
                                     </Button>
                                     <Button
-                                        variant="outlined"
+                                        variant="contained"
                                         endIcon={<ChevronRight />}
                                         onClick={nextPage}
                                         disabled={currentPage === totalPages}
+                                        sx={{
+                                            background: 'linear-gradient(to right, #FFD700, #FFA000)',
+                                            color: '#000',
+                                            fontWeight: 'bold',
+                                            '&:hover': {
+                                                background: 'linear-gradient(to right, #FFC107, #FFB300)',
+                                            },
+                                            '&:disabled': {
+                                                background: '#E0E0E0',
+                                                color: '#9E9E9E',
+                                            }
+                                        }}
                                     >
                                         Siguiente
                                     </Button>
                                 </Box>
                             </Box>
+
                         </>
                     ) : (
                         <Box sx={{ textAlign: 'center', py: 6 }}>

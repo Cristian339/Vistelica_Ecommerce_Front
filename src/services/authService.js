@@ -189,6 +189,55 @@ export const completePasswordReset = async (token, code, newPassword) => {
     }
 };
 
+
+/**
+ * Verifica que la contraseña actual sea correcta
+ * @param {string} password - Contraseña actual a verificar
+ * @returns {Promise<boolean>} - True si es correcta, false si no
+ */
+export const verifyPassword = async (password) => {
+    try {
+        const token = getToken();
+        if (!token) throw new Error('No hay sesión activa');
+
+        const response = await axios.post(
+            `${API_URL}/verify-password`,
+            { password },
+            { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+
+        return response.data.success;
+    } catch (error) {
+        console.error('Error al verificar contraseña:', error);
+    }
+};
+
+
+
+/**
+ * Cambia la contraseña del usuario
+ * @param {string} oldPassword - Contraseña actual
+ * @param {string} newPassword - Nueva contraseña
+ * @returns {Promise<Object>} - Respuesta del servidor
+ */
+export const changePassword = async (oldPassword, newPassword) => {
+    try {
+        const token = getToken();
+        if (!token) throw new Error('No hay sesión activa');
+
+        const response = await axios.post(
+            `${API_URL}/change-password`,
+            { oldPassword, newPassword },
+            { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+
+        return response.data;
+    } catch (error) {
+        console.error('Error al cambiar contraseña:', error);
+        throw new Error(error.response?.data?.error || 'Error al actualizar contraseña');
+    }
+};
+
 /**
  * Restablece la contraseña usando el token y código (mantener por compatibilidad)
  * @param {string} token - Token JWT recibido
@@ -390,6 +439,65 @@ export const deleteAccount = async (password) => {
             throw new Error('No se recibió respuesta del servidor');
         } else {
             throw new Error('Error al configurar la solicitud');
+        }
+    }
+};
+
+
+
+
+
+/**
+ * Solicita el cambio de email enviando un código de verificación al email actual
+ * @param {string} password - Contraseña actual para verificación
+ * @returns {Promise<Object>} - Respuesta del servidor
+ */
+export const requestEmailChange = async (password) => {
+    try {
+        const token = getToken();
+        if (!token) throw new Error('No hay sesión activa');
+
+        const response = await axios.post(
+            `${API_URL}/request-email-change`,
+            { password },
+            { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+
+        return response.data.success;
+    } catch (error) {
+        console.error('Error al solicitar cambio de email:', error);
+        if (error.response) {
+            throw new Error(error.response.data.message || 'Error al solicitar cambio de email');
+        } else {
+            throw new Error('Error de conexión al solicitar cambio de email');
+        }
+    }
+};
+
+/**
+ * Confirma el cambio de email con el código de verificación
+ * @param {string} code - Código de verificación recibido por email
+ * @param {string} newEmail - Nuevo email a establecer
+ * @returns {Promise<Object>} - Respuesta del servidor
+ */
+export const confirmEmailChange = async (code, newEmail) => {
+    try {
+        const token = getToken();
+        if (!token) throw new Error('No hay sesión activa');
+
+        const response = await axios.post(
+            `${API_URL}/confirm-email-change`,
+            { code, newEmail },
+            { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+
+        return response.data;
+    } catch (error) {
+        console.error('Error al confirmar cambio de email:', error);
+        if (error.response) {
+            throw new Error(error.response.data.message || 'Error al confirmar cambio de email');
+        } else {
+            throw new Error('Error de conexión al confirmar cambio de email');
         }
     }
 };

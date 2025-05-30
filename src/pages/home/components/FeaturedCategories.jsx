@@ -59,7 +59,7 @@ const CategoryContent = styled(CardContent)(() => ({
     bottom: 0,
     width: '100%',
     padding: '25px',
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: 'rgba(255,255,255,0.85)',
     backdropFilter: 'blur(4px)',
     transition: 'all 0.3s ease',
     '&:hover': {
@@ -400,7 +400,7 @@ const FeaturedCategories = () => {
             component="section"
             sx={{
                 py: { xs: 6, md: 10 },
-                backgroundColor: '#f7f7f9',
+                backgroundColor: '#ffffff',
                 position: 'relative',
                 overflow: 'hidden',
                 backgroundImage: 'radial-gradient(circle at 20% 90%, rgba(228, 176, 2, 0.03) 0%, transparent 40%), radial-gradient(circle at 80% 20%, rgba(228, 176, 2, 0.03) 0%, transparent 30%)'

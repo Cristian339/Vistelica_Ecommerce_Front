@@ -5,6 +5,13 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import Link from 'next/link';
+
+const ProgressBarCarousel = () => {
+    const [currentSlide, setCurrentSlide] = useState(0);
+    const [progress, setProgress] = useState(0);
+    const intervalRef = useRef(null);
+    const progressIntervalRef = useRef(null);
 
 // Componente para la barra de progreso individual
 const ProgressBar = React.memo(({ isActive, progress, onClick, index }) => (
@@ -42,6 +49,33 @@ const ProgressBar = React.memo(({ isActive, progress, onClick, index }) => (
         )}
     </Box>
 ));
+    // Definición de las imágenes del carrusel con enlaces específicos
+    const slides = [
+        {
+            src: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743791584/vistelica/Carrusel/hslrccwjzkmexfjv2sc8.jpg",
+            alt: "Monstera leaf close-up",
+            title: "Colecciones exclusivas",
+            subtitle: "Explora nuestra amplia gama de productos, colaborando con los mejores proveedores del país.",
+            buttonText: "Explorar",
+            link: "/product-list/productList"
+        },
+        {
+            src: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743791584/vistelica/Carrusel/kpr9ii8oqevnneudgzno.webp",
+            alt: "Indoor plants",
+            title: "Últimas unidades",
+            subtitle: "¡Aprovecha! Productos con poco stock disponible. No te quedes sin el tuyo.",
+            buttonText: "Ver productos",
+            link: "/product-list/productList?filter=lowStock" // Enlace para productos con poco stock
+        },
+        {
+            src: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743791578/vistelica/Carrusel/ctidxlquiebnqas0ivxk.jpg",
+            alt: "Tropical leaf",
+            title: "Grandes ofertas",
+            subtitle: "Aprovecha nuestras ofertas y descuentos exclusivos en productos seleccionados.",
+            buttonText: "Ver ofertas",
+            link: "/product-list/productList?filter=hasDiscount" // Enlace para productos con descuento
+        }
+    ];
 
 // Componente para cada slide
 const Slide = React.memo(({ slide, isActive, onExploreClick }) => {
@@ -59,6 +93,112 @@ const Slide = React.memo(({ slide, isActive, onExploreClick }) => {
     }, [isActive]);
 
     return (
+        <Box sx={{ width: '100%', position: 'relative', overflow: 'hidden', height: { xs: '70vh', md: '80vh' } }}>
+            {/* Slides */}
+            {slides.map((slide, index) => (
+                <Box
+                    key={index}
+                    sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        opacity: currentSlide === index ? 1 : 0,
+                        transition: 'opacity 0.8s ease-in-out',
+                        zIndex: currentSlide === index ? 1 : 0,
+                    }}
+                >
+                    <Box
+                        component="img"
+                        src={slide.src}
+                        alt={slide.alt}
+                        sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            display: 'block'
+                        }}
+                    />
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            background: 'rgba(0, 0, 0, 0.15)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'flex-start',
+                        }}
+                    >
+                        <Container>
+                            <Box
+                                sx={{
+                                    maxWidth: { xs: '90%', sm: '70%', md: '500px' },
+                                    animation: currentSlide === index ? 'fadeInUp 0.8s ease-out' : 'none',
+                                    opacity: currentSlide === index ? 1 : 0,
+                                    '@keyframes fadeInUp': {
+                                        '0%': {
+                                            opacity: 0,
+                                            transform: 'translateY(20px)'
+                                        },
+                                        '100%': {
+                                            opacity: 1,
+                                            transform: 'translateY(0)'
+                                        }
+                                    }
+                                }}
+                            >
+                                <Typography
+                                    variant="h2"
+                                    color="white"
+                                    fontWeight="bold"
+                                    sx={{
+                                        fontSize: { xs: '2.5rem', md: '3.5rem' },
+                                        lineHeight: 1.1,
+                                        mb: 2,
+                                        fontFamily: '"Playfair Display", serif'
+                                    }}
+                                >
+                                    {slide.title}
+                                </Typography>
+                                <Typography
+                                    variant="body1"
+                                    color="white"
+                                    sx={{
+                                        fontSize: { xs: '1rem', md: '1.1rem' },
+                                        mb: 4,
+                                        maxWidth: '90%'
+                                    }}
+                                >
+                                    {slide.subtitle}
+                                </Typography>
+                                <Button
+                                    component={Link}
+                                    href={slide.link}
+                                    variant="contained"
+                                    sx={{
+                                        backgroundColor: 'white',
+                                        color: 'black',
+                                        borderRadius: '50px',
+                                        padding: '12px 24px',
+                                        fontSize: '0.9rem',
+                                        fontWeight: 'bold',
+                                        textTransform: 'none',
+                                        textDecoration: 'none',
+                                        '&:hover': {
+                                            backgroundColor: '#f0f0f0',
+                                        }
+                                    }}
+                                >
+                                    {slide.buttonText}
+                                </Button>
+                            </Box>
+                        </Container>
+                    </Box>
+                </Box>
         <Box
             sx={{
                 position: 'absolute',

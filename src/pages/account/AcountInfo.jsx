@@ -17,7 +17,14 @@ import {
     InputAdornment,
     Tooltip,
     Snackbar,
-    Alert
+    Alert,
+    Stepper,
+    Step,
+    StepLabel,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -36,6 +43,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import LinkIcon from '@mui/icons-material/Link';
 import { updateUserProfile, getUserProfile } from '@/services/profileService';
 import { motion } from 'framer-motion';
+import { verifyPassword, changePassword, requestEmailChange, confirmEmailChange } from '@/services/authService';
 
 const AccountInfo = ({ userData, setUserData, loading }) => {
     const [isEditing, setIsEditing] = useState(false);
@@ -51,7 +59,17 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
         message: '',
         severity: 'success'
     });
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [passwordStep, setPasswordStep] = useState(0);
+    const [passwordError, setPasswordError] = useState('');
 
+    const [emailChangeOpen, setEmailChangeOpen] = useState(false);
+    const [emailChangeStep, setEmailChangeStep] = useState(0);
+    const [verificationCode, setVerificationCode] = useState('');
+    const [newEmail, setNewEmail] = useState('');
+    const [emailChangeError, setEmailChangeError] = useState('');
 
     useEffect(() => {
         if (userData) {
@@ -59,11 +77,9 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
         }
     }, [userData]);
 
-    // Transforma los nombres de campos para que coincidan con lo que espera el backend
     const extractUserData = (data) => {
         if (!data) return {};
         const userObj = data.user || data || {};
-        console.log("Foto" + userObj.avatar);
         return {
             name: userObj.name || userObj.nombre || '',
             lastName: userObj.lastName || userObj.apellido || '',
@@ -73,15 +89,62 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
             avatar: userObj.avatar || userObj.profilePic || '',
             address: userObj.address || '',
         };
-
     };
 
+    const handleEmailChangeOpen = () => {
+        setEmailChangeOpen(true);
+        setEmailChangeStep(0);
+        setCurrentPassword('');
+        setVerificationCode('');
+        setNewEmail('');
+        setEmailChangeError('');
+    };
 
+    const handleEmailChangeClose = () => {
+        setEmailChangeOpen(false);
+    };
+
+    const handleSendVerificationCode = async () => {
+        try {
+            if(await requestEmailChange(currentPassword)){
+                setEmailChangeStep(1);
+                setEmailChangeError('');
+                setToast({
+                    open: true,
+                    message: 'Código enviado a tu email actual',
+                    severity: 'success'
+                });
+            }else{
+                setEmailChangeError('Contraseña incorrecta');
+            }
+
+        } catch (error) {
+            setEmailChangeError(error.message);
+        }
+    };
+
+    const handleConfirmEmailChange = async () => {
+        try {
+            await confirmEmailChange(verificationCode, newEmail);
+            setEmailChangeOpen(false);
+            setToast({
+                open: true,
+                message: 'Email actualizado correctamente',
+                severity: 'success'
+            });
+
+            // Actualizar los datos del usuario
+            const updatedData = await getUserProfile();
+            if (setUserData) {
+                setUserData(updatedData);
+            }
+        } catch (error) {
+            setEmailChangeError(error.message);
+        }
+    };
 
     const handleEditClick = () => {
         const extractedData = extractUserData(userData);
-        console.log('Datos extraídos para edición:', extractedData);
-
         setFormData(extractedData);
         setOriginalData(extractedData);
         setAvatarPreview(extractedData.avatar || '');
@@ -113,7 +176,6 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
     const handleAvatarTypeChange = (type) => {
         setAvatarType(type);
         handleAvatarMenuClose();
-
         if (type === 'file') {
             fileInputRef.current.click();
         }
@@ -143,7 +205,6 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
         });
     };
 
-    // Verificar si hay cambios en el formulario
     const hasChanges = useMemo(() => {
         if (!isEditing) return false;
 
@@ -154,7 +215,6 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
             }
         }
 
-        // Verificar cambio de fecha de nacimiento
         if (formData.born_date && originalData.born_date) {
             const date1 = new Date(formData.born_date).toISOString().split('T')[0];
             const date2 = new Date(originalData.born_date).toISOString().split('T')[0];
@@ -173,7 +233,6 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
         });
     };
 
-    // Función de guardado siguiendo exactamente el patrón de AccountInfoEditable
     const handleSave = async () => {
         if (!hasChanges) {
             setToast({
@@ -186,13 +245,9 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
 
         setSaving(true);
         try {
-            // 1. Guardar cambios con el servicio (exactamente como AccountInfoEditable)
             await updateUserProfile(formData);
-
-            // 2. Recargar datos frescos (exactamente como AccountInfoEditable)
             const updatedData = await getUserProfile();
 
-            // 3. Actualizar estados
             if (setUserData) {
                 setUserData(updatedData);
             }
@@ -217,7 +272,16 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
 
     const handleCancel = () => {
         setIsEditing(false);
+        setPasswordStep(0);
         setAvatarPreview(null);
+    };
+
+    const handlePasswordCancel = () => {
+        setPasswordStep(0);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setPasswordError('');
     };
 
     if (loading) {
@@ -249,15 +313,7 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
 
     return (
         <Zoom in={!loading} style={{ transitionDelay: '100ms' }}>
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    width: '100%',
-                    position: 'relative',
-                    transition: 'all 0.3s ease'
-                }}
-            >
+            <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', position: 'relative', transition: 'all 0.3s ease' }}>
                 <Paper
                     elevation={0}
                     sx={{
@@ -267,9 +323,9 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                         background: 'linear-gradient(to bottom right, #fdfbf6, #fff)',
                         border: `1px solid ${vistelicaColors.divider}`,
                         overflow: 'hidden',
-                        width: isEditing ? { xs: '100%', md: 'calc(100% + 150px)' } : '100%', // Aumentado de 80px a 150px
-                        marginLeft: 10,  // Mantiene su posición a la izquierda
-                        marginRight: isEditing ? { xs: 0, md: '-150px' } : 30, // Aumentado de -80px a -150px
+                        width: isEditing ? { xs: '100%', md: 'calc(100% + 150px)' } : '100%',
+                        marginLeft: 10,
+                        marginRight: isEditing ? { xs: 0, md: '-150px' } : 30,
                         transition: 'all 0.3s ease',
                         transformOrigin: 'left center',
                         zIndex: 0,
@@ -382,26 +438,26 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                         ) : (
                             <Box sx={{ display: 'flex', gap: 1 }}>
                                 <Tooltip title={!hasChanges ? "No hay cambios para guardar" : ""}>
-                                    <span>
-                                        <Button
-                                            startIcon={saving ? <CircularProgress size={16} /> : <SaveIcon />}
-                                            variant="contained"
-                                            disabled={saving || !hasChanges}
-                                            sx={{
+                                <span>
+                                    <Button
+                                        startIcon={saving ? <CircularProgress size={16} /> : <SaveIcon />}
+                                        variant="contained"
+                                        disabled={saving || !hasChanges}
+                                        sx={{
+                                            backgroundColor: vistelicaColors.primary,
+                                            '&:hover': {
                                                 backgroundColor: vistelicaColors.primary,
-                                                '&:hover': {
-                                                    backgroundColor: vistelicaColors.primary,
-                                                },
-                                                '&.Mui-disabled': {
-                                                    backgroundColor: '#e0e0e0',
-                                                    color: '#a0a0a0'
-                                                }
-                                            }}
-                                            onClick={handleSave}
-                                        >
-                                            {saving ? 'Guardando' : 'Guardar'}
-                                        </Button>
-                                    </span>
+                                            },
+                                            '&.Mui-disabled': {
+                                                backgroundColor: '#e0e0e0',
+                                                color: '#a0a0a0'
+                                            }
+                                        }}
+                                        onClick={handleSave}
+                                    >
+                                        {saving ? 'Guardando' : 'Guardar'}
+                                    </Button>
+                                </span>
                                 </Tooltip>
                                 <Button
                                     startIcon={<CancelIcon />}
@@ -468,7 +524,6 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.5, delay: 0.2 }}
                     >
-                        {/* Nombre */}
                         <Grid item xs={12} sm={6}>
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                 <PersonIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
@@ -509,7 +564,6 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                             )}
                         </Grid>
 
-                        {/* Apellido */}
                         <Grid item xs={12} sm={6}>
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                 <PersonIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
@@ -550,7 +604,6 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                             )}
                         </Grid>
 
-                        {/* Email */}
                         <Grid item xs={12} sm={6}>
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                 <EmailIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
@@ -563,27 +616,41 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                                 </Typography>
                             </Box>
                             {isEditing ? (
-                                <TextField
-                                    fullWidth
-                                    name="email"
-                                    value={formData.email || ''}
-                                    onChange={handleChange}
-                                    variant="outlined"
-                                    size="small"
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            '& fieldset': {
-                                                borderColor: `${vistelicaColors.divider}`,
-                                            },
-                                            '&:hover fieldset': {
-                                                borderColor: `${vistelicaColors.primary}`,
-                                            },
-                                            '&.Mui-focused fieldset': {
-                                                borderColor: `${vistelicaColors.primary}`,
-                                            },
-                                        }
-                                    }}
-                                />
+                                <>
+                                    <Typography variant="body1" sx={{ mt: 1.5, fontSize: '1.05rem' }}>
+                                        {userData?.email || 'No especificado'}
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+                                        <Button
+                                            variant="outlined"
+                                            sx={{
+                                                borderColor: vistelicaColors.primary,
+                                                color: vistelicaColors.primary,
+                                                '&:hover': {
+                                                    borderColor: vistelicaColors.primary,
+                                                    backgroundColor: 'rgba(228, 176, 2, 0.04)',
+                                                }
+                                            }}
+                                            onClick={handleEmailChangeOpen}
+                                        >
+                                            Cambiar email
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
+                                            sx={{
+                                                borderColor: vistelicaColors.primary,
+                                                color: vistelicaColors.primary,
+                                                '&:hover': {
+                                                    borderColor: vistelicaColors.primary,
+                                                    backgroundColor: 'rgba(228, 176, 2, 0.04)',
+                                                }
+                                            }}
+                                            onClick={() => setPasswordStep(1)}
+                                        >
+                                            Cambiar contraseña
+                                        </Button>
+                                    </Box>
+                                </>
                             ) : (
                                 <Typography variant="body1" sx={{ mt: 1.5, fontSize: '1.05rem' }}>
                                     {userData?.email || 'No especificado'}
@@ -591,7 +658,6 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                             )}
                         </Grid>
 
-                        {/* Teléfono */}
                         <Grid item xs={12} sm={6}>
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                 <PhoneIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
@@ -632,7 +698,6 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                             )}
                         </Grid>
 
-                        {/* Fecha de nacimiento */}
                         <Grid item xs={12} sm={6}>
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                 <CalendarMonthIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
@@ -676,7 +741,6 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                         </Grid>
                     </Grid>
 
-                    {/* Toast de notificación */}
                     <Snackbar
                         open={toast.open}
                         autoHideDuration={6000}
@@ -693,6 +757,239 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                         </Alert>
                     </Snackbar>
                 </Paper>
+
+                {isEditing && passwordStep > 0 && (
+                    <Box
+                        sx={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 9999
+                        }}
+                    >
+                        <Paper
+                            sx={{
+                                p: 4,
+                                width: '100%',
+                                maxWidth: '500px',
+                                borderRadius: '16px',
+                                boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+                            }}
+                        >
+                            <Typography variant="h6" gutterBottom sx={{ mb: 3, color: vistelicaColors.primary }}>
+                                {passwordStep === 1 ? 'Verifica tu contraseña actual' : 'Ingresa tu nueva contraseña'}
+                            </Typography>
+
+                            {passwordStep === 1 ? (
+                                <>
+                                    <TextField
+                                        fullWidth
+                                        type="password"
+                                        label="Contraseña actual"
+                                        value={currentPassword}
+                                        onChange={(e) => setCurrentPassword(e.target.value)}
+                                        sx={{ mb: 3 }}
+                                    />
+                                    {passwordError && (
+                                        <Alert severity="error" sx={{ mb: 2 }}>
+                                            {passwordError}
+                                        </Alert>
+                                    )}
+                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                                        <Button
+                                            variant="outlined"
+                                            onClick={handlePasswordCancel}
+                                        >
+                                            Cancelar
+                                        </Button>
+                                        <Button
+                                            variant="contained"
+                                            sx={{ backgroundColor: vistelicaColors.primary }}
+                                            onClick={async () => {
+                                                try {
+                                                    if(await verifyPassword(currentPassword)){
+                                                        setPasswordStep(2);
+                                                        setPasswordError('');
+                                                    }else{
+                                                        setPasswordError('Contraseña incorrecta');
+                                                    }
+
+                                                } catch (error) {
+                                                    setPasswordError(error.message);
+                                                }
+                                            }}
+                                        >
+                                            Continuar
+                                        </Button>
+                                    </Box>
+                                </>
+                            ) : (
+                                <>
+                                    <TextField
+                                        fullWidth
+                                        type="password"
+                                        label="Nueva contraseña"
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        sx={{ mb: 2 }}
+                                    />
+                                    <TextField
+                                        fullWidth
+                                        type="password"
+                                        label="Confirmar nueva contraseña"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        sx={{ mb: 3 }}
+                                        error={newPassword !== confirmPassword && confirmPassword !== ''}
+                                        helperText={
+                                            newPassword !== confirmPassword && confirmPassword !== ''
+                                                ? 'Las contraseñas no coinciden'
+                                                : ''
+                                        }
+                                    />
+                                    {passwordError && (
+                                        <Alert severity="error" sx={{ mb: 2 }}>
+                                            {passwordError}
+                                        </Alert>
+                                    )}
+                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                                        <Button
+                                            variant="outlined"
+                                            onClick={() => {
+                                                setPasswordStep(1);
+                                                setPasswordError('');
+                                            }}
+                                        >
+                                            Atrás
+                                        </Button>
+                                        <Button
+                                            variant="contained"
+                                            sx={{ backgroundColor: vistelicaColors.primary }}
+                                            disabled={newPassword !== confirmPassword || newPassword === ''}
+                                            onClick={async () => {
+                                                try {
+                                                    await changePassword(currentPassword, newPassword);
+                                                    setToast({
+                                                        open: true,
+                                                        message: 'Contraseña cambiada exitosamente',
+                                                        severity: 'success'
+                                                    });
+                                                    setPasswordStep(0);
+                                                    setCurrentPassword('');
+                                                    setNewPassword('');
+                                                    setConfirmPassword('');
+                                                } catch (error) {
+                                                    setPasswordError(error.message);
+                                                }
+                                            }}
+                                        >
+                                            Cambiar contraseña
+                                        </Button>
+                                    </Box>
+                                </>
+                            )}
+                        </Paper>
+                    </Box>
+                )}
+
+                <Dialog open={emailChangeOpen} onClose={handleEmailChangeClose} maxWidth="sm" fullWidth>
+                    <DialogTitle sx={{ color: vistelicaColors.primary }}>
+                        Cambiar dirección de email
+                    </DialogTitle>
+                    <DialogContent>
+                        <Stepper activeStep={emailChangeStep} alternativeLabel sx={{ my: 3 }}>
+                            <Step><StepLabel>Verificar contraseña</StepLabel></Step>
+                            <Step><StepLabel>Ingresar código</StepLabel></Step>
+                            <Step><StepLabel>Nuevo email</StepLabel></Step>
+                        </Stepper>
+
+                        {emailChangeError && (
+                            <Alert severity="error" sx={{ mb: 3 }}>
+                                {emailChangeError}
+                            </Alert>
+                        )}
+
+                        {emailChangeStep === 0 && (
+                            <>
+                                <Typography variant="body1" gutterBottom>
+                                    Para cambiar tu email, primero verifica tu identidad ingresando tu contraseña actual.
+                                </Typography>
+                                <TextField
+                                    fullWidth
+                                    type="password"
+                                    label="Contraseña actual"
+                                    value={currentPassword}
+                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                    sx={{ mt: 2 }}
+                                />
+                            </>
+                        )}
+
+                        {emailChangeStep === 1 && (
+                            <>
+                                <Typography variant="body1" gutterBottom>
+                                    Hemos enviado un código de verificación a tu email actual. Por favor ingrésalo a continuación.
+                                </Typography>
+                                <TextField
+                                    fullWidth
+                                    label="Código de verificación"
+                                    value={verificationCode}
+                                    onChange={(e) => setVerificationCode(e.target.value)}
+                                    sx={{ mt: 2 }}
+                                />
+                            </>
+                        )}
+
+                        {emailChangeStep === 2 && (
+                            <>
+                                <Typography variant="body1" gutterBottom>
+                                    Ingresa tu nueva dirección de email.
+                                </Typography>
+                                <TextField
+                                    fullWidth
+                                    type="email"
+                                    label="Nuevo email"
+                                    value={newEmail}
+                                    onChange={(e) => setNewEmail(e.target.value)}
+                                    sx={{ mt: 2 }}
+                                />
+                            </>
+                        )}
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleEmailChangeClose}>Cancelar</Button>
+                        {emailChangeStep > 0 && (
+                            <Button onClick={() => setEmailChangeStep(emailChangeStep - 1)}>
+                                Atrás
+                            </Button>
+                        )}
+                        <Button
+                            onClick={() => {
+                                if (emailChangeStep === 0) {
+                                    handleSendVerificationCode();
+                                } else if (emailChangeStep === 1) {
+                                    setEmailChangeStep(2);
+                                } else {
+                                    handleConfirmEmailChange();
+                                }
+                            }}
+                            disabled={
+                                (emailChangeStep === 0 && !currentPassword) ||
+                                (emailChangeStep === 1 && !verificationCode) ||
+                                (emailChangeStep === 2 && !newEmail)
+                            }
+                            sx={{ backgroundColor: vistelicaColors.primary, color: 'white' }}
+                        >
+                            {emailChangeStep === 2 ? 'Confirmar cambio' : 'Continuar'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </Box>
         </Zoom>
     );

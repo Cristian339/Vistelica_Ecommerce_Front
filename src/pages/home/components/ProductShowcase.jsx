@@ -305,6 +305,9 @@ const ProductCard = React.memo(({ product }) => {
                                 {colorCount} {colorCount === 1 ? 'variante de color disponible' : 'variantes de color disponibles'}
                             </Typography>
                         )}
+
+                        {/* Botón de añadir al carrito */}
+
                     </HoverInfoOverlay>
                 </ImageContainer>
 
@@ -352,7 +355,6 @@ const ProductCard = React.memo(({ product }) => {
     );
 });
 
-// Componente principal
 const ProductShowcase = () => {
     const { products, loading } = useProductData();
     const theme = useTheme();
@@ -390,7 +392,7 @@ const ProductShowcase = () => {
             variants={containerVariants}
             sx={{
                 py: { xs: 4, md: 6 },
-                backgroundColor: '#FDFBF6',
+                backgroundColor: '#ffffff',
                 borderRadius: { xs: 0, md: '20px' },
                 my: { xs: 2, md: 4 },
                 px: { xs: 2, md: 4 }
@@ -473,7 +475,7 @@ const ProductShowcase = () => {
                         <Button
                             variant="outlined"
                             component={Link}
-                            href="/products"
+                            href="/product-list/productList?filter=topRated"
                             sx={{
                                 borderColor: vistelicaColors.primary,
                                 color: vistelicaColors.primary,
@@ -487,7 +489,7 @@ const ProductShowcase = () => {
                             }}
                             aria-label="Ver más productos"
                         >
-                            Ver más productos
+                            Ver más productos destacados
                         </Button>
                     </Box>
                 )}

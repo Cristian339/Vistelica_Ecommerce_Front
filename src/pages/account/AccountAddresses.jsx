@@ -97,12 +97,21 @@ const AccountAddresses = () => {
                 const addressesData = await addressService.getAddresses();
                 setAddresses(addressesData);
 
-                // Verificar dirección predeterminada
-                try {
-                    const defaultAddress = await addressService.getDefaultAddress();
-                    console.log('Dirección predeterminada cargada:', defaultAddress);
-                } catch (error) {
-                    console.error('Error al cargar la dirección predeterminada:', error);
+                // Verificar dirección predeterminada SOLO si hay direcciones
+                if (addressesData && addressesData.length > 0) {
+                    try {
+                        const defaultAddress = await addressService.getDefaultAddress();
+                        console.log('Dirección predeterminada cargada:', defaultAddress);
+                    } catch (error) {
+                        // Manejar específicamente el error 404 (no tiene dirección predeterminada)
+                        if (error.response && error.response.status === 404) {
+                            console.log('El usuario no tiene dirección predeterminada configurada');
+                        } else {
+                            console.error('Error al cargar la dirección predeterminada:', error);
+                        }
+                    }
+                } else {
+                    console.log('El usuario no tiene direcciones guardadas');
                 }
             } catch (error) {
                 console.error('Error al cargar las direcciones:', error);
@@ -118,6 +127,7 @@ const AccountAddresses = () => {
 
         fetchUserData();
     }, []);
+
 
     const handleOpenDialog = (address = null) => {
         if (address) {

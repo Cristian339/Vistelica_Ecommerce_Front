@@ -29,7 +29,6 @@ import UserOrdersPage from '../account/order-history/UserOrdersPage';
 
 const steps = ['Shipping address', 'Payment details', 'Review your order'];
 
-
 // Configuración para PayPal
 const paypalOptions = {
     "client-id": "test", // Usar "test" para sandbox o tu client-id real
@@ -47,24 +46,73 @@ export default function Checkout(props) {
     });
     const [cartData, setCartData] = React.useState(null);
     const [shippingData, setShippingData] = React.useState(null);
+    const [orderData, setOrderData] = React.useState(null);
+    const [isCartCleared, setIsCartCleared] = React.useState(false); // Nuevo estado para controlar si el carrito se limpió
+
+    // Función para limpiar carrito eliminando productos uno por uno
+    const clearCartByItems = async () => {
+        try {
+            // Si ya se limpió el carrito, no hacer nada
+            if (isCartCleared) {
+                console.log('El carrito ya fue limpiado previamente');
+                return;
+            }
+
+            // Obtener los productos actuales del carrito
+            const products = await cartService.getCurrentCartProducts();
+
+            if (!products || products.length === 0) {
+                console.log('El carrito ya está vacío');
+                setIsCartCleared(true);
+                return;
+            }
+
+            // Eliminar cada producto individualmente
+            const deletePromises = products.map(item =>
+                cartService.removeFromCart(item.cart_detail_id)
+            );
+
+            // Esperar a que se eliminen todos los productos
+            await Promise.all(deletePromises);
+
+            console.log('Carrito limpiado exitosamente');
+            setIsCartCleared(true); // Marcar que el carrito fue limpiado
+            setCartData({ products: [] }); // Limpiar el estado local del carrito
+
+        } catch (error) {
+            console.error('Error al limpiar el carrito:', error);
+            throw new Error('No se pudo limpiar el carrito');
+        }
+    };
+
     // useEffect para obtener los datos del carrito
     React.useEffect(() => {
         const fetchCartData = async () => {
             try {
-                const products = await cartService.getCurrentCartProducts();
-                setCartData({ products });
+                // Solo obtener datos del carrito si no se ha limpiado
+                if (!isCartCleared) {
+                    const products = await cartService.getCurrentCartProducts();
+                    setCartData({ products });
+                }
             } catch (error) {
                 console.error('Error fetching cart data:', error);
+                // Si hay error 404, probablemente el carrito ya está vacío
+                if (error.response?.status === 404) {
+                    setCartData({ products: [] });
+                    setIsCartCleared(true);
+                }
             }
         };
         fetchCartData();
-    }, []);
+    }, [isCartCleared]);
+
     const calculateDiscountedPrice = (price, discountPercentage) => {
         const originalPrice = parseFloat(price);
         const discount = parseFloat(discountPercentage);
         return originalPrice * (1 - discount / 100);
     };
-// Función para crear el pedido cuando se hace clic en "Realizar pedido"
+
+    // Función para crear el pedido cuando se hace clic en "Realizar pedido"
     const createOrder = async () => {
         try {
             if (!cartData || !cartData.products || cartData.products.length === 0) {
@@ -91,21 +139,24 @@ export default function Checkout(props) {
             });
 
             // Preparar el JSON del pedido según el formato requerido
-            const orderData = {
+            const orderRequestData = {
                 address_id: shippingData.selectedAddressId,
                 payment_method_name: getPaymentMethodName(),
                 details: orderDetails
             };
 
-            console.log('Enviando pedido:', orderData);
+            console.log('Enviando pedido:', orderRequestData);
 
-            const result = await orderService.createOrder(orderData);
+            const result = await orderService.createOrder(orderRequestData);
 
             console.log('Pedido creado exitosamente:', result);
 
+            // Almacenar la respuesta del pedido en el estado
+            setOrderData(result);
+
             // Limpiar carrito después de crear el pedido
             try {
-                await cartService.clearCart();
+                await clearCartByItems();
             } catch (clearError) {
                 console.warn('No se pudo limpiar el carrito:', clearError);
             }
@@ -165,6 +216,11 @@ export default function Checkout(props) {
                 throw new Error('Unknown step');
         }
     }
+
+    // Función para navegar a los pedidos sin intentar limpiar de nuevo
+    const goToOrders = () => {
+        router.push('/account/order-history/UserOrdersPage');
+    };
 
     return (
         <AppTheme {...props}>
@@ -321,13 +377,13 @@ export default function Checkout(props) {
                                 <Typography variant="h5">¡Gracias por tu pedido!</Typography>
                                 <Typography variant="body1" sx={{ color: 'text.secondary' }}>
                                     El número de tu pedido es
-                                    <strong>&nbsp;#140396</strong>. Te hemos enviado un email con la
+                                    <strong>&nbsp;#{orderData?.order?.order_number || 'N/A'}</strong>. Te hemos enviado un email con la
                                     confirmación del pedido y te actualizaremos cuando se envíe.
                                 </Typography>
                                 <Button
                                     variant="contained"
                                     sx={{ alignSelf: 'start', width: { xs: '100%', sm: 'auto' } }}
-                                    onClick={() => router.push('/account/order-history/UserOrdersPage')}
+                                    onClick={goToOrders}
                                 >
                                     Ir a mis pedidos
                                 </Button>
