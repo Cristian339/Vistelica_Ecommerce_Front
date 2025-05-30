@@ -28,6 +28,9 @@ import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import PaymentIcon from '@mui/icons-material/Payment';
 import GoogleIcon from '@mui/icons-material/Google';
 import AppleIcon from '@mui/icons-material/Apple';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import Collapse from "@mui/material/Collapse";
+
 const Card = styled(MuiCard)(({ theme, selected }) => ({
     border: '1px solid',
     borderColor: (theme.vars || theme).palette.divider,
@@ -56,6 +59,19 @@ const Card = styled(MuiCard)(({ theme, selected }) => ({
     }),
 }));
 
+const SuccessContainer = styled('div')(({ theme }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: theme.spacing(4),
+    border: '1px solid #4caf50',
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    maxWidth: '500px',
+    margin: '0 auto',
+    textAlign: 'center'
+}));
 
 const GooglePayButton = styled('div')(({ theme }) => ({
     display: 'flex',
@@ -83,7 +99,12 @@ const FormGrid = styled('div')(() => ({
     flexDirection: 'column',
 }));
 
-const PaymentForm = React.forwardRef(({ paymentData, setPaymentData }, ref) => {
+const PaymentForm = React.forwardRef(({
+                                          paymentData,
+                                          setPaymentData,
+                                          onPaymentSuccess,
+                                          onPaymentMethodChange
+                                      }, ref) => {
     const [paymentType, setPaymentType] = React.useState(paymentData?.type || 'creditCard');
     const [cardNumber, setCardNumber] = React.useState('');
     const [cvv, setCvv] = React.useState('');
@@ -91,6 +112,7 @@ const PaymentForm = React.forwardRef(({ paymentData, setPaymentData }, ref) => {
     const [cardName, setCardName] = React.useState('');
     const [isProcessing, setIsProcessing] = React.useState(false);
     const [errors, setErrors] = React.useState({});
+    const [paypalSuccess, setPaypalSuccess] = React.useState(false);
 
     // Exponer método de validación para el componente padre
     React.useImperativeHandle(ref, () => ({
@@ -98,12 +120,11 @@ const PaymentForm = React.forwardRef(({ paymentData, setPaymentData }, ref) => {
     }));
 
     const paypalOptions = {
-        "client-id": "test", // Usar "test" para simulación o tu client-id real
+        "clientId": "AR_ESIzlU1ollajGUtHrMcJZBHUy5JQpuchpI1K6mUK1DgQAcCd18IWmgZvHuIYsqDdfxLBffe9TCBD9",
         currency: "EUR",
         intent: "capture",
         components: "buttons"
     };
-
 
     const validateCreditCardForm = () => {
         const newErrors = {};
@@ -127,12 +148,14 @@ const PaymentForm = React.forwardRef(({ paymentData, setPaymentData }, ref) => {
         const type = event.target.value;
         setPaymentType(type);
         setErrors({});
+        setPaypalSuccess(false);
+        onPaymentMethodChange();
 
         if (setPaymentData) {
             setPaymentData({
                 ...paymentData,
                 type: type,
-                details: {} // Reiniciamos los detalles al cambiar el método
+                details: {}
             });
         }
     };
@@ -210,7 +233,7 @@ const PaymentForm = React.forwardRef(({ paymentData, setPaymentData }, ref) => {
             purchase_units: [
                 {
                     amount: {
-                        value: "134.98", // Este valor debería venir de tus datos
+                        value: "134.98",
                     },
                 },
             ],
@@ -219,11 +242,20 @@ const PaymentForm = React.forwardRef(({ paymentData, setPaymentData }, ref) => {
 
     const handleApprove = (data, actions) => {
         setIsProcessing(true);
+        setErrors({}); // Limpiar errores previos
+        setPaypalSuccess(false); // Resetear estado de éxito
 
         return actions.order.capture()
             .then((details) => {
                 console.log("Pago completado: ", details);
 
+                // 1. Actualizar estado de pago en el componente padre
+                onPaymentSuccess();
+
+                // 2. Actualizar estado local de éxito
+                setPaypalSuccess(true);
+
+                // 3. Guardar datos de pago en el estado global
                 if (setPaymentData) {
                     setPaymentData({
                         ...paymentData,
@@ -232,16 +264,40 @@ const PaymentForm = React.forwardRef(({ paymentData, setPaymentData }, ref) => {
                             id: details.id,
                             status: details.status,
                             paymentMethod: 'PayPal',
-                            email: details.payer?.email_address || 'usuario@example.com'
+                            email: details.payer?.email_address || '',
+                            payerId: details.payer?.payer_id || '',
+                            amount: details.purchase_units?.[0]?.amount?.value || '0',
+                            currency: details.purchase_units?.[0]?.amount?.currency_code || 'EUR',
+                            captureId: details.purchase_units?.[0]?.payments?.captures?.[0]?.id || '',
+                            createTime: details.create_time || new Date().toISOString()
                         }
                     });
                 }
-
-                alert(`Simulación de pago completado con PayPal. ID: ${details.id}`);
             })
             .catch(error => {
                 console.error("Error al procesar el pago:", error);
-                alert("Hubo un problema al procesar tu pago. Por favor intenta nuevamente.");
+
+                // Manejo de diferentes tipos de errores
+                let errorMessage = "Hubo un problema al procesar tu pago";
+
+                if (error?.details?.[0]?.issue === 'INSTRUMENT_DECLINED') {
+                    errorMessage = "El método de pago fue rechazado";
+                } else if (error?.message?.includes('funding source')) {
+                    errorMessage = "Problema con la fuente de financiación";
+                }
+
+                // Actualizar estado de errores
+                setErrors({
+                    paypal: errorMessage,
+                    paypalDetails: error
+                });
+
+                // Opcional: Reintentar lógica
+                /*
+                if (hasRetryAttempts) {
+                    return actions.restart();
+                }
+                */
             })
             .finally(() => {
                 setIsProcessing(false);
@@ -394,12 +450,10 @@ const PaymentForm = React.forwardRef(({ paymentData, setPaymentData }, ref) => {
             {paymentType === 'creditCard' && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <CreditCard
-                        cardNumber={cardNumber}
-                        cvv={cvv}
-                        expirationDate={expirationDate}
-                        onCardNumberChange={handleCardNumberChange}
-                        onCvvChange={handleCvvChange}
-                        onExpirationDateChange={handleExpirationDateChange}
+                        amount={10}
+                        onPaymentSuccess={onPaymentSuccess}  // Usar la prop
+                        onPaymentMethodChange={onPaymentMethodChange}  // Usar la prop
+                        setPaymentData={setPaymentData}
                     />
                     <FormControlLabel
                         control={<Checkbox name="saveCard" />}
@@ -410,40 +464,79 @@ const PaymentForm = React.forwardRef(({ paymentData, setPaymentData }, ref) => {
 
             {paymentType === 'paypal' && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
-                        Pago con PayPal
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Haz clic en el botón de PayPal para completar tu compra simulada
-                    </Typography>
-                    <Box sx={{ maxWidth: 450, mx: 'auto', width: '100%', position: 'relative' }}>
-                        {isProcessing && (
-                            <Box sx={{/*...*/}}>
-                                <CircularProgress />
+                    {paypalSuccess ? (
+                        <SuccessContainer>
+                            <CheckCircleIcon sx={{ fontSize: 60, color: 'success.main', mb: 2 }} />
+                            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: 'success.main' }}>
+                                Pago exitoso
+                            </Typography>
+                            <Typography variant="body1" sx={{ mb: 2 }}>
+                                Tu pago se ha procesado correctamente con PayPal.
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                Recibirás un correo de confirmación con los detalles.
+                            </Typography>
+                        </SuccessContainer>
+                    ) : (
+                        <>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
+                                Pago con PayPal
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" gutterBottom>
+                                Haz clic en el botón de PayPal para completar tu compra simulada
+                            </Typography>
+                            <Collapse in={!!errors.paypal}>
+                                <Alert severity="error" sx={{ mb: 2 }}>
+                                    {errors.paypal}
+                                </Alert>
+                            </Collapse>
+                            <Box sx={{ maxWidth: 450, mx: 'auto', width: '100%', position: 'relative' }}>
+                                {isProcessing && (
+                                    <Box sx={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: 'rgba(255,255,255,0.7)',
+                                        zIndex: 1
+                                    }}>
+                                        <CircularProgress />
+                                    </Box>
+                                )}
+                                <PayPalScriptProvider options={paypalOptions}>
+                                    <PayPalButtons
+                                        createOrder={handleCreateOrder}
+                                        onApprove={handleApprove}
+                                        style={{ layout: "vertical" }}
+                                    />
+                                </PayPalScriptProvider>
                             </Box>
-                        )}
-                        <PayPalScriptProvider options={paypalOptions}>
-                            <PayPalButtons
-                                createOrder={handleCreateOrder}
-                                onApprove={handleApprove}
-                                style={{ layout: "vertical" }}
-                            />
-                        </PayPalScriptProvider>
-                    </Box>
+                        </>
+                    )}
                 </Box>
             )}
 
             {paymentType === 'applePay' && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <ApplePayWrapper
-                        amount={2.99}
+                        amount={10}
+                        onPaymentSuccess={onPaymentSuccess}  // Usar la prop
+                        onPaymentMethodChange={onPaymentMethodChange}  // Usar la prop
+                        setPaymentData={setPaymentData}
                     />
                 </Box>
             )}
             {paymentType === 'googlePay' && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <GooglePayWrapper
-                        amount={0.99}
+                        amount={10}
+                        onPaymentSuccess={onPaymentSuccess}  // Usar la prop
+                        onPaymentMethodChange={onPaymentMethodChange}  // Usar la prop
+                        setPaymentData={setPaymentData}
                     />
                 </Box>
             )}

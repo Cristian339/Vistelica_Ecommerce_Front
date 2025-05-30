@@ -4,7 +4,6 @@ import * as React from 'react';
 import {
     Box,
     Typography,
-    Button,
     Alert,
     Collapse,
     CircularProgress,
@@ -21,8 +20,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import paymentService from '@/services/paymentService';
 import AppleIcon from '@mui/icons-material/Apple';
 
-
-const stripePromise = loadStripe("pk_test_51RPncWQc122Tani8pkjulLHNj5pnGssS5aP8eyTIKO7kBECr0X9ndIax3yFYraPQca5Ax6uH4l528N1zzsqLI8Rn00qx93QGQO");
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY);
 
 const PaymentContainer = styled('div')(({ theme }) => ({
     display: 'flex',
@@ -53,7 +51,12 @@ const SuccessContainer = styled('div')(({ theme }) => ({
     textAlign: 'center'
 }));
 
-function ApplePayComponent({ amount }) {
+function ApplePayComponent({
+                               amount,
+                               onPaymentSuccess,
+                               onPaymentMethodChange,
+                               setPaymentData
+                           }) {
     const stripe = useStripe();
     const elements = useElements();
     const [paymentRequest, setPaymentRequest] = React.useState(null);
@@ -61,11 +64,13 @@ function ApplePayComponent({ amount }) {
     const [error, setError] = React.useState(null);
     const [success, setSuccess] = React.useState(false);
 
-    // Convertir el monto a centavos
     const amountInCents = paymentService.convertEurosToCents(amount);
 
     React.useEffect(() => {
         if (!stripe || !elements) return;
+
+        // Notificar al padre que se seleccionó este método
+        onPaymentMethodChange();
 
         const pr = stripe.paymentRequest({
             country: 'ES',
@@ -77,14 +82,13 @@ function ApplePayComponent({ amount }) {
             requestPayerName: true,
             requestPayerEmail: true,
         });
-        console.log(pr);
 
         pr.canMakePayment().then((result) => {
-            console.log(result);
             if (result && result.applePay) {
                 setPaymentRequest(pr);
             } else {
-                console.warn('Apple Pay no disponible en este navegador o dispositivo');
+                console.warn('Apple Pay no disponible');
+                setError('Apple Pay no está disponible en tu dispositivo');
             }
         });
 
@@ -93,29 +97,63 @@ function ApplePayComponent({ amount }) {
             setError(null);
 
             try {
-                const paymentResult = await paymentService.payWithCard(ev.paymentMethod.id, amountInCents);
-                if (paymentResult) {
+                const { paymentIntent, error: paymentError } = await paymentService.processApplePayPayment({
+                    paymentMethodId: ev.paymentMethod.id,
+                    amount: amountInCents,
+                    currency: 'eur'
+                });
+
+                if (paymentError) {
+                    throw new Error(paymentError.message);
+                }
+
+                if (paymentIntent.status === 'succeeded') {
                     setSuccess(true);
+
+                    // Actualizar datos de pago en el estado global
+                    if (setPaymentData) {
+                        setPaymentData(prev => ({
+                            ...prev,
+                            type: 'applePay',
+                            details: {
+                                id: paymentIntent.id,
+                                status: paymentIntent.status,
+                                paymentMethod: 'Apple Pay',
+                                email: ev.payerEmail || '',
+                                amount: amount,
+                                currency: 'EUR'
+                            }
+                        }));
+                    }
+
+                    // Notificar éxito al componente padre
+                    onPaymentSuccess();
                     ev.complete('success');
                 } else {
-                    setError('No se pudo procesar el pago');
-                    ev.complete('fail');
+                    throw new Error('El pago no fue completado');
                 }
             } catch (err) {
-                setError('Error al procesar el pago');
-                console.error(err);
+                console.error('Error en Apple Pay:', err);
+                setError(err.message || 'Error al procesar el pago');
                 ev.complete('fail');
             } finally {
                 setLoading(false);
             }
         });
-    }, [stripe, elements, amountInCents]);
+    }, [stripe, elements, amountInCents, onPaymentSuccess, onPaymentMethodChange, setPaymentData]);
 
     if (success) {
         return (
             <SuccessContainer>
-                <CheckCircleIcon sx={{ fontSize: 60, color: 'success.main', mb: 2 }} />
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: 'success.main' }}>
+                <CheckCircleIcon sx={{
+                    fontSize: 60,
+                    color: 'success.main',
+                    mb: 2
+                }} />
+                <Typography variant="h5" gutterBottom sx={{
+                    fontWeight: 'bold',
+                    color: 'success.main'
+                }}>
                     Pago exitoso
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 2 }}>
@@ -137,28 +175,41 @@ function ApplePayComponent({ amount }) {
             </Collapse>
 
             <PaymentContainer>
-                <Box sx={{
-                    mb: 2,
-                    backgroundSize: 'contain',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'center'
+                <AppleIcon sx={{
+                    fontSize: 48,
+                    color: '#000000', // Color negro típico de Apple
+                    mb: 2
                 }} />
-                <AppleIcon sx={{ fontSize: 48, color: '#4285F4', mb: 2 }} />
-                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'medium' }}>
+                <Typography variant="h6" gutterBottom sx={{
+                    fontWeight: 'medium'
+                }}>
                     Pago con Apple Pay
                 </Typography>
 
                 {loading ? (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Box sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center'
+                    }}>
                         <CircularProgress sx={{ mb: 2 }} />
-                        <Typography variant="body2">Procesando pago...</Typography>
+                        <Typography variant="body2">
+                            Procesando pago...
+                        </Typography>
                     </Box>
                 ) : paymentRequest ? (
                     <>
-                        <Typography variant="body2" sx={{ mb: 3, textAlign: 'center' }}>
+                        <Typography variant="body2" sx={{
+                            mb: 3,
+                            textAlign: 'center'
+                        }}>
                             Paga de forma rápida y segura con tu dispositivo Apple.
                         </Typography>
-                        <div style={{ width: '100%', maxWidth: '300px' }}>
+                        <div style={{
+                            width: '100%',
+                            maxWidth: '300px',
+                            minHeight: '50px'
+                        }}>
                             <PaymentRequestButtonElement
                                 options={{
                                     paymentRequest,
@@ -175,7 +226,7 @@ function ApplePayComponent({ amount }) {
                     </>
                 ) : (
                     <Typography variant="body2" color="text.secondary">
-                        Apple Pay no está disponible en este dispositivo/navegador
+                        {error ? 'Error al cargar Apple Pay' : 'Cargando opciones de pago...'}
                     </Typography>
                 )}
             </PaymentContainer>
@@ -183,11 +234,19 @@ function ApplePayComponent({ amount }) {
     );
 }
 
-export default function ApplePayWrapper({ amount }) {
+export default function ApplePayWrapper({
+                                            amount,
+                                            onPaymentSuccess,
+                                            onPaymentMethodChange,
+                                            setPaymentData
+                                        }) {
     return (
         <Elements stripe={stripePromise}>
             <ApplePayComponent
                 amount={amount}
+                onPaymentSuccess={onPaymentSuccess}
+                onPaymentMethodChange={onPaymentMethodChange}
+                setPaymentData={setPaymentData}
             />
         </Elements>
     );
