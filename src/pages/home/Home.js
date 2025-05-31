@@ -11,6 +11,7 @@ import FooterComponent from "@/components/layout/FooterComponent";
 import AutomaticCarousel from "@/pages/home/components/AutomaticCarousel";
 import ProductCarousel from "@/pages/home/components/ProductCarousel";
 import { useRouter } from 'next/navigation';
+import LowStockCarousel from "@/pages/home/components/LowStockCarousel";
 
 const HomePage = () => {
     const router = useRouter();
@@ -62,13 +63,12 @@ const HomePage = () => {
             <ProductCarousel/>
 
             {/* Centrar ValuesCard */}
-            <div className="w-full mt-8">
-                <ValuesCard/>
-            </div>
-
+            <Box className="w-full mb-8" mb={6}>
+                <ValuesCard />
+            </Box>
             {/* Contenedor para Banner con Material UI */}
             <BannerSection/>
-
+            <LowStockCarousel/>
             <div>
                 <FeaturedCategories/>
             </div>
