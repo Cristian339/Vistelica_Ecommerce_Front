@@ -52,7 +52,8 @@ const FilterSidebar = ({
                            selectedGender,
                            showFilters,
                            setShowFilters,
-                           onSubcategorySelect
+                           onSubcategorySelect,
+                           products = [],
                        }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -62,15 +63,40 @@ const FilterSidebar = ({
     const handleAccordionChange = (panel) => (event, isExpanded) => {
         setExpandedAccordion(isExpanded ? panel : false);
     };
+    const getRatingCount = (rating) => {
+        if (!products || products.length === 0) return 0;
 
+        return products.filter(product => {
+            const productRating = parseFloat(product.average_rating) || 0;
+
+            if (rating === 5) {
+                // Para 5 estrellas: exactamente 5.0
+                return productRating === 5.0;
+            } else {
+                // Para 1-4 estrellas: rango de X.0 a X.99
+                return productRating >= rating && productRating < rating + 1;
+            }
+        }).length;
+    };
     // Función para manejar checkboxes
-    const handleCheckbox = (key, value) => {
-        setFilters(prev => ({
-            ...prev,
-            [key]: prev[key].includes(value)
-                ? prev[key].filter(item => item !== value)
-                : [...prev[key], value]
-        }));
+    const handleCheckbox = (filterType, value) => {
+        setFilters(prev => {
+            const currentValues = prev[filterType] || [];
+
+            if (currentValues.includes(value)) {
+                // Si ya está seleccionado, lo removemos
+                return {
+                    ...prev,
+                    [filterType]: currentValues.filter(item => item !== value)
+                };
+            } else {
+                // Si no está seleccionado, lo agregamos
+                return {
+                    ...prev,
+                    [filterType]: [...currentValues, value]
+                };
+            }
+        });
     };
 
     // Función para manejar tallas checkbox
@@ -90,13 +116,13 @@ const FilterSidebar = ({
     const getActiveFiltersCount = (type) => {
         switch (type) {
             case 'subcategories':
-                return filters.subcategories.length;
+                return filters.subcategories ? filters.subcategories.length : 0;
             case 'brands':
-                return filters.brands.length;
+                return filters.brands ? filters.brands.length : 0;
             case 'colors':
-                return filters.colors.length;
+                return filters.colors ? filters.colors.length : 0;
             case 'ratings':
-                return filters.ratings.length;
+                return filters.ratings ? filters.ratings.length : 0;
             case 'sizes':
                 return filters.sizes ? filters.sizes.length : 0;
             case 'price':
@@ -661,53 +687,76 @@ const FilterSidebar = ({
                         </AccordionSummary>
                         <AccordionDetails>
                             <List disablePadding>
-                                {[5, 4, 3, 2, 1].map((rating) => (
-                                    <motion.div
-                                        key={rating}
-                                        initial={{opacity: 0, y: 5}}
-                                        animate={{opacity: 1, y: 0}}
-                                        transition={{delay: (5 - rating) * 0.1}}
-                                    >
-                                        <ListItem
-                                            disablePadding
-                                            sx={{
-                                                borderRadius: '8px',
-                                                mb: 0.5,
-                                                transition: 'all 0.2s',
-                                                bgcolor: filters.ratings.includes(rating)
-                                                    ? 'rgba(0,0,0,0.05)'
-                                                    : 'transparent',
-                                                '&:hover': {
-                                                    bgcolor: 'rgba(0,0,0,0.02)'
-                                                }
-                                            }}
-                                            onClick={() => handleCheckbox('ratings', rating)}
-                                            button
+                                {[5, 4, 3, 2, 1].map((rating) => {
+                                    const count = getRatingCount(rating);
+
+                                    return (
+                                        <motion.div
+                                            key={rating}
+                                            initial={{opacity: 0, y: 5}}
+                                            animate={{opacity: 1, y: 0}}
+                                            transition={{delay: (5 - rating) * 0.1}}
                                         >
-                                            <ListItemText
-                                                primary={
-                                                    <Box sx={{display: 'flex', alignItems: 'center'}}>
-                                                        <Rating
-                                                            value={rating}
-                                                            max={5}
-                                                            readOnly
-                                                            size="small"
-                                                            sx={{
-                                                                color: vistelicaColors.primary,
-                                                                mr: 1
-                                                            }}
-                                                        />
-                                                        <Typography variant="body2"
-                                                                    sx={{color: vistelicaColors.textDark}}>
-                                                            {rating === 5 ? 'y más' : 'o más'}
-                                                        </Typography>
-                                                    </Box>
-                                                }
-                                                sx={{py: 0.5}}
-                                            />
-                                        </ListItem>
-                                    </motion.div>
-                                ))}
+                                            <ListItem
+                                                disablePadding
+                                                sx={{
+                                                    borderRadius: '8px',
+                                                    mb: 0.5,
+                                                    transition: 'all 0.2s',
+                                                    bgcolor: filters.ratings.includes(rating)
+                                                        ? 'rgba(0,0,0,0.05)'
+                                                        : 'transparent',
+                                                    '&:hover': {
+                                                        bgcolor: 'rgba(0,0,0,0.02)'
+                                                    },
+                                                    cursor: 'pointer',
+                                                    opacity: count === 0 ? 0.4 : 1 // Opcional: atenuar si no hay productos
+                                                }}
+                                                onClick={() => handleCheckbox('ratings', rating)}
+                                                button
+                                            >
+                                                <ListItemText
+                                                    primary={
+                                                        <Box sx={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'space-between'
+                                                        }}>
+                                                            <Box sx={{display: 'flex', alignItems: 'center'}}>
+                                                                <Rating
+                                                                    value={rating}
+                                                                    max={5}
+                                                                    readOnly
+                                                                    size="small"
+                                                                    sx={{
+                                                                        color: vistelicaColors.primary,
+                                                                        mr: 1
+                                                                    }}
+                                                                />
+                                                                {rating === 5 ? (
+                                                                    <Typography
+                                                                        variant="body2"
+                                                                        sx={{color: vistelicaColors.textDark}}
+                                                                    >
+                                                                        exactamente
+                                                                    </Typography>
+                                                                ) : (
+                                                                    <Typography
+                                                                        variant="body2"
+                                                                        sx={{color: vistelicaColors.textDark}}
+                                                                    >
+                                                                        {rating}.0 - {rating}.99
+                                                                    </Typography>
+                                                                )}
+                                                            </Box>
+                                                        </Box>
+                                                    }
+                                                    sx={{py: 0.5}}
+                                                />
+                                            </ListItem>
+                                        </motion.div>
+                                    );
+                                })}
                             </List>
                         </AccordionDetails>
                     </Accordion>

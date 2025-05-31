@@ -1,111 +1,98 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-    Box, Typography, Divider, Avatar, Rating, Button,
-    Grid, Dialog, DialogTitle, DialogContent, DialogActions,
-    IconButton, Snackbar, Alert, Paper, Chip, CircularProgress,
-    Card, CardContent, Container, Pagination, Stack, Tooltip, TextField
+    Box,
+    Typography,
+    Rating,
+    Button,
+    Card,
+    CardContent,
+    Avatar,
+    Chip,
+    LinearProgress,
+    Modal,
+    TextField,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Snackbar,
+    Alert,
+    Grid,
+    Paper,
+    Divider,
+    IconButton,
+    Fade,
+    Grow,
+    CircularProgress,
+    Stack,
+    useTheme,
+    useMediaQuery
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import CreateIcon from '@mui/icons-material/Create';
-import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import StarIcon from '@mui/icons-material/Star';
+import {
+    Edit as EditIcon,
+    Close as CloseIcon,
+    Star as StarIcon,
+    FilterList as FilterIcon,
+    RateReview as ReviewIcon
+} from '@mui/icons-material';
+import { motion, AnimatePresence } from "framer-motion";
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 import productService from '@/services/productService';
 import { getCurrentUser } from "@/services/authService";
-import { motion, AnimatePresence } from "framer-motion";
 import cartService from '@/services/cartService';
 
 const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+    // Estados principales
     const [openModal, setOpenModal] = useState(false);
     const [reviewText, setReviewText] = useState('');
     const [rating, setRating] = useState(0);
     const [submitting, setSubmitting] = useState(false);
     const [showAllReviews, setShowAllReviews] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [selectedFilter, setSelectedFilter] = useState('all');
+
+    // Estados para compra y autenticación
+    const [hasPurchasedProduct, setHasPurchasedProduct] = useState(false);
+    const [loadingPurchaseStatus, setLoadingPurchaseStatus] = useState(true);
+
+    // Estado para snackbar
     const [snackbar, setSnackbar] = useState({
         open: false,
         message: '',
         severity: 'success'
     });
-    const [currentPage, setCurrentPage] = useState(1);
-    const [hasPurchasedProduct, setHasPurchasedProduct] = useState(false);
-    const [loadingPurchaseStatus, setLoadingPurchaseStatus] = useState(true);
 
     const reviewsPerPage = 10;
     const hasToken = typeof window !== 'undefined' && localStorage.getItem('token');
 
+    // Verificar estado de entrega del producto
     useEffect(() => {
         const checkProductDelivery = async () => {
+            if (!hasToken) {
+                setLoadingPurchaseStatus(false);
+                return;
+            }
+
             try {
                 const deliveredProducts = await cartService.getDeliveredProductsIds();
                 setHasPurchasedProduct(deliveredProducts.includes(Number(productId)));
             } catch (error) {
                 console.error("Error verificando entrega:", error);
+                setHasPurchasedProduct(false);
             } finally {
                 setLoadingPurchaseStatus(false);
             }
         };
 
-        if (hasToken) {
-            checkProductDelivery();
-        } else {
-            setLoadingPurchaseStatus(false);
-        }
+        checkProductDelivery();
     }, [productId, hasToken]);
 
-    const handleOpenModal = () => {
-        if (!hasToken) {
-            setSnackbar({
-                open: true,
-                message: 'Debes iniciar sesión para dejar una reseña',
-                severity: 'warning'
-            });
-            return;
-        }
-        setOpenModal(true);
-    };
-
-    const handleCloseModal = () => {
-        setOpenModal(false);
-        setReviewText('');
-        setRating(0);
-    };
-
-    const handleSubmitReview = async () => {
-        setSubmitting(true);
-        try {
-            const user = await getCurrentUser();
-            await productService.createProductReview(productId, rating, reviewText, user.user_id);
-
-            setSnackbar({
-                open: true,
-                message: 'Reseña enviada con éxito',
-                severity: 'success'
-            });
-
-            handleCloseModal();
-
-            if (onReviewAdded) {
-                onReviewAdded();
-            }
-        } catch (error) {
-            console.error('Error al enviar la reseña:', error);
-            setSnackbar({
-                open: true,
-                message: error.response?.data?.message || error.message || 'Error al enviar la reseña',
-                severity: 'error'
-            });
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    const handleCloseSnackbar = () => {
-        setSnackbar(prev => ({ ...prev, open: false }));
-    };
-
-    const calculateStats = () => {
+    // Memoizar las estadísticas de calificaciones
+    const ratingStats = useMemo(() => {
         if (reviews.length === 0) {
             return {
                 average: 0,
@@ -138,589 +125,518 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
             totalRatings: total,
             breakdown
         };
-    };
+    }, [reviews]);
 
-    const ratingStats = calculateStats();
-
-    const displayedReviews = reviews.slice(0, 3);
-    const hasMoreReviews = reviews.length > 3;
-
-    const indexOfLastReview = currentPage * reviewsPerPage;
-    const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
-    const currentReviews = reviews.slice(indexOfFirstReview, indexOfLastReview);
-    const totalPages = Math.ceil(reviews.length / reviewsPerPage);
-
-    const handlePageChange = (event, value) => {
-        setCurrentPage(value);
-        const reviewsSection = document.getElementById('reviews-section');
-        if (reviewsSection) {
-            reviewsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Memoizar reseñas filtradas
+    const filteredReviews = useMemo(() => {
+        if (selectedFilter === 'all') {
+            return reviews;
         }
-    };
+        const starValue = parseInt(selectedFilter);
+        return reviews.filter(review => Math.round(review.rating) === starValue);
+    }, [reviews, selectedFilter]);
 
-    const formatDate = (dateString) => {
+    // Reiniciar página al cambiar filtro
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedFilter]);
+
+    // Funciones de manejo de eventos
+    const handleOpenModal = useCallback(() => {
+        if (!hasToken) {
+            setSnackbar({
+                open: true,
+                message: 'Debes iniciar sesión para dejar una reseña',
+                severity: 'warning'
+            });
+            return;
+        }
+
+        if (!hasPurchasedProduct) {
+            setSnackbar({
+                open: true,
+                message: 'Debes haber recibido este producto para dejar una reseña',
+                severity: 'warning'
+            });
+            return;
+        }
+
+        setOpenModal(true);
+    }, [hasToken, hasPurchasedProduct]);
+
+    const handleCloseModal = useCallback(() => {
+        setOpenModal(false);
+        setReviewText('');
+        setRating(0);
+    }, []);
+
+    const handleSubmitReview = useCallback(async () => {
+        if (!rating || !reviewText.trim()) {
+            setSnackbar({
+                open: true,
+                message: 'Por favor, completa todos los campos',
+                severity: 'warning'
+            });
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            const user = await getCurrentUser();
+            await productService.createProductReview(productId, rating, reviewText.trim(), user.user_id);
+
+            setSnackbar({
+                open: true,
+                message: 'Reseña enviada con éxito',
+                severity: 'success'
+            });
+
+            handleCloseModal();
+
+            if (onReviewAdded) {
+                onReviewAdded();
+            }
+        } catch (error) {
+            console.error('Error al enviar la reseña:', error);
+            setSnackbar({
+                open: true,
+                message: error.response?.data?.message || error.message || 'Error al enviar la reseña',
+                severity: 'error'
+            });
+        } finally {
+            setSubmitting(false);
+        }
+    }, [rating, reviewText, productId, onReviewAdded, handleCloseModal]);
+
+    const handleCloseSnackbar = useCallback(() => {
+        setSnackbar(prev => ({ ...prev, open: false }));
+    }, []);
+
+    const handleFilterClick = useCallback((filterValue) => {
+        setSelectedFilter(filterValue);
+    }, []);
+
+    const formatDate = useCallback((dateString) => {
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         return new Date(dateString).toLocaleDateString('es-ES', options);
-    };
+    }, []);
 
-    const renderReview = (review, index, isAnimated = true) => {
-        const Component = isAnimated ? motion.div : Box;
-        const props = isAnimated ? {
-            initial: { opacity: 0, y: 20 },
-            animate: { opacity: 1, y: 0 },
-            transition: { duration: 0.3, delay: index * 0.1 },
-            exit: { opacity: 0, y: -20 }
-        } : {};
-
-        return (
-            <Component {...props} key={`review-${review.review_id || index}`}>
-                <Card
-                    elevation={1}
-                    sx={{
-                        mb: 3,
-                        borderRadius: 2,
-                        transition: "transform 0.3s, box-shadow 0.3s",
-                        width: 700,
-                        maxWidth: 'none',
-                        '&:hover': {
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                            transform: 'translateY(-2px)'
-                        }
-                    }}
-                >
-                    <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                            <Avatar sx={{
-                                width: 44,
-                                height: 44,
-                                mr: 2,
-                                backgroundColor: vistelicaColors.primary
-                            }}>
-                                {review.user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                            </Avatar>
-                            <Box>
-                                <Typography variant="subtitle2">
-                                    {review.user?.name || 'Usuario anónimo'}
-                                </Typography>
-                                <Rating
-                                    value={review.rating}
-                                    size="small"
-                                    readOnly
-                                    sx={{
-                                        '& .MuiRating-iconFilled': {
-                                            color: vistelicaColors.primary
-                                        }
-                                    }}
-                                />
-                            </Box>
-                            <Box sx={{ flexGrow: 1 }} />
-                            <Typography variant="caption" color="text.secondary">
-                                {formatDate(review.created_at)}
-                            </Typography>
-                        </Box>
-
-                        <Box sx={{ display: 'flex', mt: 1 }}>
-                            <FormatQuoteIcon
-                                sx={{
-                                    color: 'rgba(0,0,0,0.1)',
-                                    fontSize: '1.5rem',
-                                    mr: 1,
-                                    transform: 'rotate(180deg)'
-                                }}
-                            />
-                            <Typography variant="body2" sx={{ flex: 1 }}>
-                                {review.review_text}
-                            </Typography>
-                        </Box>
-                    </CardContent>
-                </Card>
-            </Component>
-        );
-    };
-
-    const renderReviewButton = (isFirstReview = false) => {
+    const renderReviewButton = useCallback((isFirstReview = false) => {
         if (loadingPurchaseStatus) {
-            return <CircularProgress size={24} />;
+            return (
+                <Box display="flex" alignItems="center" gap={1}>
+                    <CircularProgress size={20} />
+                    <Typography variant="body2">Cargando...</Typography>
+                </Box>
+            );
         }
 
         const buttonText = hasPurchasedProduct
             ? (isFirstReview ? 'Sé el primero en opinar' : 'Escribir opinión')
             : 'Compra el producto para opinar';
 
-        return (
-            <Tooltip
-                title={!hasPurchasedProduct ? "Debes haber recibido este producto para dejar una reseña" : ""}
-                placement="top"
-            >
-                <span>
-                    <Button
-                        variant="contained"
-                        onClick={handleOpenModal}
-                        startIcon={<CreateIcon />}
-                        disabled={!hasPurchasedProduct || !hasToken}
-                        sx={{
-                            bgcolor: vistelicaColors.primary,
-                            color: 'white',
-                            '&:hover': {
-                                bgcolor: vistelicaColors.primaryDark
-                            },
-                            '&:disabled': {
-                                bgcolor: '#e0e0e0',
-                                color: '#9e9e9e'
-                            }
-                        }}
-                    >
-                        {buttonText}
-                    </Button>
-                </span>
-            </Tooltip>
-        );
-    };
+        const isDisabled = !hasPurchasedProduct || !hasToken;
 
-    if (!showAllReviews) {
         return (
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+            <Button
+                variant="contained"
+                startIcon={<EditIcon />}
+                onClick={handleOpenModal}
+                disabled={isDisabled}
+                fullWidth={isMobile}
+                sx={{
+                    backgroundColor: vistelicaColors.primary,
+                    '&:hover': {
+                        backgroundColor: vistelicaColors.primaryDark,
+                    },
+                    '&.Mui-disabled': {
+                        backgroundColor: '#e0e0e0',
+                        color: '#9e9e9e',
+                    }
+                }}
+                title={!hasPurchasedProduct ? "Debes haber recibido este producto para dejar una reseña" : ""}
             >
-                <Box mt={4}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                        <Typography
-                            variant="h5"
+                {buttonText}
+            </Button>
+        );
+    }, [loadingPurchaseStatus, hasPurchasedProduct, hasToken, handleOpenModal, isMobile]);
+
+    // Componente de reseña individual
+    const ReviewCard = React.memo(({ review, index }) => (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+        >
+            <Card
+                elevation={1}
+                sx={{
+                    mb: 2,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                        elevation: 4,
+                        transform: 'translateY(-2px)',
+                    }
+                }}
+            >
+                <CardContent>
+                    <Box display="flex" alignItems="center" mb={1}>
+                        <Avatar
                             sx={{
-                                fontSize: '1.3rem',
-                                fontWeight: 600,
-                                color: vistelicaColors.secondary
+                                bgcolor: vistelicaColors.primary,
+                                width: 40,
+                                height: 40,
+                                mr: 2
                             }}
                         >
-                            Opiniones de clientes
-                        </Typography>
-
-                        {reviews.length > 0 && (
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <Rating
-                                    value={ratingStats.average}
-                                    precision={0.1}
-                                    readOnly
-                                    size="small"
-                                    sx={{
-                                        mr: 1,
-                                        '& .MuiRating-iconFilled': {
-                                            color: vistelicaColors.primary
-                                        }
-                                    }}
-                                />
-                                <Typography
-                                    variant="body2"
-                                    sx={{
-                                        color: vistelicaColors.primary,
-                                        fontWeight: 500
-                                    }}
-                                >
-                                    ({ratingStats.totalRatings})
-                                </Typography>
-                            </Box>
-                        )}
-                    </Box>
-
-                    <AnimatePresence>
-                        {reviews.length > 0 ? (
-                            <>
-                                <Box sx={{ mb: 3 }}>
-                                    {displayedReviews.map((review, index) => renderReview(review, index))}
-                                </Box>
-
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
-                                    {hasMoreReviews && (
-                                        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                                            <Button
-                                                variant="outlined"
-                                                onClick={() => setShowAllReviews(true)}
-                                                endIcon={<ExpandMoreIcon />}
-                                                sx={{
-                                                    color: vistelicaColors.primary,
-                                                    borderColor: vistelicaColors.primary,
-                                                    '&:hover': {
-                                                        borderColor: vistelicaColors.primaryDark
-                                                    }
-                                                }}
-                                            >
-                                                Ver todas las opiniones
-                                            </Button>
-                                        </motion.div>
-                                    )}
-
-                                    {renderReviewButton()}
-                                </Box>
-                            </>
-                        ) : (
-                            <Box sx={{
-                                textAlign: 'center',
-                                py: 4,
-                                border: '1px dashed',
-                                borderColor: 'divider',
-                                borderRadius: 2
-                            }}>
-                                <Typography variant="body1" gutterBottom>
-                                    Este producto aún no tiene opiniones
-                                </Typography>
-                                {renderReviewButton(true)}
-                            </Box>
-                        )}
-                    </AnimatePresence>
-                </Box>
-
-                <Dialog
-                    open={openModal}
-                    onClose={handleCloseModal}
-                    fullWidth
-                    maxWidth="sm"
-                    PaperProps={{
-                        sx: {
-                            borderRadius: 2,
-                            boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
-                        }
-                    }}
-                >
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <DialogTitle sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            borderBottom: '1px solid',
-                            borderColor: 'divider'
-                        }}>
-                            <Typography variant="h6" sx={{ fontWeight: 600, color: vistelicaColors.secondary }}>
-                                Escribe tu opinión
+                            {review.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                        </Avatar>
+                        <Box flex={1}>
+                            <Typography variant="subtitle2" fontWeight={600}>
+                                {review.user?.name || 'Usuario anónimo'}
                             </Typography>
-                            <IconButton onClick={handleCloseModal} edge="end">
-                                <CloseIcon />
-                            </IconButton>
-                        </DialogTitle>
-
-                        <DialogContent sx={{ px: 3, pt: 3, pb: 1 }}>
-                            <Box sx={{ mb: 3 }}>
-                                <Typography variant="body1" gutterBottom sx={{ fontWeight: 500 }}>
-                                    ¿Cómo valorarías este producto?
-                                </Typography>
-                                <Rating
-                                    value={rating}
-                                    onChange={(event, newValue) => setRating(newValue)}
-                                    size="large"
-                                    sx={{
-                                        '& .MuiRating-iconFilled': {
-                                            color: vistelicaColors.primary
-                                        }
-                                    }}
-                                />
-                            </Box>
-
-                            <TextField
-                                label="Tu opinión"
-                                multiline
-                                rows={4}
-                                fullWidth
-                                variant="outlined"
-                                value={reviewText}
-                                onChange={(e) => setReviewText(e.target.value)}
-                                placeholder="¿Qué te ha parecido este producto? ¿Recomendarías su compra?"
-                            />
-                        </DialogContent>
-
-                        <DialogActions sx={{ px: 3, py: 3, justifyContent: 'space-between' }}>
-                            <Button
-                                onClick={handleCloseModal}
-                                sx={{
-                                    color: vistelicaColors.secondaryDark,
-                                    fontWeight: 500
-                                }}
-                            >
-                                Cancelar
-                            </Button>
-                            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                                <Button
-                                    onClick={handleSubmitReview}
-                                    variant="contained"
-                                    disabled={!rating || !reviewText || submitting}
-                                    startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : null}
-                                    sx={{
-                                        bgcolor: vistelicaColors.primary,
-                                        '&:hover': {
-                                            bgcolor: vistelicaColors.primaryDark
-                                        }
-                                    }}
-                                >
-                                    {submitting ? 'Enviando...' : 'Publicar reseña'}
-                                </Button>
-                            </motion.div>
-                        </DialogActions>
-                    </motion.div>
-                </Dialog>
-
-                <Snackbar
-                    open={snackbar.open}
-                    autoHideDuration={6000}
-                    onClose={handleCloseSnackbar}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-                >
-                    <Alert
-                        onClose={handleCloseSnackbar}
-                        severity={snackbar.severity}
-                        sx={{ width: '100%' }}
-                    >
-                        {snackbar.message}
-                    </Alert>
-                </Snackbar>
-            </motion.div>
-        );
-    }
+                            <Rating value={review.rating} size="small" readOnly />
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                            {formatDate(review.created_at)}
+                        </Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ mt: 1, lineHeight: 1.5 }}>
+                        {review.review_text}
+                    </Typography>
+                </CardContent>
+            </Card>
+        </motion.div>
+    ));
 
     return (
-        <Dialog
-            fullScreen
-            open={showAllReviews}
-            onClose={() => setShowAllReviews(false)}
-            TransitionComponent={motion.div}
-        >
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-            >
-                <Box sx={{
-                    p: 3,
-                    position: 'sticky',
-                    top: 0,
-                    zIndex: 10,
-                    bgcolor: 'white',
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                }}>
-                    <Typography variant="h5" sx={{ fontWeight: 600, color: vistelicaColors.primary }}>
-                        Todas las opiniones ({reviews.length})
-                    </Typography>
-                    <IconButton onClick={() => setShowAllReviews(false)}>
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
+        <Box sx={{ mt: 4 }}>
+            {/* Header */}
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+                <Typography variant="h5" fontWeight={600} color={vistelicaColors.secondary}>
+                    Opiniones de clientes
+                </Typography>
+                {reviews.length > 0 && (
+                    <Box display="flex" alignItems="center" gap={1}>
+                        <Rating value={ratingStats.average} size="small" readOnly />
+                        <Typography variant="body2" color={vistelicaColors.primary} fontWeight={500}>
+                            ({ratingStats.totalRatings})
+                        </Typography>
+                    </Box>
+                )}
+            </Box>
 
-                <Container maxWidth="lg" sx={{ py: 4 }}>
-                    <Grid container spacing={4}>
-                        <Grid item xs={12} md={5} lg={4}>
-                            <motion.div
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.5 }}
-                            >
-                                <Paper
-                                    elevation={2}
-                                    sx={{
-                                        p: 4,
-                                        borderRadius: 2,
-                                        background: `linear-gradient(145deg, #ffffff, #f5f5f5)`,
-                                        boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
-                                        position: 'sticky',
-                                        top: 100,
-                                        mx: { xs: 0, md: 2 }
-                                    }}
-                                >
-                                    <Box sx={{ textAlign: 'center', mb: 4 }}>
-                                        <Typography
-                                            variant="h2"
-                                            sx={{
-                                                fontWeight: 700,
-                                                color: vistelicaColors.secondary,
-                                                mb: 2
-                                            }}
-                                        >
-                                            {ratingStats.average.toFixed(1)}
-                                        </Typography>
+            {reviews.length > 0 ? (
+                <Grid container spacing={3}>
+                    {/* Sidebar con estadísticas */}
+                    <Grid item xs={12} md={4}>
+                        <Paper
+                            elevation={2}
+                            sx={{
+                                p: 3,
+                                background: 'linear-gradient(145deg, #ffffff, #f8f9fa)',
+                                position: isMobile ? 'static' : 'sticky',
+                                top: 20
+                            }}
+                        >
+                            {/* Resumen de calificación */}
+                            <Box textAlign="center" mb={3}>
+                                <Typography variant="h3" fontWeight={700} color={vistelicaColors.secondary}>
+                                    {ratingStats.average.toFixed(1)}
+                                </Typography>
+                                <Rating value={ratingStats.average} size="large" readOnly />
+                                <Typography variant="body1" color={vistelicaColors.primary} fontWeight={500} mt={1}>
+                                    {ratingStats.totalRatings} valoraciones
+                                </Typography>
+                            </Box>
 
-                                        <Rating
-                                            value={ratingStats.average}
-                                            precision={0.1}
-                                            readOnly
-                                            size="large"
-                                            sx={{
-                                                mb: 2,
-                                                fontSize: '2rem',
-                                                '& .MuiRating-iconFilled': {
-                                                    color: vistelicaColors.primary
-                                                }
-                                            }}
-                                        />
-
-                                        <Typography
-                                            sx={{
-                                                color: vistelicaColors.primary,
-                                                fontWeight: 500,
-                                                fontSize: '1.2rem',
-                                                mb: 2
-                                            }}
-                                        >
-                                            {ratingStats.totalRatings} valoraciones
-                                        </Typography>
-                                    </Box>
-
-                                    <Divider sx={{ my: 3 }} />
-
-                                    <Box sx={{ my: 4 }}>
-                                        {ratingStats.breakdown.map((item, index) => (
-                                            <motion.div
-                                                key={index}
-                                                initial={{ opacity: 0, x: -10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ duration: 0.3, delay: index * 0.1 }}
-                                            >
-                                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                                    <Typography variant="body1" sx={{ width: 40, fontWeight: 600 }}>
-                                                        {item.stars} <StarIcon sx={{ fontSize: 18, mb: -0.3, color: vistelicaColors.primary }} />
-                                                    </Typography>
-                                                    <Box sx={{ flexGrow: 1, mx: 1.5 }}>
-                                                        <Box
-                                                            sx={{
-                                                                height: 10,
-                                                                backgroundColor: '#eaeaea',
-                                                                borderRadius: 4,
-                                                                overflow: 'hidden',
-                                                                width: '100%',
-                                                                border: '1px solid',
-                                                                borderColor: vistelicaColors.primary
-                                                            }}
-                                                        >
-                                                            <motion.div
-                                                                initial={{ width: 0 }}
-                                                                animate={{ width: `${item.percentage}%` }}
-                                                                transition={{ duration: 1, delay: index * 0.1 }}
-                                                                style={{
-                                                                    height: '100%',
-                                                                    backgroundColor: vistelicaColors.primary
-                                                                }}
-                                                            />
-                                                        </Box>
-                                                    </Box>
-                                                    <Typography variant="body2" sx={{ width: 40, textAlign: 'right', fontWeight: 500, color: vistelicaColors.primary }}>
-                                                        {item.percentage}%
-                                                    </Typography>
-                                                </Box>
-                                            </motion.div>
-                                        ))}
-                                    </Box>
-
-                                    {renderReviewButton()}
-                                </Paper>
-                            </motion.div>
-                        </Grid>
-
-                        <Grid item xs={12} md={7} lg={8}>
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.5 }}
-                            >
-                                <Box sx={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    height: 'calc(100vh - 200px)'
-                                }}>
-                                    <Box sx={{
-                                        flex: 1,
-                                        overflowY: 'auto',
-                                        pr: 2,
-                                        mb: 2,
-                                        '&::-webkit-scrollbar': {
-                                            width: '6px'
-                                        },
-                                        '&::-webkit-scrollbar-track': {
-                                            background: '#f1f1f1',
-                                            borderRadius: '10px'
-                                        },
-                                        '&::-webkit-scrollbar-thumb': {
-                                            background: vistelicaColors.primary,
-                                            borderRadius: '10px',
-                                            '&:hover': {
-                                                background: vistelicaColors.primaryDark
-                                            }
-                                        }
-                                    }} id="reviews-section">
-                                        {currentReviews.map((review, index) => renderReview(review, index))}
-
-                                        {reviews.length === 0 && (
-                                            <Box sx={{ textAlign: 'center', py: 6 }}>
-                                                <Typography variant="h6" gutterBottom>
-                                                    Sin opiniones aún
-                                                </Typography>
-                                                <Typography color="text.secondary">
-                                                    Sé el primero en dejar tu opinión
-                                                </Typography>
-                                            </Box>
-                                        )}
-                                    </Box>
-
-                                    {reviews.length > reviewsPerPage && (
-                                        <Box sx={{
-                                            py: 2,
-                                            position: 'sticky',
-                                            bottom: 0,
-                                            backgroundColor: 'background.paper',
-                                            borderTop: '1px solid',
-                                            borderColor: 'divider',
-                                            zIndex: 1
-                                        }}>
-                                            <Pagination
-                                                count={totalPages}
-                                                page={currentPage}
-                                                onChange={handlePageChange}
-                                                color="primary"
+                            {/* Desglose de calificaciones */}
+                            <Box mb={3}>
+                                {ratingStats.breakdown.map((item) => (
+                                    <Box
+                                        key={item.stars}
+                                        display="flex"
+                                        alignItems="center"
+                                        mb={1}
+                                        sx={{
+                                            cursor: item.count > 0 ? 'pointer' : 'default',
+                                            p: 1,
+                                            borderRadius: 1,
+                                            '&:hover': item.count > 0 ? {
+                                                backgroundColor: 'rgba(0, 118, 253, 0.05)',
+                                            } : {}
+                                        }}
+                                        onClick={() => item.count > 0 && handleFilterClick(item.stars.toString())}
+                                    >
+                                        <Box display="flex" alignItems="center" minWidth={50}>
+                                            <Typography variant="body2" fontWeight={600}>
+                                                {item.stars}
+                                            </Typography>
+                                            <StarIcon sx={{ fontSize: 16, ml: 0.5 }} />
+                                        </Box>
+                                        <Box flex={1} mx={2}>
+                                            <LinearProgress
+                                                variant="determinate"
+                                                value={item.percentage}
                                                 sx={{
-                                                    '& .MuiPaginationItem-root': {
-                                                        color: vistelicaColors.primary,
-                                                        '&.Mui-selected': {
-                                                            backgroundColor: vistelicaColors.primary,
-                                                            color: 'white',
-                                                            '&:hover': {
-                                                                backgroundColor: vistelicaColors.primaryDark
-                                                            }
-                                                        },
-                                                        '&:hover': {
-                                                            backgroundColor: 'rgba(0, 118, 253, 0.1)'
-                                                        }
+                                                    height: 8,
+                                                    borderRadius: 4,
+                                                    backgroundColor: '#eaeaea',
+                                                    '& .MuiLinearProgress-bar': {
+                                                        backgroundColor: vistelicaColors.primary,
                                                     }
                                                 }}
                                             />
                                         </Box>
+                                        <Typography variant="caption" color={vistelicaColors.primary} fontWeight={500}>
+                                            {item.count} ({item.percentage}%)
+                                        </Typography>
+                                    </Box>
+                                ))}
+                            </Box>
+
+                            {renderReviewButton()}
+                        </Paper>
+                    </Grid>
+
+                    {/* Área principal con reseñas */}
+                    <Grid item xs={12} md={8}>
+                        {/* Filtros */}
+                        <Box mb={3}>
+                            <Box display="flex" alignItems="center" mb={2}>
+                                <FilterIcon sx={{ mr: 1 }} />
+                                <Typography variant="subtitle2" fontWeight={600} color={vistelicaColors.secondary}>
+                                    Filtrar por valoración:
+                                </Typography>
+                            </Box>
+                            <Box display="flex" flexWrap="wrap" gap={1}>
+                                <Chip
+                                    label={`Todas (${reviews.length})`}
+                                    onClick={() => handleFilterClick('all')}
+                                    // REEMPLAZAR LAS PROPS color Y variant POR ESTE sx:
+                                    sx={{
+                                        backgroundColor: selectedFilter === 'all' ? vistelicaColors.primary : 'transparent',
+                                        color: selectedFilter === 'all' ? '#fff' : vistelicaColors.primary,
+                                        borderColor: vistelicaColors.primary,
+                                        border: `1px solid ${vistelicaColors.primary}`,
+                                        fontWeight: selectedFilter === 'all' ? 600 : 400,
+                                        '&:hover': {
+                                            backgroundColor: selectedFilter === 'all' ? vistelicaColors.primaryDark : vistelicaColors.primaryLight,
+                                            color: selectedFilter === 'all' ? '#fff' : vistelicaColors.primaryDark,
+                                        }
+                                    }}
+                                />
+                                {ratingStats.breakdown.map((item) => (
+                                    item.count > 0 && (
+                                        <Chip
+                                            key={item.stars}
+                                            label={`${item.stars} ★ (${item.count})`}
+                                            onClick={() => handleFilterClick(item.stars.toString())}
+                                            // REEMPLAZAR LAS PROPS color Y variant POR ESTE sx:
+                                            sx={{
+                                                backgroundColor: selectedFilter === item.stars.toString() ? vistelicaColors.primary : 'transparent',
+                                                color: selectedFilter === item.stars.toString() ? '#fff' : vistelicaColors.primary,
+                                                borderColor: vistelicaColors.primary,
+                                                border: `1px solid ${vistelicaColors.primary}`,
+                                                fontWeight: selectedFilter === item.stars.toString() ? 600 : 400,
+                                                '&:hover': {
+                                                    backgroundColor: selectedFilter === item.stars.toString() ? vistelicaColors.primaryDark : vistelicaColors.primaryLight,
+                                                    color: selectedFilter === item.stars.toString() ? '#fff' : vistelicaColors.primaryDark,
+                                                }
+                                            }}
+                                        />
+                                    )
+                                ))}
+                            </Box>
+                        </Box>
+
+                        {/* Lista de reseñas */}
+                        <AnimatePresence mode="wait">
+                            {filteredReviews.length > 0 ? (
+                                <Box key="reviews-list">
+                                    {filteredReviews.slice(0, showAllReviews ? filteredReviews.length : 5).map((review, index) => (
+                                        <ReviewCard key={review.review_id || index} review={review} index={index} />
+                                    ))}
+                                    {filteredReviews.length > 5 && !showAllReviews && (
+                                        <motion.div
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                        >
+                                            <Box display="flex" justifyContent="center" mt={2}>
+                                                <Button
+                                                    variant="outlined"
+                                                    onClick={() => setShowAllReviews(true)}
+                                                    sx={{
+                                                        borderColor: vistelicaColors.primary,
+                                                        color: vistelicaColors.primary,
+                                                        '&:hover': {
+                                                            borderColor: vistelicaColors.primaryDark,
+                                                            backgroundColor: 'rgba(0, 118, 253, 0.05)',
+                                                        }
+                                                    }}
+                                                >
+                                                    Ver todas las reseñas ({filteredReviews.length})
+                                                </Button>
+                                            </Box>
+                                        </motion.div>
                                     )}
                                 </Box>
-                            </motion.div>
-                        </Grid>
+                            ) : (
+                                <motion.div
+                                    key="empty-state"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                >
+                                    <Paper
+                                        sx={{
+                                            p: 4,
+                                            textAlign: 'center',
+                                            border: '2px dashed #dee2e6',
+                                            backgroundColor: 'transparent'
+                                        }}
+                                    >
+                                        <Typography variant="h6" color="text.secondary" mb={1}>
+                                            {selectedFilter === 'all'
+                                                ? 'Sin opiniones aún'
+                                                : `No hay opiniones de ${selectedFilter} estrella${selectedFilter === '1' ? '' : 's'}`
+                                            }
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" mb={2}>
+                                            {selectedFilter === 'all'
+                                                ? 'Sé el primero en dejar tu opinión'
+                                                : 'Prueba con otro filtro o deja tu propia opinión'
+                                            }
+                                        </Typography>
+                                    </Paper>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </Grid>
-                </Container>
-            </motion.div>
+                </Grid>
+            ) : (
+                <Paper
+                    sx={{
+                        p: 4,
+                        textAlign: 'center',
+                        border: '2px dashed #dee2e6',
+                        backgroundColor: 'transparent'
+                    }}
+                >
+                    <ReviewIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                    <Typography variant="h6" color="text.secondary" mb={1}>
+                        Este producto aún no tiene opiniones
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" mb={3}>
+                        Sé el primero en compartir tu experiencia
+                    </Typography>
+                    {renderReviewButton(true)}
+                </Paper>
+            )}
 
+            {/* Modal para escribir reseña */}
+            <Dialog
+                open={openModal}
+                onClose={handleCloseModal}
+                maxWidth="sm"
+                fullWidth
+                TransitionComponent={Fade}
+            >
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6" fontWeight={600} color={vistelicaColors.secondary}>
+                        Escribe tu opinión
+                    </Typography>
+                    <IconButton onClick={handleCloseModal} size="small">
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent dividers>
+                    <Stack spacing={3}>
+                        <Box>
+                            <Typography variant="body2" fontWeight={500} mb={1}>
+                                ¿Cómo valorarías este producto?
+                            </Typography>
+                            <Rating
+                                value={rating}
+                                onChange={(event, newValue) => setRating(newValue)}
+                                size="large"
+                                sx={{ mb: 1 }}
+                            />
+                            {rating === 0 && (
+                                <Typography variant="caption" color="error">
+                                    Por favor, selecciona una valoración
+                                </Typography>
+                            )}
+                        </Box>
+                        <Box>
+                            <TextField
+                                fullWidth
+                                multiline
+                                rows={4}
+                                label="Tu opinión"
+                                placeholder="¿Qué te ha parecido este producto? ¿Recomendarías su compra?"
+                                value={reviewText}
+                                onChange={(e) => setReviewText(e.target.value)}
+                                inputProps={{ maxLength: 1000 }}
+                                helperText={`${reviewText.length}/1000 caracteres`}
+                                error={!reviewText.trim() && reviewText.length > 0}
+                            />
+                            {!reviewText.trim() && reviewText.length > 0 && (
+                                <Typography variant="caption" color="error">
+                                    Por favor, escribe tu opinión
+                                </Typography>
+                            )}
+                        </Box>
+                    </Stack>
+                </DialogContent>
+                <DialogActions sx={{ p: 2, gap: 1 }}>
+                    <Button onClick={handleCloseModal} variant="outlined">
+                        Cancelar
+                    </Button>
+                    <Button
+                        onClick={handleSubmitReview}
+                        variant="contained"
+                        disabled={!rating || !reviewText.trim() || submitting}
+                        sx={{
+                            backgroundColor: vistelicaColors.primary,
+                            '&:hover': {
+                                backgroundColor: vistelicaColors.primaryDark,
+                            }
+                        }}
+                    >
+                        {submitting ? (
+                            <>
+                                <CircularProgress size={20} sx={{ mr: 1 }} />
+                                Enviando...
+                            </>
+                        ) : (
+                            'Publicar reseña'
+                        )}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Snackbar */}
             <Snackbar
                 open={snackbar.open}
                 autoHideDuration={6000}
                 onClose={handleCloseSnackbar}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                TransitionComponent={Grow}
             >
                 <Alert
                     onClose={handleCloseSnackbar}
                     severity={snackbar.severity}
+                    variant="filled"
                     sx={{ width: '100%' }}
                 >
                     {snackbar.message}
                 </Alert>
             </Snackbar>
-        </Dialog>
+        </Box>
     );
 };
+
+// Agregar displayName para debugging
+ProductReviews.displayName = 'ProductReviews';
 
 export default ProductReviews;
