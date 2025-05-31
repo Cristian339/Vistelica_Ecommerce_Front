@@ -11,6 +11,7 @@ import FooterComponent from "@/components/layout/FooterComponent";
 import AutomaticCarousel from "@/pages/home/components/AutomaticCarousel";
 import ProductCarousel from "@/pages/home/components/ProductCarousel";
 import { useRouter } from 'next/navigation';
+import LowStockCarousel from './components/LowStockCarousel';
 
 const HomePage = () => {
     const router = useRouter();
