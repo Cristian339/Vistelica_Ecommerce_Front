@@ -1,182 +1,285 @@
 'use client';
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Button, Box, Typography, CircularProgress, Container, Skeleton, Card } from '@mui/material';
+import { Button, Box, Typography, CircularProgress, Container, Skeleton, Card, Tooltip } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
+import TimerIcon from '@mui/icons-material/Timer';
 import { motion, AnimatePresence } from 'framer-motion';
 import productService from '../../../services/productService';
 import { useRouter } from 'next/navigation';
 import { vistelicaColors } from '../../shared-theme/vistelicaColors';
 import { typography } from "@/pages/shared-theme/themePrimitives";
 
-// Componente memoizado para los círculos de color
+// Componente para los círculos de color mejorado
 const ColorCircle = React.memo(({ color }) => {
     const colorMap = {
-        black: '#000', white: '#fff', blue: '#2196f3',
-        red: '#f44336', green: '#4caf50', yellow: '#ffeb3b',
-        pink: '#e91e63', purple: '#9c27b0', orange: '#ff9800',
-        brown: '#795548', gray: '#9e9e9e', beige: '#f5f5dc',
-        gold: '#ffd700'
+        black: '#000', white: '#fff', blue: '#1e88e5',
+        red: '#e53935', green: '#43a047', yellow: '#fdd835',
+        pink: '#d81b60', purple: '#8e24aa', orange: '#fb8c00',
+        brown: '#6d4c41', gray: '#757575', beige: '#f5f5dc',
+        gold: '#ffd700', navy: '#0d47a1', silver: '#bdbdbd'
     };
 
     const bgColor = colorMap[color.toLowerCase()] || '#bdbdbd';
-    const needsBorder = color.toLowerCase() === 'white';
+    const needsBorder = ['white', 'yellow', 'beige'].includes(color.toLowerCase());
 
     return (
-        <Box
-            sx={{
-                width: 12,
-                height: 12,
+        <motion.div
+            whileHover={{ scale: 1.3, y: -2 }}
+            whileTap={{ scale: 0.9 }}
+            style={{
+                width: '18px',
+                height: '18px',
                 borderRadius: '50%',
-                backgroundColor: bgColor,
-                border: needsBorder ? '1px solid #ddd' : 'none',
+                background: bgColor,
+                marginRight: '6px',
+                border: needsBorder ? '1px solid #aaa' : 'none',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                position: 'relative',
+                cursor: 'pointer'
             }}
+            title={color}
         />
     );
 });
 
-// Componente para el badge de stock
+// Componente para el badge de stock mejorado visual y animado
 const StockBadge = React.memo(({ stockQuantity }) => {
-    // Memoizar los colores de stock
-    const stockColors = useMemo(() => {
-        if (stockQuantity <= 5) return { bg: '#ffebee', color: '#c62828', border: '#ffcdd2' };
-        if (stockQuantity <= 10) return { bg: '#fff3e0', color: '#ef6c00', border: '#ffcc02' };
-        return { bg: '#e8f5e8', color: '#2e7d32', border: '#c8e6c8' };
+    const stockConfig = useMemo(() => {
+        if (stockQuantity <= 3) return {
+            bg: 'linear-gradient(135deg, rgba(255,59,48,0.95) 0%, rgba(255,36,0,0.95) 100%)',
+            color: '#ffffff',
+            icon: <LocalFireDepartmentIcon
+                sx={{
+                    fontSize: '1rem',
+                    mr: 0.5,
+                    animation: 'pulseStock 1.5s infinite',
+                    '@keyframes pulseStock': {
+                        '0%': { opacity: 0.7 },
+                        '50%': { opacity: 1 },
+                        '100%': { opacity: 0.7 },
+                    }
+                }}
+            />,
+            text: '¡Últimas unidades!'
+        };
+
+        if (stockQuantity <= 8) return {
+            bg: 'linear-gradient(135deg, rgba(255,149,0,0.95) 0%, rgba(255,111,0,0.95) 100%)',
+            color: '#ffffff',
+            icon: <TimerIcon sx={{ fontSize: '1rem', mr: 0.5 }} />,
+            text: `¡Solo ${stockQuantity} disponibles!`
+        };
+
+        return {
+            bg: 'linear-gradient(135deg, rgba(52,199,89,0.95) 0%, rgba(48,180,80,0.95) 100%)',
+            color: '#ffffff',
+            icon: <InventoryIcon sx={{ fontSize: '1rem', mr: 0.5 }} />,
+            text: 'Disponible'
+        };
     }, [stockQuantity]);
 
     return (
-        <Box
-            component={motion.div}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            sx={{
+        <motion.div
+            initial={{ opacity: 0, scale: 0.8, x: -20 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            transition={{ type: "spring", damping: 15, stiffness: 300 }}
+            style={{
                 position: 'absolute',
-                top: 10,
-                left: 10,
-                backgroundColor: stockColors.bg,
-                color: stockColors.color,
-                border: `1px solid ${stockColors.border}`,
-                borderRadius: '20px',
-                px: 1.5,
-                py: 0.5,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5,
-                fontWeight: 'bold',
-                fontSize: '0.75rem',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                zIndex: 2,
+                top: '12px',
+                left: '12px',
+                zIndex: 10
             }}
         >
-            <InventoryIcon sx={{ fontSize: '0.875rem' }} />
-            Stock: {stockQuantity}
-        </Box>
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    background: stockConfig.bg,
+                    color: stockConfig.color,
+                    fontWeight: 'bold',
+                    borderRadius: '20px',
+                    paddingX: stockQuantity <= 3 ? 1.8 : 1.5,
+                    paddingY: 0.6,
+                    boxShadow: stockQuantity <= 3 ?
+                        '0px 4px 12px rgba(255,59,48,0.4), 0 0 0 2px rgba(255,255,255,0.2)' :
+                        '0px 3px 8px rgba(0,0,0,0.15)',
+                    fontSize: '0.75rem',
+                    lineHeight: 1.1,
+                    border: stockQuantity <= 3 ?
+                        '1px solid rgba(255,255,255,0.3)' :
+                        'none',
+                    animation: stockQuantity <= 3 ? 'glowStock 2s infinite alternate' : 'none',
+                    '@keyframes glowStock': {
+                        '0%': { boxShadow: '0px 4px 12px rgba(255,59,48,0.4), 0 0 0 2px rgba(255,255,255,0.2)' },
+                        '100%': { boxShadow: '0px 4px 15px rgba(255,59,48,0.7), 0 0 0 3px rgba(255,255,255,0.25)' }
+                    }
+                }}
+            >
+                {stockConfig.icon}
+                {stockConfig.text}
+            </Box>
+        </motion.div>
     );
 });
 
-// Componente para el badge de descuento
+// Componente para el badge de descuento mejorado con animación
 const DiscountBadge = React.memo(({ discountPercentage }) => {
     if (!discountPercentage || discountPercentage <= 0) return null;
 
     return (
-        <Box
-            component={motion.div}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            sx={{
+        <motion.div
+            initial={{ rotate: -10, scale: 0 }}
+            animate={{ rotate: 0, scale: 1 }}
+            transition={{
+                type: "spring",
+                damping: 12,
+                stiffness: 300,
+                delay: 0.2
+            }}
+            whileHover={{
+                scale: 1.1,
+                rotate: -5,
+                transition: { duration: 0.2 }
+            }}
+            style={{
                 position: 'absolute',
-                top: 10,
-                right: 10,
-                backgroundColor: vistelicaColors.primary,
-                color: '#fff',
+                top: '12px',
+                right: '12px',
+                zIndex: 10
+            }}
+        >
+            <Box sx={{
+                background: 'linear-gradient(135deg, #f5365c 0%, #f33 100%)',
+                color: 'white',
+                fontSize: discountPercentage >= 30 ? '1.1rem' : '0.95rem',
+                fontWeight: 800,
                 borderRadius: '50%',
-                width: 50,
-                height: 50,
+                width: discountPercentage >= 30 ? 65 : 58,
+                height: discountPercentage >= 30 ? 65 : 58,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontWeight: 'bold',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                zIndex: 2,
-            }}
-        >
-            -{discountPercentage}%
-        </Box>
+                boxShadow: '0 4px 12px rgba(243, 51, 51, 0.35)',
+                border: '2px solid rgba(255,255,255,0.5)',
+                position: 'relative',
+                overflow: 'hidden',
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: '-15px',
+                    left: '-15px',
+                    right: '-15px',
+                    bottom: '-15px',
+                    background: 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%)',
+                    opacity: 0.7,
+                    animation: 'pulseLight 2s infinite'
+                },
+                '@keyframes pulseLight': {
+                    '0%': { opacity: 0.4, transform: 'scale(1)' },
+                    '50%': { opacity: 0.2, transform: 'scale(1.1)' },
+                    '100%': { opacity: 0.4, transform: 'scale(1)' }
+                }
+            }}>
+                <Typography
+                    sx={{
+                        lineHeight: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        fontFamily: typography.fontFamily
+                    }}
+                >
+                    <span style={{ fontSize: '65%', fontWeight: 600 }}>AHORRA</span>
+                    <span>{discountPercentage}%</span>
+                </Typography>
+            </Box>
+        </motion.div>
     );
 });
 
-// Componente de tarjeta de producto con poco stock (memoizado)
+// Componente de tarjeta de producto mejorado
 const LowStockProductCard = React.memo(({ product, onClick }) => {
+    const isHotDeal = product.stock_quantity <= 3;
+    const hasDiscount = product.discount_percentage > 0;
+
     return (
         <motion.div
-            whileHover={{
-                y: -10,
-                boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
-                transition: { duration: 0.3 }
-            }}
+            whileHover={{ y: -10 }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{
+                duration: 0.4,
+                type: "spring",
+                damping: 20
+            }}
+            style={{ height: '100%' }}
         >
             <Card
-                onClick={onClick}
+                onClick={() => onClick(product.product_id)}
                 sx={{
                     height: '100%',
-                    borderRadius: '12px',
+                    borderRadius: '14px',
                     overflow: 'hidden',
-                    backgroundColor: '#ffffff',
-                    border: 'none',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.04)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    transition: 'all 0.3s ease',
                     position: 'relative',
-                    '&::before': {
+                    cursor: 'pointer',
+                    boxShadow: isHotDeal ?
+                        '0 8px 25px rgba(255, 59, 48, 0.15)' :
+                        '0 8px 20px rgba(0, 0, 0, 0.08)',
+                    border: isHotDeal ?
+                        '1px solid rgba(255, 59, 48, 0.2)' :
+                        '1px solid rgba(0, 0, 0, 0.06)',
+                    transition: 'all 0.4s ease',
+                    '&:hover': {
+                        boxShadow: isHotDeal ?
+                            '0 14px 30px rgba(255, 59, 48, 0.25)' :
+                            '0 14px 25px rgba(0, 0, 0, 0.12)',
+                        '& .product-image': {
+                            transform: 'scale(1.08)'
+                        },
+                        '& .view-details': {
+                            opacity: 1,
+                            transform: 'translateY(0)'
+                        }
+                    }
+                }}
+            >
+                {/* Badges de stock y descuento */}
+                <StockBadge stockQuantity={product.stock_quantity} />
+                <DiscountBadge discountPercentage={product.discount_percentage} />
+
+                {/* Imagen del producto */}
+                <Box sx={{
+                    position: 'relative',
+                    height: { xs: '220px', sm: '240px', md: '280px' },
+                    overflow: 'hidden',
+                    backgroundColor: '#f8f8f8',
+                    '&::after': isHotDeal ? {
                         content: '""',
                         position: 'absolute',
                         bottom: 0,
                         left: 0,
-                        width: '100%',
-                        height: '4px',
-                        backgroundColor: vistelicaColors.primary,
-                        opacity: 0,
-                        transition: 'opacity 0.3s ease',
-                    },
-                    '&:hover::before': {
-                        opacity: 1,
-                    }
-                }}
-                role="button"
-                aria-label={`Ver detalles de ${product.name}`}
-                tabIndex={0}
-            >
-                <Box
-                    sx={{
-                        position: 'relative',
-                        height: { xs: '220px', sm: '260px', md: '320px' },
-                        overflow: 'hidden',
-                        backgroundColor: '#f8f8f8',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
-                >
+                        right: 0,
+                        height: '70px',
+                        background: 'linear-gradient(to top, rgba(255,59,48,0.08), transparent)',
+                        zIndex: 1
+                    } : {}
+                }}>
                     <Box
-                        component={motion.img}
-                        whileHover={{ scale: 1.05 }}
-                        transition={{ duration: 0.5 }}
+                        component="img"
+                        className="product-image"
                         sx={{
                             width: '100%',
                             height: '100%',
                             objectFit: 'cover',
-                            transition: 'transform 0.5s ease',
+                            transition: 'transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
                         }}
-                        alt={product.name}
                         src={product.image || product.main_image || '/api/placeholder/400/300'}
+                        alt={product.name}
                         loading="lazy"
                         onError={(e) => {
                             e.target.onerror = null;
@@ -184,88 +287,124 @@ const LowStockProductCard = React.memo(({ product, onClick }) => {
                         }}
                     />
 
-                    <StockBadge stockQuantity={product.stock_quantity} />
-                    <DiscountBadge discountPercentage={product.discount_percentage} />
+
                 </Box>
 
-                <Box sx={{ p: 2, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                {/* Contenido de la tarjeta */}
+                <Box sx={{
+                    p: 2.2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '180px'
+                }}>
+                    {/* Categoría */}
                     <Typography
                         variant="subtitle2"
                         sx={{
-                            color: vistelicaColors.secondary,
+                            color: 'text.secondary',
                             fontFamily: typography.fontFamily,
                             mb: 0.5,
                             fontSize: '0.85rem',
+                            fontWeight: 500
                         }}
                     >
                         {product.subcategory_name || product.brand || ''}
                     </Typography>
 
+                    {/* Nombre del producto */}
                     <Typography
                         variant="h6"
                         sx={{
                             fontFamily: typography.fontFamily,
-                            fontWeight: 400,
-                            fontSize: { xs: '1rem', md: '1.1rem' },
-                            mb: 1,
+                            fontWeight: 500,
+                            fontSize: '1.05rem',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
-                            color: '#333',
-                            lineHeight: 1.2,
-                            height: '2.4em',
+                            height: '2.5em',
+                            lineHeight: 1.25,
+                            mb: 1
                         }}
                     >
                         {product.name}
                     </Typography>
 
-                    {/* Colores disponibles - Componente optimizado */}
+                    {/* Colores disponibles */}
                     {product.colors && product.colors.length > 0 && (
-                        <Box sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            mb: 1.5
+                        }}>
                             <Typography
                                 variant="caption"
                                 sx={{
                                     color: 'text.secondary',
-                                    fontSize: '0.75rem',
-                                    fontFamily: typography.fontFamily
+                                    fontSize: '0.8rem',
+                                    mr: 1
                                 }}
                             >
                                 Colores:
                             </Typography>
-                            <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                {product.colors.slice(0, 3).map((color, index) => (
+                            <Box sx={{ display: 'flex' }}>
+                                {product.colors.slice(0, 4).map((color, index) => (
                                     <ColorCircle key={index} color={color} />
                                 ))}
-                                {product.colors.length > 3 && (
+                                {product.colors.length > 4 && (
                                     <Typography
                                         variant="caption"
                                         sx={{
-                                            fontSize: '0.7rem',
+                                            fontSize: '0.75rem',
                                             color: 'text.secondary',
-                                            ml: 0.5
+                                            ml: 0.5,
+                                            mt: 0.5
                                         }}
                                     >
-                                        +{product.colors.length - 3}
+                                        +{product.colors.length - 4}
                                     </Typography>
                                 )}
                             </Box>
                         </Box>
                     )}
 
-                    <Box sx={{ mt: 'auto', pt: 1 }}>
+                    {/* Precio */}
+                    <Box sx={{
+                        mt: 'auto',
+                        display: 'flex',
+                        alignItems: 'flex-end'
+                    }}>
                         <Typography
                             variant="h6"
                             sx={{
                                 fontFamily: typography.fontFamily,
                                 fontWeight: 700,
-                                color: vistelicaColors.primary,
-                                fontSize: '1.25rem',
+                                fontSize: '1.4rem',
+                                color: hasDiscount ? '#f5365c' : vistelicaColors.primary,
+                                mr: 1,
+                                lineHeight: 1
                             }}
                         >
                             ${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
                         </Typography>
+
+                        {/* Precio original si hay descuento */}
+                        {hasDiscount && product.original_price && (
+                            <Typography
+                                sx={{
+                                    fontFamily: typography.fontFamily,
+                                    fontSize: '1rem',
+                                    color: 'text.secondary',
+                                    textDecoration: 'line-through',
+                                    mb: 0.3
+                                }}
+                            >
+                                ${typeof product.original_price === 'number' ?
+                                product.original_price.toFixed(2) :
+                                product.original_price}
+                            </Typography>
+                        )}
                     </Box>
                 </Box>
             </Card>
@@ -273,30 +412,225 @@ const LowStockProductCard = React.memo(({ product, onClick }) => {
     );
 });
 
-// Componente de esqueleto de carga personalizado
+// Componente para los controles de navegación
+const NavigationControls = React.memo(({
+                                           onPrevious,
+                                           onNext,
+                                           currentIndex,
+                                           maxIndex,
+                                           onProgressClick,
+                                           progressBarRef,
+                                           progressPercentage,
+                                           title  // Añadido title como prop
+                                       }) => {
+    return (
+        <>
+            {/* Encabezado con icono de fuego y "¡Aprovecha!" */}
+            <Box
+                component={motion.div}
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    mb: 1
+                }}
+            >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <LocalFireDepartmentIcon
+                        sx={{
+                            color: '#ff6b6b',
+                            fontSize: '2rem',
+                            animation: 'pulseIcon 2s infinite',
+                            '@keyframes pulseIcon': {
+                                '0%': { transform: 'scale(1)' },
+                                '50%': { transform: 'scale(1.1)' },
+                                '100%': { transform: 'scale(1)' }
+                            }
+                        }}
+                    />
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            fontFamily: typography.fontFamily,
+                            fontWeight: 700,
+                            color: '#FFCC00',
+                            fontSize: '1.3rem',
+                            textShadow: '0px 1px 2px rgba(0,0,0,0.3)'
+                        }}
+                    >
+                        ¡Aprovecha!
+                    </Typography>
+                </Box>
+                <Typography
+                    variant="h4"
+                    sx={{
+                        fontFamily: typography.fontFamily,
+                        fontWeight: 700,
+                        color: '#ff6b6b',
+                        fontSize: { xs: '1.75rem', md: '2rem' },
+                        position: 'relative',
+                        '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            bottom: -8,
+                            left: 0,
+                            width: '40%',
+                            height: '3px',
+                            background: 'linear-gradient(90deg, #ff6b6b, transparent)'
+                        }
+                    }}
+                >
+                    {title}
+                </Typography>
+            </Box>
+
+            {/* Controles de navegación */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 3, mb: 2 }}>
+                <Tooltip title="Anterior">
+                    <Button
+                        onClick={onPrevious}
+                        sx={{
+                            minWidth: 'auto',
+                            width: 36,
+                            height: 36,
+                            borderRadius: '50%',
+                            color: '#ff6b6b',
+                            border: '2px solid rgba(255, 107, 107, 0.3)',
+                            '&:hover': {
+                                backgroundColor: 'rgba(255, 107, 107, 0.08)',
+                                borderColor: '#ff6b6b'
+                            }
+                        }}
+                        component={motion.button}
+                        whileTap={{ scale: 0.9 }}
+                    >
+                        <ArrowBackIosNewIcon fontSize="small" />
+                    </Button>
+                </Tooltip>
+
+                {/* Barra de progreso */}
+                <Box
+                    sx={{
+                        flex: 1,
+                        height: '8px',
+                        bgcolor: 'rgba(255, 107, 107, 0.15)',
+                        borderRadius: '4px',
+                        position: 'relative',
+                        cursor: 'pointer',
+                        overflow: 'hidden',
+                        boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)'
+                    }}
+                    ref={progressBarRef}
+                    onClick={onProgressClick}
+                    role="slider"
+                    aria-valuemin={0}
+                    aria-valuemax={maxIndex}
+                    aria-valuenow={currentIndex}
+                >
+                    <Box
+                        component={motion.div}
+                        animate={{
+                            width: `${progressPercentage}%`
+                        }}
+                        transition={{ type: "spring", stiffness: 100 }}
+                        sx={{
+                            height: '100%',
+                            background: 'linear-gradient(90deg, #ff6b6b 0%, #ff8e8e 100%)',
+                            borderRadius: '4px'
+                        }}
+                    />
+
+                    {/* Indicador circular en la barra */}
+                    <Box
+                        component={motion.div}
+                        animate={{
+                            left: `${progressPercentage}%`
+                        }}
+                        transition={{ type: "spring", stiffness: 100 }}
+                        sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            width: 16,
+                            height: 16,
+                            borderRadius: '50%',
+                            bgcolor: '#ff6b6b',
+                            border: '2px solid white',
+                            boxShadow: '0 0 5px rgba(0,0,0,0.3)'
+                        }}
+                    />
+                </Box>
+
+                {/* Botón Siguiente */}
+                <Tooltip title="Siguiente">
+                    <Button
+                        onClick={onNext}
+                        sx={{
+                            minWidth: 'auto',
+                            width: 36,
+                            height: 36,
+                            borderRadius: '50%',
+                            color: '#ff6b6b',
+                            border: '2px solid rgba(255, 107, 107, 0.3)',
+                            '&:hover': {
+                                backgroundColor: 'rgba(255, 107, 107, 0.08)',
+                                borderColor: '#ff6b6b'
+                            }
+                        }}
+                        component={motion.button}
+                        whileTap={{ scale: 0.9 }}
+                    >
+                        <ArrowForwardIosIcon fontSize="small" />
+                    </Button>
+                </Tooltip>
+            </Box>
+        </>
+    );
+});
+
+// Componente de esqueleto de carga mejorado
 const ProductCardSkeleton = () => (
     <Box sx={{ height: '100%' }}>
-        <Skeleton
-            variant="rectangular"
-            height={320}
-            sx={{
-                borderRadius: '12px 12px 0 0',
-                animation: 'pulse 1.5s ease-in-out 0.5s infinite'
+        <motion.div
+            initial={{ opacity: 0.3 }}
+            animate={{ opacity: 1 }}
+            transition={{
+                repeat: Infinity,
+                repeatType: 'reverse',
+                duration: 1
             }}
-        />
-        <Box sx={{ p: 2 }}>
-            <Skeleton variant="text" width="40%" height={20} sx={{ mb: 1 }} />
-            <Skeleton variant="text" width="90%" height={24} sx={{ mb: 0.5 }} />
-            <Skeleton variant="text" width="70%" height={24} sx={{ mb: 1 }} />
-            <Skeleton variant="text" width="30%" height={16} sx={{ mb: 1 }} />
-            <Box sx={{ pt: 1, mt: 'auto' }}>
-                <Skeleton variant="rectangular" width="40%" height={32} sx={{ borderRadius: 1 }} />
-            </Box>
-        </Box>
+        >
+            <Card
+                sx={{
+                    height: '100%',
+                    borderRadius: '14px',
+                    overflow: 'hidden',
+                    background: '#fff',
+                    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.06)',
+                    border: '1px solid rgba(0,0,0,0.06)'
+                }}
+            >
+                <Skeleton
+                    variant="rectangular"
+                    height={280}
+                    animation="wave"
+                />
+                <Box sx={{ p: 2.2 }}>
+                    <Skeleton variant="text" width="30%" height={18} sx={{ mb: 1 }} />
+                    <Skeleton variant="text" width="85%" height={26} sx={{ mb: 0.5 }} />
+                    <Skeleton variant="text" width="70%" height={26} sx={{ mb: 1.5 }} />
+                    <Skeleton variant="text" width="40%" height={16} sx={{ mb: 1.5 }} />
+                    <Skeleton variant="rectangular" width="50%" height={32} sx={{ borderRadius: 1 }} />
+                </Box>
+            </Card>
+        </motion.div>
     </Box>
 );
 
-// Hook personalizado para la lógica de fetch
+// Hooks personalizados mantenidos tal cual
 const useLowStockProducts = () => {
     const [state, setState] = useState({
         products: [],
@@ -331,7 +665,6 @@ const useLowStockProducts = () => {
 
         fetchProducts();
 
-        // Limpieza
         return () => {
             isMounted = false;
         };
@@ -340,7 +673,6 @@ const useLowStockProducts = () => {
     return state;
 };
 
-// Hook personalizado para la lógica de responsive
 const useResponsiveSlider = (initialSlidesToShow, products, currentIndex) => {
     const [slidesToShow, setSlidesToShow] = useState(initialSlidesToShow);
     const [cardWidth, setCardWidth] = useState(100);
@@ -373,7 +705,6 @@ const useResponsiveSlider = (initialSlidesToShow, products, currentIndex) => {
         };
     }, [initialSlidesToShow]);
 
-    // Calcular el índice máximo con memoización para evitar cálculos innecesarios
     const maxIndex = useMemo(() =>
             Math.max(0, products.length - slidesToShow),
         [products.length, slidesToShow]
@@ -382,10 +713,10 @@ const useResponsiveSlider = (initialSlidesToShow, products, currentIndex) => {
     return { slidesToShow, cardWidth, maxIndex };
 };
 
-// Componente principal con memoización
+// Componente principal
 const LowStockCarousel = React.memo(({
                                          title = "¡Últimas unidades!",
-                                         subtitle = "Productos con stock limitado. ¡No dejes pasar la oportunidad de conseguir estos artículos únicos!",
+                                         subtitle = "Productos con stock limitado. ¡No dejes pasar la oportunidad!",
                                          initialSlidesToShow = 4
                                      }) => {
     const router = useRouter();
@@ -409,7 +740,7 @@ const LowStockCarousel = React.memo(({
 
     const handlePrevious = useCallback(() => {
         setCurrentIndex(prevIndex =>
-            prevIndex === 0 && maxIndex > 0 ? maxIndex : Math.max(0, prevIndex - 1)
+            prevIndex === 0 ? maxIndex : Math.max(0, prevIndex - 1)
         );
     }, [maxIndex]);
 
@@ -481,35 +812,41 @@ const LowStockCarousel = React.memo(({
         return null;
     }
 
-    // Navegación con teclado
-    const handleKeyDown = (e) => {
-        if (e.key === 'ArrowLeft') handlePrevious();
-        else if (e.key === 'ArrowRight') handleNext();
-    };
-
     return (
         <Box
             component={motion.div}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             sx={{
                 py: { xs: 4, md: 6 },
-                px: { xs: 2, md: 4 },
                 background: 'linear-gradient(180deg, #fff5f5 0%, #FFFFFF 100%)',
-                borderRadius: { xs: '0', md: '16px' },
+                borderRadius: { xs: '0', md: '20px' },
+                mx: { xs: 0, md: 2 },
                 my: { xs: 3, md: 5 },
                 overflow: 'hidden',
-                border: '1px solid rgba(255, 107, 107, 0.1)',
                 position: 'relative',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '5px',
+                    background: 'linear-gradient(90deg, #ff6b6b, #f5365c)'
+                }
             }}
-            onKeyDown={handleKeyDown}
+            onKeyDown={(e) => {
+                if (e.key === 'ArrowLeft') handlePrevious();
+                else if (e.key === 'ArrowRight') handleNext();
+            }}
             tabIndex="0"
             role="region"
             aria-label="Carrusel de productos con poco stock"
         >
             <Container maxWidth="xl">
-                {/* Cabecera */}
+                {/* Cabecera mejorada */}
                 <Box
                     sx={{
                         display: 'flex',
@@ -518,49 +855,63 @@ const LowStockCarousel = React.memo(({
                         mb: 4,
                         flexWrap: { xs: 'wrap', sm: 'nowrap' }
                     }}
-                    component={motion.div}
-                    initial={{ y: -20 }}
-                    animate={{ y: 0 }}
-                    transition={{ duration: 0.5 }}
                 >
                     <Box sx={{ mb: { xs: 2, sm: 0 } }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                            <InventoryIcon sx={{ color: '#ff6b6b', fontSize: '2rem' }} />
+                        <Box
+                            component={motion.div}
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ duration: 0.5 }}
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1.5,
+                                mb: 1
+                            }}
+                        >
+                            <LocalFireDepartmentIcon
+                                sx={{
+                                    color: '#ff6b6b',
+                                    fontSize: '2rem',
+                                    animation: 'pulseIcon 2s infinite',
+                                    '@keyframes pulseIcon': {
+                                        '0%': { transform: 'scale(1)' },
+                                        '50%': { transform: 'scale(1.1)' },
+                                        '100%': { transform: 'scale(1)' }
+                                    }
+                                }}
+                            />
                             <Typography
                                 variant="h4"
-                                component={motion.h2}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.2 }}
                                 sx={{
                                     fontFamily: typography.fontFamily,
-                                    fontWeight: 600,
+                                    fontWeight: 700,
                                     color: '#ff6b6b',
+                                    fontSize: { xs: '1.75rem', md: '2rem' },
                                     position: 'relative',
-                                    display: 'inline-block',
                                     '&::after': {
                                         content: '""',
                                         position: 'absolute',
                                         bottom: -8,
                                         left: 0,
-                                        width: '60px',
+                                        width: '40%',
                                         height: '3px',
-                                        backgroundColor: '#ff6b6b'
+                                        background: 'linear-gradient(90deg, #ff6b6b, transparent)'
                                     }
                                 }}
                             >
                                 {title}
                             </Typography>
                         </Box>
+
                         {subtitle && (
                             <Typography
-                                variant="body1"
                                 component={motion.p}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: 0.3 }}
+                                variant="body1"
                                 sx={{
-                                    mt: 1,
                                     color: 'text.secondary',
                                     maxWidth: '600px',
                                     fontFamily: typography.fontFamily
@@ -570,21 +921,28 @@ const LowStockCarousel = React.memo(({
                             </Typography>
                         )}
                     </Box>
+
                     <Button
-                        variant="text"
-                        component={motion.button}
-                        whileHover={{ scale: 1.05 }}
+                        variant="outlined"
                         onClick={handleSeeAllClick}
+                        component={motion.button}
+                        whileHover={{ scale: 1.05, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
                         sx={{
                             color: '#ff6b6b',
-                            fontFamily: typography.fontFamily,
+                            borderColor: '#ff6b6b',
                             fontWeight: 600,
+                            borderRadius: '8px',
+                            px: 2.5,
+                            py: 1,
                             textTransform: 'none',
+                            boxShadow: '0 2px 8px rgba(255,107,107,0.15)',
                             '&:hover': {
-                                backgroundColor: 'rgba(255, 107, 107, 0.08)'
+                                borderColor: '#e55757',
+                                backgroundColor: 'rgba(255,107,107,0.08)',
+                                boxShadow: '0 4px 12px rgba(255,107,107,0.25)'
                             }
                         }}
-                        aria-label="Ver todos los productos con poco stock"
                     >
                         Ver todos
                     </Button>
@@ -595,24 +953,19 @@ const LowStockCarousel = React.memo(({
                     <Box sx={{ mt: 2 }}>
                         <Box
                             sx={{
-                                display: 'flex',
-                                gap: 2,
-                                overflowX: 'hidden',
-                                mx: -1
+                                display: 'grid',
+                                gridTemplateColumns: {
+                                    xs: '1fr',
+                                    sm: '1fr 1fr',
+                                    md: '1fr 1fr 1fr',
+                                    lg: '1fr 1fr 1fr 1fr'
+                                },
+                                gap: 3,
+                                px: 1
                             }}
                         >
                             {[...Array(4)].map((_, index) => (
-                                <Box
-                                    key={index}
-                                    sx={{
-                                        width: {
-                                            xs: '100%',
-                                            sm: '50%',
-                                            md: `${100 / initialSlidesToShow}%`
-                                        },
-                                        px: 1
-                                    }}
-                                >
+                                <Box key={index} sx={{ height: '480px' }}>
                                     <ProductCardSkeleton />
                                 </Box>
                             ))}
@@ -622,28 +975,19 @@ const LowStockCarousel = React.memo(({
                     <Box
                         sx={{
                             textAlign: 'center',
-                            py: 4,
+                            py: 5,
                             borderRadius: 2,
                             backgroundColor: 'rgba(255, 82, 82, 0.1)',
-                            border: '1px solid rgba(255, 82, 82, 0.2)',
-                            my: 2
+                            border: '1px solid rgba(255, 82, 82, 0.2)'
                         }}
                     >
-                        <Typography
-                            color="error"
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: 1
-                            }}
-                        >
+                        <Typography color="error" variant="h6">
                             {error}
                         </Typography>
                         <Button
                             variant="outlined"
                             color="error"
-                            sx={{ mt: 2, textTransform: 'none' }}
+                            sx={{ mt: 2 }}
                             onClick={() => window.location.reload()}
                         >
                             Reintentar
@@ -651,95 +995,86 @@ const LowStockCarousel = React.memo(({
                     </Box>
                 ) : (
                     <>
+                        {/* Carrusel de productos */}
                         <Box
                             sx={{
                                 position: 'relative',
                                 overflow: 'hidden',
                                 mx: -1,
                                 height: '100%',
+                                py: 2
                             }}
                             onTouchStart={handleTouchStart}
                             onTouchEnd={handleTouchEnd}
                         >
-                            {/* Indicadores laterales de navegación */}
+                            {/* Botones laterales para escritorio */}
                             <Box
+                                component={motion.div}
+                                whileHover={{ opacity: 1, x: 5 }}
                                 sx={{
                                     position: 'absolute',
-                                    top: '50%',
                                     left: 0,
+                                    top: '50%',
                                     transform: 'translateY(-50%)',
-                                    zIndex: 5,
-                                    width: '60px',
-                                    height: '60px',
-                                    display: { xs: 'none', md: 'flex' },
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
+                                    zIndex: 10,
                                     opacity: 0.2,
-                                    transition: 'opacity 0.3s ease',
-                                    '&:hover': { opacity: 1 },
+                                    display: { xs: 'none', md: 'block' }
                                 }}
-                                component={motion.div}
-                                whileHover={{ opacity: 1 }}
                             >
                                 <Button
                                     onClick={handlePrevious}
                                     sx={{
-                                        minWidth: '44px',
-                                        width: '44px',
-                                        height: '44px',
+                                        minWidth: '48px',
+                                        width: '48px',
+                                        height: '48px',
                                         borderRadius: '50%',
                                         backgroundColor: 'rgba(255,255,255,0.9)',
-                                        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                                        boxShadow: '0 3px 12px rgba(0,0,0,0.12)',
                                         color: '#ff6b6b',
                                         '&:hover': {
-                                            backgroundColor: '#ffffff'
+                                            backgroundColor: '#ffffff',
+                                            boxShadow: '0 5px 15px rgba(0,0,0,0.15)'
                                         }
                                     }}
-                                    aria-label="Anterior producto"
                                 >
                                     <KeyboardArrowLeftIcon />
                                 </Button>
                             </Box>
 
                             <Box
+                                component={motion.div}
+                                whileHover={{ opacity: 1, x: -5 }}
                                 sx={{
                                     position: 'absolute',
-                                    top: '50%',
                                     right: 0,
+                                    top: '50%',
                                     transform: 'translateY(-50%)',
-                                    zIndex: 5,
-                                    width: '60px',
-                                    height: '60px',
-                                    display: { xs: 'none', md: 'flex' },
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
+                                    zIndex: 10,
                                     opacity: 0.2,
-                                    transition: 'opacity 0.3s ease',
-                                    '&:hover': { opacity: 1 },
+                                    display: { xs: 'none', md: 'block' }
                                 }}
-                                component={motion.div}
-                                whileHover={{ opacity: 1 }}
                             >
                                 <Button
                                     onClick={handleNext}
                                     sx={{
-                                        minWidth: '44px',
-                                        width: '44px',
-                                        height: '44px',
+                                        minWidth: '48px',
+                                        width: '48px',
+                                        height: '48px',
                                         borderRadius: '50%',
                                         backgroundColor: 'rgba(255,255,255,0.9)',
-                                        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                                        boxShadow: '0 3px 12px rgba(0,0,0,0.12)',
                                         color: '#ff6b6b',
                                         '&:hover': {
-                                            backgroundColor: '#ffffff'
+                                            backgroundColor: '#ffffff',
+                                            boxShadow: '0 5px 15px rgba(0,0,0,0.15)'
                                         }
                                     }}
-                                    aria-label="Siguiente producto"
                                 >
                                     <KeyboardArrowRightIcon />
                                 </Button>
                             </Box>
 
+                            {/* Carrusel con animaciones mejoradas */}
                             <AnimatePresence mode="wait">
                                 <Box
                                     component={motion.div}
@@ -747,13 +1082,14 @@ const LowStockCarousel = React.memo(({
                                         x: `-${currentIndex * (100 / slidesToShow)}%`
                                     }}
                                     transition={{
-                                        type: 'tween',
-                                        duration: 0.4,
-                                        ease: [0.25, 0.1, 0.25, 1.0]  // Curva de aceleración mejorada
+                                        type: 'spring',
+                                        stiffness: 300,
+                                        damping: 30
                                     }}
                                     sx={{
                                         display: 'flex',
                                         height: '100%',
+                                        px: 1
                                     }}
                                 >
                                     {products.map((product) => (
@@ -762,13 +1098,13 @@ const LowStockCarousel = React.memo(({
                                             sx={{
                                                 width: `${cardWidth}%`,
                                                 flexShrink: 0,
-                                                px: 1,
-                                                height: '100%',
+                                                px: 1.5,
+                                                height: '100%'
                                             }}
                                         >
                                             <LowStockProductCard
                                                 product={product}
-                                                onClick={() => handleProductClick(product.product_id)}
+                                                onClick={handleProductClick}
                                             />
                                         </Box>
                                     ))}
@@ -776,117 +1112,49 @@ const LowStockCarousel = React.memo(({
                             </AnimatePresence>
                         </Box>
 
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                mt: 4,
-                                px: 2
-                            }}
-                            component={motion.div}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4 }}
-                        >
-                            <Button
-                                aria-label="Producto anterior"
-                                sx={{
-                                    minWidth: '44px',
-                                    width: '44px',
-                                    height: '44px',
-                                    borderRadius: '50%',
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    border: `1px solid #ff6b6b`,
-                                    color: '#ff6b6b',
-                                    '&:hover': {
-                                        backgroundColor: 'rgba(255, 107, 107, 0.04)'
-                                    }
-                                }}
-                                onClick={handlePrevious}
-                                component={motion.button}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                <ArrowBackIosNewIcon fontSize="small" />
-                            </Button>
+                        {/* Controles de navegación inferiores */}
+                        <NavigationControls
+                            onPrevious={handlePrevious}
+                            onNext={handleNext}
+                            currentIndex={currentIndex}
+                            maxIndex={maxIndex}
+                            onProgressClick={handleProgressBarClick}
+                            progressBarRef={progressBarRef}
+                            progressPercentage={progressPercentage}
+                        />
 
-                            <Box
-                                sx={{
-                                    flex: 1,
-                                    mx: 2,
-                                    height: '4px',
-                                    bgcolor: 'rgba(255, 107, 107, 0.2)',
-                                    borderRadius: '2px',
-                                    position: 'relative',
-                                    cursor: 'pointer'
-                                }}
-                                ref={progressBarRef}
-                                onClick={handleProgressBarClick}
-                                role="slider"
-                                aria-valuemin={0}
-                                aria-valuemax={maxIndex}
-                                aria-valuenow={currentIndex}
-                                tabIndex={0}
-                            >
-                                <Box
-                                    component={motion.div}
-                                    animate={{
-                                        width: `${progressPercentage}%`,
-                                        transition: { ease: "easeOut", duration: 0.4 }
-                                    }}
-                                    sx={{
-                                        position: 'absolute',
-                                        left: 0,
-                                        top: 0,
-                                        height: '100%',
-                                        backgroundColor: '#ff6b6b',
-                                        borderRadius: '2px'
-                                    }}
-                                />
-                            </Box>
-
-                            <Button
-                                aria-label="Siguiente producto"
-                                sx={{
-                                    minWidth: '44px',
-                                    width: '44px',
-                                    height: '44px',
-                                    borderRadius: '50%',
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    border: `1px solid #ff6b6b`,
-                                    color: '#ff6b6b',
-                                    '&:hover': {
-                                        backgroundColor: 'rgba(255, 107, 107, 0.04)'
-                                    }
-                                }}
-                                onClick={handleNext}
-                                component={motion.button}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                <ArrowForwardIosIcon fontSize="small" />
-                            </Button>
-                        </Box>
-
-                        {/* Indicador de índice */}
+                        {/* Indicador de página actual */}
                         <Box
                             sx={{
                                 display: 'flex',
                                 justifyContent: 'center',
+                                alignItems: 'center',
                                 mt: 2
                             }}
                         >
                             <Typography
+                                component={motion.div}
+                                animate={{ scale: [1, 1.1, 1] }}
+                                transition={{
+                                    duration: 0.5,
+                                    ease: "easeInOut",
+                                    times: [0, 0.5, 1],
+                                    repeat: 0,
+                                    repeatDelay: 0
+                                }}
+                                key={currentIndex}
                                 variant="caption"
                                 sx={{
-                                    color: 'text.secondary',
-                                    fontSize: '0.8rem',
+                                    backgroundColor: 'rgba(255,107,107,0.15)',
+                                    color: '#ff6b6b',
+                                    fontWeight: 'bold',
+                                    px: 2,
+                                    py: 0.5,
+                                    borderRadius: '12px',
+                                    fontSize: '0.8rem'
                                 }}
                             >
-                                {currentIndex + 1} / {Math.min(products.length, maxIndex + 1)}
+                                {currentIndex + 1} de {Math.min(products.length, maxIndex + 1)}
                             </Typography>
                         </Box>
                     </>
@@ -901,6 +1169,8 @@ ColorCircle.displayName = 'ColorCircle';
 StockBadge.displayName = 'StockBadge';
 DiscountBadge.displayName = 'DiscountBadge';
 LowStockProductCard.displayName = 'LowStockProductCard';
+NavigationControls.displayName = 'NavigationControls';
+ProductCardSkeleton.displayName = 'ProductCardSkeleton';
 LowStockCarousel.displayName = 'LowStockCarousel';
 
 export default LowStockCarousel;

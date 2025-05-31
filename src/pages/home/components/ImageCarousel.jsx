@@ -45,7 +45,7 @@ const ProgressBar = React.memo(({ isActive, progress, onClick, index }) => (
 ));
 
 // Componente para cada slide
-const Slide = React.memo(({ slide, isActive, onExploreClick }) => {
+const Slide = React.memo(({ slide, isActive }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const imgRef = useRef(null);
@@ -143,7 +143,7 @@ const Slide = React.memo(({ slide, isActive, onExploreClick }) => {
                         </Typography>
                         <Button
                             component={Link}
-                            href={slide.link}
+                            href={slide.link || '#'}
                             variant="contained"
                             aria-label={`Explorar ${slide.title}`}
                             sx={{
@@ -169,7 +169,7 @@ const Slide = React.memo(({ slide, isActive, onExploreClick }) => {
 });
 
 // Componente principal del carrusel
-const ProgressBarCarousel = () => {
+const ImageCarousel = () => {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [progress, setProgress] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
@@ -302,7 +302,6 @@ const ProgressBarCarousel = () => {
                     key={index}
                     slide={slide}
                     isActive={currentSlide === index}
-                    onExploreClick={() => window.location.href = slide.link}
                 />
             ))}
 
@@ -399,4 +398,4 @@ const ProgressBarCarousel = () => {
 ProgressBar.displayName = 'ProgressBar';
 Slide.displayName = 'CarouselSlide';
 
-export default React.memo(ProgressBarCarousel);
+export default React.memo(ImageCarousel);
