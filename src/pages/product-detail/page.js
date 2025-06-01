@@ -77,7 +77,7 @@ export default function ProductDetailPage() {
         toast.dismiss();
     };
 
-    const handleAddToCart = async () => {
+    const handleAddToCart = async (quantity = 1) => {
         toast.dismiss();
         setAddingToCart(true);
 
@@ -126,11 +126,11 @@ export default function ProductDetailPage() {
                 throw new Error('No se pudo obtener el ID del carrito');
             }
 
-            // Añadimos el producto al carrito
+            // Añadimos el producto al carrito con la cantidad especificada
             await cartService.addToCart(
                 cart.cart_id,
                 product.product_id,
-                1,
+                quantity,
                 parseFloat(product.price),
                 selectedSize,
                 selectedColor,

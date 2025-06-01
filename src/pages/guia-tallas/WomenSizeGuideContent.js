@@ -37,11 +37,11 @@ const bodyFont = {
     fontWeight: 400
 };
 
-const MenSizeGuideContent = () => {
+const WomenSizeGuideContent = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const router = useRouter();
-    const [tabValue, setTabValue] = useState(0);
+    const [tabValue, setTabValue] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -52,71 +52,47 @@ const MenSizeGuideContent = () => {
         return () => clearTimeout(timer);
     }, []);
 
-    // Data for size tables
+    // Data for size tables - Adaptada para mujer
     const topWearSizes = [
-        { size: 'XS', chest: '88-92' },
-        { size: 'S', chest: '94-98' },
-        { size: 'M', chest: '100-104' },
-        { size: 'L', chest: '106-110' },
-        { size: 'XL', chest: '112-116' },
-        { size: 'XXL', chest: '118-122' },
+        { size: 'XS', bust: '82-85', waist: '62-65', hip: '88-91' },
+        { size: 'S', bust: '86-89', waist: '66-69', hip: '92-95' },
+        { size: 'M', bust: '90-93', waist: '70-73', hip: '96-98' },
+        { size: 'L', bust: '94-97', waist: '74-77', hip: '99-101' },
+        { size: 'XL', bust: '98-102', waist: '78-82', hip: '102-105' },
     ];
 
-    const shirtSizes = [
-        { size: '38', equivalence: 'XS', neck: '38' },
-        { size: '39', equivalence: 'S', neck: '39' },
-        { size: '40', equivalence: 'M', neck: '40' },
-        { size: '41', equivalence: 'M', neck: '41' },
-        { size: '42', equivalence: 'L', neck: '42' },
-        { size: '43', equivalence: 'XL', neck: '43' },
-        { size: '44', equivalence: 'XL', neck: '44' },
-        { size: '45', equivalence: 'XXL', neck: '45' },
-    ];
-
-    const formalWearSizes = [
-        { size: '42', equivalence: 'XS', chest: '88-90' },
-        { size: '44', equivalence: 'XS', chest: '92-94' },
-        { size: '46', equivalence: 'S', chest: '96-98' },
-        { size: '48', equivalence: 'M', chest: '100-102' },
-        { size: '50', equivalence: 'M', chest: '104-106' },
-        { size: '52', equivalence: 'L', chest: '108-110' },
-        { size: '54', equivalence: 'XL', chest: '112-114' },
-        { size: '56', equivalence: 'XL', chest: '116-118' },
-        { size: '58', equivalence: 'XXL', chest: '120-122' },
-        { size: '60', equivalence: 'XXL', chest: '124-126' },
+    const dressSizes = [
+        { size: '34', int: 'XXS', bust: '82', waist: '62', hip: '88' },
+        { size: '36', int: 'XS', bust: '86', waist: '66', hip: '92' },
+        { size: '38', int: 'S', bust: '90', waist: '70', hip: '96' },
+        { size: '40', int: 'M', bust: '94', waist: '74', hip: '100' },
+        { size: '42', int: 'L', bust: '98', waist: '78', hip: '104' },
+        { size: '44', int: 'XL', bust: '102', waist: '82', hip: '108' },
     ];
 
     const bottomWearSizes = [
-        { size: '38', waist: '74-76', hip: '90-93' },
-        { size: '40', waist: '78-80', hip: '94-96' },
-        { size: '42', waist: '82-84', hip: '97-99' },
-        { size: '44', waist: '86-88', hip: '100-102' },
-        { size: '46', waist: '90-92', hip: '103-105' },
-        { size: '48', waist: '94-96', hip: '106-108' },
-        { size: '50', waist: '98-100', hip: '109-111' },
-        { size: '52', waist: '102-106', hip: '112-114' },
-        { size: '54', waist: '108-110', hip: '116-118' },
-        { size: '56', waist: '112-116', hip: '119-122' },
+        { size: 'XS', waist: '62-65', hip: '88-91' },
+        { size: 'S', waist: '66-69', hip: '92-95' },
+        { size: 'M', waist: '70-73', hip: '96-98' },
+        { size: 'L', waist: '74-77', hip: '99-101' },
+        { size: 'XL', waist: '78-82', hip: '102-105' },
     ];
 
     const underwearSizes = [
-        { size: 'XS', waist: '68-70' },
-        { size: 'S', waist: '71-76' },
-        { size: 'M', waist: '77-82' },
-        { size: 'L', waist: '83-88' },
-        { size: 'XL', waist: '89-94' },
-        { size: 'XXL', waist: '95-100' },
+        { size: 'XS', int: '75A-80A', waist: '62-65' },
+        { size: 'S', int: '85A-90A', waist: '66-69' },
+        { size: 'M', int: '95A-100A', waist: '70-73' },
+        { size: 'L', int: '105A-110A', waist: '74-77' },
+        { size: 'XL', int: '115A-120A', waist: '78-82' },
     ];
 
     const shoeSizes = [
-        { size: '39', length: '25,5' },
-        { size: '40', length: '26' },
-        { size: '41', length: '26,8' },
-        { size: '42', length: '27,5' },
-        { size: '43', length: '28' },
-        { size: '44', length: '29' },
-        { size: '45', length: '28,8' },
-        { size: '46', length: '30,6' },
+        { size: '35', length: '22.5' },
+        { size: '36', length: '23' },
+        { size: '37', length: '23.5' },
+        { size: '38', length: '24' },
+        { size: '39', length: '24.5' },
+        { size: '40', length: '25' },
     ];
 
     if (isLoading) {
@@ -168,8 +144,8 @@ const MenSizeGuideContent = () => {
     return (
         <>
             <Head>
-                <title>Guía de Tallas Hombre | Tu Marca</title>
-                <meta name="description" content="Guía de tallas para ropa de hombre" />
+                <title>Guía de Tallas Mujer | Tu Marca</title>
+                <meta name="description" content="Guía de tallas para ropa de mujer" />
                 <link
                     href="https://fonts.googleapis.com/css2?family=Amethysta&family=Tenor+Sans&display=swap"
                     rel="stylesheet"
@@ -206,7 +182,7 @@ const MenSizeGuideContent = () => {
                             switch(newValue) {
                                 case 0: router.push('/guia-tallas/MenSizeGuidePage'); break;
                                 case 1: router.push('/guia-tallas/WomenSizeGuideContent'); break;
-                                case 3: router.push('/guia-tallas/YouthSizeGuideContent'); break;
+                                case 2: router.push('/guia-tallas/YouthSizeGuideContent'); break;
                             }
                         }}
                         variant={isMobile ? 'scrollable' : 'fullWidth'}
@@ -279,7 +255,7 @@ const MenSizeGuideContent = () => {
                         ...titleFont
                     }}
                 >
-                    GUÍA DE TALLAS HOMBRE
+                    GUÍA DE TALLAS MUJER
                 </Typography>
 
                 <Box sx={{ mb: 6 }}>
@@ -287,7 +263,7 @@ const MenSizeGuideContent = () => {
                         Encuentra la talla perfecta para tu estilo. Todas las medidas están en centímetros.
                     </Typography>
                     <Typography variant="body1" paragraph sx={bodyFont}>
-                        Si necesitas ayuda adicional, nuestro equipo de atención al cliente estará encantado de ayudarte.
+                        Recuerda que cada cuerpo es único. Si estás entre dos tallas, te recomendamos elegir la mayor.
                     </Typography>
                 </Box>
 
@@ -298,8 +274,8 @@ const MenSizeGuideContent = () => {
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
                         <Image
-                            src="https://res.cloudinary.com/dhyv4dpk2/image/upload/v1747494646/vistelica/productos/axi8umeoraiw7wxp0ouq.jpg"
-                            alt="Parte superior"
+                            src="https://res.cloudinary.com/dhyv4dpk2/image/upload/v1748677549/vistelica/productos/qn2rtnvruhzwtk30ysmo.png"
+                            alt="Parte superior mujer"
                             width={500}
                             height={400}
                             style={{ objectFit: 'contain' }}
@@ -313,31 +289,39 @@ const MenSizeGuideContent = () => {
                         </Typography>
 
                         <Grid container spacing={3} sx={{ mt: 2 }}>
-                            <Grid item xs={12} md={6}>
+                            <Grid item xs={12} md={4}>
                                 <Typography variant="h6" component="h4" gutterBottom sx={titleFont}>
-                                    1. CUELLO
+                                    1. BUSTO
                                 </Typography>
                                 <Typography variant="body1" sx={bodyFont}>
-                                    Debemos medirnos con una cinta métrica alrededor del cuello con una cierta inclinación
-                                    en la parte delantera por donde caería el botón de la camisa.
+                                    Coloca la cinta métrica alrededor de la parte más llena de tu busto, manteniéndola paralela al suelo.
                                 </Typography>
                             </Grid>
 
-                            <Grid item xs={12} md={6}>
+                            <Grid item xs={12} md={4}>
                                 <Typography variant="h6" component="h4" gutterBottom sx={titleFont}>
-                                    2. PECHO
+                                    2. CINTURA
                                 </Typography>
                                 <Typography variant="body1" sx={bodyFont}>
-                                    Debemos medirnos con una cinta métrica alrededor del pecho justo por debajo de los brazos.
+                                    Mide alrededor de la parte más estrecha de tu torso, generalmente justo encima del ombligo.
+                                </Typography>
+                            </Grid>
+
+                            <Grid item xs={12} md={4}>
+                                <Typography variant="h6" component="h4" gutterBottom sx={titleFont}>
+                                    3. CADERA
+                                </Typography>
+                                <Typography variant="body1" sx={bodyFont}>
+                                    Rodea con la cinta métrica la parte más ancha de tus caderas, pasando por el punto más prominente.
                                 </Typography>
                             </Grid>
                         </Grid>
                     </Box>
 
-                    {/* Casual Wear */}
+                    {/* Tops */}
                     <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
                         <Typography variant="h5" component="h3" gutterBottom sx={titleFont}>
-                            PARKAS | CHALECOS | CAZADORAS | JERSEYS | POLOS | CAMISETAS | SUDADERAS
+                            BLUSAS | CAMISETAS | TOPS | CHAQUETAS | ABRIGOS
                         </Typography>
 
                         <TableContainer>
@@ -352,9 +336,21 @@ const MenSizeGuideContent = () => {
                                 </TableHead>
                                 <TableBody>
                                     <TableRow>
-                                        <TableCell component="th" scope="row" sx={titleFont}>PECHO (CM)</TableCell>
+                                        <TableCell component="th" scope="row" sx={titleFont}>BUSTO (CM)</TableCell>
                                         {topWearSizes.map(item => (
-                                            <TableCell key={`chest-${item.size}`} align="center" sx={bodyFont}>{item.chest}</TableCell>
+                                            <TableCell key={`bust-${item.size}`} align="center" sx={bodyFont}>{item.bust}</TableCell>
+                                        ))}
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell component="th" scope="row" sx={titleFont}>CINTURA (CM)</TableCell>
+                                        {topWearSizes.map(item => (
+                                            <TableCell key={`waist-${item.size}`} align="center" sx={bodyFont}>{item.waist}</TableCell>
+                                        ))}
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell component="th" scope="row" sx={titleFont}>CADERA (CM)</TableCell>
+                                        {topWearSizes.map(item => (
+                                            <TableCell key={`hip-${item.size}`} align="center" sx={bodyFont}>{item.hip}</TableCell>
                                         ))}
                                     </TableRow>
                                 </TableBody>
@@ -362,67 +358,45 @@ const MenSizeGuideContent = () => {
                         </TableContainer>
                     </Paper>
 
-                    {/* Shirts */}
+                    {/* Dresses */}
                     <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
                         <Typography variant="h5" component="h3" gutterBottom sx={titleFont}>
-                            CAMISAS
+                            VESTIDOS | MONOS | ENTERIZOS
                         </Typography>
 
                         <TableContainer>
                             <Table size={isMobile ? 'small' : 'medium'}>
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell sx={titleFont}>TALLA</TableCell>
-                                        {shirtSizes.map(item => (
+                                        <TableCell sx={titleFont}>TALLA ESP</TableCell>
+                                        {dressSizes.map(item => (
                                             <TableCell key={item.size} align="center" sx={bodyFont}>{item.size}</TableCell>
                                         ))}
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
                                     <TableRow>
-                                        <TableCell component="th" scope="row" sx={titleFont}>EQUIVALENCIA</TableCell>
-                                        {shirtSizes.map(item => (
-                                            <TableCell key={`equiv-${item.size}`} align="center" sx={bodyFont}>{item.equivalence}</TableCell>
+                                        <TableCell component="th" scope="row" sx={titleFont}>TALLA INT</TableCell>
+                                        {dressSizes.map(item => (
+                                            <TableCell key={`int-${item.size}`} align="center" sx={bodyFont}>{item.int}</TableCell>
                                         ))}
                                     </TableRow>
                                     <TableRow>
-                                        <TableCell component="th" scope="row" sx={titleFont}>CUELLO (CM)</TableCell>
-                                        {shirtSizes.map(item => (
-                                            <TableCell key={`neck-${item.size}`} align="center" sx={bodyFont}>{item.neck}</TableCell>
-                                        ))}
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    </Paper>
-
-                    {/* Formal Wear */}
-                    <Paper elevation={2} sx={{ p: 3 }}>
-                        <Typography variant="h5" component="h3" gutterBottom sx={titleFont}>
-                            ABRIGOS | AMERICANAS | TRAJES | CHAQUÉS | CHALECO CEREMONIA
-                        </Typography>
-
-                        <TableContainer>
-                            <Table size={isMobile ? 'small' : 'medium'}>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell sx={titleFont}>TALLA</TableCell>
-                                        {formalWearSizes.map(item => (
-                                            <TableCell key={item.size} align="center" sx={bodyFont}>{item.size}</TableCell>
-                                        ))}
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    <TableRow>
-                                        <TableCell component="th" scope="row" sx={titleFont}>EQUIVALENCIA</TableCell>
-                                        {formalWearSizes.map(item => (
-                                            <TableCell key={`equiv-${item.size}`} align="center" sx={bodyFont}>{item.equivalence}</TableCell>
+                                        <TableCell component="th" scope="row" sx={titleFont}>BUSTO (CM)</TableCell>
+                                        {dressSizes.map(item => (
+                                            <TableCell key={`bust-${item.size}`} align="center" sx={bodyFont}>{item.bust}</TableCell>
                                         ))}
                                     </TableRow>
                                     <TableRow>
-                                        <TableCell component="th" scope="row" sx={titleFont}>PECHO (CM)</TableCell>
-                                        {formalWearSizes.map(item => (
-                                            <TableCell key={`chest-${item.size}`} align="center" sx={bodyFont}>{item.chest}</TableCell>
+                                        <TableCell component="th" scope="row" sx={titleFont}>CINTURA (CM)</TableCell>
+                                        {dressSizes.map(item => (
+                                            <TableCell key={`waist-${item.size}`} align="center" sx={bodyFont}>{item.waist}</TableCell>
+                                        ))}
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell component="th" scope="row" sx={titleFont}>CADERA (CM)</TableCell>
+                                        {dressSizes.map(item => (
+                                            <TableCell key={`hip-${item.size}`} align="center" sx={bodyFont}>{item.hip}</TableCell>
                                         ))}
                                     </TableRow>
                                 </TableBody>
@@ -440,47 +414,18 @@ const MenSizeGuideContent = () => {
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
                         <Image
-                            src="https://res.cloudinary.com/dhyv4dpk2/image/upload/v1747494647/vistelica/productos/h4add57bz1av8hnwmrm4.jpg"
-                            alt="Parte inferior"
+                            src="https://res.cloudinary.com/dhyv4dpk2/image/upload/v1748676995/vistelica/productos/ji5ubirazncnciiz3g76.png"
+                            alt="Parte inferior mujer"
                             width={500}
                             height={400}
                             style={{ objectFit: 'contain' }}
                         />
                     </Box>
 
-                    {/* Measurement Instructions */}
-                    <Box sx={{ backgroundColor: theme.palette.grey[100], p: 3, mb: 4, borderRadius: 1 }}>
-                        <Typography variant="h5" component="h3" gutterBottom sx={titleFont}>
-                            ¿CÓMO TOMARNOS CORRECTAMENTE LAS MEDIDAS?
-                        </Typography>
-
-                        <Grid container spacing={3} sx={{ mt: 2 }}>
-                            <Grid item xs={12} md={6}>
-                                <Typography variant="h6" component="h4" gutterBottom sx={titleFont}>
-                                    3. CINTURA
-                                </Typography>
-                                <Typography variant="body1" sx={bodyFont}>
-                                    Trazamos con la cinta métrica el contorno de nuestra cintura a la altura de donde se situaría el cinturón.
-                                    La medida que nos dé, sería la talla del cinturón.
-                                </Typography>
-                            </Grid>
-
-                            <Grid item xs={12} md={6}>
-                                <Typography variant="h6" component="h4" gutterBottom sx={titleFont}>
-                                    4. CADERA
-                                </Typography>
-                                <Typography variant="body1" sx={bodyFont}>
-                                    Con la cinta métrica rodearemos la parte más ancha de nuestra cadera pasando por la parte más sobresaliente del trasero.
-                                    Recuerda que para tomar esta medida debes juntar los pies antes.
-                                </Typography>
-                            </Grid>
-                        </Grid>
-                    </Box>
-
-                    {/* Pants, Bermudas, Belts */}
+                    {/* Pants, Skirts */}
                     <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
                         <Typography variant="h5" component="h3" gutterBottom sx={{ mb: 2, ...titleFont }}>
-                            PANTALONES | BERMUDAS | CINTURONES
+                            PANTALONES | FALDAS | SHORTS
                         </Typography>
 
                         <TableContainer>
@@ -514,7 +459,7 @@ const MenSizeGuideContent = () => {
                     {/* Underwear */}
                     <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
                         <Typography variant="h5" component="h3" gutterBottom sx={{ mb: 2, ...titleFont }}>
-                            UNDERWEAR | BAÑO
+                            ROPA INTERIOR | BAÑADOR | LENCERÍA
                         </Typography>
 
                         <TableContainer>
@@ -529,9 +474,15 @@ const MenSizeGuideContent = () => {
                                 </TableHead>
                                 <TableBody>
                                     <TableRow>
+                                        <TableCell component="th" scope="row" sx={titleFont}>TALLA INT</TableCell>
+                                        {underwearSizes.map(item => (
+                                            <TableCell key={`int-${item.size}`} align="center" sx={bodyFont}>{item.int}</TableCell>
+                                        ))}
+                                    </TableRow>
+                                    <TableRow>
                                         <TableCell component="th" scope="row" sx={titleFont}>CINTURA (CM)</TableCell>
                                         {underwearSizes.map(item => (
-                                            <TableCell key={`under-waist-${item.size}`} align="center" sx={bodyFont}>{item.waist}</TableCell>
+                                            <TableCell key={`waist-${item.size}`} align="center" sx={bodyFont}>{item.waist}</TableCell>
                                         ))}
                                     </TableRow>
                                 </TableBody>
@@ -550,7 +501,7 @@ const MenSizeGuideContent = () => {
 
                     <Paper elevation={2} sx={{ p: 3 }}>
                         <Typography variant="h5" component="h3" gutterBottom sx={{ mb: 2, ...titleFont }}>
-                            SNEAKERS | ZAPATOS
+                            ZAPATOS | SANDALIAS | DEPORTIVOS
                         </Typography>
 
                         <TableContainer>
@@ -580,4 +531,4 @@ const MenSizeGuideContent = () => {
     );
 };
 
-export default MenSizeGuideContent;
+export default WomenSizeGuideContent;
