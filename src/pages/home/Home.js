@@ -11,7 +11,7 @@ import FooterComponent from "@/components/layout/FooterComponent";
 import AutomaticCarousel from "@/pages/home/components/AutomaticCarousel";
 import ProductCarousel from "@/pages/home/components/ProductCarousel";
 import { useRouter } from 'next/navigation';
-import LowStockCarousel from "@/pages/home/components/LowStockCarousel";
+import LowStockCarousel from './components/LowStockCarousel';
 
 const HomePage = () => {
     const router = useRouter();
@@ -62,13 +62,17 @@ const HomePage = () => {
             </div>
             <ProductCarousel/>
 
+            {/* Banner integrado con LowStockCarousel */}
+            <div className="w-full mt-8">
+                <BannerSection/>
+                <LowStockCarousel title="" subtitle="" />
+            </div>
+
             {/* Centrar ValuesCard */}
-            <Box className="w-full mb-8" mb={6}>
-                <ValuesCard />
-            </Box>
-            {/* Contenedor para Banner con Material UI */}
-            <BannerSection/>
-            <LowStockCarousel/>
+            <div className="w-full mt-8">
+                <ValuesCard/>
+            </div>
+
             <div>
                 <FeaturedCategories/>
             </div>
