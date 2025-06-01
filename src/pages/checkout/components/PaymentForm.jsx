@@ -102,6 +102,7 @@ const FormGrid = styled('div')(() => ({
 const PaymentForm = React.forwardRef(({
                                           paymentData,
                                           setPaymentData,
+                                          amount,
                                           onPaymentSuccess,
                                           onPaymentMethodChange
                                       }, ref) => {
@@ -233,7 +234,7 @@ const PaymentForm = React.forwardRef(({
             purchase_units: [
                 {
                     amount: {
-                        value: "134.98",
+                        value: amount,
                     },
                 },
             ],
@@ -450,7 +451,7 @@ const PaymentForm = React.forwardRef(({
             {paymentType === 'creditCard' && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <CreditCard
-                        amount={10}
+                        amount={amount}
                         onPaymentSuccess={onPaymentSuccess}  // Usar la prop
                         onPaymentMethodChange={onPaymentMethodChange}  // Usar la prop
                         setPaymentData={setPaymentData}
@@ -523,7 +524,7 @@ const PaymentForm = React.forwardRef(({
             {paymentType === 'applePay' && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <ApplePayWrapper
-                        amount={10}
+                        amount={amount}
                         onPaymentSuccess={onPaymentSuccess}  // Usar la prop
                         onPaymentMethodChange={onPaymentMethodChange}  // Usar la prop
                         setPaymentData={setPaymentData}
@@ -533,7 +534,7 @@ const PaymentForm = React.forwardRef(({
             {paymentType === 'googlePay' && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <GooglePayWrapper
-                        amount={10}
+                        amount={amount}
                         onPaymentSuccess={onPaymentSuccess}  // Usar la prop
                         onPaymentMethodChange={onPaymentMethodChange}  // Usar la prop
                         setPaymentData={setPaymentData}

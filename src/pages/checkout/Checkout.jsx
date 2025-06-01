@@ -215,6 +215,7 @@ export default function Checkout(props) {
                 return <PaymentForm
                     paymentData={paymentData}
                     setPaymentData={setPaymentData}
+                    amount={activeStep >= 2 ? '$144.97' : '$134.98'}
                     onPaymentSuccess={() => setIsPaymentCompleted(true)}
                     onPaymentMethodChange={() => setIsPaymentCompleted(false)}
                     ref={paymentFormRef}
