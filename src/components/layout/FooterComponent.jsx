@@ -79,14 +79,16 @@ const SocialSection = React.memo(({ socials, delay = 0.4 }) => {
             >
                 {socials.map((social, index) => (
                     <Tooltip key={index} title={social.name}>
-                        <SocialIconButton
-                            component={motion.button}
-                            whileHover={{ y: -3 }}
-                            whileTap={{ scale: 0.9 }}
-                            aria-label={social.name}
-                        >
-                            {social.icon}
-                        </SocialIconButton>
+                        <Link href={social.href} target="_blank" rel="noopener noreferrer">
+                            <SocialIconButton
+                                component={motion.button}
+                                whileHover={{ y: -3 }}
+                                whileTap={{ scale: 0.9 }}
+                                aria-label={social.name}
+                            >
+                                {social.icon}
+                            </SocialIconButton>
+                        </Link>
                     </Tooltip>
                 ))}
             </Box>
@@ -188,7 +190,7 @@ const FooterComponent = () => {
             links: [
                 { href: "/envios", text: "Envíos" },
                 { href: "/pagos", text: "Pagos" },
-                { href: "/cambios-devoluciones", text: "Cambios y devoluciones" },
+                { href: "/guia-compra/ReturnsPage", text: "Cambios y devoluciones" },
                 { href: "/tarjeta-regalo", text: "Tarjeta Regalo" },
                 { href: "/pack-trajearte", text: "Pack Trajearte" },
                 { href: "/vestuario-laboral", text: "Vestuario Laboral" }
@@ -230,15 +232,15 @@ const FooterComponent = () => {
 
     // Redes sociales (memoizadas)
     const socialMedias = useMemo(() => [
-        { name: "Facebook", icon: <FacebookIcon /> },
-        { name: "Instagram", icon: <InstagramIcon /> },
-        { name: "YouTube", icon: <YouTubeIcon /> },
-        { name: "Twitter", icon: <TwitterIcon /> },
+        { name: "Facebook", icon: <FacebookIcon />, href: "https://www.facebook.com/profile.php?id=61576882775567" },
+        { name: "Instagram", icon: <InstagramIcon />, href: "https://www.instagram.com/vistelica_ecommerce/" },
+        { name: "Twitter", icon: <TwitterIcon />, href: "https://x.com/Vistelica_" },
         {
             name: "TikTok",
             icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 015.25 5C3.8 5.6 3 7.15 3 8.76v6.5a3.79 3.79 0 003.4 3.73 3.94 3.94 0 003.35-.73 4.37 4.37 0 001.14-1.35 3.8 3.8 0 00.37-2.55v-4.4h3.45c.28 0 1.16-.2 1.93-.85a3.37 3.37 0 001.27-2.48c0-2.2-1.43-4-3.98-4h-.47z" />
-            </svg>
+            </svg>,
+            href: "https://www.tiktok.com/@vistelica_ecommerce"
         }
     ], []);
 
@@ -290,7 +292,7 @@ const FooterComponent = () => {
                     scale: 1.1,
                     boxShadow: '0 8px 15px rgba(0,0,0,0.1)'
                 }}
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.9 }}socialMedias
             >
                 <IconButton
                     onClick={scrollToTop}
