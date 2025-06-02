@@ -13,7 +13,7 @@ import {
 } from '@mui/icons-material';
 import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
 import { typography } from "@/pages/shared-theme/themePrimitives";
-
+import { useRouter } from 'next/router';
 // Importar componentes
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -54,7 +54,7 @@ const ProductDetail = ({
     const [errorMessage, setErrorMessage] = useState(null);
     const [highlightedSection, setHighlightedSection] = useState(null);
     const [showSizeGuide, setShowSizeGuide] = useState(false);
-
+    const router = useRouter();
     // Calculate prices correctly
     const hasDiscount = product?.discount_percentage && parseFloat(product.discount_percentage) > 0;
     const originalPrice = product?.price ? parseFloat(product.price) : 0;
@@ -153,6 +153,7 @@ const ProductDetail = ({
     const handleQuantityChange = (change) => {
         const newQuantity = Math.max(1, quantity + change);
         setQuantity(newQuantity);
+        console.log(quantity);
     };
 
     // Gestionar favoritos
@@ -203,7 +204,27 @@ const ProductDetail = ({
         }
     };
 
-    // Añadir al carrito
+
+
+    const handleSizeGuideClick = () => {
+        // Asumiendo que product.category contiene la categoría del producto
+        const category = product?.category?.name.toLowerCase(); // Convertir a minúsculas para comparar
+
+        if (category === 'hombre') {
+            router.push('/guia-tallas/MenSizeGuidePage');
+        } else if (category === 'mujer') {
+            router.push('/guia-tallas/WomenSizeGuideContent');
+        } else if (category === 'chica' || category === 'chico') {
+            router.push('/guia-tallas/YouthSizeGuideContent');
+        } else {
+            // Manejar caso por defecto si es necesario
+            router.push('/guia-tallas/MenSizeGuidePage');
+        }
+    };
+
+
+
+
     const handleAddToCart = async () => {
         if ((availableSizes?.length > 0 && !selectedSize) ||
             (availableColors?.length > 0 && !selectedColor)) {
@@ -226,14 +247,7 @@ const ProductDetail = ({
 
         setErrorMessage(null);
         try {
-            await onAddToCart({
-                productId: product.product_id,
-                quantity: quantity,
-                price: parseFloat(hasDiscount ? discountedPrice : originalPrice),
-                size: selectedSize,
-                color: selectedColor,
-                discount_percentage: hasDiscount ? parseFloat(product.discount_percentage) : null
-            });
+            await onAddToCart(quantity);
         } catch (error) {
             setErrorMessage('Error al añadir al carrito');
             console.error('Error adding to cart:', error);
@@ -713,7 +727,7 @@ const ProductDetail = ({
                                                 <Button
                                                     variant="text"
                                                     size="small"
-                                                    onClick={() => setShowSizeGuide(true)}
+                                                    onClick={handleSizeGuideClick}  // Cambiado de setShowSizeGuide(true) a handleSizeGuideClick
                                                     sx={{
                                                         textTransform: 'none',
                                                         fontSize: '0.8rem',

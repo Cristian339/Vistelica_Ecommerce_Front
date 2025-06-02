@@ -34,6 +34,10 @@ const convertEurosToCents = (euros) => {
     // Convertir a número
     const amount = parseFloat(euros);
 
+
+    console.log("EL AMOUNT ES: " + euros);
+
+
     // Verificar que es un número válido
     if (isNaN(amount)) {
         throw new Error('El valor proporcionado no es un número válido');

@@ -22,16 +22,14 @@ const SizeGuideSelector = () => {
         // Navegar a la página correspondiente
         switch(newValue) {
             case 0:
-                router.push('/guia-tallas/hombre');
+                router.push('/guia-tallas/MenSizeGuidePage');
                 break;
             case 1:
-                router.push('/guia-tallas/mujer');
+                router.push('/guia-tallas/WomenSizeGuideContent');
                 break;
             case 2:
-                router.push('/guia-tallas/nino');
+                router.push('/guia-tallas/KidsSizeGuideContent');
                 break;
-            default:
-                router.push('/guia-tallas/hombre');
         }
     };
 
