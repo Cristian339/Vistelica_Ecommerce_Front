@@ -37,40 +37,12 @@ const StyledLink = styled(Link)(() => ({
     },
 }));
 
-export default function ContactInfoStep({ formData, onChange, addressError, addressErrorMessage, phoneError, phoneErrorMessage, onBack, required = {} }) {
+export default function ContactInfoStep({ formData, onChange, phoneError, phoneErrorMessage, onBack, required = {} }) {
     const { mode } = useColorScheme();
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <FormControl>
-                <FormLabel htmlFor="address" sx={{
-                    color: mode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
-                    fontWeight: 500
-                }}>
-                    Dirección{required.address ? ' *' : ''}
-                </FormLabel>
-                <TextField
-                    name="address"
-                    required={required.address}
-                    fullWidth
-                    id="address"
-                    placeholder="Av. Principal 123, Ciudad"
-                    value={formData.address}
-                    onChange={onChange}
-                    error={addressError}
-                    helperText={addressErrorMessage}
-                    FormHelperTextProps={{
-                        sx: { fontWeight: 700 }
-                    }}
-                    sx={{
-                        '& .MuiOutlinedInput-root': {
-                            '&.Mui-focused fieldset': {
-                                borderColor: vistelicaColors.primary,
-                            }
-                        }
-                    }}
-                />
-            </FormControl>
+
             <FormControl>
                 <FormLabel htmlFor="phone" sx={{
                     color: mode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,

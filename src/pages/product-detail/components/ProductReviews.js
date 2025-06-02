@@ -27,14 +27,27 @@ import {
     CircularProgress,
     Stack,
     useTheme,
-    useMediaQuery
+    useMediaQuery,
+    Menu,
+    MenuItem,
+    FormControl,
+    FormControlLabel,
+    RadioGroup,
+    Radio,
+    ListItemIcon,
+    ListItemText
 } from '@mui/material';
 import {
     Edit as EditIcon,
     Close as CloseIcon,
     Star as StarIcon,
     FilterList as FilterIcon,
-    RateReview as ReviewIcon
+    RateReview as ReviewIcon,
+    MoreVert as MoreVertIcon,
+    Flag as FlagIcon,
+    Warning as WarningIcon,
+    Block as BlockIcon,
+    Report as ReportIcon
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from "framer-motion";
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
@@ -42,6 +55,14 @@ import productService from '@/services/productService';
 import { getCurrentUser } from "@/services/authService";
 import cartService from '@/services/cartService';
 
+// Enum para las razones de reporte (debe coincidir con el backend)
+
+const ReportReason = {
+    IRRELEVANT: "No tiene que ver con el tema",
+    INAPPROPRIATE: "Inapropiada",
+    FALSE: "Falsa",
+    OTHER: "Otro"
+};
 const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -58,6 +79,18 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
     // Estados para compra y autenticación
     const [hasPurchasedProduct, setHasPurchasedProduct] = useState(false);
     const [loadingPurchaseStatus, setLoadingPurchaseStatus] = useState(true);
+    const [currentUser, setCurrentUser] = useState(null);
+
+    // Estados para reportes
+    const [reportModal, setReportModal] = useState({
+        open: false,
+        reviewId: null,
+        selectedReason: '',
+        otherReasonText: '',
+        submitting: false
+    });
+    const [menuAnchor, setMenuAnchor] = useState(null);
+    const [selectedReviewForMenu, setSelectedReviewForMenu] = useState(null);
 
     // Estado para snackbar
     const [snackbar, setSnackbar] = useState({
@@ -69,7 +102,7 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
     const reviewsPerPage = 10;
     const hasToken = typeof window !== 'undefined' && localStorage.getItem('token');
 
-    // Verificar estado de entrega del producto
+    // Verificar estado de entrega del producto y obtener usuario actual
     useEffect(() => {
         const checkProductDelivery = async () => {
             if (!hasToken) {
@@ -78,8 +111,13 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
             }
 
             try {
-                const deliveredProducts = await cartService.getDeliveredProductsIds();
+                const [deliveredProducts, user] = await Promise.all([
+                    cartService.getDeliveredProductsIds(),
+                    getCurrentUser()
+                ]);
+
                 setHasPurchasedProduct(deliveredProducts.includes(Number(productId)));
+                setCurrentUser(user);
             } catch (error) {
                 console.error("Error verificando entrega:", error);
                 setHasPurchasedProduct(false);
@@ -208,6 +246,99 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
         }
     }, [rating, reviewText, productId, onReviewAdded, handleCloseModal]);
 
+    // Funciones para reportes
+    const handleMenuOpen = useCallback((event, review) => {
+        if (!hasToken) {
+            setSnackbar({
+                open: true,
+                message: 'Debes iniciar sesión para reportar una reseña',
+                severity: 'warning'
+            });
+            return;
+        }
+
+        setMenuAnchor(event.currentTarget);
+        setSelectedReviewForMenu(review);
+    }, [hasToken]);
+
+    const handleMenuClose = useCallback(() => {
+        setMenuAnchor(null);
+        setSelectedReviewForMenu(null);
+    }, []);
+
+    const handleOpenReportModal = useCallback(() => {
+        setReportModal({
+            open: true,
+            reviewId: selectedReviewForMenu?.review_id,
+            selectedReason: '',
+            otherReasonText: '',
+            submitting: false
+        });
+        handleMenuClose();
+    }, [selectedReviewForMenu, handleMenuClose]);
+
+    const handleCloseReportModal = useCallback(() => {
+        setReportModal({
+            open: false,
+            reviewId: null,
+            selectedReason: '',
+            otherReasonText: '',
+            submitting: false
+        });
+    }, []);
+
+    const handleReportSubmit = useCallback(async () => {
+        if (!reportModal.selectedReason) {
+            setSnackbar({
+                open: true,
+                message: 'Por favor, selecciona una razón para el reporte',
+                severity: 'warning'
+            });
+            return;
+        }
+
+        if (reportModal.selectedReason === 'Otro' && !reportModal.otherReasonText.trim()) {
+            setSnackbar({
+                open: true,
+                message: 'Por favor, especifica la razón del reporte',
+                severity: 'warning'
+            });
+            return;
+        }
+
+        setReportModal(prev => ({ ...prev, submitting: true }));
+
+        try {
+            const reportData = {
+                reviewId: reportModal.reviewId,
+                reason: reportModal.selectedReason, // debe ser "Inapropiada", "Falsa", etc.
+                other_reason_text:
+                    reportModal.selectedReason === 'Otro'
+                        ? reportModal.otherReasonText.trim()
+                        : ""
+            };
+
+            await productService.reportReview(reportData);
+
+            setSnackbar({
+                open: true,
+                message: 'Reporte enviado correctamente. Gracias por ayudarnos a mantener la calidad del contenido.',
+                severity: 'success'
+            });
+
+            handleCloseReportModal();
+        } catch (error) {
+            console.error('Error al enviar el reporte:', error);
+            setSnackbar({
+                open: true,
+                message: error.response?.data?.message || 'Error al enviar el reporte. Inténtalo de nuevo.',
+                severity: 'error'
+            });
+        } finally {
+            setReportModal(prev => ({ ...prev, submitting: false }));
+        }
+    }, [reportModal]);
+
     const handleCloseSnackbar = useCallback(() => {
         setSnackbar(prev => ({ ...prev, open: false }));
     }, []);
@@ -261,6 +392,15 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
         );
     }, [loadingPurchaseStatus, hasPurchasedProduct, hasToken, handleOpenModal, isMobile]);
 
+    // Función para verificar si el usuario puede reportar una reseña
+    const canReportReview = useCallback((review) => {
+        // Solo usuarios autenticados pueden reportar
+        if (!hasToken || !currentUser) return false;
+
+        // Los usuarios no pueden reportar sus propias reseñas
+        return review.user?.user_id !== currentUser.user_id;
+    }, [hasToken, currentUser]);
+
     // Componente de reseña individual
     const ReviewCard = React.memo(({ review, index }) => (
         <motion.div
@@ -297,9 +437,30 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                             </Typography>
                             <Rating value={review.rating} size="small" readOnly />
                         </Box>
-                        <Typography variant="caption" color="text.secondary">
-                            {formatDate(review.created_at)}
-                        </Typography>
+                        <Box display="flex" alignItems="center" gap={1}>
+                            <Typography variant="caption" color="text.secondary">
+                                {formatDate(review.created_at)}
+                            </Typography>
+                            {canReportReview(review) && (
+                                <Button
+                                    size="small"
+                                    startIcon={<FlagIcon fontSize="small" />}
+                                    onClick={() => handleOpenReportModal(review)}
+                                    sx={{
+                                        color: 'text.secondary',
+                                        minWidth: 'auto',
+                                        px: 1,
+                                        fontSize: '0.75rem',
+                                        '&:hover': {
+                                            color: 'warning.main',
+                                            backgroundColor: 'rgba(255, 193, 7, 0.1)'
+                                        }
+                                    }}
+                                >
+                                    Reportar
+                                </Button>
+                            )}
+                        </Box>
                     </Box>
                     <Typography variant="body2" sx={{ mt: 1, lineHeight: 1.5 }}>
                         {review.review_text}
@@ -413,7 +574,6 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                                 <Chip
                                     label={`Todas (${reviews.length})`}
                                     onClick={() => handleFilterClick('all')}
-                                    // REEMPLAZAR LAS PROPS color Y variant POR ESTE sx:
                                     sx={{
                                         backgroundColor: selectedFilter === 'all' ? vistelicaColors.primary : 'transparent',
                                         color: selectedFilter === 'all' ? '#fff' : vistelicaColors.primary,
@@ -432,7 +592,6 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                                             key={item.stars}
                                             label={`${item.stars} ★ (${item.count})`}
                                             onClick={() => handleFilterClick(item.stars.toString())}
-                                            // REEMPLAZAR LAS PROPS color Y variant POR ESTE sx:
                                             sx={{
                                                 backgroundColor: selectedFilter === item.stars.toString() ? vistelicaColors.primary : 'transparent',
                                                 color: selectedFilter === item.stars.toString() ? '#fff' : vistelicaColors.primary,
@@ -533,6 +692,28 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                 </Paper>
             )}
 
+            {/* Menu contextual para reportar */}
+            <Menu
+                anchorEl={menuAnchor}
+                open={Boolean(menuAnchor)}
+                onClose={handleMenuClose}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
+            >
+                <MenuItem onClick={handleOpenReportModal}>
+                    <ListItemIcon>
+                        <FlagIcon fontSize="small" color="warning" />
+                    </ListItemIcon>
+                    <ListItemText primary="Reportar reseña" />
+                </MenuItem>
+            </Menu>
+
             {/* Modal para escribir reseña */}
             <Dialog
                 open={openModal}
@@ -611,6 +792,115 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                         ) : (
                             'Publicar reseña'
                         )}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Modal para reportar reseña */}
+            <Dialog
+                open={reportModal.open}
+                onClose={handleCloseReportModal}
+                maxWidth="sm"
+                fullWidth
+                TransitionComponent={Fade}
+            >
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                        <ReportIcon color="warning" />
+                        <Typography variant="h6" fontWeight={600} color={vistelicaColors.secondary}>
+                            Reportar reseña
+                        </Typography>
+                    </Box>
+                    <IconButton onClick={handleCloseReportModal} size="small">
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent dividers>
+                    <Stack spacing={3}>
+                        <Box>
+                            <Typography variant="body2" mb={2} color="text.secondary">
+                                ¿Por qué razón deseas reportar esta reseña? Tu reporte nos ayuda a mantener la calidad del contenido.
+                            </Typography>
+                            <FormControl component="fieldset">
+                                <RadioGroup
+                                    value={reportModal.selectedReason}
+                                    onChange={(e) => setReportModal(prev => ({
+                                        ...prev,
+                                        selectedReason: e.target.value
+                                    }))}
+                                >
+                                    {Object.entries(ReportReason).map(([key, value]) => (
+                                        <FormControlLabel
+                                            key={key}
+                                            value={value}
+                                            control={<Radio size="small" />}
+                                            label={
+                                                <Box display="flex" alignItems="center" gap={1}>
+                                                    {value === 'Inapropiada' && <WarningIcon fontSize="small" color="error" />}
+                                                    {value === 'Falsa' && <BlockIcon fontSize="small" color="error" />}
+                                                    {value === 'No tiene que ver con el tema' && <FlagIcon fontSize="small" color="warning" />}
+                                                    {value === 'Otro' && <ReportIcon fontSize="small" color="action" />}
+                                                    <Typography variant="body2">{value}</Typography>
+                                                </Box>
+                                            }
+                                            sx={{ mb: 1 }}
+                                        />
+                                    ))}
+                                </RadioGroup>
+                            </FormControl>
+                        </Box>
+
+                        {reportModal.selectedReason === 'Otro' && (
+                            <Box>
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    rows={3}
+                                    label="Especifica la razón"
+                                    placeholder="Por favor, describe el motivo del reporte..."
+                                    value={reportModal.otherReasonText}
+                                    onChange={(e) => setReportModal(prev => ({
+                                        ...prev,
+                                        otherReasonText: e.target.value
+                                    }))}
+                                    inputProps={{ maxLength: 500 }}
+                                    helperText={`${reportModal.otherReasonText.length}/500 caracteres`}
+                                    error={reportModal.selectedReason === 'Otro' && !reportModal.otherReasonText.trim()}
+                                />
+                            </Box>
+                        )}
+
+                        <Box
+                            sx={{
+                                p: 2,
+                                backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                                borderRadius: 1,
+                                border: '1px solid rgba(255, 193, 7, 0.3)'
+                            }}
+                        >
+                            <Typography variant="caption" color="text.secondary" display="flex" alignItems="center" gap={1}>
+                                <WarningIcon fontSize="small" color="warning" />
+                                Los reportes falsos o malintencionados pueden resultar en la suspensión de tu cuenta.
+                            </Typography>
+                        </Box>
+                    </Stack>
+                </DialogContent>
+                <DialogActions sx={{ p: 2, gap: 1 }}>
+                    <Button onClick={handleCloseReportModal} variant="outlined">
+                        Cancelar
+                    </Button>
+                    <Button
+                        onClick={handleReportSubmit}
+                        variant="contained"
+                        color="warning"
+                        disabled={
+                            !reportModal.selectedReason ||
+                            (reportModal.selectedReason === 'Otro' && !reportModal.otherReasonText.trim()) ||
+                            reportModal.submitting
+                        }
+                        startIcon={reportModal.submitting ? <CircularProgress size={16} /> : <FlagIcon />}
+                    >
+                        {reportModal.submitting ? 'Enviando...' : 'Enviar reporte'}
                     </Button>
                 </DialogActions>
             </Dialog>

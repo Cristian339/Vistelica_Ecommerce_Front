@@ -338,6 +338,37 @@ const getLowStockProducts = async () => {
         );
     }
 };
+/**
+ * Reporta una reseña por contenido inapropiado
+ * @param {Object} reportData - Datos del reporte
+ * @returns {Promise<Object>} Respuesta del servidor
+ */
+export const reportReview = async (reportData) => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Debes iniciar sesión para reportar una reseña');
+        }
+
+        const response = await axios.post(
+            `${API_URL}/review/report`,
+            reportData,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error al reportar reseña:", error);
+        throw new Error(
+            error.response?.data?.message ||
+            'Error al enviar el reporte'
+        );
+    }
+};
 
 
 const productService = {
@@ -357,6 +388,7 @@ const productService = {
     getProductsBasicInfo,
     getDiscountedProductsByCategory,
     getLowStockProducts,
+    reportReview,
 };
 
 export default productService;

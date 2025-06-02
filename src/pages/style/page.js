@@ -9,13 +9,20 @@ import {
     CardContent,
     CardMedia,
     IconButton,
-    CircularProgress
+    CircularProgress,
+    Snackbar,
+    Alert
 } from '@mui/material';
-import { Heart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Favorite, FavoriteBorder } from '@mui/icons-material';
 import {useRouter, useSearchParams} from 'next/navigation';
 import Navbar from "@/components/layout/HeaderComponent";
 import { getStyleById } from "@/services/styleService";
+import wishlistService from '@/services/wishlistService';
+import { getToken } from '@/services/authService';
+import { isInLocalWishlist, addToLocalWishlist, removeFromLocalWishlist } from "@/utils/localStorageHelpers";
 import Link from 'next/link';
+
 const Page = ({ params }) => {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -23,13 +30,10 @@ const Page = ({ params }) => {
     const [loading, setLoading] = useState(true);
     const [styleData, setStyleData] = useState(null);
     const [favorites, setFavorites] = useState({});
+    const [loadingWishlist, setLoadingWishlist] = useState({});
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [selectedThumbnail, setSelectedThumbnail] = useState(0);
-
-
-
-
-
+    const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
 
     useEffect(() => {
         const fetchStyleData = async () => {
@@ -51,11 +55,9 @@ const Page = ({ params }) => {
                     })
                 };
                 setStyleData(processedData);
-                const initialFavorites = {};
-                processedData.products.forEach(product => {
-                    initialFavorites[product.product_id] = false;
-                });
-                setFavorites(initialFavorites);
+
+                // Inicializar estado de favoritos
+                await initializeFavorites(processedData.products);
 
                 const mainImageIndex = processedData.styleImages.findIndex(img => img.is_main);
                 if (mainImageIndex !== -1) {
@@ -77,6 +79,103 @@ const Page = ({ params }) => {
             setLoading(false);
         }
     }, [styleId]);
+
+    const initializeFavorites = async (products) => {
+        const token = getToken();
+        const initialFavorites = {};
+        const initialLoadingState = {};
+
+        if (!token) {
+            // Para usuarios invitados: verificar localStorage
+            products.forEach(product => {
+                initialFavorites[product.product_id] = isInLocalWishlist(product.product_id);
+                initialLoadingState[product.product_id] = false;
+            });
+        } else {
+            // Para usuarios registrados: verificar API
+            try {
+                const wishlist = await wishlistService.getWishlist();
+                products.forEach(product => {
+                    const found = wishlist.some(item => item.product_id === product.product_id);
+                    initialFavorites[product.product_id] = found;
+                    initialLoadingState[product.product_id] = false;
+                });
+            } catch (error) {
+                console.error('Error al cargar wishlist:', error);
+                products.forEach(product => {
+                    initialFavorites[product.product_id] = false;
+                    initialLoadingState[product.product_id] = false;
+                });
+            }
+        }
+
+        setFavorites(initialFavorites);
+        setLoadingWishlist(initialLoadingState);
+    };
+
+    const toggleFavorite = async (productId, product) => {
+        const token = getToken();
+
+        if (!token) {
+            setToast({
+                open: true,
+                message: 'Inicia sesión para guardar productos en favoritos',
+                severity: 'warning'
+            });
+
+            // Para usuarios invitados: usar localStorage
+            const newFavStatus = !favorites[productId];
+            setFavorites(prev => ({
+                ...prev,
+                [productId]: newFavStatus
+            }));
+
+            if (newFavStatus) {
+                addToLocalWishlist(product);
+            } else {
+                removeFromLocalWishlist(productId);
+            }
+            return;
+        }
+
+        try {
+            setLoadingWishlist(prev => ({
+                ...prev,
+                [productId]: true
+            }));
+
+            if (favorites[productId]) {
+                await wishlistService.removeFromWishlist(productId);
+            } else {
+                await wishlistService.addToWishlist(productId);
+            }
+
+            setFavorites(prev => ({
+                ...prev,
+                [productId]: !prev[productId]
+            }));
+
+            setToast({
+                open: true,
+                message: favorites[productId]
+                    ? 'Producto eliminado de favoritos'
+                    : 'Producto añadido a favoritos',
+                severity: 'success'
+            });
+        } catch (error) {
+            console.error('Error actualizando wishlist:', error);
+            setToast({
+                open: true,
+                message: 'Error al actualizar favoritos',
+                severity: 'error'
+            });
+        } finally {
+            setLoadingWishlist(prev => ({
+                ...prev,
+                [productId]: false
+            }));
+        }
+    };
 
     return (
         <>
@@ -102,7 +201,8 @@ const Page = ({ params }) => {
                                 setSelectedThumbnail={setSelectedThumbnail}
                                 products={styleData.products}
                                 favorites={favorites}
-                                setFavorites={setFavorites}
+                                loadingWishlist={loadingWishlist}
+                                toggleFavorite={toggleFavorite}
                             />
                         </Box>
                     </>
@@ -114,6 +214,22 @@ const Page = ({ params }) => {
                     </Container>
                 )}
             </Box>
+
+            {/* Toast de notificaciones */}
+            <Snackbar
+                open={toast.open}
+                autoHideDuration={4000}
+                onClose={() => setToast({ ...toast, open: false })}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert
+                    onClose={() => setToast({ ...toast, open: false })}
+                    severity={toast.severity}
+                    sx={{ width: '100%' }}
+                >
+                    {toast.message}
+                </Alert>
+            </Snackbar>
         </>
     );
 };
@@ -138,7 +254,8 @@ const MainContentSection = ({
                                 setSelectedThumbnail,
                                 products,
                                 favorites,
-                                setFavorites
+                                loadingWishlist,
+                                toggleFavorite
                             }) => {
     const handlePrevImage = () => {
         const prevIndex = currentImageIndex === 0 ? styleImages.length - 1 : currentImageIndex - 1;
@@ -155,13 +272,6 @@ const MainContentSection = ({
     const handleThumbnailClick = (index) => {
         setCurrentImageIndex(index);
         setSelectedThumbnail(index);
-    };
-
-    const toggleFavorite = (id) => {
-        setFavorites(prev => ({
-            ...prev,
-            [id]: !prev[id]
-        }));
     };
 
     return (
@@ -209,14 +319,12 @@ const MainContentSection = ({
                         <ChevronRight />
                     </IconButton>
 
-
                     <Box
                         component="img"
                         src={styleImages[currentImageIndex]?.image_url || "/api/placeholder/600/800"}
                         alt="Estilo"
                         sx={{ width: '100%', height: 'auto', objectFit: 'cover' }}
                     />
-
 
                     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1, flexWrap: 'wrap' }}>
                         {styleImages.map((img, index) => (
@@ -248,7 +356,8 @@ const MainContentSection = ({
                                 <ProductCard
                                     product={product}
                                     isFavorite={favorites[product.product_id]}
-                                    onToggleFavorite={() => toggleFavorite(product.product_id)}
+                                    isLoadingWishlist={loadingWishlist[product.product_id]}
+                                    onToggleFavorite={() => toggleFavorite(product.product_id, product)}
                                 />
                             </Grid>
                         ))}
@@ -259,9 +368,7 @@ const MainContentSection = ({
     );
 };
 
-
-
-const ProductCard = ({ product, isFavorite, onToggleFavorite }) => {
+const ProductCard = ({ product, isFavorite, isLoadingWishlist, onToggleFavorite }) => {
     const formattedPrice = `${product.price} €`;
     const hasDiscount = product.discount_percentage && parseFloat(product.discount_percentage) > 0;
     const mainImage = product.main_image ||
@@ -301,27 +408,46 @@ const ProductCard = ({ product, isFavorite, onToggleFavorite }) => {
                     />
                     <IconButton
                         onClick={(e) => {
-                            e.preventDefault(); // previene la navegación si se hace clic en el corazón
+                            e.preventDefault();
+                            e.stopPropagation();
                             onToggleFavorite();
                         }}
+                        disabled={isLoadingWishlist}
                         sx={{
                             position: 'absolute',
                             top: 8,
                             right: 8,
                             bgcolor: 'white',
-                            opacity: 0.7,
-                            '&:hover': { bgcolor: 'white', opacity: 1 },
-                            padding: '4px',
-                            zIndex: 2
+                            opacity: 0.9,
+                            '&:hover': {
+                                bgcolor: 'white',
+                                opacity: 1,
+                                transform: 'scale(1.1)'
+                            },
+                            padding: '8px',
+                            zIndex: 2,
+                            transition: 'all 0.2s ease-in-out'
                         }}
                         aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
                         size="small"
                     >
-                        <Heart
-                            fill={isFavorite ? "black" : "none"}
-                            stroke="black"
-                            size={18}
-                        />
+                        {isLoadingWishlist ? (
+                            <CircularProgress size={20} />
+                        ) : isFavorite ? (
+                            <Favorite
+                                sx={{
+                                    color: 'red',
+                                    fontSize: '1.5rem'
+                                }}
+                            />
+                        ) : (
+                            <FavoriteBorder
+                                sx={{
+                                    color: 'black',
+                                    fontSize: '1.5rem'
+                                }}
+                            />
+                        )}
                     </IconButton>
 
                     {hasDiscount && (
@@ -368,6 +494,5 @@ const ProductCard = ({ product, isFavorite, onToggleFavorite }) => {
         </Link>
     );
 };
-
 
 export default Page;
