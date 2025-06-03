@@ -523,18 +523,6 @@ const MenuFooter = memo(() => (
             backgroundColor: `${vistelicaColors.primary}10`,
             borderRadius: '16px'
         }}>
-            <AccessibleIcon fontSize="small" sx={{ color: vistelicaColors.primary }} />
-            <Typography
-                variant="caption"
-                sx={{
-                    fontFamily: typography.fontFamily,
-                    color: vistelicaColors.secondary,
-                    fontWeight: 500,
-                    fontSize: '0.75rem',
-                }}
-            >
-                Navegue con flechas y Tab para accesibilidad
-            </Typography>
         </Box>
     </Box>
 ));

@@ -110,8 +110,7 @@ const ProductGallery = ({ productId, initialImages = [] }) => {
         setImages(prevImages => {
             const newImages = [...prevImages];
             newImages[index] = {
-                ...newImages[index],
-                image_url: '/assets/images/products/placeholder-image.jpg'
+                ...newImages[index]
             };
             return newImages;
         });
@@ -229,7 +228,7 @@ const ProductGallery = ({ productId, initialImages = [] }) => {
                         >
                             <Box
                                 component="img"
-                                src={images[currentIndex]?.image_url || '/assets/images/products/placeholder-image.jpg'}
+                                src={images[currentIndex]?.image_url}
                                 alt={`Imagen del producto ${currentIndex + 1}`}
                                 onError={() => handleImageError(currentIndex)}
                                 sx={{
@@ -424,11 +423,10 @@ const ProductGallery = ({ productId, initialImages = [] }) => {
                             >
                                 <Box
                                     component="img"
-                                    src={img.image_url || '/assets/images/products/placeholder-image.jpg'}
+                                    src={img.image_url}
                                     alt={`Miniatura ${index + 1}`}
                                     onError={(e) => {
                                         e.target.onerror = null;
-                                        e.target.src = '/assets/images/products/placeholder-image.jpg';
                                     }}
                                     sx={{
                                         width: '100%',
@@ -502,11 +500,10 @@ const ProductGallery = ({ productId, initialImages = [] }) => {
                             >
                                 <Box
                                     component="img"
-                                    src={images[currentIndex]?.image_url || '/assets/images/products/placeholder-image.jpg'}
+                                    src={images[currentIndex]?.image_url}
                                     alt={`Imagen ampliada ${currentIndex + 1}`}
                                     onError={(e) => {
                                         e.target.onerror = null;
-                                        e.target.src = '/assets/images/products/placeholder-image.jpg';
                                     }}
                                     sx={{
                                         maxHeight: '85vh',

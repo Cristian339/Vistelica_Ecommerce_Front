@@ -456,7 +456,7 @@ const NavigationControls = React.memo(({
                         sx={{
                             fontFamily: typography.fontFamily,
                             fontWeight: 700,
-                            color: '#FFCC00',
+                            color: '#D32F2F',
                             fontSize: '1.3rem',
                             textShadow: '0px 1px 2px rgba(0,0,0,0.3)'
                         }}
@@ -869,18 +869,6 @@ const LowStockCarousel = React.memo(({
                                 mb: 1
                             }}
                         >
-                            <LocalFireDepartmentIcon
-                                sx={{
-                                    color: '#ff6b6b',
-                                    fontSize: '2rem',
-                                    animation: 'pulseIcon 2s infinite',
-                                    '@keyframes pulseIcon': {
-                                        '0%': { transform: 'scale(1)' },
-                                        '50%': { transform: 'scale(1.1)' },
-                                        '100%': { transform: 'scale(1)' }
-                                    }
-                                }}
-                            />
                             <Typography
                                 variant="h4"
                                 sx={{
