@@ -318,13 +318,13 @@ const ProductCard = React.memo(({
 
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                             <Rating
-                                value={product.rating || 0}
+                                value={product.average_rating || 0}
                                 precision={0.5}
                                 size={largeView ? "medium" : "small"}
                                 readOnly
                             />
                             <Typography variant={largeView ? "body1" : "body2"} sx={{ ml: 1 }}>
-                                ({product.numReviews || 0})
+                                ({product.reviews_count || 0})
                             </Typography>
                         </Box>
 

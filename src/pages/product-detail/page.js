@@ -92,7 +92,7 @@ export default function ProductDetailPage() {
         toast.dismiss();
     };
 
-    const handleAddToCart = async () => {
+    const handleAddToCart = async (quantity = 1) => {
         toast.dismiss();
         setAddingToCart(true);
 
@@ -147,12 +147,13 @@ export default function ProductDetailPage() {
             await cartService.addToCart(
                 cart.cart_id,
                 product.product_id,
-                1,
+                /*1,*/
+                quantity,
                 parseFloat(product.price),
                 selectedSize,
                 selectedColor,
                 product.discount_percentage,
-                productImage
+                product.image_url || product.img_url || product.images?.[0]
             );
 
             toast.success('✅ Producto añadido al carrito', {
@@ -432,6 +433,6 @@ export default function ProductDetailPage() {
                     </Button>
                 )}
             />
-        </Box>
+        </div>
     );
 }

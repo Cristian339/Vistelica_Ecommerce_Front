@@ -192,7 +192,8 @@ const FilterSidebar = ({
                            selectedGender,
                            showFilters,
                            setShowFilters,
-                           onSubcategorySelect
+                           onSubcategorySelect,
+                           products = [],
                        }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -203,7 +204,21 @@ const FilterSidebar = ({
     const handleAccordionChange = (panel) => (event, isExpanded) => {
         setExpandedAccordion(isExpanded ? panel : false);
     };
+    const getRatingCount = (rating) => {
+        if (!products || products.length === 0) return 0;
 
+        return products.filter(product => {
+            const productRating = parseFloat(product.average_rating) || 0;
+
+            if (rating === 5) {
+                // Para 5 estrellas: exactamente 5.0
+                return productRating === 5.0;
+            } else {
+                // Para 1-4 estrellas: rango de X.0 a X.99
+                return productRating >= rating && productRating < rating + 1;
+            }
+        }).length;
+    };
     // Función para manejar checkboxes
     const handleCheckbox = (key, value) => {
         setFilters(prev => ({

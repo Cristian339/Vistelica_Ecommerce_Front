@@ -1344,11 +1344,21 @@ const ProductList = () => {
                     );
                 }
 
-                // Filtro por valoración - optimizado
-                if (filters.ratings.length > 0) {
-                    const minRating = Math.min(...filters.ratings);
-                    result = result.filter(p => (p.rating || 0) >= minRating);
-                }
+        if (filters.ratings.length > 0) {
+            result = result.filter(product => {
+                const productRating = parseFloat(product.average_rating) || 0;
+
+                return filters.ratings.some(selectedRating => {
+                    if (selectedRating === 5) {
+                        // Para 5 estrellas: exactamente 5.0
+                        return productRating === 5.0;
+                    } else {
+                        // Para 1-4 estrellas: rango de X.0 a X.99
+                        return productRating >= selectedRating && productRating < selectedRating + 1;
+                    }
+                });
+            });
+        }
 
                 // Filtros de precio - con validaciones robustas
                 if (filters.priceMin !== '') {
@@ -1542,6 +1552,7 @@ const ProductList = () => {
                         showFilters={showFilters}
                         setShowFilters={setShowFilters}
                         closeSidebar={closeSidebar}
+                        products={products}
                         onSubcategorySelect={(subcatId) => {
                             if (filters.subcategories.includes(subcatId)) {
                                 setFilters(prev => ({

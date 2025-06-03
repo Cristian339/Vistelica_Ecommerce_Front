@@ -18,6 +18,7 @@ import RegistrationOptions from './components/RegistrationOptions';
 import AccountInfoStep from './components/AccountInfoStep';
 import PersonalInfoStep from './components/PersonalInfoStep';
 import ContactInfoStep from './components/ContactInfoStep';
+import AdditionalAddressStep from './components/AdditionalAddressStep';
 import { useColorScheme } from '@mui/material/styles';
 import { vistelicaColors } from '../shared-theme/vistelicaColors';
 
@@ -29,9 +30,12 @@ const Card = styled(MuiCard)(() => {
         flexDirection: 'column',
         alignSelf: 'center',
         width: '100%',
-        padding: '32px',
-        gap: '16px',
+        maxWidth: '450px', // Ancho máximo fijo
+        padding: '24px', // Reducir padding
+        gap: '12px', // Reducir gap
         margin: 'auto',
+        maxHeight: '90vh', // Altura máxima del viewport
+        overflowY: 'auto', // Permitir scroll vertical
         backgroundColor: mode === 'dark'
             ? vistelicaColors.cardBackground.dark
             : vistelicaColors.cardBackground.light,
@@ -40,7 +44,6 @@ const Card = styled(MuiCard)(() => {
             : vistelicaColors.cardShadow.light,
         borderRadius: '16px',
         position: 'relative',
-        overflow: 'hidden',
         '&::after': {
             content: '""',
             position: 'absolute',
@@ -50,19 +53,43 @@ const Card = styled(MuiCard)(() => {
             height: '5px',
             background: `linear-gradient(90deg, ${vistelicaColors.primary}, ${vistelicaColors.quaternary})`,
         },
-        '@media (min-width: 600px)': {
-            width: '450px',
+        '&::-webkit-scrollbar': {
+            width: '6px',
+        },
+        '&::-webkit-scrollbar-track': {
+            background: 'rgba(0,0,0,0.1)',
+            borderRadius: '3px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+            background: vistelicaColors.primary,
+            borderRadius: '3px',
+            '&:hover': {
+                background: vistelicaColors.primaryDark,
+            }
         },
     };
+    /*
+    '&::-webkit-scrollbar': {
+            display: 'none',
+            width: 0,
+        },
+        // Para Firefox
+        scrollbarWidth: 'none',
+        // Para Internet Explorer y Edge legacy
+        '-ms-overflow-style': 'none',
+
+    * */
 });
 
 const SignUpContainer = styled(Stack)(() => {
     const { mode } = useColorScheme();
 
     return {
-        height: 'calc((1 - var(--template-frame-height, 0)) * 100dvh)',
-        minHeight: '100%',
+        height: '100vh', // Altura completa del viewport
+        minHeight: '100vh',
         padding: '16px',
+        justifyContent: 'center', // Centrar verticalmente
+        alignItems: 'center', // Centrar horizontalmente
         '@media (min-width: 600px)': {
             padding: '32px',
         },
@@ -80,7 +107,7 @@ const SignUpContainer = styled(Stack)(() => {
     };
 });
 
-const steps = ['Cuenta', 'Información personal', 'Contacto'];
+const steps = ['Cuenta', 'Información personal', 'Dirección adicional', 'Contacto'];
 
 export default function SignUp(props) {
     const { mode } = useColorScheme();
@@ -93,10 +120,21 @@ export default function SignUp(props) {
         lastName: '',
         email: '',
         password: '',
-        address: '',
         phone: '',
         avatar: '',
-        born_date: ''
+        born_date: '',
+
+        includeAdditionalAddress: false,
+        additional_street: '',
+        additional_city: '',
+        additional_state: '',
+        additional_postal_code: '',
+        additional_country: '',
+        additional_block: '',
+        additional_floor: '',
+        additional_door: '',
+        additional_label: '',
+        additional_is_default: false
     });
 
     // Validation error states
@@ -110,10 +148,12 @@ export default function SignUp(props) {
     const [lastNameErrorMessage, setLastNameErrorMessage] = React.useState('');
     const [born_dateError, setBorn_dateError] = React.useState(false);
     const [born_dateErrorMessage, setBorn_dateErrorMessage] = React.useState('');
-    const [addressError, setAddressError] = React.useState(false);
-    const [addressErrorMessage, setAddressErrorMessage] = React.useState('');
+
     const [phoneError, setPhoneError] = React.useState(false);
     const [phoneErrorMessage, setPhoneErrorMessage] = React.useState('');
+
+    // Additional address error states
+    const [additionalAddressErrors, setAdditionalAddressErrors] = React.useState({});
 
     // API communication states
     const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -134,6 +174,48 @@ export default function SignUp(props) {
             ...formData,
             [name]: value
         });
+    };
+
+    const handleCheckboxChange = (name, checked) => {
+        setFormData({
+            ...formData,
+            [name]: checked
+        });
+    };
+
+    const validateAdditionalAddress = () => {
+        const errors = {};
+        let isValid = true;
+
+        if (formData.includeAdditionalAddress) {
+            if (!formData.additional_street || formData.additional_street.trim() === '') {
+                errors.additional_street = 'La calle es requerida.';
+                isValid = false;
+            }
+
+            if (!formData.additional_city || formData.additional_city.trim() === '') {
+                errors.additional_city = 'La ciudad es requerida.';
+                isValid = false;
+            }
+
+            if (!formData.additional_state || formData.additional_state.trim() === '') {
+                errors.additional_state = 'El estado/provincia es requerido.';
+                isValid = false;
+            }
+
+            if (!formData.additional_postal_code || formData.additional_postal_code.trim() === '') {
+                errors.additional_postal_code = 'El código postal es requerido.';
+                isValid = false;
+            }
+
+            if (!formData.additional_country || formData.additional_country.trim() === '') {
+                errors.additional_country = 'El país es requerido.';
+                isValid = false;
+            }
+        }
+
+        setAdditionalAddressErrors(errors);
+        return isValid;
     };
 
     const validateCurrentStep = async () => {
@@ -215,19 +297,14 @@ export default function SignUp(props) {
 
                 return isValid;
 
-            case 2: // Contact info
+            case 2: // Additional address
+                return validateAdditionalAddress();
+
+            case 3: // Contact info
                 const address = document.getElementById('address');
                 const phone = document.getElementById('phone');
                 isValid = true;
 
-                if (!address?.value || address.value.trim() === '') {
-                    setAddressError(true);
-                    setAddressErrorMessage('La dirección es requerida.');
-                    isValid = false;
-                } else {
-                    setAddressError(false);
-                    setAddressErrorMessage('');
-                }
 
                 if (!phone?.value || phone.value.trim() === '') {
                     setPhoneError(true);
@@ -269,7 +346,7 @@ export default function SignUp(props) {
             if (activeStep === steps.length - 1) {
                 // Validar que todos los campos requeridos estén completos
                 if (!formData.name || !formData.lastName || !formData.email ||
-                    !formData.password || !formData.address || !formData.phone ||
+                    !formData.password  || !formData.phone ||
                     !formData.born_date) {
                     setSubmitError('Por favor completa todos los campos requeridos.');
                     return;
@@ -286,7 +363,7 @@ export default function SignUp(props) {
 
                     // Redirigir después del registro exitoso
                     setTimeout(() => {
-                        window.location.href = '/sign-in-side/SignInSide';
+                        window.location.href = 'sign-in-side/Sign-in-side'; // Cambia la URL según tu ruta de inicio de sesión
                     }, 2000);
                 } catch (error) {
                     console.error('Error al registrar usuario:', error);
@@ -420,16 +497,25 @@ export default function SignUp(props) {
                                 )}
 
                                 {activeStep === 2 && (
+                                    <AdditionalAddressStep
+                                        formData={formData}
+                                        onChange={handleChange}
+                                        onCheckboxChange={handleCheckboxChange}
+                                        errors={additionalAddressErrors}
+                                        onBack={handleBack}
+                                        isLastStep={false}
+                                    />
+                                )}
+
+                                {activeStep === 3 && (
                                     <ContactInfoStep
                                         formData={formData}
                                         onChange={handleChange}
-                                        addressError={addressError}
-                                        addressErrorMessage={addressErrorMessage}
                                         phoneError={phoneError}
                                         phoneErrorMessage={phoneErrorMessage}
                                         onBack={handleBack}
                                         required={{
-                                            address: true,
+
                                             phone: true,
                                             avatar: false
                                         }}

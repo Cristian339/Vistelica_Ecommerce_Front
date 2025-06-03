@@ -338,6 +338,104 @@ const getLowStockProducts = async () => {
         );
     }
 };
+/**
+ * Reporta una reseña por contenido inapropiado
+ * @param {Object} reportData - Datos del reporte
+ * @returns {Promise<Object>} Respuesta del servidor
+ */
+export const reportReview = async (reportData) => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Debes iniciar sesión para reportar una reseña');
+        }
+
+        const response = await axios.post(
+            `${API_URL}/review/report`,
+            reportData,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error al reportar reseña:", error);
+        throw new Error(
+            error.response?.data?.message ||
+            'Error al enviar el reporte'
+        );
+    }
+};
+
+
+/**
+ * Solicita una devolución para un item de pedido
+ * @param {number} orderDetailId - ID del detalle del pedido
+ * @param {string} motivo - Motivo de la devolución
+ * @returns {Promise<Object>} Respuesta del servidor
+ */
+export const requestRefund = async (orderDetailId, motivo) => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Debes iniciar sesión para solicitar una devolución');
+        }
+
+        const response = await axios.post(
+            `${API_URL}/delivered/request-refund`,
+            {
+                order_detail_id: orderDetailId,
+                motivo: motivo
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error al solicitar devolución:', error);
+        throw new Error(
+            error.response?.data?.message ||
+            'No se pudo procesar la solicitud de devolución. Inténtalo más tarde.'
+        );
+    }
+};
+
+/**
+ * Obtiene los pedidos entregados con sus detalles
+ * @returns {Promise<Array>} Lista de pedidos entregados con detalles
+ */
+export const getDeliveredOrdersWithDetails = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Debes iniciar sesión para ver tus pedidos');
+        }
+
+        const response = await axios.get(
+            `${API_URL}/delivered/delivered-with-details`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        );
+        return response.data.orders || [];
+    } catch (error) {
+        console.error('Error al obtener pedidos entregados:', error);
+        throw new Error(
+            error.response?.data?.message ||
+            'No se pudieron cargar los pedidos entregados. Inténtalo más tarde.'
+        );
+    }
+};
+
 
 
 const productService = {
@@ -357,6 +455,9 @@ const productService = {
     getProductsBasicInfo,
     getDiscountedProductsByCategory,
     getLowStockProducts,
+    reportReview,
+    requestRefund,
+    getDeliveredOrdersWithDetails,
 };
 
 export default productService;

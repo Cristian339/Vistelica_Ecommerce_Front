@@ -158,7 +158,7 @@ const CartPage = React.memo(() => {
         if (isGuest) {
             router.push('/sign-in-side');
         } else {
-            router.push('/checkout');
+            router.push('/checkout/Checkout');
         }
     }, [router]);
 

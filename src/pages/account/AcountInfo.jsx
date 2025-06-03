@@ -70,6 +70,21 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
     const [verificationCode, setVerificationCode] = useState('');
     const [newEmail, setNewEmail] = useState('');
     const [emailChangeError, setEmailChangeError] = useState('');
+    const [passwordValidation, setPasswordValidation] = useState({
+        minLength: false,
+        isValid: false
+    });
+    const validatePassword = (password) => {
+        const minLength = password.length >= 6;
+
+        const validation = {
+            minLength,
+            isValid: minLength
+        };
+
+        setPasswordValidation(validation);
+        return validation;
+    };
 
     useEffect(() => {
         if (userData) {
@@ -282,6 +297,7 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
         setNewPassword('');
         setConfirmPassword('');
         setPasswordError('');
+        setPasswordValidation({ minLength: false, isValid: false });
     };
 
     if (loading) {
@@ -645,7 +661,10 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                                                     backgroundColor: 'rgba(228, 176, 2, 0.04)',
                                                 }
                                             }}
-                                            onClick={() => setPasswordStep(1)}
+                                            onClick={() => {
+                                                setPasswordStep(1);
+                                                setPasswordError('');
+                                            }}
                                         >
                                             Cambiar contraseña
                                         </Button>
@@ -836,8 +855,17 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                                         type="password"
                                         label="Nueva contraseña"
                                         value={newPassword}
-                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        onChange={(e) => {
+                                            setNewPassword(e.target.value);
+                                            validatePassword(e.target.value);
+                                        }}
                                         sx={{ mb: 2 }}
+                                        error={!passwordValidation.isValid && newPassword !== ''}
+                                        helperText={
+                                            newPassword !== '' && !passwordValidation.minLength
+                                                ? 'La contraseña debe tener al menos 6 caracteres'
+                                                : ''
+                                        }
                                     />
                                     <TextField
                                         fullWidth
@@ -853,12 +881,18 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                                                 : ''
                                         }
                                     />
+                                    {newPassword === currentPassword && newPassword !== '' && (
+                                        <Alert severity="error" sx={{ mb: 2 }}>
+                                            La nueva contraseña debe ser diferente a la actual
+                                        </Alert>
+                                    )}
                                     {passwordError && (
                                         <Alert severity="error" sx={{ mb: 2 }}>
                                             {passwordError}
                                         </Alert>
                                     )}
                                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+
                                         <Button
                                             variant="outlined"
                                             onClick={() => {
@@ -871,7 +905,12 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                                         <Button
                                             variant="contained"
                                             sx={{ backgroundColor: vistelicaColors.primary }}
-                                            disabled={newPassword !== confirmPassword || newPassword === ''}
+                                            disabled={
+                                                newPassword !== confirmPassword ||
+                                                newPassword === '' ||
+                                                newPassword === currentPassword || // NUEVA LÍNEA: evita usar la misma contraseña
+                                                !passwordValidation.isValid
+                                            }
                                             onClick={async () => {
                                                 try {
                                                     await changePassword(currentPassword, newPassword);
@@ -884,6 +923,7 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                                                     setCurrentPassword('');
                                                     setNewPassword('');
                                                     setConfirmPassword('');
+                                                    setPasswordValidation({ minLength: false, isValid: false });
                                                 } catch (error) {
                                                     setPasswordError(error.message);
                                                 }
@@ -891,6 +931,7 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                                         >
                                             Cambiar contraseña
                                         </Button>
+
                                     </Box>
                                 </>
                             )}
