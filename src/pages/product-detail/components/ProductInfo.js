@@ -1,47 +1,73 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Accordion, AccordionSummary, AccordionDetails, Typography, Box, Paper, Divider, Chip, IconButton } from '@mui/material';
+import {
+    Accordion, AccordionSummary, AccordionDetails,
+    Typography, Box, Paper, Divider, Chip, IconButton,
+    useTheme, useMediaQuery
+} from '@mui/material';
 import { motion, AnimatePresence } from "framer-motion";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import DescriptionIcon from '@mui/icons-material/Description';
 import ArticleIcon from '@mui/icons-material/Article';
 import InfoIcon from '@mui/icons-material/Info';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
 import { typography } from "@/pages/shared-theme/themePrimitives";
 
 const ProductInfo = ({ description }) => {
     const [expanded, setExpanded] = useState(true);
     const [highlightedParagraph, setHighlightedParagraph] = useState(null);
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
 
     // Dividir la descripción en párrafos para animación
     const paragraphs = description.split('\n').filter(p => p.trim().length > 0);
 
-    // Animaciones
+    // Animaciones optimizadas
     const containerVariants = {
-        hidden: { opacity: 0, y: 10 },
+        hidden: { opacity: 0, y: isMobile ? 5 : 10 },
         visible: {
             opacity: 1,
             y: 0,
             transition: {
-                duration: 0.4,
+                duration: 0.3,
                 when: "beforeChildren",
-                staggerChildren: 0.1
+                staggerChildren: isMobile ? 0.05 : 0.1
             }
         }
     };
 
     const paragraphVariants = {
-        hidden: { opacity: 0, x: -5 },
-        visible: { opacity: 1, x: 0 }
+        hidden: { opacity: 0, x: isMobile ? -3 : -5 },
+        visible: {
+            opacity: 1,
+            x: 0,
+            transition: {
+                type: "spring",
+                stiffness: 300,
+                damping: 30
+            }
+        }
     };
 
     const handleParagraphHover = (index) => {
-        setHighlightedParagraph(index);
+        if (!isMobile) setHighlightedParagraph(index);
     };
 
     const handleParagraphLeave = () => {
-        setHighlightedParagraph(null);
+        if (!isMobile) setHighlightedParagraph(null);
+    };
+
+    const handleParagraphTouch = (index) => {
+        if (isMobile) {
+            if (highlightedParagraph === index) {
+                setHighlightedParagraph(null);
+            } else {
+                setHighlightedParagraph(index);
+            }
+        }
     };
 
     return (
@@ -53,11 +79,14 @@ const ProductInfo = ({ description }) => {
             <Paper
                 elevation={2}
                 sx={{
-                    mt: 2,
+                    mt: { xs: 1.5, sm: 2, md: 2.5 },
                     overflow: 'hidden',
-                    borderRadius: '12px',
+                    borderRadius: { xs: '10px', sm: '12px' },
                     backgroundColor: '#fcfcfc',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+                    boxShadow: {
+                        xs: '0 2px 10px rgba(0,0,0,0.04)',
+                        sm: '0 4px 20px rgba(0,0,0,0.06)'
+                    },
                     border: `1px solid ${vistelicaColors.primary}20`
                 }}
             >
@@ -73,39 +102,69 @@ const ProductInfo = ({ description }) => {
                 >
                     <AccordionSummary
                         expandIcon={
-                            <motion.div
-                                animate={{ rotate: expanded ? 180 : 0 }}
-                                transition={{ duration: 0.3, type: "spring", stiffness: 200 }}
+                            <Box
+                                component={motion.div}
+                                animate={{
+                                    rotate: expanded ? 180 : 0,
+                                    scale: expanded ? 1.2 : 1
+                                }}
+                                transition={{
+                                    duration: 0.3,
+                                    type: "spring",
+                                    stiffness: 200
+                                }}
+                                sx={{
+                                    backgroundColor: `${vistelicaColors.primary}15`,
+                                    borderRadius: '50%',
+                                    width: { xs: 28, sm: 32 },
+                                    height: { xs: 28, sm: 32 },
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
                             >
                                 <ExpandMoreIcon
                                     sx={{
-                                        fontSize: '1.2rem',
-                                        color: vistelicaColors.secondary
+                                        fontSize: { xs: '1.1rem', sm: '1.2rem' },
+                                        color: vistelicaColors.primary
                                     }}
                                 />
-                            </motion.div>
+                            </Box>
                         }
+                        aria-label="Expandir descripción del producto"
                         sx={{
-                            minHeight: '56px !important',
-                            p: 1.5,
-                            px: 2.5,
+                            minHeight: { xs: '48px !important', sm: '56px !important' },
+                            p: { xs: 1.2, sm: 1.5 },
+                            px: { xs: 1.8, sm: 2.5 },
                             background: `linear-gradient(to right, ${vistelicaColors.primary}15, ${vistelicaColors.secondary}05)`,
                             ':hover': {
                                 background: `linear-gradient(to right, ${vistelicaColors.primary}25, ${vistelicaColors.secondary}10)`,
+                            },
+                            '& .MuiAccordionSummary-content': {
+                                margin: { xs: '6px 0', sm: '8px 0' }
                             }
                         }}
                     >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: { xs: 1, sm: 1.5 },
+                            flexWrap: { xs: 'wrap', sm: 'nowrap' }
+                        }}>
                             <motion.div
                                 animate={{
-                                    rotate: expanded ? [0, 15, 0] : 0,
-                                    scale: expanded ? [1, 1.15, 1] : 1
+                                    rotate: expanded ? 15 : 0,
+                                    scale: expanded ? 1.15 : 1
                                 }}
-                                transition={{ duration: 0.5, delay: 0.2 }}
+                                transition={{
+                                    duration: 0.5,
+                                    delay: 0.2,
+                                    type: "spring"
+                                }}
                                 style={{
                                     background: `linear-gradient(135deg, ${vistelicaColors.primary}, ${vistelicaColors.secondary})`,
                                     borderRadius: '50%',
-                                    padding: '8px',
+                                    padding: isMobile ? '6px' : '8px',
                                     display: 'flex',
                                     justifyContent: 'center',
                                     alignItems: 'center'
@@ -113,17 +172,17 @@ const ProductInfo = ({ description }) => {
                             >
                                 <ArticleIcon sx={{
                                     color: 'white',
-                                    fontSize: '1.3rem'
+                                    fontSize: { xs: '1.1rem', sm: '1.3rem' }
                                 }} />
                             </motion.div>
-                            <Box>
+                            <Box sx={{ flex: 1 }}>
                                 <Typography
                                     variant="subtitle1"
                                     sx={{
-                                        fontSize: '1.1rem',
+                                        fontSize: { xs: '0.95rem', sm: '1.1rem' },
                                         fontWeight: 600,
                                         fontFamily: typography.fontFamily,
-                                        color: vistelicaColors.secondary,
+                                        color: vistelicaColors.primary,
                                         textTransform: 'uppercase',
                                         letterSpacing: '0.5px'
                                     }}
@@ -133,8 +192,9 @@ const ProductInfo = ({ description }) => {
                                 <Typography
                                     variant="body2"
                                     sx={{
-                                        fontSize: '0.8rem',
-                                        color: 'text.secondary',
+                                        fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                                        color: vistelicaColors.secondary,
+                                        fontFamily: typography.fontFamily,
                                         display: { xs: 'none', sm: 'block' }
                                     }}
                                 >
@@ -142,15 +202,25 @@ const ProductInfo = ({ description }) => {
                                 </Typography>
                             </Box>
                             <Chip
+                                icon={
+                                    <AutoAwesomeIcon
+                                        sx={{
+                                            fontSize: '0.7rem',
+                                            color: vistelicaColors.primary
+                                        }}
+                                    />
+                                }
                                 label="Detalle"
                                 size="small"
                                 sx={{
-                                    height: 22,
-                                    backgroundColor: `${vistelicaColors.primary}30`,
-                                    color: vistelicaColors.secondary,
-                                    fontSize: '0.7rem',
+                                    height: { xs: 20, sm: 22 },
+                                    backgroundColor: `${vistelicaColors.primary}15`,
+                                    color: vistelicaColors.primary,
+                                    fontSize: { xs: '0.65rem', sm: '0.7rem' },
                                     fontWeight: 600,
-                                    ml: 1
+                                    fontFamily: typography.fontFamily,
+                                    ml: { xs: 0, sm: 1 },
+                                    display: { xs: expanded ? 'none' : 'flex', sm: 'flex' }
                                 }}
                             />
                         </Box>
@@ -170,7 +240,7 @@ const ProductInfo = ({ description }) => {
                                         borderStyle: 'dashed'
                                     }} />
                                     <Box sx={{
-                                        p: 3,
+                                        p: { xs: 2, sm: 3 },
                                         borderRadius: '0 0 12px 12px',
                                         position: 'relative',
                                         overflow: 'hidden',
@@ -183,43 +253,73 @@ const ProductInfo = ({ description }) => {
                                                     variants={paragraphVariants}
                                                     onMouseEnter={() => handleParagraphHover(index)}
                                                     onMouseLeave={handleParagraphLeave}
+                                                    onClick={() => handleParagraphTouch(index)}
                                                 >
                                                     <Box
                                                         sx={{
                                                             display: 'flex',
                                                             alignItems: 'flex-start',
-                                                            gap: 1.5,
-                                                            mb: 2,
-                                                            transition: 'all 0.3s',
-                                                            p: 1.5,
-                                                            borderRadius: '8px',
-                                                            backgroundColor: highlightedParagraph === index ? `${vistelicaColors.primary}08` : 'transparent'
+                                                            gap: { xs: 1, sm: 1.5 },
+                                                            mb: { xs: 1.5, sm: 2 },
+                                                            transition: 'all 0.3s ease',
+                                                            p: { xs: 1, sm: 1.5 },
+                                                            borderRadius: { xs: '6px', sm: '8px' },
+                                                            backgroundColor: highlightedParagraph === index
+                                                                ? `${vistelicaColors.primary}08`
+                                                                : 'transparent',
+                                                            '&:hover': {
+                                                                backgroundColor: !isMobile
+                                                                    ? `${vistelicaColors.primary}05`
+                                                                    : 'transparent'
+                                                            }
                                                         }}
                                                     >
-                                                        {index === 0 && (
+                                                        {index === 0 ? (
                                                             <InfoIcon sx={{
                                                                 color: vistelicaColors.primary,
-                                                                fontSize: '1.2rem',
-                                                                mt: 0.3
+                                                                fontSize: { xs: '1.1rem', sm: '1.2rem' },
+                                                                mt: 0.3,
+                                                                flexShrink: 0
                                                             }} />
-                                                        )}
+                                                        ) : index === 1 ? (
+                                                            <Box
+                                                                sx={{
+                                                                    display: { xs: 'none', md: 'block' },
+                                                                    opacity: 0.7,
+                                                                    ml: 0.2
+                                                                }}
+                                                            >
+                                                                <FormatQuoteIcon sx={{
+                                                                    color: vistelicaColors.primary,
+                                                                    fontSize: '0.9rem',
+                                                                    transform: 'rotate(180deg)',
+                                                                    mt: 0.3,
+                                                                    opacity: 0.6,
+                                                                    flexShrink: 0
+                                                                }} />
+                                                            </Box>
+                                                        ) : null}
+
                                                         <Typography
                                                             variant="body1"
                                                             component="p"
                                                             sx={{
-                                                                fontSize: '1rem',
+                                                                fontSize: { xs: '0.9rem', sm: '1rem' },
                                                                 lineHeight: 1.7,
                                                                 fontFamily: typography.fontFamily,
-                                                                color: index === 0 ? vistelicaColors.secondary : (vistelicaColors.textPrimary || '#333'),
+                                                                color: index === 0
+                                                                    ? vistelicaColors.primary
+                                                                    : (vistelicaColors.secondary || '#333'),
                                                                 position: 'relative',
-                                                                pl: index === 0 ? 0 : (index === 1 ? 0 : 0),
+                                                                pl: index === 0 ? 0 : (index === 1 ? { xs: 0, md: 0 } : 0),
                                                                 flex: 1,
                                                                 '&:not(:last-child)': {
-                                                                    pb: 1,
+                                                                    pb: { xs: 0.5, sm: 1 },
                                                                 },
                                                                 '&:first-of-type': {
-                                                                    fontWeight: 500,
-                                                                }
+                                                                    fontWeight: 600,
+                                                                },
+                                                                wordBreak: 'break-word'
                                                             }}
                                                         >
                                                             {paragraph}
@@ -232,9 +332,11 @@ const ProductInfo = ({ description }) => {
                                                 <Typography
                                                     variant="body1"
                                                     sx={{
-                                                        fontSize: '1rem',
+                                                        fontSize: { xs: '0.9rem', sm: '1rem' },
                                                         fontFamily: typography.fontFamily,
-                                                        p: 1.5
+                                                        p: { xs: 1, sm: 1.5 },
+                                                        color: vistelicaColors.secondary,
+                                                        fontStyle: 'italic'
                                                     }}
                                                 >
                                                     {description || "No hay descripción disponible para este producto."}
@@ -242,31 +344,33 @@ const ProductInfo = ({ description }) => {
                                             </motion.div>
                                         )}
 
-                                        {/* Elementos decorativos */}
+                                        {/* Elementos decorativos responsivos */}
                                         <Box
                                             sx={{
                                                 position: 'absolute',
-                                                bottom: -30,
-                                                right: -30,
-                                                width: '180px',
-                                                height: '180px',
+                                                bottom: { xs: -20, sm: -30 },
+                                                right: { xs: -20, sm: -30 },
+                                                width: { xs: 120, sm: 180 },
+                                                height: { xs: 120, sm: 180 },
                                                 background: `radial-gradient(circle, ${vistelicaColors.primary}10 10%, transparent 70%)`,
                                                 opacity: 0.5,
                                                 borderRadius: '50%',
-                                                zIndex: 0
+                                                zIndex: 0,
+                                                display: { xs: 'none', sm: 'block' }
                                             }}
                                         />
                                         <Box
                                             sx={{
                                                 position: 'absolute',
-                                                top: 20,
-                                                left: -40,
-                                                width: '100px',
-                                                height: '100px',
+                                                top: { xs: 10, sm: 20 },
+                                                left: { xs: -20, sm: -40 },
+                                                width: { xs: 70, sm: 100 },
+                                                height: { xs: 70, sm: 100 },
                                                 background: `radial-gradient(circle, ${vistelicaColors.secondary}10 10%, transparent 70%)`,
                                                 opacity: 0.4,
                                                 borderRadius: '50%',
-                                                zIndex: 0
+                                                zIndex: 0,
+                                                display: { xs: 'none', sm: 'block' }
                                             }}
                                         />
                                     </Box>

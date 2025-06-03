@@ -1,6 +1,8 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Head from 'next/head';
 import ProductDetail from './components/ProductDetail';
 import productService from "@/services/productService";
 import cartService from '@/services/cartService';
@@ -9,7 +11,19 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Navbar from "@/components/layout/HeaderComponent";
 import Footer from "@/components/layout/FooterComponent";
-import { CircularProgress } from '@mui/material';
+import {
+    Box,
+    Typography,
+    Button,
+    CircularProgress,
+    Container,
+    Paper
+} from '@mui/material';
+import { motion } from "framer-motion";
+import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
+import { typography } from "@/pages/shared-theme/themePrimitives";
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 export default function ProductDetailPage() {
     const searchParams = useSearchParams();
@@ -24,6 +38,40 @@ export default function ProductDetailPage() {
     const [addingToCart, setAddingToCart] = useState(false);
     const [sessionId, setSessionId] = useState(null);
 
+    // Optimizado para evitar re-renderizaciones innecesarias
+    const fetchProductData = useCallback(async () => {
+        try {
+            setLoading(true);
+            if (!id) {
+                throw new Error("ID de producto no proporcionado");
+            }
+
+            const productData = await productService.getById(id);
+
+            if (!productData) {
+                throw new Error("Producto no encontrado");
+            }
+
+            setProduct(productData);
+
+            // Establecer valores por defecto solo si hay opciones disponibles
+            if (productData.sizes?.length > 0) {
+                setSelectedSize(productData.sizes[0]);
+            }
+            if (productData.colors?.length > 0) {
+                setSelectedColor(productData.colors[0]);
+            }
+        } catch (err) {
+            console.error("Error fetchando el producto:", err);
+            setError(err.message || "Error al cargar el producto");
+            toast.error("Error al cargar los datos del producto", {
+                position: "bottom-center"
+            });
+        } finally {
+            setLoading(false);
+        }
+    }, [id]);
+
     useEffect(() => {
         // Obtener sessionId del localStorage si existe
         const storedSessionId = localStorage.getItem('sessionId');
@@ -31,41 +79,8 @@ export default function ProductDetailPage() {
             setSessionId(storedSessionId);
         }
 
-        const fetchProductData = async () => {
-            try {
-                setLoading(true);
-                if (id) {
-                    const productData = await productService.getById(id);
-
-                    if (!productData) {
-                        throw new Error("Producto no encontrado");
-                    }
-
-                    setProduct(productData);
-
-                    // Establecer valores por defecto solo si hay opciones disponibles
-                    const productSizes = productData.sizes || productData.size || [];
-                    const productColors = productData.colors || [];
-
-                    if (productData.sizes?.length > 0) {
-                        setSelectedSize(productData.sizes[0]);
-                    }
-                    if (productColors.length > 0) {
-                        setSelectedColor(productColors[0]);
-                    }
-
-                    setLoading(false);
-                }
-            } catch (err) {
-                console.error("Error fetching product:", err);
-                setError(err.message || "Error al cargar el producto");
-                setLoading(false);
-                toast.error("Error al cargar los datos del producto");
-            }
-        };
-
         fetchProductData();
-    }, [id]);
+    }, [fetchProductData]);
 
     const handleSizeChange = (size) => {
         setSelectedSize(size);
@@ -82,7 +97,7 @@ export default function ProductDetailPage() {
         setAddingToCart(true);
 
         try {
-            // Usamos las propiedades correctas del producto
+            // Comprobación mejorada de propiedades
             const sizes = product.sizes || product.size || [];
             const colors = product.colors || [];
 
@@ -103,16 +118,14 @@ export default function ProductDetailPage() {
                 setSessionId(currentSessionId);
             }
 
-            // Intentamos obtener el carrito con manejo de errores mejorado
+            // Gestión de carrito con mejor manejo de errores
             let cart = null;
             try {
                 cart = await cartService.getCart(user?.user_id, currentSessionId);
             } catch (cartError) {
                 console.warn("Error al obtener el carrito, intentando crear uno nuevo:", cartError);
-                // Si falla la obtención, intentamos crear uno nuevo
             }
 
-            // Si no hay carrito, intentamos crearlo
             if (!cart) {
                 try {
                     cart = await cartService.createCart(user?.user_id, currentSessionId);
@@ -126,6 +139,10 @@ export default function ProductDetailPage() {
                 throw new Error('No se pudo obtener el ID del carrito');
             }
 
+            // Imagen por defecto mejorada
+            const productImage = product.image_url || product.img_url ||
+                (product.images && product.images.length > 0 ? product.images[0].image_url : null);
+
             // Añadimos el producto al carrito
             await cartService.addToCart(
                 cart.cart_id,
@@ -135,7 +152,7 @@ export default function ProductDetailPage() {
                 selectedSize,
                 selectedColor,
                 product.discount_percentage,
-                product.image_url || product.img_url || product.images?.[0]
+                productImage
             );
 
             toast.success('✅ Producto añadido al carrito', {
@@ -147,6 +164,7 @@ export default function ProductDetailPage() {
                 draggable: true,
                 progress: undefined,
                 theme: "light",
+                style: { fontFamily: typography.fontFamily }
             });
 
         } catch (error) {
@@ -160,6 +178,7 @@ export default function ProductDetailPage() {
                 draggable: true,
                 progress: undefined,
                 theme: "light",
+                style: { fontFamily: typography.fontFamily }
             });
         } finally {
             setAddingToCart(false);
@@ -168,54 +187,213 @@ export default function ProductDetailPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <CircularProgress size={60} />
-            </div>
+            <Box sx={{
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                bgcolor: '#fafafa'
+            }}>
+                <Head>
+                    <title>Cargando producto... | Vistelica</title>
+                    <meta name="description" content="Cargando información del producto" />
+                </Head>
+                <Navbar />
+                <Box sx={{
+                    flexGrow: 1,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    flexDirection: 'column',
+                    gap: 2
+                }}>
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse", repeatDelay: 0.5 }}
+                    >
+                        <CircularProgress size={60} sx={{ color: vistelicaColors.primary }} />
+                    </motion.div>
+                    <Typography
+                        variant="body1"
+                        sx={{
+                            fontFamily: typography.fontFamily,
+                            color: 'text.secondary',
+                            mt: 2
+                        }}
+                    >
+                        Cargando información del producto...
+                    </Typography>
+                </Box>
+                <Footer />
+            </Box>
         );
     }
 
     if (error) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen p-4">
+            <Box sx={{
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                bgcolor: '#fafafa'
+            }}>
+                <Head>
+                    <title>Error | Vistelica</title>
+                    <meta name="description" content="Ha ocurrido un error al cargar el producto" />
+                </Head>
                 <Navbar />
-                <div className="max-w-md text-center">
-                    <h1 className="text-2xl font-bold text-red-500 mb-4">Error</h1>
-                    <p className="text-lg mb-6">{error}</p>
-                    <button
-                        onClick={() => router.push('/')}
-                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                <Container maxWidth="sm" sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                        style={{ width: '100%' }}
                     >
-                        Volver a la página principal
-                    </button>
-                </div>
+                        <Paper
+                            elevation={2}
+                            sx={{
+                                p: { xs: 3, sm: 4 },
+                                borderRadius: 2,
+                                textAlign: 'center',
+                                my: 4
+                            }}
+                        >
+                            <ErrorOutlineIcon sx={{ fontSize: 60, color: 'error.main', mb: 2 }} />
+                            <Typography
+                                variant="h5"
+                                component="h1"
+                                sx={{
+                                    mb: 2,
+                                    fontFamily: typography.fontFamily,
+                                    fontWeight: 600
+                                }}
+                            >
+                                Error
+                            </Typography>
+                            <Typography
+                                variant="body1"
+                                sx={{
+                                    mb: 3,
+                                    fontFamily: typography.fontFamily
+                                }}
+                            >
+                                {error}
+                            </Typography>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                startIcon={<ArrowBackIcon />}
+                                onClick={() => router.push('/')}
+                                sx={{
+                                    fontFamily: typography.fontFamily,
+                                    textTransform: 'none',
+                                    px: 3,
+                                    py: 1
+                                }}
+                            >
+                                Volver a la página principal
+                            </Button>
+                        </Paper>
+                    </motion.div>
+                </Container>
                 <Footer />
-            </div>
+            </Box>
         );
     }
 
     if (!product) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen p-4">
+            <Box sx={{
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                bgcolor: '#fafafa'
+            }}>
+                <Head>
+                    <title>Producto no encontrado | Vistelica</title>
+                    <meta name="description" content="El producto que buscas no está disponible" />
+                </Head>
                 <Navbar />
-                <div className="max-w-md text-center">
-                    <h1 className="text-2xl font-bold mb-4">Producto no encontrado</h1>
-                    <p className="text-lg mb-6">El producto que buscas no está disponible.</p>
-                    <button
-                        onClick={() => router.push('/')}
-                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                <Container maxWidth="sm" sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                        style={{ width: '100%' }}
                     >
-                        Volver a la página principal
-                    </button>
-                </div>
+                        <Paper
+                            elevation={2}
+                            sx={{
+                                p: { xs: 3, sm: 4 },
+                                borderRadius: 2,
+                                textAlign: 'center',
+                                my: 4
+                            }}
+                        >
+                            <Typography
+                                variant="h5"
+                                component="h1"
+                                sx={{
+                                    mb: 2,
+                                    fontFamily: typography.fontFamily,
+                                    fontWeight: 600
+                                }}
+                            >
+                                Producto no encontrado
+                            </Typography>
+                            <Typography
+                                variant="body1"
+                                sx={{
+                                    mb: 3,
+                                    fontFamily: typography.fontFamily
+                                }}
+                            >
+                                El producto que buscas no está disponible.
+                            </Typography>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                startIcon={<ArrowBackIcon />}
+                                onClick={() => router.push('/')}
+                                sx={{
+                                    fontFamily: typography.fontFamily,
+                                    textTransform: 'none',
+                                    px: 3,
+                                    py: 1
+                                }}
+                            >
+                                Volver a la página principal
+                            </Button>
+                        </Paper>
+                    </motion.div>
+                </Container>
                 <Footer />
-            </div>
+            </Box>
         );
     }
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <Box
+            component={motion.div}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            sx={{
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                bgcolor: '#fafafa'
+            }}
+        >
+            <Head>
+                <title>{product.name || 'Producto'} | Vistelica</title>
+                <meta name="description" content={product.description?.substring(0, 155) || 'Detalle de producto en Vistelica'} />
+                <meta property="og:title" content={`${product.name || 'Producto'} | Vistelica`} />
+                <meta property="og:description" content={product.description?.substring(0, 155) || 'Detalle de producto en Vistelica'} />
+                {product.image_url && <meta property="og:image" content={product.image_url} />}
+            </Head>
+
             <Navbar />
-            <div className="flex-grow">
+            <Box sx={{ flexGrow: 1 }}>
                 <ProductDetail
                     product={product}
                     availableSizes={product.sizes || []}
@@ -227,7 +405,7 @@ export default function ProductDetailPage() {
                     onAddToCart={handleAddToCart}
                     addingToCart={addingToCart}
                 />
-            </div>
+            </Box>
             <Footer />
             <ToastContainer
                 position="bottom-right"
@@ -240,7 +418,20 @@ export default function ProductDetailPage() {
                 draggable
                 pauseOnHover
                 theme="light"
+                toastStyle={{ fontFamily: typography.fontFamily }}
+                closeButton={({ closeToast }) => (
+                    <Button
+                        onClick={closeToast}
+                        size="small"
+                        sx={{
+                            minWidth: 'auto',
+                            fontFamily: typography.fontFamily
+                        }}
+                    >
+                        ✕
+                    </Button>
+                )}
             />
-        </div>
+        </Box>
     );
 }

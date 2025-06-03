@@ -1,8 +1,9 @@
 "use client";
 
 import React from 'react';
-import { Box, Typography, Grid } from '@mui/material';
+import { Box, Typography, Grid, Tooltip } from '@mui/material';
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import { typography } from "@/pages/shared-theme/themePrimitives";
 
 const ColorSelector = ({ colors, selectedColor, onColorChange }) => {
     const getColorValue = (color) => {
@@ -26,33 +27,93 @@ const ColorSelector = ({ colors, selectedColor, onColorChange }) => {
         return colorMap[color] || '#cccccc';
     };
 
+    // Función para obtener un nombre más amigable del color
+    const getColorName = (color) => {
+        const colorNames = {
+            RED: 'Rojo',
+            BLACK: 'Negro',
+            WHITE: 'Blanco',
+            BLUE: 'Azul',
+            GREEN: 'Verde',
+            YELLOW: 'Amarillo',
+            ORANGE: 'Naranja',
+            PURPLE: 'Morado',
+            BROWN: 'Marrón',
+            GRAY: 'Gris',
+            PINK: 'Rosa',
+            BEIGE: 'Beige',
+            GOLD: 'Dorado',
+            SILVER: 'Plateado'
+        };
+        return colorNames[color] || color;
+    };
+
     return (
-        <Box mb={2}>
-            <Typography variant="subtitle2" gutterBottom sx={{ fontSize: '0.85rem' }}>
+        <Box mb={3}>
+            <Typography
+                variant="subtitle2"
+                gutterBottom
+                sx={{
+                    fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' },
+                    fontFamily: typography.fontFamily,
+                    fontWeight: 500,
+                    color: vistelicaColors.secondary,
+                    mb: 1
+                }}
+            >
                 Colores:
             </Typography>
-            <Grid container spacing={1}>
+            <Grid
+                container
+                spacing={{ xs: 1, sm: 1.5 }}
+                sx={{
+                    ml: -0.5,
+                    maxWidth: '100%',
+                    flexWrap: 'wrap'
+                }}
+            >
                 {colors.map((color) => (
                     <Grid item key={color}>
-                        <Box
-                            onClick={() => onColorChange(color)}
-                            sx={{
-                                width: 32,
-                                height: 32,
-                                borderRadius: '50%',
-                                backgroundColor: getColorValue(color),
-                                cursor: 'pointer',
-                                border: selectedColor === color
-                                    ? `2px solid ${vistelicaColors.primary}`
-                                    : '1px solid #ddd',
-                                boxShadow: selectedColor === color
-                                    ? `0 0 0 2px ${vistelicaColors.primary}`
-                                    : 'none',
-                                '&:hover': {
-                                    boxShadow: `0 0 0 2px ${vistelicaColors.primary}`
-                                }
-                            }}
-                        />
+                        <Tooltip
+                            title={getColorName(color)}
+                            arrow
+                            placement="top"
+                        >
+                            <Box
+                                onClick={() => onColorChange(color)}
+                                aria-label={`Color ${getColorName(color)}`}
+                                role="button"
+                                tabIndex={0}
+                                sx={{
+                                    width: { xs: 28, sm: 32, md: 36 },
+                                    height: { xs: 28, sm: 32, md: 36 },
+                                    borderRadius: '50%',
+                                    backgroundColor: getColorValue(color),
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    border: selectedColor === color
+                                        ? `2px solid ${vistelicaColors.primary}`
+                                        : '1px solid #ddd',
+                                    boxShadow: selectedColor === color
+                                        ? `0 0 0 2px ${vistelicaColors.primary}`
+                                        : 'none',
+                                    '&:hover': {
+                                        boxShadow: `0 0 0 2px ${vistelicaColors.primary}`,
+                                        transform: 'scale(1.1)'
+                                    },
+                                    '&:focus': {
+                                        outline: 'none',
+                                        boxShadow: `0 0 0 3px ${vistelicaColors.primary}80`
+                                    }
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        onColorChange(color);
+                                        e.preventDefault();
+                                    }
+                                }}
+                            />
+                        </Tooltip>
                     </Grid>
                 ))}
             </Grid>
@@ -60,4 +121,4 @@ const ColorSelector = ({ colors, selectedColor, onColorChange }) => {
     );
 };
 
-export default ColorSelector;
+export default ColorSelector; 

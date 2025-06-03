@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Accordion, AccordionSummary, AccordionDetails, Typography, Box, Paper, Divider, Chip } from '@mui/material';
+import { Accordion, AccordionSummary, AccordionDetails, Typography, Box, Paper, Divider, Chip, useMediaQuery, useTheme } from '@mui/material';
 import { motion, AnimatePresence } from "framer-motion";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FabricIcon from '@mui/icons-material/Checkroom';
@@ -11,6 +11,9 @@ import { typography } from "@/pages/shared-theme/themePrimitives";
 
 const CompositionCare = ({ composition }) => {
     const [expanded, setExpanded] = useState(false);
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
 
     // Instrucciones de cuidado predeterminadas
     const careInstructions = [
@@ -21,7 +24,7 @@ const CompositionCare = ({ composition }) => {
         "Lavar colores similares juntos"
     ];
 
-    // Animaciones
+    // Animaciones optimizadas
     const containerVariants = {
         hidden: { opacity: 0, y: 10 },
         visible: {
@@ -30,14 +33,14 @@ const CompositionCare = ({ composition }) => {
             transition: {
                 duration: 0.4,
                 when: "beforeChildren",
-                staggerChildren: 0.1
+                staggerChildren: 0.08
             }
         }
     };
 
     const itemVariants = {
         hidden: { opacity: 0, x: -5 },
-        visible: { opacity: 1, x: 0 }
+        visible: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
     };
 
     return (
@@ -47,14 +50,15 @@ const CompositionCare = ({ composition }) => {
             transition={{ duration: 0.5 }}
         >
             <Paper
-                elevation={2}
+                elevation={isMobile ? 1 : 2}
                 sx={{
-                    mt: 2,
+                    mt: { xs: 1.5, sm: 2, md: 2.5 },
                     overflow: 'hidden',
-                    borderRadius: '12px',
+                    borderRadius: { xs: '10px', sm: '12px' },
                     backgroundColor: '#fcfcfc',
                     boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-                    border: `1px solid ${vistelicaColors.secondary}20`
+                    border: `1px solid ${vistelicaColors.secondary}20`,
+                    transition: 'all 0.3s ease'
                 }}
             >
                 <Accordion
@@ -75,23 +79,30 @@ const CompositionCare = ({ composition }) => {
                             >
                                 <ExpandMoreIcon
                                     sx={{
-                                        fontSize: '1.2rem',
+                                        fontSize: { xs: '1.1rem', sm: '1.2rem' },
                                         color: vistelicaColors.secondary
                                     }}
                                 />
                             </motion.div>
                         }
+                        aria-label="Expandir composición y cuidados"
                         sx={{
-                            minHeight: '56px !important',
-                            p: 1.5,
-                            px: 2.5,
+                            minHeight: { xs: '48px !important', sm: '56px !important' },
+                            p: { xs: 1.2, sm: 1.5 },
+                            px: { xs: 2, sm: 2.5 },
                             background: `linear-gradient(to right, ${vistelicaColors.secondary}15, ${vistelicaColors.primary}05)`,
                             ':hover': {
                                 background: `linear-gradient(to right, ${vistelicaColors.secondary}25, ${vistelicaColors.primary}10)`,
                             }
                         }}
                     >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: { xs: 1, sm: 1.5 },
+                            width: '100%',
+                            flexWrap: { xs: 'wrap', sm: 'nowrap' }
+                        }}>
                             <motion.div
                                 animate={{
                                     rotate: expanded ? [0, -15, 0] : 0,
@@ -101,7 +112,7 @@ const CompositionCare = ({ composition }) => {
                                 style={{
                                     background: `linear-gradient(135deg, ${vistelicaColors.secondary}, ${vistelicaColors.primary})`,
                                     borderRadius: '50%',
-                                    padding: '8px',
+                                    padding: isMobile ? '6px' : '8px',
                                     display: 'flex',
                                     justifyContent: 'center',
                                     alignItems: 'center'
@@ -109,14 +120,17 @@ const CompositionCare = ({ composition }) => {
                             >
                                 <FabricIcon sx={{
                                     color: 'white',
-                                    fontSize: '1.3rem'
+                                    fontSize: { xs: '1.1rem', sm: '1.3rem' }
                                 }} />
                             </motion.div>
-                            <Box>
+                            <Box sx={{
+                                flex: 1,
+                                mr: { xs: 0, sm: 1 }
+                            }}>
                                 <Typography
                                     variant="subtitle1"
                                     sx={{
-                                        fontSize: '1.1rem',
+                                        fontSize: { xs: '0.95rem', sm: '1.1rem' },
                                         fontWeight: 600,
                                         fontFamily: typography.fontFamily,
                                         color: vistelicaColors.secondary,
@@ -130,6 +144,7 @@ const CompositionCare = ({ composition }) => {
                                     variant="body2"
                                     sx={{
                                         fontSize: '0.8rem',
+                                        fontFamily: typography.fontFamily,
                                         color: 'text.secondary',
                                         display: { xs: 'none', sm: 'block' }
                                     }}
@@ -141,12 +156,13 @@ const CompositionCare = ({ composition }) => {
                                 label="Info"
                                 size="small"
                                 sx={{
-                                    height: 22,
+                                    height: { xs: 20, sm: 22 },
                                     backgroundColor: `${vistelicaColors.secondary}30`,
                                     color: vistelicaColors.secondary,
                                     fontSize: '0.7rem',
+                                    fontFamily: typography.fontFamily,
                                     fontWeight: 600,
-                                    ml: 1
+                                    ml: { xs: 0, sm: 1 }
                                 }}
                             />
                         </Box>
@@ -166,7 +182,7 @@ const CompositionCare = ({ composition }) => {
                                         borderStyle: 'dashed'
                                     }} />
                                     <Box sx={{
-                                        p: 3,
+                                        p: { xs: 2, sm: 2.5, md: 3 },
                                         borderRadius: '0 0 12px 12px',
                                         position: 'relative',
                                         overflow: 'hidden',
@@ -174,23 +190,23 @@ const CompositionCare = ({ composition }) => {
                                     }}>
                                         {/* Sección de composición */}
                                         <motion.div variants={itemVariants}>
-                                            <Box sx={{ mb: 3 }}>
+                                            <Box sx={{ mb: { xs: 2, sm: 3 } }}>
                                                 <Typography
                                                     variant="h6"
                                                     sx={{
-                                                        fontSize: '1rem',
+                                                        fontSize: { xs: '0.9rem', sm: '1rem' },
                                                         fontWeight: 600,
                                                         fontFamily: typography.fontFamily,
                                                         color: vistelicaColors.secondary,
-                                                        mb: 2,
+                                                        mb: { xs: 1.5, sm: 2 },
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         gap: 1
                                                     }}
                                                 >
                                                     <Box sx={{
-                                                        width: 6,
-                                                        height: 22,
+                                                        width: { xs: 4, sm: 6 },
+                                                        height: { xs: 18, sm: 22 },
                                                         backgroundColor: vistelicaColors.secondary,
                                                         borderRadius: 1,
                                                         mr: 1
@@ -200,10 +216,10 @@ const CompositionCare = ({ composition }) => {
                                                 <Typography
                                                     variant="body1"
                                                     sx={{
-                                                        fontSize: '1rem',
+                                                        fontSize: { xs: '0.9rem', sm: '1rem' },
                                                         fontFamily: typography.fontFamily,
                                                         lineHeight: 1.7,
-                                                        pl: 2,
+                                                        pl: { xs: 1.5, sm: 2 },
                                                         borderLeft: `3px solid ${vistelicaColors.secondary}40`
                                                     }}
                                                 >
@@ -218,26 +234,31 @@ const CompositionCare = ({ composition }) => {
                                                 <Typography
                                                     variant="h6"
                                                     sx={{
-                                                        fontSize: '1rem',
+                                                        fontSize: { xs: '0.9rem', sm: '1rem' },
                                                         fontWeight: 600,
                                                         fontFamily: typography.fontFamily,
                                                         color: vistelicaColors.secondary,
-                                                        mb: 2,
+                                                        mb: { xs: 1.5, sm: 2 },
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         gap: 1
                                                     }}
                                                 >
                                                     <Box sx={{
-                                                        width: 6,
-                                                        height: 22,
+                                                        width: { xs: 4, sm: 6 },
+                                                        height: { xs: 18, sm: 22 },
                                                         backgroundColor: vistelicaColors.primary,
                                                         borderRadius: 1,
                                                         mr: 1
                                                     }} />
                                                     Instrucciones de cuidado
                                                 </Typography>
-                                                <Box sx={{ pl: 2 }}>
+                                                <Box sx={{
+                                                    pl: { xs: 1, sm: 2 },
+                                                    display: 'grid',
+                                                    gridTemplateColumns: { xs: '1fr', sm: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(2, 1fr)' },
+                                                    gap: { xs: 1, sm: 2 }
+                                                }}>
                                                     {careInstructions.map((instruction, index) => (
                                                         <motion.div
                                                             key={index}
@@ -248,17 +269,17 @@ const CompositionCare = ({ composition }) => {
                                                             <Box sx={{
                                                                 display: 'flex',
                                                                 alignItems: 'center',
-                                                                gap: 2,
-                                                                mb: 1.5
+                                                                gap: { xs: 1.5, sm: 2 },
+                                                                mb: { xs: 1, sm: 1.5 }
                                                             }}>
                                                                 <LocalLaundryServiceIcon sx={{
                                                                     color: vistelicaColors.primary,
-                                                                    fontSize: '1rem'
+                                                                    fontSize: { xs: '0.9rem', sm: '1rem' }
                                                                 }} />
                                                                 <Typography
                                                                     variant="body2"
                                                                     sx={{
-                                                                        fontSize: '0.95rem',
+                                                                        fontSize: { xs: '0.85rem', sm: '0.95rem' },
                                                                         fontFamily: typography.fontFamily
                                                                     }}
                                                                 >
@@ -271,18 +292,19 @@ const CompositionCare = ({ composition }) => {
                                             </Box>
                                         </motion.div>
 
-                                        {/* Elementos decorativos */}
+                                        {/* Elementos decorativos ajustados para responsive */}
                                         <Box
                                             sx={{
                                                 position: 'absolute',
                                                 bottom: -30,
                                                 right: -30,
-                                                width: '180px',
-                                                height: '180px',
+                                                width: { xs: '120px', sm: '180px' },
+                                                height: { xs: '120px', sm: '180px' },
                                                 background: `radial-gradient(circle, ${vistelicaColors.secondary}10 10%, transparent 70%)`,
                                                 opacity: 0.5,
                                                 borderRadius: '50%',
-                                                zIndex: 0
+                                                zIndex: 0,
+                                                display: { xs: 'none', sm: 'block' }
                                             }}
                                         />
                                         <Box
@@ -290,12 +312,13 @@ const CompositionCare = ({ composition }) => {
                                                 position: 'absolute',
                                                 top: 20,
                                                 left: -40,
-                                                width: '100px',
-                                                height: '100px',
+                                                width: { xs: '80px', sm: '100px' },
+                                                height: { xs: '80px', sm: '100px' },
                                                 background: `radial-gradient(circle, ${vistelicaColors.primary}10 10%, transparent 70%)`,
                                                 opacity: 0.4,
                                                 borderRadius: '50%',
-                                                zIndex: 0
+                                                zIndex: 0,
+                                                display: { xs: 'none', sm: 'block' }
                                             }}
                                         />
                                     </Box>

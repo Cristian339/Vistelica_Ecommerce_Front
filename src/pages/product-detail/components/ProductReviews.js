@@ -714,7 +714,7 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                 <Alert
                     onClose={handleCloseSnackbar}
                     severity={snackbar.severity}
-                    sx={{ width: '100%' }}
+                    sx={{ width: '100%' }}w
                 >
                     {snackbar.message}
                 </Alert>
