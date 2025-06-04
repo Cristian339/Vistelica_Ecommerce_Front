@@ -372,31 +372,38 @@ export const reportReview = async (reportData) => {
 
 
 /**
- * Solicita una devolución para un item de pedido
+ * Solicita una devolución para un item de pedido con imagen
  * @param {number} orderDetailId - ID del detalle del pedido
  * @param {string} motivo - Motivo de la devolución
+ * @param {File|null} imagen - Archivo de imagen (opcional)
  * @returns {Promise<Object>} Respuesta del servidor
  */
-export const requestRefund = async (orderDetailId, motivo) => {
+export const requestRefund = async (orderDetailId, motivo, imagen = null) => {
     try {
         const token = localStorage.getItem('token');
         if (!token) {
             throw new Error('Debes iniciar sesión para solicitar una devolución');
         }
 
+        const formData = new FormData();
+        formData.append('order_detail_id', orderDetailId);
+        formData.append('motivo', motivo);
+
+        if (imagen) {
+            formData.append('file', imagen); // 'file' debe coincidir con uploadSingle en el backend
+        }
+
         const response = await axios.post(
             `${API_URL}/delivered/request-refund`,
-            {
-                order_detail_id: orderDetailId,
-                motivo: motivo
-            },
+            formData,
             {
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'multipart/form-data'
                 }
             }
         );
+
         return response.data;
     } catch (error) {
         console.error('Error al solicitar devolución:', error);

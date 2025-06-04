@@ -1,15 +1,21 @@
 export const COLORS = [
-    { id: 'negro', label: 'Negro', cssColor: '#000000' },
-    { id: 'blanco', label: 'Blanco', cssColor: '#FFFFFF' },
-    { id: 'gris', label: 'Gris', cssColor: '#808080' },
-    { id: 'azul', label: 'Azul', cssColor: '#0000FF' },
-    { id: 'rojo', label: 'Rojo', cssColor: '#FF0000' },
-    { id: 'verde', label: 'Verde', cssColor: '#008000' },
-    { id: 'amarillo', label: 'Amarillo', cssColor: '#FFFF00' },
-    { id: 'rosa', label: 'Rosa', cssColor: '#FFC0CB' },
-    { id: 'morado', label: 'Morado', cssColor: '#800080' },
-    { id: 'naranja', label: 'Naranja', cssColor: '#FFA500' }
+    { id: 'BLACK', label: 'Negro', cssColor: '#000000' },
+    { id: 'WHITE', label: 'Blanco', cssColor: '#FFFFFF' },
+    { id: 'GRAY', label: 'Gris', cssColor: '#808080' },
+    { id: 'RED', label: 'Rojo', cssColor: '#FF0000' },
+    { id: 'BLUE', label: 'Azul', cssColor: '#0000FF' },
+    { id: 'GREEN', label: 'Verde', cssColor: '#008000' },
+    { id: 'YELLOW', label: 'Amarillo', cssColor: '#FFFF00' },
+    { id: 'PINK', label: 'Rosa', cssColor: '#FFC0CB' },
+    { id: 'PURPLE', label: 'Morado', cssColor: '#800080' },
+    { id: 'ORANGE', label: 'Naranja', cssColor: '#FFA500' },
+    { id: 'BROWN', label: 'Marrón', cssColor: '#A52A2A' },
+    { id: 'BEIGE', label: 'Beige', cssColor: '#F5F5DC' },
+    { id: 'GOLD', label: 'Dorado', cssColor: '#FFD700' },
+    { id: 'SILVER', label: 'Plateado', cssColor: '#C0C0C0' },
+    { id: 'NAVY', label: 'Azul Marino', cssColor: '#000080' },
 ];
+
 
 export const BRANDS = [
     { id: 'puma', name: 'Puma' },

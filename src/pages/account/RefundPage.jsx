@@ -23,7 +23,8 @@ import {
     IconButton,
     Fab,
     useMediaQuery,
-    useTheme, Paper
+    useTheme,
+    Paper
 } from '@mui/material';
 import SidebarMenu from '@/components/layout/SidebarMenu';
 import { requestRefund, getDeliveredOrdersWithDetails } from '@/services/productService';
@@ -33,6 +34,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import AssignmentReturnIcon from '@mui/icons-material/AssignmentReturn';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PhotoCamera from '@mui/icons-material/PhotoCamera';
+import Close from '@mui/icons-material/Close';
 import Navbar from "@/components/layout/HeaderComponent";
 import MenuIcon from '@mui/icons-material/Menu';
 
@@ -52,28 +55,28 @@ const RefundPage = () => {
     const [successDialog, setSuccessDialog] = useState(false);
     const [refundReason, setRefundReason] = useState('');
     const [processingRefund, setProcessingRefund] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
 
-    // Obtener los pedidos entregados
-    useEffect(() => {
-        const fetchDeliveredOrders = async () => {
-            try {
-                setLoading(true);
-                console.log("AQUI");
-                const result = await getDeliveredOrdersWithDetails();
-                console.log(JSON.stringify(result));
-                if (result) {
-                    console.log("ENTRO");
-                    setOrders(result);
-                } else {
-                    setError(result.message);
-                }
-            } catch (err) {
-                setError('Error al cargar los pedidos');
-            } finally {
-                setLoading(false);
+    const fetchDeliveredOrders = async () => {
+        try {
+            setLoading(true);
+            const result = await getDeliveredOrdersWithDetails();
+            if (result) {
+                setOrders(result);
+                setError(null);
+            } else {
+                setError(result?.message || 'No se pudieron cargar los pedidos');
             }
-        };
+        } catch (err) {
+            setError('Error al cargar los pedidos');
+            console.error('Error fetching delivered orders:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchDeliveredOrders();
     }, []);
 
@@ -89,6 +92,35 @@ const RefundPage = () => {
         });
     };
 
+    const handleImageChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                setError('La imagen no debe superar los 5MB');
+                return;
+            }
+
+            if (!file.type.match('image.*')) {
+                setError('Por favor sube solo archivos de imagen (JPEG, PNG)');
+                return;
+            }
+
+            setSelectedImage(file);
+            setError(null);
+
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleRemoveImage = () => {
+        setSelectedImage(null);
+        setImagePreview(null);
+    };
+
     const handleCloseRefundDialog = () => {
         setRefundDialog({
             open: false,
@@ -96,6 +128,9 @@ const RefundPage = () => {
             productName: ''
         });
         setRefundReason('');
+        setSelectedImage(null);
+        setImagePreview(null);
+        setError(null);
     };
 
     const handleSubmitRefund = async () => {
@@ -104,34 +139,34 @@ const RefundPage = () => {
             return;
         }
 
+        if (refundReason.trim().length < 10) {
+            setError('El motivo debe tener al menos 10 caracteres');
+            return;
+        }
+
         try {
             setProcessingRefund(true);
             const result = await requestRefund(
                 refundDialog.orderDetailId,
-                refundReason
+                refundReason,
+                selectedImage
             );
 
             if (result.success) {
-                // Actualizar el estado local con la devolución solicitada
-                setOrders(orders.map(order => ({
-                    ...order,
-                    details: order.details.map(detail =>
-                        detail.order_detail_id === refundDialog.orderDetailId
-                            ? {
-                                ...detail,
-                                estado_devolucion: 'Revision',
-                                motivo_devolucion: refundReason
-                            }
-                            : detail
-                    )
-                })));
+                // Cerrar el diálogo primero
                 handleCloseRefundDialog();
+
+                // Mostrar mensaje de éxito
                 setSuccessDialog(true);
+
+                // Recargar los pedidos para mostrar el estado actualizado
+                await fetchDeliveredOrders();
             } else {
-                setError(result.message);
+                setError(result.message || 'Error al procesar la devolución');
             }
         } catch (err) {
-            setError('Error al procesar la devolución');
+            setError(err.message || 'Error al procesar la devolución');
+            console.error('Error submitting refund:', err);
         } finally {
             setProcessingRefund(false);
         }
@@ -157,14 +192,12 @@ const RefundPage = () => {
             <Navbar />
             <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
                 <Grid container spacing={4}>
-                    {/* Sidebar para desktop */}
                     {!isMobile && (
                         <Grid item md={3}>
                             <SidebarMenu />
                         </Grid>
                     )}
 
-                    {/* Contenido principal */}
                     <Grid item xs={12} md={9}>
                         <Paper elevation={0} sx={{
                             border: '1px solid #e0e0e0',
@@ -202,6 +235,13 @@ const RefundPage = () => {
                                     sx={{ borderLeft: `4px solid ${vistelicaColors.error}` }}
                                 >
                                     <Typography color="error">{error}</Typography>
+                                    <Button
+                                        onClick={fetchDeliveredOrders}
+                                        variant="outlined"
+                                        sx={{ mt: 1 }}
+                                    >
+                                        Reintentar
+                                    </Button>
                                 </Box>
                             ) : orders.length === 0 ? (
                                 <Box
@@ -298,7 +338,6 @@ const RefundPage = () => {
                                                                         mr: 2,
                                                                         flexShrink: 0
                                                                     }}>
-                                                                        {/* Aquí iría la imagen del producto si estuviera disponible */}
                                                                         <AssignmentReturnIcon sx={{ color: vistelicaColors.secondary }} />
                                                                     </Box>
 
@@ -324,6 +363,25 @@ const RefundPage = () => {
                                                                                     <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
                                                                                         "{detail.motivo_devolucion}"
                                                                                     </Typography>
+                                                                                )}
+                                                                                {detail.foto_devolucion_url && (
+                                                                                    <Box sx={{ mt: 1 }}>
+                                                                                        <Typography variant="caption" display="block" color="text.secondary">
+                                                                                            Foto adjunta:
+                                                                                        </Typography>
+                                                                                        <Box
+                                                                                            component="img"
+                                                                                            src={detail.foto_devolucion_url}
+                                                                                            alt="Foto de devolución"
+                                                                                            sx={{
+                                                                                                maxWidth: '100px',
+                                                                                                maxHeight: '100px',
+                                                                                                borderRadius: '4px',
+                                                                                                border: '1px solid #e0e0e0',
+                                                                                                mt: 1
+                                                                                            }}
+                                                                                        />
+                                                                                    </Box>
                                                                                 )}
                                                                             </Box>
                                                                         )}
@@ -396,10 +454,11 @@ const RefundPage = () => {
                     <Typography variant="body1" sx={{ mb: 2 }}>
                         Estás solicitando la devolución de: <strong>{refundDialog.productName}</strong>
                     </Typography>
+
                     <TextField
                         autoFocus
                         margin="dense"
-                        label="Motivo de la devolución"
+                        label="Motivo de la devolución*"
                         placeholder="Describe el motivo de tu devolución..."
                         type="text"
                         fullWidth
@@ -416,9 +475,86 @@ const RefundPage = () => {
                             },
                             '& .MuiInputLabel-root.Mui-focused': {
                                 color: vistelicaColors.primary
-                            }
+                            },
+                            mb: 3
                         }}
+                        error={!!error && error.includes('motivo')}
+                        helperText={error && error.includes('motivo') ? error : ''}
                     />
+
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                        Adjunta una foto del producto (opcional):
+                    </Typography>
+
+                    <input
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        id="refund-image-upload"
+                        type="file"
+                        onChange={handleImageChange}
+                        disabled={processingRefund}
+                    />
+
+                    <label htmlFor="refund-image-upload">
+                        <Button
+                            variant="outlined"
+                            component="span"
+                            startIcon={<PhotoCamera />}
+                            disabled={processingRefund}
+                            sx={{
+                                borderColor: vistelicaColors.primary,
+                                color: vistelicaColors.primary,
+                                '&:hover': {
+                                    borderColor: vistelicaColors.secondary,
+                                    backgroundColor: 'rgba(118, 179, 167, 0.04)'
+                                }
+                            }}
+                        >
+                            Seleccionar Imagen
+                        </Button>
+                    </label>
+
+                    {imagePreview && (
+                        <Box sx={{ mt: 2, position: 'relative', display: 'inline-block' }}>
+                            <Box
+                                component="img"
+                                src={imagePreview}
+                                alt="Preview"
+                                sx={{
+                                    maxWidth: '100%',
+                                    maxHeight: '200px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #e0e0e0'
+                                }}
+                            />
+                            <IconButton
+                                size="small"
+                                onClick={handleRemoveImage}
+                                sx={{
+                                    position: 'absolute',
+                                    top: 8,
+                                    right: 8,
+                                    backgroundColor: 'rgba(0,0,0,0.5)',
+                                    color: 'white',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(0,0,0,0.7)'
+                                    }
+                                }}
+                            >
+                                <Close fontSize="small" />
+                            </IconButton>
+                        </Box>
+                    )}
+
+                    {error && error.includes('imagen') && (
+                        <Typography color="error" variant="caption" sx={{ mt: 1, display: 'block' }}>
+                            {error}
+                        </Typography>
+                    )}
+
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                        * Sube una foto que muestre el problema con el producto (máx. 5MB, formatos: JPG, PNG)
+                    </Typography>
                 </DialogContent>
                 <DialogActions sx={{
                     p: 2,
@@ -513,7 +649,6 @@ const RefundPage = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Botón flotante para móvil */}
             {isMobile && (
                 <Fab
                     color="primary"
@@ -534,7 +669,6 @@ const RefundPage = () => {
                 </Fab>
             )}
 
-            {/* Sidebar para móvil */}
             {isMobile && (
                 <SidebarMenu
                     drawerOpen={sidebarOpen}
