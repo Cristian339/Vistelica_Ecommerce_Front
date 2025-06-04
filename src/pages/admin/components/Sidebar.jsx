@@ -21,6 +21,7 @@ import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import BrightnessAutoRoundedIcon from '@mui/icons-material/BrightnessAutoRounded';
+import ReportIcon from '@mui/icons-material/Report';
 
 import ColorSchemeToggle from '@/theme/ColorSchemeToggle';
 import { closeSidebar } from '@/pages/admin/utils';
@@ -193,6 +194,17 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                             <WidgetsIcon />
                             <ListItemContent>
                                 <Typography level="title-sm">Subcategorías</Typography>
+                            </ListItemContent>
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem>
+                        <ListItemButton
+                            selected={activeTab === 'reportedReviews'}
+                            onClick={() => setActiveTab('reportedReviews')}
+                        >
+                            <ReportIcon />
+                            <ListItemContent>
+                                <Typography level="title-sm">Reseñas Reportadas</Typography>
                             </ListItemContent>
                         </ListItemButton>
                     </ListItem>

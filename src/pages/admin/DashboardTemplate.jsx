@@ -28,6 +28,8 @@ const CategoryTable = dynamic(() => import('./components/CategoryTable'), { ssr:
 const CategoryList = dynamic(() => import('./components/CategoryList'), { ssr: false });
 const SubcategoryTable = dynamic(() => import('./components/SubcategoryTable'), { ssr: false });
 const SubcategoryList = dynamic(() => import('./components/SubcategoryList'), { ssr: false });
+const ReviewTable = dynamic(() => import('./components/ReviewTable'), { ssr: false });
+const ReviewList = dynamic(() => import('./components/ReviewList'), { ssr: false });
 
 const JoyOrderDashboardTemplate = ({ children }) => {
     const [activeTab, setActiveTab] = React.useState('orders');
@@ -103,6 +105,16 @@ const JoyOrderDashboardTemplate = ({ children }) => {
                         <RefundTable />
                     </>
                 );
+            case 'reportedReviews':
+                return (
+                    <>
+                        <Typography level="h2" component="h1">
+                            Reseñas Reportadas
+                        </Typography>
+                        <ReviewTable />
+                        <ReviewList />
+                    </>
+                );
             default:
                 return (
                     <>
@@ -125,6 +137,7 @@ const JoyOrderDashboardTemplate = ({ children }) => {
             case 'categories': return 'Categorías';
             case 'subcategories': return 'Subcategorías';
             case 'refunds': return 'Devoluciones';
+            case 'reportedReviews': return 'Reseñas Reportadas';
             default: return 'Pedidos';
         }
     };

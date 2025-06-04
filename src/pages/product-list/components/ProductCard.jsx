@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import { isInLocalWishlist } from '@/utils/localStorageHelpers';
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 import { typography } from "@/pages/shared-theme/themePrimitives";
+import wishlistService from '@/services/wishlistService'; // Importar el servicio
 
 // Corrección de estilos para eliminar la advertencia de largeView
 const ProductCardContainer = styled(Box, {
@@ -47,7 +48,7 @@ const ImageContainer = styled(Box, {
 })(({ largeView }) => ({
     position: 'relative',
     width: '100%',
-    paddingTop: largeView ? '100%' : '133%', // Más cuadrado en vista grande
+    paddingTop: largeView ? '100%' : '133%',
     overflow: 'hidden',
     borderRadius: '12px 12px 0 0',
     backgroundColor: '#f9f9f9',
@@ -63,7 +64,7 @@ const ProductImage = styled('img', {
     height: '100%',
     objectFit: largeView ? 'cover' : 'contain',
     transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-    backgroundColor: largeView ? 'transparent' : '#f9f9f9', // Fondo solo para contain
+    backgroundColor: largeView ? 'transparent' : '#f9f9f9',
 }));
 
 const FavoriteButton = styled(IconButton)(({ theme }) => ({
@@ -181,13 +182,46 @@ const ProductCard = React.memo(({
     const [imageError, setImageError] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
     const [isInFavorites, setIsInFavorites] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Obtener el ID del producto de manera consistente
+    const productId = useMemo(() => {
+        return product?.product_id || product?.id || product?._id;
+    }, [product]);
 
     // Verificar si el producto está en favoritos al cargar el componente
     useEffect(() => {
-        if (product && product.id) {
-            setIsInFavorites(isInLocalWishlist(product.id));
-        }
-    }, [product]);
+        const checkWishlistStatus = async () => {
+            if (!productId) return;
+
+            try {
+                // Primero verificar en localStorage (más rápido)
+                const isInLocal = isInLocalWishlist(productId);
+                setIsInFavorites(isInLocal);
+
+                // Luego verificar en el servidor si hay usuario autenticado
+                const isInServer = await wishlistService.checkProductInWishlist(productId);
+
+                // Si hay discrepancia, sincronizar
+                if (isInLocal !== isInServer) {
+                    setIsInFavorites(isInServer);
+
+                    // Actualizar localStorage para mantener sincronización
+                    if (isInServer && !isInLocal) {
+                        wishlistService.addToLocalWishlist(product);
+                    } else if (!isInServer && isInLocal) {
+                        await wishlistService.removeFromWishlist(productId);
+                    }
+                }
+            } catch (error) {
+                console.error('Error verificando estado de wishlist:', error);
+                // En caso de error, usar solo el estado local
+                setIsInFavorites(isInLocalWishlist(productId));
+            }
+        };
+
+        checkWishlistStatus();
+    }, [product, productId]);
 
     // Si el producto no existe, no renderizar nada
     if (!product) return null;
@@ -199,9 +233,6 @@ const ProductCard = React.memo(({
             (product.imageUrl || product.image || product.images?.[0] || '/images/placeholder-product.jpg') :
             '/images/placeholder-product.jpg';
 
-        // ID del producto
-        const productId = product.product_id || product.id || product._id || '';
-
         // Precios y descuentos
         const originalPrice = parseFloat(product.price) || 0;
         const discountPercentage = parseFloat(product.discount_percentage) || 0;
@@ -212,7 +243,6 @@ const ProductCard = React.memo(({
 
         return {
             imageUrl,
-            productId,
             originalPrice,
             discountPercentage,
             hasDiscount,
@@ -220,15 +250,47 @@ const ProductCard = React.memo(({
         };
     }, [product, imageError]);
 
-    const toggleFavorite = (e) => {
+    const toggleFavorite = async (e) => {
         e.preventDefault();
         e.stopPropagation();
 
-        if (onAddToWishlist) {
-            onAddToWishlist(product, isInFavorites);
-        } else {
-            // Actualizar solo el estado local si no hay función de manejo
-            setIsInFavorites(!isInFavorites);
+        if (isLoading || !productId) return;
+
+        setIsLoading(true);
+
+        // Actualizar el estado inmediatamente para feedback visual rápido
+        const newFavoriteState = !isInFavorites;
+        setIsInFavorites(newFavoriteState);
+
+        try {
+            if (onAddToWishlist) {
+                // Si hay función personalizada, usarla
+                await onAddToWishlist(product, isInFavorites);
+            } else {
+                // Lógica por defecto usando el servicio
+                if (isInFavorites) {
+                    // Remover de wishlist
+                    await wishlistService.removeFromWishlist(productId);
+                    // Remover también del almacenamiento local
+                    await wishlistService.removeFromLocalWishlist(productId);
+                } else {
+                    // Añadir a wishlist
+                    await wishlistService.addToWishlist(productId);
+                    wishlistService.addToLocalWishlist(product);
+                }
+            }
+
+            // Opcional: Emitir evento personalizado para notificar a otros componentes
+            window.dispatchEvent(new CustomEvent('wishlistUpdated', {
+                detail: { productId, isInWishlist: newFavoriteState }
+            }));
+
+        } catch (error) {
+            console.error('Error al modificar wishlist:', error);
+            // Revertir el estado en caso de error
+            setIsInFavorites(isInFavorites);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -249,17 +311,20 @@ const ProductCard = React.memo(({
                     className={`heart-icon ${isInFavorites ? 'active' : ''}`}
                     onClick={toggleFavorite}
                     size={largeView ? "medium" : "small"}
-                    aria-label="añadir a favoritos"
-                    color="error"
-                    sx={{ opacity: isInFavorites ? 1 : undefined }}
+                    aria-label={isInFavorites ? "quitar de favoritos" : "añadir a favoritos"}
+                    disabled={isLoading}
+                    sx={{
+                        opacity: isInFavorites ? 1 : undefined,
+                        color: isInFavorites ? '#f44336' : 'inherit' // Rojo cuando está en favoritos
+                    }}
                 >
                     {isInFavorites ? <FavoriteIcon /> : <FavoriteBorderIcon />}
                 </FavoriteButton>
             )}
 
             <Link
-                href={`/product-detail/page/${productData.productId}`}
-                as={`/product-detail/page?id=${productData.productId}`}
+                href={`/product-detail/page/${productId}`}
+                as={`/product-detail/page?id=${productId}`}
                 passHref
                 style={{ textDecoration: 'none', color: 'inherit' }}
             >
@@ -436,7 +501,7 @@ const ProductCard = React.memo(({
                     gap: 1,
                 }}>
                     <ActionButton
-                        onClick={() => onRemove?.(product.id || product.product_id)}
+                        onClick={() => onRemove?.( productId)}
                         color="error"
                         size="medium"
                         aria-label="Eliminar de favoritos"

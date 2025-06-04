@@ -10,6 +10,35 @@ const getClients = async () => {
         fullName: client.profile ? `${client.profile.name} ${client.profile.lastName}` : 'Sin nombre'
     }));
 };
+const getAllOrders = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/admin/orders`);
+        return response.data;
+    } catch (error) {
+        console.error('Error getting all orders:', error);
+        throw new Error(error.response?.data?.message || 'Error al obtener las órdenes');
+    }
+};
+
+const markOrderAsShipped = async (orderId) => {
+    try {
+        const response = await axios.post(`${API_URL}/admin/orders/${orderId}/shipped`);
+        return response.data;
+    } catch (error) {
+        console.error('Error marcando pedido como enviado:', error);
+        throw new Error(error.response?.data?.message || 'No se pudo marcar como enviado');
+    }
+};
+
+const markOrderAsDelivered = async (orderId) => {
+    try {
+        const response = await axios.post(`${API_URL}/admin/orders/${orderId}/delivered`);
+        return response.data;
+    } catch (error) {
+        console.error('Error marcando pedido como entregado:', error);
+        throw new Error(error.response?.data?.message || 'No se pudo marcar como entregado');
+    }
+};
 
 const getSuppliers = async () => {
     const response = await axios.get(`${API_URL}/suppliers`);
@@ -53,11 +82,7 @@ const unbanUser = async (userId) => {
     }
 };
 
-// Métodos para pedidos
-const getAllOrders = async () => {
-    const response = await axios.get(`${API_URL}/orders`);
-    return response.data;
-};
+
 
 const deleteOrder = async (orderId) => {
     await axios.delete(`${API_URL}/orders/${orderId}`);
@@ -201,6 +226,27 @@ const getSubcategoriesByCategory = async (categoryId) => {
     const response = await axios.get(`${API_URL}/categories/${categoryId}/subcategories`);
     return response.data;
 };
+// Obtener todas las reseñas reportadas (agrupadas por reseña)
+const getReportedReviews = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/admin/reviews/reported`);
+        return response.data;
+    } catch (error) {
+        console.error('Error getting reported reviews:', error);
+        throw new Error(error.response?.data?.message || 'Error al obtener reseñas reportadas');
+    }
+};
+
+// Obtener todos los reportes individuales (vista detallada)
+const getAllReports = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/admin/reviews/reports`);
+        return response.data;
+    } catch (error) {
+        console.error('Error getting all reports:', error);
+        throw new Error(error.response?.data?.message || 'Error al obtener todos los reportes');
+    }
+};
 
 
 
@@ -245,6 +291,38 @@ const updateRefundStatus = async (orderDetailId, status, rejectionReason) => {
         );
     }
 };
+// Eliminar una reseña reportada (y todos sus reportes)
+const deleteReview = async (reviewId) => {
+    try {
+        const response = await axios.delete(`${API_URL}/admin/reviews/${reviewId}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error deleting review:', error);
+        throw new Error(error.response?.data?.message || 'Error al eliminar la reseña');
+    }
+};
+
+// Eliminar un reporte específico (mantener la reseña)
+const deleteReport = async (reportId) => {
+    try {
+        const response = await axios.delete(`${API_URL}/admin/reports/${reportId}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error deleting report:', error);
+        throw new Error(error.response?.data?.message || 'Error al eliminar el reporte');
+    }
+};
+
+// Eliminar todos los reportes de una reseña específica (mantener la reseña)
+const deleteReportsForReview = async (reviewId) => {
+    try {
+        const response = await axios.delete(`${API_URL}/admin/reviews/${reviewId}/reports`);
+        return response.data;
+    } catch (error) {
+        console.error('Error deleting reports for review:', error);
+        throw new Error(error.response?.data?.message || 'Error al eliminar reportes de la reseña');
+    }
+};
 export default {
     getClients,
     getSuppliers,
@@ -273,6 +351,14 @@ export default {
     updateSubcategory,
     toggleDiscardSubcategory,
     getSubcategoriesByCategory,
+    markOrderAsDelivered,
+    markOrderAsShipped,
+    getReportedReviews,
+    getAllReports,
+    deleteReview,
+    deleteReport,
+    deleteReportsForReview,
+
     updateRefundStatus,
     getRefundsInReview
 };

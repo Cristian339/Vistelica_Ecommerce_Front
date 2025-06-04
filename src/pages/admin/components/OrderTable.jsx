@@ -1,6 +1,4 @@
-import * as React from 'react';
-import adminService from "@/services/adminService";
-import { ColorPaletteProp } from '@mui/joy/styles';
+import React, { useState, useEffect } from 'react';
 import Avatar from '@mui/joy/Avatar';
 import Box from '@mui/joy/Box';
 import Button from '@mui/joy/Button';
@@ -8,593 +6,559 @@ import Chip from '@mui/joy/Chip';
 import Divider from '@mui/joy/Divider';
 import FormControl from '@mui/joy/FormControl';
 import FormLabel from '@mui/joy/FormLabel';
-import Link from '@mui/joy/Link';
 import Input from '@mui/joy/Input';
-import Modal from '@mui/joy/Modal';
-import ModalDialog from '@mui/joy/ModalDialog';
-import ModalClose from '@mui/joy/ModalClose';
 import Table from '@mui/joy/Table';
 import Sheet from '@mui/joy/Sheet';
-import Checkbox from '@mui/joy/Checkbox';
-import IconButton, { iconButtonClasses } from '@mui/joy/IconButton';
+import IconButton from '@mui/joy/IconButton';
 import Typography from '@mui/joy/Typography';
 import Menu from '@mui/joy/Menu';
 import MenuButton from '@mui/joy/MenuButton';
 import MenuItem from '@mui/joy/MenuItem';
 import Dropdown from '@mui/joy/Dropdown';
-import Select from '@mui/joy/Select';
-import Option from '@mui/joy/Option';
-import Stack from '@mui/joy/Stack';
+import Modal from '@mui/joy/Modal';
+import ModalDialog from '@mui/joy/ModalDialog';
 import DialogTitle from '@mui/joy/DialogTitle';
 import DialogContent from '@mui/joy/DialogContent';
-
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import SearchIcon from '@mui/icons-material/Search';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
-import BlockIcon from '@mui/icons-material/Block';
-import AutorenewRoundedIcon from '@mui/icons-material/AutorenewRounded';
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
+import Stack from '@mui/joy/Stack';
+import Select from '@mui/joy/Select';
+import Option from '@mui/joy/Option';
+import adminService from "@/services/adminService";
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
-import CreditCardIcon from '@mui/icons-material/CreditCard';
-import PaymentIcon from '@mui/icons-material/Payment';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import PersonIcon from '@mui/icons-material/Person';
-import EmailIcon from '@mui/icons-material/Email';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import CircularProgress from '@mui/joy/CircularProgress';
+import SearchIcon from '@mui/icons-material/Search';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import EditIcon from '@mui/icons-material/Edit';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 
-function descendingComparator(a, b, orderBy) {
-    if (b[orderBy] < a[orderBy]) {
-        return -1;
-    }
-    if (b[orderBy] > a[orderBy]) {
-        return 1;
-    }
-    return 0;
-}
+export default function OrderTable() {
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [searchFilter, setSearchFilter] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [viewingOrder, setViewingOrder] = useState(null);
+    const [processingOrderId, setProcessingOrderId] = useState(null);
 
-function getComparator(order, orderBy) {
-    return order === 'desc'
-        ? (a, b) => descendingComparator(a, b, orderBy)
-        : (a, b) => -descendingComparator(a, b, orderBy);
-}
-
-function EditOrderForm({ order, onSave, onClose }) {
-    const [formData, setFormData] = React.useState(order || {
-        id: '',
-        date: '',
-        status: 'Pagado',
-        customer: {
-            initial: '',
-            name: '',
-            email: '',
-        },
-        shippingAddress: '',
-        paymentMethod: 'tarjeta'
+    // Estados para la paginación
+    const [page, setPage] = useState(1);
+    const [pagination, setPagination] = useState({
+        currentPage: 1,
+        totalPages: 1,
+        totalOrders: 0,
+        ordersPerPage: 10,
+        hasNextPage: false,
+        hasPrevPage: false
     });
 
-    React.useEffect(() => {
-        if (order) {
-            setFormData(order);
-        }
-    }, [order]);
+    useEffect(() => {
+        fetchOrders();
+    }, [page, statusFilter, searchFilter]);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => {
-            if (name.startsWith('customer.')) {
-                const field = name.split('.')[1];
-                return {
-                    ...prev,
-                    customer: {
-                        ...prev.customer,
-                        [field]: value
-                    }
-                };
-            }
-            return { ...prev, [name]: value };
+    const fetchOrders = async () => {
+        try {
+            setLoading(true);
+            const response = await adminService.getAllOrders({
+                page,
+                status: statusFilter,
+                search: searchFilter,
+                sortBy: 'created_at',
+                sortOrder: 'DESC'
+            });
+
+            setOrders(response.orders);
+            setPagination(response.pagination);
+            setLoading(false);
+        } catch (err) {
+            setError(err.message);
+            setLoading(false);
+        }
+    };
+
+    // Función específica para marcar como enviado
+    const handleMarkAsShipped = async (orderId) => {
+        try {
+            setProcessingOrderId(orderId);
+            await adminService.markOrderAsShipped(orderId);
+            // Refrescar la lista de órdenes
+            await fetchOrders();
+        } catch (error) {
+            setError(error.message);
+        } finally {
+            setProcessingOrderId(null);
+        }
+    };
+
+    // Función específica para marcar como entregado
+    const handleMarkAsDelivered = async (orderId) => {
+        try {
+            setProcessingOrderId(orderId);
+            await adminService.markOrderAsDelivered(orderId);
+            // Refrescar la lista de órdenes
+            await fetchOrders();
+        } catch (error) {
+            setError(error.message);
+        } finally {
+            setProcessingOrderId(null);
+        }
+    };
+
+    // Función genérica para otros cambios de estado
+    const handleStatusChange = async (orderId, newStatus) => {
+        try {
+            setProcessingOrderId(orderId);
+            await adminService.updateOrderStatus(orderId, newStatus);
+            await fetchOrders();
+        } catch (error) {
+            setError(error.message);
+        } finally {
+            setProcessingOrderId(null);
+        }
+    };
+
+    const getStatusColor = (status) => {
+        const statusColors = {
+            'Pendiente': 'warning',
+            'Almacen': 'primary',
+            'Enviado': 'info',
+            'Entregado': 'success',
+            'Cancelado': 'danger'
+        };
+        return statusColors[status] || 'neutral';
+    };
+
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
         });
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        onSave(formData);
-    };
+    function RowMenu({ order }) {
+        const isProcessing = processingOrderId === order.order_id;
 
-    if (!order) return null;
-
-    return (
-        <Modal open={!!order} onClose={onClose}>
-            <ModalDialog>
-                <DialogTitle>Editar Pedido</DialogTitle>
-                <DialogContent>Modifique los detalles del pedido</DialogContent>
-                <form onSubmit={handleSubmit}>
-                    <Stack spacing={2}>
-                        <FormControl>
-                            <FormLabel>ID</FormLabel>
-                            <Input
-                                name="id"
-                                value={formData.id}
-                                disabled
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Fecha</FormLabel>
-                            <Input
-                                name="date"
-                                value={formData.date}
-                                onChange={handleChange}
-                                required
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Estado</FormLabel>
-                            <Select
-                                value={formData.status}
-                                onChange={(e, value) => {
-                                    setFormData(prev => ({ ...prev, status: value }));
-                                }}
-                            >
-                                <Option value="Pagado">Pagado</Option>
-                                <Option value="Reembolsado">Reembolsado</Option>
-                                <Option value="Cancelado">Cancelado</Option>
-                            </Select>
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Nombre del Cliente</FormLabel>
-                            <Input
-                                name="customer.name"
-                                value={formData.customer.name}
-                                onChange={handleChange}
-                                required
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Email del Cliente</FormLabel>
-                            <Input
-                                name="customer.email"
-                                type="email"
-                                value={formData.customer.email}
-                                onChange={handleChange}
-                                required
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Dirección de Envío</FormLabel>
-                            <Input
-                                name="shippingAddress"
-                                value={formData.shippingAddress}
-                                onChange={handleChange}
-                                required
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Método de Pago</FormLabel>
-                            <Select
-                                value={formData.paymentMethod}
-                                onChange={(e, value) => {
-                                    setFormData(prev => ({ ...prev, paymentMethod: value }));
-                                }}
-                            >
-                                <Option value="tarjeta">Tarjeta</Option>
-                                <Option value="bizum">Bizum</Option>
-                                <Option value="paypal">PayPal</Option>
-                            </Select>
-                        </FormControl>
-                        <Button type="submit">Guardar cambios</Button>
-                    </Stack>
-                </form>
-            </ModalDialog>
-        </Modal>
-    );
-}
-
-export default function OrderTable() {
-    const [order, setOrder] = React.useState('desc');
-    const [orderBy, setOrderBy] = React.useState('id');
-    const [selected, setSelected] = React.useState([]);
-    const [rows, setRows] = React.useState([]);
-    const [editingOrder, setEditingOrder] = React.useState(null);
-    const [nameFilter, setNameFilter] = React.useState('');
-    const [emailFilter, setEmailFilter] = React.useState('');
-    const [dateFilter, setDateFilter] = React.useState('');
-    const [isLoading, setIsLoading] = React.useState(true);
-    const [error, setError] = React.useState(null);
-
-    // Estados para la paginación
-    const [page, setPage] = React.useState(1);
-    const [rowsPerPage] = React.useState(20);
-
-    React.useEffect(() => {
-        const fetchOrders = async () => {
-            try {
-                setIsLoading(true);
-                setError(null);
-                const orders = await adminService.getAllOrders();
-
-                if (!orders || !Array.isArray(orders)) {
-                    throw new Error('Formato de datos inválido');
-                }
-
-                const formattedOrders = orders.map(order => ({
-                    id: `INV-${order.order_id}`,
-                    date: new Date(order.created_at).toLocaleDateString('es-ES', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric'
-                    }),
-                    status: order.status || 'Desconocido',
-                    customer: {
-                        initial: order.client?.name?.charAt(0) || '?',
-                        name: order.client?.name || 'Cliente desconocido',
-                        email: order.client?.email || 'Email no disponible',
-                    },
-                    shippingAddress: order.client?.address || 'Dirección no especificada',
-                    paymentMethod: order.payment_method?.toLowerCase() || 'tarjeta'
-                }));
-
-                setRows(formattedOrders);
-            } catch (err) {
-                console.error('Error al cargar pedidos:', err);
-                setError(err.message || 'Error al cargar los pedidos');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchOrders();
-    }, []);
-
-    const handleSort = (property) => {
-        const isAsc = orderBy === property && order === 'asc';
-        setOrder(isAsc ? 'desc' : 'asc');
-        setOrderBy(property);
-    };
-
-    const handleEditOrder = (order) => {
-        setEditingOrder(order);
-    };
-
-    const handleSaveOrder = (updatedOrder) => {
-        setRows(prev => prev.map(order =>
-            order.id === updatedOrder.id ? updatedOrder : order
-        ));
-        setEditingOrder(null);
-    };
-
-    const handleDeleteOrder = async (orderId) => {
-        try {
-            const numericId = parseInt(orderId.split('-')[1]);
-            await adminService.deleteOrder(numericId);
-            setRows(prev => prev.filter(order => order.id !== orderId));
-        } catch (error) {
-            console.error('Error al eliminar pedido:', error);
-            alert('No se pudo eliminar el pedido');
-        }
-    };
-
-    const renderPaymentMethodIcon = (method) => {
-        switch(method) {
-            case 'tarjeta':
-                return <CreditCardIcon fontSize="small" />;
-            case 'bizum':
-                return <PaymentIcon fontSize="small" />;
-            case 'paypal':
-                return <AccountBalanceWalletIcon fontSize="small" />;
-            default:
-                return <CreditCardIcon fontSize="small" />;
-        }
-    };
-
-    const filteredRows = rows.filter(row => {
-        const matchesName = row.customer.name.toLowerCase().includes(nameFilter.toLowerCase());
-        const matchesEmail = row.customer.email.toLowerCase().includes(emailFilter.toLowerCase());
-        const matchesDate = row.date.toLowerCase().includes(dateFilter.toLowerCase());
-
-        return matchesName && matchesEmail && matchesDate;
-    });
-
-    // Calcular pedidos paginados
-    const startIndex = (page - 1) * rowsPerPage;
-    const endIndex = startIndex + rowsPerPage;
-    const paginatedRows = [...filteredRows].sort(getComparator(order, orderBy)).slice(startIndex, endIndex);
-    const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
-
-    function RowMenu({ order, onEdit }) {
         return (
             <Dropdown>
                 <MenuButton
                     slots={{ root: IconButton }}
-                    slotProps={{ root: { variant: 'plain', color: 'neutral', size: 'sm' } }}
+                    slotProps={{
+                        root: {
+                            variant: 'plain',
+                            color: 'neutral',
+                            size: 'sm',
+                            disabled: isProcessing
+                        }
+                    }}
                 >
                     <MoreHorizRoundedIcon />
                 </MenuButton>
                 <Menu size="sm" sx={{ minWidth: 140 }}>
-                    <MenuItem onClick={() => onEdit(order)}>Editar</MenuItem>
-                    <Divider />
-                    <MenuItem
-                        color="danger"
-                        onClick={() => {
-                            handleDeleteOrder(order.id);
-                        }}
-                    >
-                        Eliminar
+                    <MenuItem onClick={() => setViewingOrder(order)}>
+                        <VisibilityIcon sx={{ mr: 1 }} /> Ver Detalles
                     </MenuItem>
+
+                    {/* Solo mostrar opción de envío si el estado lo permite */}
+                    {(order.status === 'Pendiente' || order.status === 'Almacen') && (
+                        <MenuItem
+                            onClick={() => handleMarkAsShipped(order.order_id)}
+                            disabled={isProcessing}
+                        >
+                            <LocalShippingIcon sx={{ mr: 1 }} />
+                            {isProcessing ? 'Procesando...' : 'Marcar Enviado'}
+                        </MenuItem>
+                    )}
+
+                    {/* Solo mostrar opción de entrega si está enviado */}
+                    {order.status === 'Enviado' && (
+                        <MenuItem
+                            onClick={() => handleMarkAsDelivered(order.order_id)}
+                            disabled={isProcessing}
+                        >
+                            <EditIcon sx={{ mr: 1 }} />
+                            {isProcessing ? 'Procesando...' : 'Marcar Entregado'}
+                        </MenuItem>
+                    )}
+
+                    {/* Opción para cancelar si aún no está enviado */}
+                    {(order.status === 'Pendiente' || order.status === 'Almacen') && (
+                        <MenuItem
+                            onClick={() => handleStatusChange(order.order_id, 'Cancelado')}
+                            disabled={isProcessing}
+                            sx={{ color: 'danger.main' }}
+                        >
+                            <EditIcon sx={{ mr: 1 }} />
+                            {isProcessing ? 'Procesando...' : 'Cancelar Orden'}
+                        </MenuItem>
+                    )}
                 </Menu>
             </Dropdown>
         );
     }
 
-    if (isLoading) {
+    function OrderDetailsModal({ order, onClose }) {
+        if (!order) return null;
+
         return (
-            <Box sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '300px'
-            }}>
-                <CircularProgress />
-                <Typography sx={{ ml: 2 }}>Cargando pedidos...</Typography>
-            </Box>
+            <Modal open onClose={onClose}>
+                <ModalDialog
+                    sx={{
+                        maxWidth: '800px',
+                        width: '90vw',
+                        maxHeight: '90vh',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden'
+                    }}
+                >
+                    <DialogTitle>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>Detalles de la Orden #{order.order_number}</span>
+                            <Chip
+                                color={getStatusColor(order.status)}
+                                size="sm"
+                                variant="soft"
+                            >
+                                {order.status}
+                            </Chip>
+                        </Box>
+                    </DialogTitle>
+
+                    <DialogContent
+                        sx={{
+                            overflowY: 'auto',
+                            flexGrow: 1,
+                            px: 0,
+                            '&::-webkit-scrollbar': {
+                                width: '6px'
+                            },
+                            '&::-webkit-scrollbar-thumb': {
+                                backgroundColor: 'rgba(0,0,0,0.2)',
+                                borderRadius: '3px'
+                            }
+                        }}
+                    >
+                        <Stack spacing={3} sx={{ px: 2 }}>
+                            {/* Información del Cliente */}
+                            <Box>
+                                <Typography level="title-md" sx={{ mb: 1 }}>
+                                    Información del Cliente
+                                </Typography>
+                                <Typography level="body-sm">
+                                    <strong>Nombre:</strong> {order.user.profile.first_name} {order.user.profile.last_name}
+                                </Typography>
+                                <Typography level="body-sm">
+                                    <strong>Email:</strong> {order.user.email}
+                                </Typography>
+                                <Typography level="body-sm">
+                                    <strong>Teléfono:</strong> {order.user.profile.phone}
+                                </Typography>
+                            </Box>
+
+                            <Divider />
+
+                            {/* Dirección de Envío */}
+                            <Box>
+                                <Typography level="title-md" sx={{ mb: 1 }}>
+                                    Dirección de Envío
+                                </Typography>
+                                <Typography level="body-sm">
+                                    {order.address.street}
+                                </Typography>
+                                <Typography level="body-sm">
+                                    {order.address.city}, {order.address.state} {order.address.postal_code}
+                                </Typography>
+                                <Typography level="body-sm">
+                                    {order.address.country}
+                                </Typography>
+                                {order.address.label && (
+                                    <Chip size="sm" variant="outlined" sx={{ mt: 0.5 }}>
+                                        {order.address.label}
+                                    </Chip>
+                                )}
+                            </Box>
+
+                            <Divider />
+
+                            {/* Productos */}
+                            <Box>
+                                <Typography level="title-md" sx={{ mb: 2 }}>
+                                    Productos ({order.details.length})
+                                </Typography>
+                                {order.details.map((detail, index) => (
+                                    <Box key={detail.order_detail_id} sx={{ mb: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 'sm' }}>
+                                        <Box sx={{ display: 'flex', gap: 2 }}>
+                                            <Avatar
+                                                src={detail.product.images.find(img => img.is_main)?.image_url}
+                                                size="lg"
+                                                sx={{ borderRadius: 'sm' }}
+                                            />
+                                            <Box sx={{ flex: 1 }}>
+                                                <Typography level="title-sm">
+                                                    {detail.product.name}
+                                                </Typography>
+                                                <Typography level="body-xs" sx={{ mt: 0.5, mb: 1 }}>
+                                                    {detail.product.description.substring(0, 100)}...
+                                                </Typography>
+                                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1 }}>
+                                                    {detail.size && (
+                                                        <Chip size="sm" variant="outlined">
+                                                            Talla: {detail.size}
+                                                        </Chip>
+                                                    )}
+                                                    {detail.color && (
+                                                        <Chip size="sm" variant="outlined">
+                                                            Color: {detail.color}
+                                                        </Chip>
+                                                    )}
+                                                    <Chip size="sm" variant="outlined">
+                                                        Cantidad: {detail.quantity}
+                                                    </Chip>
+                                                </Box>
+                                                <Typography level="title-sm" color="primary">
+                                                    ${detail.price} c/u
+                                                </Typography>
+                                                {detail.product.discount_percentage > 0 && (
+                                                    <Typography level="body-xs" color="success">
+                                                        Descuento: {detail.product.discount_percentage}%
+                                                    </Typography>
+                                                )}
+                                            </Box>
+                                        </Box>
+                                    </Box>
+                                ))}
+                            </Box>
+
+                            <Divider />
+
+                            {/* Información de Pago */}
+                            <Box>
+                                <Typography level="title-md" sx={{ mb: 1 }}>
+                                    Información de Pago
+                                </Typography>
+                                <Typography level="body-sm">
+                                    <strong>Método:</strong> {order.payment_method_name}
+                                </Typography>
+                                <Typography level="body-sm">
+                                    <strong>Subtotal:</strong> ${order.total_price}
+                                </Typography>
+                                <Typography level="body-sm">
+                                    <strong>Envío:</strong> ${order.shipping_cost}
+                                </Typography>
+                                <Typography level="title-sm" color="primary">
+                                    <strong>Total:</strong> ${(parseFloat(order.total_price) + parseFloat(order.shipping_cost)).toFixed(2)}
+                                </Typography>
+
+                                {order.payments && order.payments.length > 0 && (
+                                    <Box sx={{ mt: 1 }}>
+                                        <Typography level="body-sm">
+                                            <strong>Estado del Pago:</strong>
+                                            <Chip size="sm" color="success" sx={{ ml: 1 }}>
+                                                {order.payments[0].payment_status}
+                                            </Chip>
+                                        </Typography>
+                                    </Box>
+                                )}
+                            </Box>
+
+                            <Divider />
+
+                            {/* Fechas */}
+                            <Box>
+                                <Typography level="title-md" sx={{ mb: 1 }}>
+                                    Fechas Importantes
+                                </Typography>
+                                <Typography level="body-sm">
+                                    <strong>Fecha de Pedido:</strong> {formatDate(order.created_at)}
+                                </Typography>
+                                <Typography level="body-sm">
+                                    <strong>Entrega Estimada:</strong> {formatDate(order.estimated_delivery_date)}
+                                </Typography>
+                                {order.delivered_at && (
+                                    <Typography level="body-sm">
+                                        <strong>Fecha de Entrega:</strong> {formatDate(order.delivered_at)}
+                                    </Typography>
+                                )}
+                            </Box>
+                        </Stack>
+                    </DialogContent>
+
+                    <Box sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        gap: 2,
+                        pt: 2,
+                        pb: 1,
+                        px: 2,
+                        borderTop: '1px solid',
+                        borderColor: 'divider'
+                    }}>
+                        {/* Acciones rápidas en el modal */}
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                            {(order.status === 'Pendiente' || order.status === 'Almacen') && (
+                                <Button
+                                    variant="soft"
+                                    color="primary"
+                                    size="sm"
+                                    startDecorator={<LocalShippingIcon />}
+                                    onClick={() => {
+                                        handleMarkAsShipped(order.order_id);
+                                        onClose();
+                                    }}
+                                    disabled={processingOrderId === order.order_id}
+                                >
+                                    Marcar Enviado
+                                </Button>
+                            )}
+
+                            {order.status === 'Enviado' && (
+                                <Button
+                                    variant="soft"
+                                    color="success"
+                                    size="sm"
+                                    startDecorator={<EditIcon />}
+                                    onClick={() => {
+                                        handleMarkAsDelivered(order.order_id);
+                                        onClose();
+                                    }}
+                                    disabled={processingOrderId === order.order_id}
+                                >
+                                    Marcar Entregado
+                                </Button>
+                            )}
+                        </Box>
+
+                        <Button variant="outlined" onClick={onClose}>Cerrar</Button>
+                    </Box>
+                </ModalDialog>
+            </Modal>
         );
     }
 
-    if (error) {
-        return (
-            <Box sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '300px',
-                color: 'danger.500'
-            }}>
-                <Typography color="danger">{error}</Typography>
-            </Box>
-        );
-    }
+    if (loading) return <Typography>Cargando órdenes...</Typography>;
+    if (error) return <Typography color="danger">Error: {error}</Typography>;
 
     return (
         <React.Fragment>
             <Box
-                className="SearchAndFilters-tabletUp"
                 sx={{
-                    borderRadius: 'sm',
-                    py: 2,
-                    display: { xs: 'none', sm: 'flex' },
-                    flexWrap: 'wrap',
-                    gap: 1.5,
-                    '& > *': {
-                        minWidth: { xs: '120px', md: '160px' },
-                    },
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    mb: 2,
+                    gap: 2
                 }}
             >
-                <FormControl sx={{ flex: 1 }} size="sm">
-                    <FormLabel>Buscar por nombre</FormLabel>
+                <FormControl sx={{ flex: 1, maxWidth: 300 }}>
                     <Input
                         size="sm"
-                        placeholder="Nombre del cliente"
-                        startDecorator={<PersonIcon />}
-                        value={nameFilter}
-                        onChange={(e) => setNameFilter(e.target.value)}
+                        placeholder="Buscar por número de orden o cliente..."
+                        startDecorator={<SearchIcon />}
+                        value={searchFilter}
+                        onChange={(e) => setSearchFilter(e.target.value)}
                     />
                 </FormControl>
-                <FormControl sx={{ flex: 1 }} size="sm">
-                    <FormLabel>Buscar por email</FormLabel>
-                    <Input
+
+                <FormControl sx={{ minWidth: 150 }}>
+                    <Select
                         size="sm"
-                        placeholder="Email del cliente"
-                        startDecorator={<EmailIcon />}
-                        value={emailFilter}
-                        onChange={(e) => setEmailFilter(e.target.value)}
-                    />
-                </FormControl>
-                <FormControl sx={{ flex: 1 }} size="sm">
-                    <FormLabel>Buscar por fecha</FormLabel>
-                    <Input
-                        size="sm"
-                        placeholder="Fecha del pedido"
-                        startDecorator={<CalendarMonthIcon />}
-                        value={dateFilter}
-                        onChange={(e) => setDateFilter(e.target.value)}
-                    />
+                        value={statusFilter}
+                        onChange={(e, newValue) => setStatusFilter(newValue)}
+                    >
+                        <Option value="all">Todos los Estados</Option>
+                        <Option value="Pendiente">Pendiente</Option>
+                        <Option value="Almacen">Almacén</Option>
+                        <Option value="Enviado">Enviado</Option>
+                        <Option value="Entregado">Entregado</Option>
+                        <Option value="Cancelado">Cancelado</Option>
+                    </Select>
                 </FormControl>
             </Box>
 
-            <EditOrderForm
-                order={editingOrder}
-                onSave={handleSaveOrder}
-                onClose={() => setEditingOrder(null)}
-            />
+            {viewingOrder && (
+                <OrderDetailsModal
+                    order={viewingOrder}
+                    onClose={() => setViewingOrder(null)}
+                />
+            )}
 
-            <Sheet
-                className="OrderTableContainer"
-                variant="outlined"
-                sx={{
-                    display: { xs: 'none', sm: 'initial' },
-                    width: '100%',
-                    borderRadius: 'sm',
-                    flexShrink: 1,
-                    overflow: 'auto',
-                    minHeight: 0,
-                }}
-            >
-                <Table
-                    aria-labelledby="tableTitle"
-                    stickyHeader
-                    hoverRow
-                    sx={{
-                        '--TableCell-headBackground': 'var(--joy-palette-background-level1)',
-                        '--Table-headerUnderlineThickness': '1px',
-                        '--TableRow-hoverBackground': 'var(--joy-palette-background-level1)',
-                        '--TableCell-paddingY': '4px',
-                        '--TableCell-paddingX': '8px',
-                    }}
-                >
+            <Sheet variant="outlined" sx={{ borderRadius: 'sm', overflow: 'auto' }}>
+                <Table hoverRow>
                     <thead>
                     <tr>
-                        <th style={{ width: 48, textAlign: 'center', padding: '12px 6px' }}>
-                            <Checkbox
-                                size="sm"
-                                indeterminate={
-                                    selected.length > 0 && selected.length !== filteredRows.length
-                                }
-                                checked={selected.length === filteredRows.length}
-                                onChange={(event) => {
-                                    setSelected(
-                                        event.target.checked ? filteredRows.map((row) => row.id) : [],
-                                    );
-                                }}
-                                color={
-                                    selected.length > 0 || selected.length === filteredRows.length
-                                        ? 'primary'
-                                        : undefined
-                                }
-                                sx={{ verticalAlign: 'text-bottom' }}
-                            />
-                        </th>
-                        <th style={{ width: 120, padding: '12px 6px' }}>
-                            <Link
-                                underline="none"
-                                color="primary"
-                                component="button"
-                                onClick={() => handleSort('id')}
-                                endDecorator={<ArrowDropDownIcon />}
-                                sx={{
-                                    fontWeight: 'lg',
-                                    '& svg': {
-                                        transition: '0.2s',
-                                        transform: orderBy === 'id' && order === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)',
-                                    },
-                                }}
-                            >
-                                ID
-                            </Link>
-                        </th>
-                        <th style={{ width: 140, padding: '12px 6px' }}>
-                            <Link
-                                underline="none"
-                                color="primary"
-                                component="button"
-                                onClick={() => handleSort('date')}
-                                endDecorator={<ArrowDropDownIcon />}
-                                sx={{
-                                    fontWeight: 'lg',
-                                    '& svg': {
-                                        transition: '0.2s',
-                                        transform: orderBy === 'date' && order === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)',
-                                    },
-                                }}
-                            >
-                                Fecha
-                            </Link>
-                        </th>
-                        <th style={{ width: 140, padding: '12px 6px' }}>Estado</th>
-                        <th style={{ width: 200, padding: '12px 6px' }}>Cliente</th>
-                        <th style={{ width: 220, padding: '12px 6px' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <LocationOnIcon fontSize="small" />
-                                <span>Dirección</span>
-                            </Box>
-                        </th>
-                        <th style={{ width: 150, padding: '12px 6px' }}>
-                            <Link
-                                underline="none"
-                                color="primary"
-                                component="button"
-                                onClick={() => handleSort('paymentMethod')}
-                                endDecorator={<ArrowDropDownIcon />}
-                                sx={{
-                                    fontWeight: 'lg',
-                                    '& svg': {
-                                        transition: '0.2s',
-                                        transform: orderBy === 'paymentMethod' && order === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)',
-                                    },
-                                }}
-                            >
-                                Método Pago
-                            </Link>
-                        </th>
-                        <th style={{ width: 80, padding: '12px 6px' }}></th>
+                        <th>Número de Orden</th>
+                        <th>Cliente</th>
+                        <th>Estado</th>
+                        <th>Total</th>
+                        <th>Método de Pago</th>
+                        <th>Fecha</th>
+                        <th>Productos</th>
+                        <th>Acciones</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {paginatedRows.map((row) => (
-                        <tr key={row.id}>
-                            <td style={{ textAlign: 'center' }}>
-                                <Checkbox
-                                    size="sm"
-                                    checked={selected.includes(row.id)}
-                                    color={selected.includes(row.id) ? 'primary' : undefined}
-                                    onChange={(event) => {
-                                        setSelected((ids) =>
-                                            event.target.checked
-                                                ? ids.concat(row.id)
-                                                : ids.filter((itemId) => itemId !== row.id),
-                                        );
-                                    }}
-                                    slotProps={{ checkbox: { sx: { textAlign: 'left' } } }}
-                                    sx={{ verticalAlign: 'text-bottom' }}
-                                />
-                            </td>
+                    {orders.map((order) => (
+                        <tr key={order.order_id}>
                             <td>
-                                <Typography level="body-xs">{row.id}</Typography>
-                            </td>
-                            <td>
-                                <Typography level="body-xs">{row.date}</Typography>
-                            </td>
-                            <td>
-                                <Chip
-                                    variant="soft"
-                                    size="sm"
-                                    startDecorator={
-                                        {
-                                            Pagado: <CheckRoundedIcon />,
-                                            Reembolsado: <AutorenewRoundedIcon />,
-                                            Cancelado: <BlockIcon />,
-                                        }[row.status]
-                                    }
-                                    color={
-                                        {
-                                            Pagado: 'success',
-                                            Reembolsado: 'neutral',
-                                            Cancelado: 'danger',
-                                        }[row.status]
-                                    }
-                                >
-                                    {row.status}
-                                </Chip>
-                            </td>
-                            <td>
-                                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                                    <Avatar size="sm">{row.customer.initial}</Avatar>
-                                    <div>
-                                        <Typography level="body-xs">{row.customer.name}</Typography>
-                                        <Typography level="body-xs">{row.customer.email}</Typography>
-                                    </div>
-                                </Box>
-                            </td>
-                            <td>
-                                <Typography level="body-xs" sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px' }}>
-                                    {row.shippingAddress}
+                                <Typography fontWeight="lg" level="body-sm">
+                                    {order.order_number}
                                 </Typography>
                             </td>
                             <td>
+                                <Box>
+                                    <Typography level="body-sm" fontWeight="lg">
+                                        {order.user.profile.first_name} {order.user.profile.last_name}
+                                    </Typography>
+                                    <Typography level="body-xs" color="neutral">
+                                        {order.user.email}
+                                    </Typography>
+                                </Box>
+                            </td>
+                            <td>
                                 <Chip
-                                    variant="outlined"
+                                    color={getStatusColor(order.status)}
                                     size="sm"
-                                    startDecorator={renderPaymentMethodIcon(row.paymentMethod)}
+                                    variant="soft"
                                 >
-                                    {row.paymentMethod === 'tarjeta' ? 'Tarjeta' :
-                                        row.paymentMethod === 'bizum' ? 'Bizum' : 'PayPal'}
+                                    {order.status}
                                 </Chip>
                             </td>
                             <td>
-                                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                    <RowMenu order={row} onEdit={handleEditOrder} />
+                                <Typography fontWeight="lg" color="primary">
+                                    ${order.total_price}
+                                </Typography>
+                                {order.shipping_cost > 0 && (
+                                    <Typography level="body-xs" color="neutral">
+                                        + ${order.shipping_cost} envío
+                                    </Typography>
+                                )}
+                            </td>
+                            <td>
+                                <Chip size="sm" variant="outlined">
+                                    {order.payment_method_name}
+                                </Chip>
+                            </td>
+                            <td>
+                                <Typography level="body-sm">
+                                    {formatDate(order.created_at)}
+                                </Typography>
+                            </td>
+                            <td>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                    {order.details.slice(0, 2).map((detail, index) => (
+                                        <Typography key={index} level="body-xs">
+                                            {detail.quantity}x {detail.product.name.substring(0, 20)}...
+                                        </Typography>
+                                    ))}
+                                    {order.details.length > 2 && (
+                                        <Typography level="body-xs" color="neutral">
+                                            +{order.details.length - 2} más
+                                        </Typography>
+                                    )}
                                 </Box>
+                            </td>
+                            <td>
+                                <RowMenu order={order} />
                             </td>
                         </tr>
                     ))}
@@ -602,8 +566,7 @@ export default function OrderTable() {
                 </Table>
             </Sheet>
 
-            {/* Custom Pagination */}
-            {filteredRows.length > rowsPerPage && (
+            {pagination.totalPages > 1 && (
                 <Box sx={{
                     display: 'flex',
                     justifyContent: 'center',
@@ -617,28 +580,45 @@ export default function OrderTable() {
                     <Button
                         variant="outlined"
                         size="sm"
-                        disabled={page === 1}
-                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                        startDecorator={<KeyboardArrowLeftIcon />}
+                        disabled={!pagination.hasPrevPage}
+                        onClick={() => setPage(p => p - 1)}
                     >
                         Anterior
                     </Button>
 
                     <Typography level="body-md">
-                        Página {page} de {totalPages}
+                        Página {pagination.currentPage} de {pagination.totalPages}
                     </Typography>
 
                     <Button
                         variant="outlined"
                         size="sm"
-                        disabled={page >= totalPages}
-                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                        endDecorator={<KeyboardArrowRightIcon />}
+                        disabled={!pagination.hasNextPage}
+                        onClick={() => setPage(p => p + 1)}
                     >
                         Siguiente
                     </Button>
                 </Box>
             )}
+
+            {/* Estadísticas rápidas */}
+            <Box sx={{
+                display: 'flex',
+                gap: 2,
+                mt: 3,
+                p: 2,
+                bgcolor: 'background.level1',
+                borderRadius: 'sm'
+            }}>
+                <Box sx={{ textAlign: 'center' }}>
+                    <Typography level="h4" color="primary">
+                        {pagination.totalOrders}
+                    </Typography>
+                    <Typography level="body-xs">
+                        Total Órdenes
+                    </Typography>
+                </Box>
+            </Box>
         </React.Fragment>
     );
 }
