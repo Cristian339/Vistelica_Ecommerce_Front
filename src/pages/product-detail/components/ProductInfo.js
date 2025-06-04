@@ -15,9 +15,12 @@ import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
 import { typography } from "@/pages/shared-theme/themePrimitives";
 
-const ProductInfo = ({ description }) => {
-    const [expanded, setExpanded] = useState(true);
+const ProductInfo = ({ product }) => {
+    const [expanded, setExpanded] = useState(false);
     const [highlightedParagraph, setHighlightedParagraph] = useState(null);
+
+    const description = product?.description || '';
+
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
