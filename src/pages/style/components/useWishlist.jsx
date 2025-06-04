@@ -1,101 +1,24 @@
-'use client';
-import React, { useState, useEffect } from 'react';
-import {
-    Box,
-    Container,
-    CircularProgress,
-    Snackbar,
-    Alert,
-    Typography
-} from '@mui/material';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Navbar from "@/components/layout/HeaderComponent";
-import { getStyleById } from "@/services/styleService";
+import { useState, useEffect, useCallback } from 'react';
 import wishlistService from '@/services/wishlistService';
 import { getToken } from '@/services/authService';
 import {
-    isInLocalWishlist,
     addToLocalWishlist,
     removeFromLocalWishlist,
     getLocalWishlist,
     syncLocalWishlist
 } from "@/utils/localStorageHelpers";
 
-// Importar componentes modulares
-import HeaderComponent from './components/HeaderComponent';
-import MainContentSection from './components/MainContentSection';
-
-const Page = ({ params }) => {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const styleId = searchParams.get('id');
-
-    // Estados
-    const [loading, setLoading] = useState(true);
-    const [styleData, setStyleData] = useState(null);
+const useWishlist = (products = []) => {
     const [wishlistItems, setWishlistItems] = useState(new Set());
     const [loadingWishlist, setLoadingWishlist] = useState({});
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [selectedThumbnail, setSelectedThumbnail] = useState(0);
-    const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
     const [wishlistCount, setWishlistCount] = useState(0);
+    const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
 
-    useEffect(() => {
-        const fetchStyleData = async () => {
-            try {
-                setLoading(true);
-                const data = await getStyleById(styleId);
-                const processedData = {
-                    ...data,
-                    products: data.products.map(product => {
-                        const relatedProduct = data.relatedProducts.find(rp => rp.product_id === product.product_id);
-                        if (relatedProduct) {
-                            return {
-                                ...product,
-                                main_image: relatedProduct.main_image,
-                                images: relatedProduct.images
-                            };
-                        }
-                        return product;
-                    })
-                };
-                setStyleData(processedData);
-
-                if (processedData.products && processedData.products.length > 0) {
-                    await initializeWishlist(processedData.products);
-                }
-
-                const mainImageIndex = processedData.styleImages.findIndex(img => img.is_main);
-                if (mainImageIndex !== -1) {
-                    setCurrentImageIndex(mainImageIndex);
-                    setSelectedThumbnail(mainImageIndex);
-                }
-
-            } catch (error) {
-                console.error("Error al cargar el estilo:", error);
-                setToast({
-                    open: true,
-                    message: 'Error al cargar el estilo',
-                    severity: 'error'
-                });
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (styleId) {
-            fetchStyleData();
-        } else {
-            console.error("No se proporcionó un ID de estilo válido");
-            setLoading(false);
-        }
-    }, [styleId]);
-
-    const initializeWishlist = async (products) => {
+    const initializeWishlist = useCallback(async (productList) => {
         const token = getToken();
         const wishlistSet = new Set();
 
-        console.log('🔄 Inicializando wishlist para productos:', products.map(p => ({ id: p.product_id, name: p.name })));
+        console.log('🔄 Inicializando wishlist para productos:', productList.map(p => ({ id: p.product_id, name: p.name })));
 
         try {
             if (token) {
@@ -135,17 +58,17 @@ const Page = ({ params }) => {
 
         setWishlistItems(wishlistSet);
 
-        products.forEach(product => {
+        productList.forEach(product => {
             const isInWishlist = wishlistSet.has(product.product_id);
             console.log(`📦 Producto ${product.product_id} (${product.name}): ${isInWishlist ? '❤️ En wishlist' : '🤍 No en wishlist'}`);
         });
-    };
+    }, []);
 
-    const isProductInWishlist = (productId) => {
+    const isProductInWishlist = useCallback((productId) => {
         return wishlistItems.has(productId);
-    };
+    }, [wishlistItems]);
 
-    const toggleFavorite = async (productId, product) => {
+    const toggleFavorite = useCallback(async (productId, product) => {
         const token = getToken();
         const isCurrentlyFavorite = isProductInWishlist(productId);
         const newFavoriteStatus = !isCurrentlyFavorite;
@@ -257,62 +180,29 @@ const Page = ({ params }) => {
         } finally {
             setLoadingWishlist(prev => ({ ...prev, [productId]: false }));
         }
+    }, [wishlistItems, wishlistCount, isProductInWishlist]);
+
+    const closeToast = useCallback(() => {
+        setToast(prev => ({ ...prev, open: false }));
+    }, []);
+
+    // Inicializar wishlist cuando cambien los productos
+    useEffect(() => {
+        if (products && products.length > 0) {
+            initializeWishlist(products);
+        }
+    }, [products, initializeWishlist]);
+
+    return {
+        wishlistItems,
+        wishlistCount,
+        loadingWishlist,
+        toast,
+        isProductInWishlist,
+        toggleFavorite,
+        closeToast,
+        initializeWishlist
     };
-
-    return (
-        <>
-            <Navbar />
-            <Box>
-                {loading ? (
-                    <Container maxWidth="lg" sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
-                        <CircularProgress size={60} />
-                    </Container>
-                ) : styleData ? (
-                    <>
-                        <HeaderComponent
-                            title={styleData.name}
-                            subtitle={styleData.description}
-                            articleCount={`${styleData.products.length} artículos`}
-                            wishlistCount={wishlistCount}
-                        />
-                        <MainContentSection
-                            styleImages={styleData.styleImages}
-                            currentImageIndex={currentImageIndex}
-                            setCurrentImageIndex={setCurrentImageIndex}
-                            selectedThumbnail={selectedThumbnail}
-                            setSelectedThumbnail={setSelectedThumbnail}
-                            products={styleData.products}
-                            isProductInWishlist={isProductInWishlist}
-                            loadingWishlist={loadingWishlist}
-                            toggleFavorite={toggleFavorite}
-                        />
-                    </>
-                ) : (
-                    <Container maxWidth="lg">
-                        <Typography variant="h5" color="error" sx={{ py: 4, textAlign: 'center' }}>
-                            ❌ No se pudo cargar el estilo. Por favor, inténtalo más tarde.
-                        </Typography>
-                    </Container>
-                )}
-            </Box>
-
-            {/* Toast de notificaciones */}
-            <Snackbar
-                open={toast.open}
-                autoHideDuration={4000}
-                onClose={() => setToast({ ...toast, open: false })}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            >
-                <Alert
-                    onClose={() => setToast({ ...toast, open: false })}
-                    severity={toast.severity}
-                    sx={{ width: '100%' }}
-                >
-                    {toast.message}
-                </Alert>
-            </Snackbar>
-        </>
-    );
 };
 
-export default Page;
+export default useWishlist;

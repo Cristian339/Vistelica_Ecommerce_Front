@@ -403,20 +403,7 @@ export default function AddressForm({ onDataChange }) {
                 </Grid>
 
 
-                {selectedAddressId && (
-                    <Grid item xs={12}>
-                        <Box sx={{
-                            p: 2,
-                            bgcolor: 'rgba(228, 176, 2, 0.08)',
-                            borderRadius: 1,
-                            border: '1px solid rgba(228, 176, 2, 0.3)'
-                        }}>
-                            <Typography variant="body2" color="text.secondary">
-                                ✓ Usando dirección guardada (ID: {selectedAddressId})
-                            </Typography>
-                        </Box>
-                    </Grid>
-                )}
+
             </Grid>
 
             {/* Modal para seleccionar direcciones */}
