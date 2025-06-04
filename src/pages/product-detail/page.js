@@ -43,30 +43,35 @@ export default function ProductDetailPage() {
         try {
             setLoading(true);
             if (!id) {
-                throw new Error("ID de producto no proporcionado");
+                // En lugar de lanzar un error, manejarlo graciosamente
+                setError("ID de producto no proporcionado");
+                setProduct(null);
+                setLoading(false);
+                return; // Salir de la función sin intentar fetch
             }
 
             const productData = await productService.getById(id);
 
             if (!productData) {
-                throw new Error("Producto no encontrado");
-            }
+                setError("Producto no encontrado");
+                setProduct(null);
+            } else {
+                setProduct(productData);
 
-            setProduct(productData);
+                // Establecer valores por defecto solo si hay opciones disponibles
+                if (productData.sizes?.length > 0) {
+                    setSelectedSize(productData.sizes[0]);
+                }
+                if (productData.colors?.length > 0) {
+                    setSelectedColor(productData.colors[0]);
+                }
 
-            // Establecer valores por defecto solo si hay opciones disponibles
-            if (productData.sizes?.length > 0) {
-                setSelectedSize(productData.sizes[0]);
-            }
-            if (productData.colors?.length > 0) {
-                setSelectedColor(productData.colors[0]);
+                setError(null);
             }
         } catch (err) {
-            console.error("Error fetchando el producto:", err);
+            console.error("Error fetching product:", err);
             setError(err.message || "Error al cargar el producto");
-            toast.error("Error al cargar los datos del producto", {
-                position: "bottom-center"
-            });
+            setProduct(null);
         } finally {
             setLoading(false);
         }

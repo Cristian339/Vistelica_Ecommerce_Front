@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    ShoppingCart, Favorite, FavoriteBorder, Add, Remove, Share,
+    ShoppingCart, Favorite, FavoriteBorder, Share,
     LocalShipping, Check, TouchApp
 } from '@mui/icons-material';
 import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
@@ -30,7 +30,10 @@ import wishlistService from '@/services/wishlistService';
 import { getToken } from '@/services/authService';
 import {isInLocalWishlist} from "@/utils/localStorageHelpers";
 
-
+// Nuevos componentes modularizados
+import SizeSelector from './SizeSelector';
+import ColorSelector from './ColorSelector';
+import QuantitySelector from './QuantitySelector';
 
 const ProductDetail = ({
                            product,
@@ -301,7 +304,7 @@ const ProductDetail = ({
     }
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Container maxWidth="xl" sx={{ py: 4 }}>
             <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -311,64 +314,74 @@ const ProductDetail = ({
             </motion.div>
 
             <Grid container spacing={4}>
-                {/* Columna izquierda - Galería de imágenes */}
-                <Grid item xs={12} md={7}>
+                {/* Columna izquierda - Galería de imágenes y Envíos */}
+                <Grid item xs={12} md={6}>
                     <motion.div
                         initial="hidden"
                         animate="visible"
                         variants={fadeUp}
                     >
                         <ProductGallery productId={product?.product_id} />
+
+                        {/* Sección de envíos y devoluciones debajo del carrusel */}
+                        <Box sx={{ mt: 3 }}>
+                            <ShippingInfo />
+                        </Box>
                     </motion.div>
                 </Grid>
 
                 {/* Columna derecha - Información del producto */}
-                <Grid item xs={12} md={5}>
+                <Grid item xs={12} md={6}>
                     <motion.div
                         initial="hidden"
                         animate="visible"
                         variants={staggerItems}
                     >
-                        {/* Título del producto y acciones */}
+                        {/* Título y botones de acción */}
                         <motion.div variants={itemFade}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                            <Box sx={{
+                                display: 'flex',
+                                flexWrap: {xs: 'wrap', sm: 'nowrap'},
+                                justifyContent: 'space-between',
+                                alignItems: 'flex-start',
+                                mb: 2
+                            }}>
                                 <Typography
                                     variant="h5"
                                     sx={{
-                                        fontWeight: 600,
                                         fontFamily: typography.fontFamily,
-                                        color: vistelicaColors.secondary
+                                        fontWeight: 600,
+                                        color: vistelicaColors.secondary,
+                                        mr: 2,
+                                        flexGrow: 1
                                     }}
                                 >
                                     {product?.name || product?.product_name || 'Nombre del producto'}
                                 </Typography>
-                                <Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto', mt: {xs: 1, sm: 0} }}>
                                     <motion.div
-                                        whileHover={{ scale: 1.1 }}
-                                        whileTap={{ scale: 0.9 }}
+                                        initial={false}
+                                        animate={loadingWishlist ? { rotate: [0, 360] } : {}}
+                                        transition={{ duration: 1, repeat: Infinity }}
                                     >
                                         <IconButton
                                             onClick={handleFavoriteToggle}
                                             disabled={loadingWishlist}
+                                            title={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+                                            aria-label={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
                                             sx={{
-                                                color: isFavorite ? vistelicaColors.error : 'text.secondary',
+                                                color: isFavorite ? 'error.main' : 'grey.500',
                                                 '&:hover': {
-                                                    color: isFavorite ? 'darkred' : vistelicaColors.primary
+                                                    backgroundColor: 'rgba(233, 30, 99, 0.08)'
                                                 }
                                             }}
                                         >
                                             {loadingWishlist ? (
-                                                <CircularProgress size={24} />
+                                                <CircularProgress size={20} />
                                             ) : isFavorite ? (
-                                                <motion.div
-                                                    initial={{ scale: 0 }}
-                                                    animate={{ scale: 1 }}
-                                                    transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                                                >
-                                                    <Favorite />
-                                                </motion.div>
+                                                <FavoriteIcon />
                                             ) : (
-                                                <FavoriteBorder />
+                                                <FavoriteBorderIcon />
                                             )}
                                         </IconButton>
                                     </motion.div>
@@ -386,467 +399,96 @@ const ProductDetail = ({
                                     transition={{ duration: 0.5 }}
                                 >
                                     <Typography
-                                        variant="h4"
+                                        variant="h5"
                                         sx={{
-                                            fontWeight: 600,
-                                            color: vistelicaColors.secondary,
+                                            fontWeight: 700,
+                                            color: hasDiscount ? 'error.main' : vistelicaColors.secondary,
                                             fontFamily: typography.fontFamily
                                         }}
                                     >
-                                        {hasDiscount ?
-                                            `${parseFloat(discountedPrice).toFixed(2)}€` :
-                                            `${originalPrice.toFixed(2)}€`
-                                        }
+                                        {hasDiscount ? `${discountedPrice}€` : `${originalPrice}€`}
                                     </Typography>
                                 </motion.div>
 
                                 {hasDiscount && (
                                     <Box sx={{ml: 2, display: 'flex', flexDirection: 'column'}}>
                                         <Typography
-                                            variant="h6"
+                                            variant="body1"
                                             sx={{
                                                 textDecoration: 'line-through',
                                                 color: 'text.secondary',
-                                                fontWeight: 400
+                                                fontFamily: typography.fontFamily
                                             }}
                                         >
-                                            {originalPrice.toFixed(2)}€
+                                            {originalPrice}€
                                         </Typography>
-                                        <motion.div
-                                            animate={{ rotate: [0, -5, 0, 5, 0] }}
-                                            transition={{ duration: 0.5, delay: 0.2 }}
+                                        <Typography
+                                            variant="body2"
+                                            sx={{
+                                                color: 'success.main',
+                                                fontWeight: 600,
+                                                fontFamily: typography.fontFamily
+                                            }}
                                         >
-                                            <Chip
-                                                label={`-${product.discount_percentage}%`}
-                                                size="small"
-                                                sx={{
-                                                    bgcolor: vistelicaColors.error,
-                                                    color: 'white',
-                                                    fontSize: '0.75rem',
-                                                    height: 24
-                                                }}
-                                            />
-                                        </motion.div>
+                                            {product.discount_percentage}% dto.
+                                        </Typography>
                                     </Box>
                                 )}
                             </Box>
                         </motion.div>
 
-                        {/* Banner de promoción si hay descuento */}
-                        <AnimatePresence>
-                            {hasDiscount && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                    variants={itemFade}
+                        {/* Banner de promoción si hay descuento - CORREGIDO */}
+                        {hasDiscount && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <Paper
+                                    elevation={0}
+                                    sx={{
+                                        bgcolor: 'error.light',
+                                        color: 'error.contrastText',
+                                        p: 1.5,
+                                        borderRadius: 2,
+                                        mb: 3,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}
                                 >
-                                    <PromotionBanner
-                                        price={`¡Ahorras ${discountAmount}€!`}
-                                        offer="Oferta por tiempo limitado"
-                                    />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                                    <Typography variant="body1" sx={{ fontWeight: 700 }}>
+                                        {product.discount_percentage}% OFF OFERTA Ahorra {discountAmount}€ en este producto
+                                    </Typography>
+                                </Paper>
+                            </motion.div>
+                        )}
 
-                        {/* Selector de color mejorado */}
+                        {/* Selector de color - MODULARIZADO */}
                         <motion.div variants={itemFade}>
                             {availableColors?.length > 0 && (
-                                <motion.div
-                                    animate={highlightedSection === 'color' ? pulseAnimation : {}}
-                                >
-                                    <Paper
-                                        elevation={2}
-                                        sx={{
-                                            my: 3,
-                                            p: 2.5,
-                                            borderRadius: '12px',
-                                            background: 'linear-gradient(145deg, #ffffff, #f5f5f5)',
-                                            position: 'relative',
-                                            overflow: 'hidden'
-                                        }}
-                                    >
-                                        {/* Decoración de fondo */}
-                                        <Box
-                                            sx={{
-                                                position: 'absolute',
-                                                top: 0,
-                                                right: 0,
-                                                width: '80px',
-                                                height: '80px',
-                                                background: `linear-gradient(225deg, ${vistelicaColors.primary}15, transparent)`,
-                                                borderRadius: '0 0 0 100%',
-                                                zIndex: 0
-                                            }}
-                                        />
-
-                                        <Box sx={{ position: 'relative', zIndex: 1 }}>
-                                            <Typography
-                                                variant="h6"
-                                                sx={{
-                                                    mb: 1.5,
-                                                    fontFamily: typography.fontFamily,
-                                                    fontWeight: 600,
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    color: vistelicaColors.secondary
-                                                }}
-                                            >
-                                                <motion.div
-                                                    initial={{ scale: 1 }}
-                                                    animate={{ scale: [1, 1.15, 1] }}
-                                                    transition={{ duration: 1, repeat: Infinity, repeatDelay: 5 }}
-                                                    style={{ display: 'inline-flex', marginRight: '8px' }}
-                                                >
-                                                    <Box
-                                                        sx={{
-                                                            width: 24,
-                                                            height: 24,
-                                                            borderRadius: '50%',
-                                                            background: 'conic-gradient(from 0deg, red, orange, yellow, green, blue, indigo, violet, red)',
-                                                            mr: 1.5
-                                                        }}
-                                                    />
-                                                </motion.div>
-                                                Color: {selectedColor ? (
-                                                <Chip
-                                                    label={availableColors.find(c => c.code === selectedColor || c.value === selectedColor || c === selectedColor)?.name || selectedColor}
-                                                    size="small"
-                                                    sx={{
-                                                        ml: 1,
-                                                        backgroundColor: selectedColor === 'white' || selectedColor === '#FFFFFF' ? '#f0f0f0' : selectedColor,
-                                                        color: selectedColor === 'white' || selectedColor === '#FFFFFF' ||
-                                                        selectedColor === 'yellow' || selectedColor === '#FFFF00' ? 'black' : 'white',
-                                                        fontWeight: 500,
-                                                        px: 1
-                                                    }}
-                                                />
-                                            ) : (
-                                                <Typography component="span" sx={{ color: 'text.secondary', ml: 0.5, fontWeight: 400 }}>
-                                                    Seleccionar
-                                                </Typography>
-                                            )}
-                                            </Typography>
-
-                                            <Box
-                                                sx={{
-                                                    display: 'flex',
-                                                    gap: 1.5,
-                                                    flexWrap: 'wrap',
-                                                    mt: 2
-                                                }}
-                                            >
-                                                {availableColors.map((color, index) => {
-                                                    // Manejar diferentes estructuras de datos de color
-                                                    const colorCode = typeof color === 'object'
-                                                        ? (color.code || color.value || color.color || color.hex || '#cccccc')
-                                                        : color;
-                                                    const colorName = typeof color === 'object' ? (color.name || colorCode) : colorCode;
-                                                    const isSelected = colorCode === selectedColor || color === selectedColor;
-
-                                                    const isLight = colorCode === 'white' || colorCode === '#FFFFFF' ||
-                                                        colorCode === 'yellow' || colorCode === '#FFFF00';
-
-                                                    return (
-                                                        <Tooltip title={colorName} arrow key={index}>
-                                                            <motion.div
-                                                                whileHover={{
-                                                                    scale: 1.15,
-                                                                    y: -5,
-                                                                    boxShadow: '0 10px 15px rgba(0,0,0,0.1)'
-                                                                }}
-                                                                whileTap={{ scale: 0.9 }}
-                                                                initial={{ opacity: 0, scale: 0.5 }}
-                                                                animate={{
-                                                                    opacity: 1,
-                                                                    scale: 1,
-                                                                    rotate: isSelected ? [0, 10, -10, 0] : 0
-                                                                }}
-                                                                transition={{
-                                                                    delay: index * 0.07,
-                                                                    duration: 0.25,
-                                                                    rotate: { duration: 0.5, ease: "easeInOut" }
-                                                                }}
-                                                                style={{
-                                                                    cursor: 'pointer',
-                                                                    position: 'relative',
-                                                                    zIndex: isSelected ? 2 : 1
-                                                                }}
-                                                            >
-                                                                <Box
-                                                                    onClick={() => onColorChange(colorCode)}
-                                                                    sx={{
-                                                                        width: 46,
-                                                                        height: 46,
-                                                                        borderRadius: '50%',
-                                                                        backgroundColor: colorCode,
-                                                                        border: `2px solid ${isSelected ? vistelicaColors.primary : 'transparent'}`,
-                                                                        outline: isSelected ? `2px solid ${vistelicaColors.primary}` : 'none',
-                                                                        outlineOffset: 3,
-                                                                        boxShadow: isSelected
-                                                                            ? '0 0 0 2px white, 0 0 15px rgba(0,0,0,0.2)'
-                                                                            : '0 3px 6px rgba(0,0,0,0.1)',
-                                                                        transition: 'all 0.3s ease',
-                                                                        display: 'flex',
-                                                                        justifyContent: 'center',
-                                                                        alignItems: 'center',
-                                                                        position: 'relative'
-                                                                    }}
-                                                                >
-                                                                    {isSelected && (
-                                                                        <motion.div
-                                                                            initial={{ scale: 0, opacity: 0 }}
-                                                                            animate={{ scale: 1, opacity: 1 }}
-                                                                            transition={{ duration: 0.3 }}
-                                                                        >
-                                                                            <Check
-                                                                                sx={{
-                                                                                    color: isLight ? 'black' : 'white',
-                                                                                    fontSize: '1.5rem'
-                                                                                }}
-                                                                            />
-                                                                        </motion.div>
-                                                                    )}
-                                                                </Box>
-                                                            </motion.div>
-                                                        </Tooltip>
-                                                    );
-                                                })}
-                                            </Box>
-                                        </Box>
-                                    </Paper>
-                                </motion.div>
+                                <ColorSelector
+                                    availableColors={availableColors}
+                                    selectedColor={selectedColor}
+                                    onColorChange={onColorChange}
+                                    highlightedSection={highlightedSection === 'color'}
+                                    pulseAnimation={pulseAnimation}
+                                />
                             )}
                         </motion.div>
 
-                        {/* Selector de talla mejorado */}
+                        {/* Selector de talla - MODULARIZADO */}
                         <motion.div variants={itemFade}>
                             {availableSizes?.length > 0 && (
-                                <motion.div
-                                    animate={highlightedSection === 'size' ? pulseAnimation : {}}
-                                >
-                                    <Paper
-                                        elevation={2}
-                                        sx={{
-                                            my: 3,
-                                            p: 2.5,
-                                            borderRadius: '12px',
-                                            background: 'linear-gradient(145deg, #ffffff, #f5f5f5)',
-                                            position: 'relative',
-                                            overflow: 'hidden'
-                                        }}
-                                    >
-                                        {/* Decoración de fondo */}
-                                        <Box
-                                            sx={{
-                                                position: 'absolute',
-                                                bottom: 0,
-                                                left: 0,
-                                                width: '80px',
-                                                height: '80px',
-                                                background: `linear-gradient(45deg, ${vistelicaColors.primary}15, transparent)`,
-                                                borderRadius: '0 100% 0 0',
-                                                zIndex: 0
-                                            }}
-                                        />
-
-                                        <Box sx={{ position: 'relative', zIndex: 1 }}>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <Typography
-                                                    variant="h6"
-                                                    sx={{
-                                                        fontFamily: typography.fontFamily,
-                                                        fontWeight: 600,
-                                                        color: vistelicaColors.secondary,
-                                                        display: 'flex',
-                                                        alignItems: 'center'
-                                                    }}
-                                                >
-                                                    <motion.div
-                                                        animate={{ scale: [1, 1.1, 1] }}
-                                                        transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                                                        style={{ display: 'inline-flex', marginRight: '8px' }}
-                                                    >
-                                                        <Box
-                                                            component="span"
-                                                            sx={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                mr: 1,
-                                                                p: 0.5,
-                                                                border: `1px solid ${vistelicaColors.primary}30`,
-                                                                borderRadius: '4px'
-                                                            }}
-                                                        >
-                                                            <Typography
-                                                                variant="caption"
-                                                                sx={{
-                                                                    fontWeight: 700,
-                                                                    fontSize: '0.9rem',
-                                                                    color: vistelicaColors.primary
-                                                                }}
-                                                            >
-                                                                S-XL
-                                                            </Typography>
-                                                        </Box>
-                                                    </motion.div>
-
-                                                    Talla: {selectedSize ? (
-                                                    <Typography
-                                                        component="span"
-                                                        sx={{
-                                                            fontWeight: 700,
-                                                            ml: 1,
-                                                            color: vistelicaColors.primary
-                                                        }}
-                                                    >
-                                                        {selectedSize}
-                                                    </Typography>
-                                                ) : (
-                                                    <Typography component="span" sx={{ color: 'text.secondary', ml: 0.5, fontWeight: 400 }}>
-                                                        Seleccionar
-                                                    </Typography>
-                                                )}
-                                                </Typography>
-
-                                                <Button
-                                                    variant="text"
-                                                    size="small"
-                                                    onClick={() => setShowSizeGuide(true)}
-                                                    sx={{
-                                                        textTransform: 'none',
-                                                        fontSize: '0.8rem',
-                                                        fontWeight: 500,
-                                                        color: vistelicaColors.primary
-                                                    }}
-                                                >
-                                                    Guía de tallas
-                                                </Button>
-                                            </Box>
-
-                                            <Box
-                                                sx={{
-                                                    display: 'flex',
-                                                    flexWrap: 'wrap',
-                                                    gap: 1.2,
-                                                    mt: 2
-                                                }}
-                                            >
-                                                {availableSizes.map((size, index) => {
-                                                    const sizeName = typeof size === 'object' ? size.name : size;
-                                                    const isOutOfStock = typeof size === 'object' ? !size.stock || size.stock <= 0 : false;
-                                                    const isSelected = sizeName === selectedSize;
-
-                                                    return (
-                                                        <motion.div
-                                                            key={sizeName}
-                                                            whileHover={{
-                                                                scale: isOutOfStock ? 1 : 1.08,
-                                                                y: isOutOfStock ? 0 : -3,
-                                                                boxShadow: isOutOfStock ? 'none' : '0 6px 12px rgba(0,0,0,0.1)'
-                                                            }}
-                                                            whileTap={{ scale: isOutOfStock ? 1 : 0.95 }}
-                                                            initial={{ opacity: 0, y: 10 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            transition={{
-                                                                delay: index * 0.05,
-                                                                duration: 0.25,
-                                                                type: "spring",
-                                                                stiffness: 300
-                                                            }}
-                                                        >
-                                                            <Paper
-                                                                elevation={isSelected ? 4 : 1}
-                                                                onClick={() => !isOutOfStock && onSizeChange(sizeName)}
-                                                                sx={{
-                                                                    width: 46,
-                                                                    height: 46,
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'center',
-                                                                    cursor: isOutOfStock ? 'not-allowed' : 'pointer',
-                                                                    borderRadius: '12px',
-                                                                    backgroundColor: isSelected
-                                                                        ? vistelicaColors.primary
-                                                                        : isOutOfStock
-                                                                            ? '#f5f5f5'
-                                                                            : 'white',
-                                                                    border: isSelected
-                                                                        ? 'none'
-                                                                        : `1px solid ${isOutOfStock ? '#e0e0e0' : '#d0d0d0'}`,
-                                                                    color: isSelected
-                                                                        ? 'white'
-                                                                        : isOutOfStock
-                                                                            ? '#aaa'
-                                                                            : vistelicaColors.secondary,
-                                                                    fontWeight: isSelected ? 600 : 500,
-                                                                    fontSize: '0.9rem',
-                                                                    position: 'relative',
-                                                                    overflow: 'hidden',
-                                                                    transition: 'all 0.3s ease'
-                                                                }}
-                                                            >
-                                                                {isSelected && (
-                                                                    <motion.div
-                                                                        initial={{ scale: 0 }}
-                                                                        animate={{ scale: 1 }}
-                                                                        style={{
-                                                                            position: 'absolute',
-                                                                            top: 0,
-                                                                            left: 0,
-                                                                            width: '100%',
-                                                                            height: '100%',
-                                                                            background: `radial-gradient(circle, ${vistelicaColors.primary} 0%, ${vistelicaColors.primaryDark} 100%)`,
-                                                                            zIndex: 0
-                                                                        }}
-                                                                    />
-                                                                )}
-
-                                                                <Typography
-                                                                    sx={{
-                                                                        fontWeight: isSelected ? 600 : 500,
-                                                                        position: 'relative',
-                                                                        zIndex: 1,
-                                                                        fontSize: '0.9rem'
-                                                                    }}
-                                                                >
-                                                                    {sizeName}
-                                                                </Typography>
-
-                                                                {isOutOfStock && (
-                                                                    <Box
-                                                                        sx={{
-                                                                            position: 'absolute',
-                                                                            top: '50%',
-                                                                            left: '0',
-                                                                            width: '100%',
-                                                                            height: '1px',
-                                                                            backgroundColor: '#bbb',
-                                                                            transform: 'rotate(-45deg)'
-                                                                        }}
-                                                                    />
-                                                                )}
-                                                            </Paper>
-                                                        </motion.div>
-                                                    );
-                                                })}
-                                            </Box>
-
-                                            <Typography
-                                                variant="caption"
-                                                sx={{
-                                                    display: 'block',
-                                                    mt: 1.5,
-                                                    color: 'text.secondary',
-                                                    fontStyle: 'italic'
-                                                }}
-                                            >
-                                                Selecciona tu talla habitual
-                                            </Typography>
-                                        </Box>
-                                    </Paper>
-                                </motion.div>
+                                <SizeSelector
+                                    availableSizes={availableSizes}
+                                    selectedSize={selectedSize}
+                                    onSizeChange={onSizeChange}
+                                    showSizeGuide={showSizeGuide}
+                                    setShowSizeGuide={setShowSizeGuide}
+                                    highlightedSection={highlightedSection === 'size'}
+                                    pulseAnimation={pulseAnimation}
+                                />
                             )}
                         </motion.div>
 
@@ -865,121 +507,13 @@ const ProductDetail = ({
                             )}
                         </AnimatePresence>
 
-                        {/* Selector de cantidad mejorado */}
+                        {/* Selector de cantidad - MODULARIZADO */}
                         <motion.div variants={itemFade}>
                             <Box sx={{ my: 3 }}>
-                                <Paper
-                                    elevation={2}
-                                    sx={{
-                                        p: 2,
-                                        borderRadius: '12px',
-                                        background: 'linear-gradient(145deg, #ffffff, #f8f8f8)'
-                                    }}
-                                >
-                                    <Typography
-                                        variant="h6"
-                                        sx={{
-                                            fontFamily: typography.fontFamily,
-                                            fontWeight: 600,
-                                            mb: 2,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            color: vistelicaColors.secondary
-                                        }}
-                                    >
-                                        <TouchApp sx={{ mr: 1, color: vistelicaColors.primary }} />
-                                        Cantidad
-                                    </Typography>
-
-                                    <motion.div
-                                        whileHover={{ scale: 1.03 }}
-                                        style={{
-                                            display: 'flex',
-                                            justifyContent: 'center',
-                                            alignItems: 'center'
-                                        }}
-                                    >
-                                        <Box sx={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            width: '180px',
-                                            height: '55px',
-                                            borderRadius: '28px',
-                                            background: 'linear-gradient(145deg, #f8f8f8, #ffffff)',
-                                            boxShadow: '5px 5px 10px #d9d9d9, -5px -5px 10px #ffffff',
-                                            padding: '6px'
-                                        }}>
-                                            <motion.div
-                                                whileHover={{ scale: 1.1 }}
-                                                whileTap={{ scale: 0.9 }}
-                                                style={{ flex: 1, display: 'flex', justifyContent: 'center' }}
-                                            >
-                                                <IconButton
-                                                    size="large"
-                                                    onClick={() => handleQuantityChange(-1)}
-                                                    disabled={quantity <= 1}
-                                                    sx={{
-                                                        backgroundColor: quantity <= 1 ? '#f0f0f0' : vistelicaColors.primary,
-                                                        color: quantity <= 1 ? '#aaa' : 'white',
-                                                        '&:hover': {
-                                                            backgroundColor: quantity <= 1 ? '#f0f0f0' : vistelicaColors.primaryDark,
-                                                        },
-                                                        width: 40,
-                                                        height: 40
-                                                    }}
-                                                >
-                                                    <Remove />
-                                                </IconButton>
-                                            </motion.div>
-
-                                            <motion.div
-                                                key={quantity}
-                                                initial={{ scale: 0.8, opacity: 0.5 }}
-                                                animate={{ scale: 1, opacity: 1 }}
-                                                transition={{
-                                                    type: "spring",
-                                                    stiffness: 700,
-                                                    damping: 30
-                                                }}
-                                                style={{ flex: 1 }}
-                                            >
-                                                <Typography
-                                                    sx={{
-                                                        textAlign: 'center',
-                                                        fontFamily: typography.fontFamily,
-                                                        fontWeight: 700,
-                                                        fontSize: '1.5rem',
-                                                        color: vistelicaColors.secondary
-                                                    }}
-                                                >
-                                                    {quantity}
-                                                </Typography>
-                                            </motion.div>
-
-                                            <motion.div
-                                                whileHover={{ scale: 1.1 }}
-                                                whileTap={{ scale: 0.9 }}
-                                                style={{ flex: 1, display: 'flex', justifyContent: 'center' }}
-                                            >
-                                                <IconButton
-                                                    size="large"
-                                                    onClick={() => handleQuantityChange(1)}
-                                                    sx={{
-                                                        backgroundColor: vistelicaColors.primary,
-                                                        color: 'white',
-                                                        '&:hover': {
-                                                            backgroundColor: vistelicaColors.primaryDark,
-                                                        },
-                                                        width: 40,
-                                                        height: 40
-                                                    }}
-                                                >
-                                                    <Add />
-                                                </IconButton>
-                                            </motion.div>
-                                        </Box>
-                                    </motion.div>
-                                </Paper>
+                                <QuantitySelector
+                                    quantity={quantity}
+                                    onQuantityChange={handleQuantityChange}
+                                />
                             </Box>
                         </motion.div>
 
@@ -1009,9 +543,12 @@ const ProductDetail = ({
                                     borderRadius: '12px',
                                     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                                     '&:hover': {
-                                        backgroundColor: vistelicaColors.primaryDark,
-                                        boxShadow: '0 6px 16px rgba(0,0,0,0.2)'
-                                    }
+                                        backgroundColor: `${vistelicaColors.primaryDark}`
+                                    },
+                                    '&:active': {
+                                        transform: 'scale(0.98)'
+                                    },
+                                    transition: 'all 0.2s ease'
                                 }}
                             >
                                 {addingToCart ? 'Añadiendo...' : 'Añadir al carrito'}
@@ -1034,21 +571,21 @@ const ProductDetail = ({
                                 p: 1
                             }}>
                                 <motion.div
-                                    animate={{ x: [0, 5, 0] }}
-                                    transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
+                                    initial={{ scale: 1 }}
+                                    animate={{ scale: [1, 1.2, 1] }}
+                                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}
                                 >
-                                    <LocalShipping sx={{ mr: 1 }} />
+                                    <LocalShipping sx={{ mr: 1, color: vistelicaColors.success }} />
                                 </motion.div>
                                 <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                    ¡Envío gratis en pedidos superiores a 50€!
+                                    Envío gratis en 24-48h
                                 </Typography>
                             </Box>
                         </motion.div>
 
-                        {/* Información adicional */}
+                        {/* Información adicional - sin ShippingInfo */}
                         <motion.div variants={itemFade}>
                             <Box sx={{ mt: 3 }}>
-                                <ShippingInfo />
                                 <ProductInfo description={product?.description || 'Descripción no disponible'} />
                                 <CompositionCare composition={product?.composition || '100% Algodón'} />
                             </Box>
