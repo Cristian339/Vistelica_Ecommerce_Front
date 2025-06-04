@@ -438,6 +438,6 @@ export default function ProductDetailPage() {
                     </Button>
                 )}
             />
-        </div>
+        </Box>
     );
 }

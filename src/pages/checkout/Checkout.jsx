@@ -109,6 +109,21 @@ export default function Checkout(props) {
         fetchCartData();
     }, [isCartCleared]);
 
+
+    const calculateTotal = () => {
+        if (!cartData?.products) return '0.00 €';
+
+        const subtotal = cartData.products.reduce((sum, item) => {
+            const finalPrice = calculateDiscountedPrice(item.price, item.discount_percentage);
+            return sum + (finalPrice * item.quantity);
+        }, 0);
+
+        const shippingCost = subtotal >= 50 ? 0 : 4.99;
+        const total = subtotal + shippingCost;
+
+        return total.toFixed(2) + ' €'; // Formato: "99.99 €"
+    };
+
     const calculateDiscountedPrice = (price, discountPercentage) => {
         const originalPrice = parseFloat(price);
         const discount = parseFloat(discountPercentage);
@@ -215,7 +230,7 @@ export default function Checkout(props) {
                 return <PaymentForm
                     paymentData={paymentData}
                     setPaymentData={setPaymentData}
-                    amount={activeStep >= 2 ? '$144.97' : '$134.98'}
+                    amount={calculateTotal()}
                     onPaymentSuccess={() => setIsPaymentCompleted(true)}
                     onPaymentMethodChange={() => setIsPaymentCompleted(false)}
                     ref={paymentFormRef}

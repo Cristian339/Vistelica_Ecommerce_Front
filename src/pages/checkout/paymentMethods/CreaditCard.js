@@ -122,7 +122,7 @@ function CreditCardForm({ amount, onPaymentSuccess, onPaymentMethodChange }) {
                     Pago exitoso
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 2 }}>
-                    Tu pago de {amount.toFixed(2)}€ se ha procesado correctamente.
+                    Tu pago se ha procesado correctamente.
                 </Typography>
             </SuccessContainer>
         );
