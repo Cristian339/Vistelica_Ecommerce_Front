@@ -227,6 +227,19 @@ const ProductList = () => {
         setTimeout(applyFilter, 100);
     }, [searchParams, products.length]);
 
+
+    const getAvailableSizes = (products) => {
+        const sizeSet = new Set();
+        products.forEach(product => {
+            if (product.sizes && Array.isArray(product.sizes)) {
+                product.sizes.forEach(size => sizeSet.add(size));
+            }
+        });
+        return Array.from(sizeSet);
+    };
+
+
+
 // Limpieza eficiente de filtros URL con retroalimentación visual
     const clearURLFilters = useCallback(() => {
         const currentURL = new URL(window.location);
@@ -1566,6 +1579,7 @@ const ProductList = () => {
                                 }));
                             }
                         }}
+                        availableSizes={getAvailableSizes(filteredProducts)}
                     />
                 </Box>
 
@@ -1806,10 +1820,11 @@ const ProductList = () => {
                             {/* Chips para colores */}
                             {filters.colors.map(colorId => {
                                 const color = COLORS.find(c => c.id === colorId);
+
                                 return (
                                     <Chip
                                         key={colorId}
-                                        label={color?.label || colorId}
+                                        label={color?.label}
                                         size="small"
                                         onDelete={() => {
                                             setFilters(prev => ({

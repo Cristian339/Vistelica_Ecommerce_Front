@@ -202,6 +202,49 @@ const getSubcategoriesByCategory = async (categoryId) => {
     return response.data;
 };
 
+
+
+const getRefundsInReview = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/refunds/review`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        return response.data.data || [];
+    } catch (error) {
+        console.error('Error al obtener devoluciones en revisión:', error);
+        throw new Error(
+            error.response?.data?.message ||
+            'No se pudieron cargar las devoluciones en revisión'
+        );
+    }
+};
+
+const updateRefundStatus = async (orderDetailId, status, rejectionReason) => {
+    try {
+        const response = await axios.put(
+            `${API_URL}/refunds/${orderDetailId}/status`,
+            {
+                status,
+                rejection_reason: rejectionReason
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        return response.data.data;
+    } catch (error) {
+        console.error('Error al actualizar estado de devolución:', error);
+        throw new Error(
+            error.response?.data?.message ||
+            'No se pudo actualizar el estado de la devolución'
+        );
+    }
+};
 export default {
     getClients,
     getSuppliers,
@@ -229,5 +272,7 @@ export default {
     createSubcategory,
     updateSubcategory,
     toggleDiscardSubcategory,
-    getSubcategoriesByCategory
+    getSubcategoriesByCategory,
+    updateRefundStatus,
+    getRefundsInReview
 };

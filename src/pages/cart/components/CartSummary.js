@@ -371,42 +371,49 @@ const CartSummary = React.memo(({
                             placement="top"
                             arrow
                         >
-                            <span style={{ width: '100%', display: 'block' }}>
-                                <Button
-                                    fullWidth
-                                    variant="contained"
-                                    disabled={totalPrice === 0 || isProcessing}
-                                    onClick={handleCheckoutClick}
-                                    sx={{
-                                        py: { xs: 1.2, sm: 1.5 },
-                                        fontSize: { xs: '0.85rem', sm: '0.95rem' },
-                                        fontWeight: 'bold',
-                                        textTransform: 'uppercase',
-                                        borderRadius: 2,
-                                        background: `linear-gradient(135deg, ${vistelicaColors.primary}, ${vistelicaColors.secondary})`,
-                                        position: 'relative',
-                                        overflow: 'hidden',
-                                        '&::after': {
-                                            content: '""',
-                                            position: 'absolute',
-                                            top: 0,
-                                            left: '-100%',
-                                            width: '100%',
-                                            height: '100%',
-                                            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
-                                            animation: 'shine 3s infinite linear'
-                                        },
-                                        '@keyframes shine': {
-                                            '0%': { left: '-100%' },
-                                            '100%': { left: '100%' }
-                                        }
-                                    }}
-                                    startIcon={isProcessing ? <CircularProgress size={20} color="inherit" /> : <ShoppingBagIcon />}
-                                >
-                                    {isProcessing ? 'Procesando...' : 'Finalizar compra'}
-                                </Button>
-                            </span>
-                        </Tooltip>
+    <span style={{ width: '100%', display: 'block' }}>
+        <Button
+            fullWidth
+            variant="contained"
+            disabled={totalPrice === 0 || isProcessing}
+            onClick={handleCheckoutClick}
+            sx={{
+                py: { xs: 1.2, sm: 1.5 },
+                fontSize: { xs: '0.85rem', sm: '0.95rem' },
+                fontWeight: 'bold',
+                textTransform: 'uppercase',
+                borderRadius: 2,
+                background: `linear-gradient(135deg, ${vistelicaColors.primary}, ${vistelicaColors.secondary})`,
+                color: '#ffffff !important', // Texto siempre blanco
+                position: 'relative',
+                overflow: 'hidden',
+                '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: '-100%',
+                    width: '100%',
+                    height: '100%',
+                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                    animation: 'shine 3s infinite linear'
+                },
+                '@keyframes shine': {
+                    '0%': { left: '-100%' },
+                    '100%': { left: '100%' }
+                },
+                '& .MuiButton-startIcon': {
+                    color: '#ffffff !important' // Icono siempre blanco
+                }
+            }}
+            startIcon={isProcessing ?
+                <CircularProgress size={20} sx={{ color: '#ffffff' }} /> :
+                <ShoppingBagIcon sx={{ color: '#ffffff' }} />
+            }
+        >
+            {isProcessing ? 'Procesando...' : 'Finalizar compra'}
+        </Button>
+    </span>
+</Tooltip>
 
                         {/* Componente de insignias de seguridad */}
                         <SecurityBadges showSecurityBadge={showSecurityBadge} />

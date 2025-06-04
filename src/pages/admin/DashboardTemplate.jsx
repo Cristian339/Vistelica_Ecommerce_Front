@@ -13,6 +13,7 @@ import dynamic from 'next/dynamic';
 
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
+import RefundTable from "@/pages/admin/components/RefundTable";
 
 // Componentes dinámicos
 const OrderTable = dynamic(() => import('./components/OrderTable'), { ssr: false });
@@ -93,6 +94,15 @@ const JoyOrderDashboardTemplate = ({ children }) => {
                         <SubcategoryList/>
                     </>
                 );
+            case 'refunds':
+                return (
+                    <>
+                        <Typography level="h2" component="h1">
+                            Devoluciones
+                        </Typography>
+                        <RefundTable />
+                    </>
+                );
             default:
                 return (
                     <>
@@ -114,6 +124,7 @@ const JoyOrderDashboardTemplate = ({ children }) => {
             case 'products': return 'Productos';
             case 'categories': return 'Categorías';
             case 'subcategories': return 'Subcategorías';
+            case 'refunds': return 'Devoluciones';
             default: return 'Pedidos';
         }
     };

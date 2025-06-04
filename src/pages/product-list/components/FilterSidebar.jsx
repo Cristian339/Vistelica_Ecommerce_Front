@@ -35,18 +35,24 @@ const SIZES = [
 
 // Lista de colores
 const COLORS = [
-    { id: 'BLack', label: 'Negro', hex: '#000000' },
-    { id: 'white', label: 'Blanco', hex: '#FFFFFF' },
-    { id: 'gray', label: 'Gris', hex: '#808080' },
-    { id: 'red', label: 'Rojo', hex: '#FF0000' },
-    { id: 'blue', label: 'Azul', hex: '#0000FF' },
-    { id: 'green', label: 'Verde', hex: '#008000' },
-    { id: 'yellow', label: 'Amarillo', hex: '#FFFF00' },
-    { id: 'pink', label: 'Rosa', hex: '#FFC0CB' },
-    { id: 'purple', label: 'Morado', hex: '#800080' },
-    { id: 'orange', label: 'Naranja', hex: '#FFA500' },
-    { id: 'brown', label: 'Marrón', hex: '#A52A2A' }
+    { id: 'BLACK', label: 'Negro', hex: '#000000' },
+    { id: 'WHITE', label: 'Blanco', hex: '#FFFFFF' },
+    { id: 'GRAY', label: 'Gris', hex: '#808080' },
+    { id: 'RED', label: 'Rojo', hex: '#FF0000' },
+    { id: 'BLUE', label: 'Azul', hex: '#0000FF' },
+    { id: 'GREEN', label: 'Verde', hex: '#008000' },
+    { id: 'YELLOW', label: 'Amarillo', hex: '#FFFF00' },
+    { id: 'PINK', label: 'Rosa', hex: '#FFC0CB' },
+    { id: 'PURPLE', label: 'Morado', hex: '#800080' },
+    { id: 'ORANGE', label: 'Naranja', hex: '#FFA500' },
+    { id: 'BROWN', label: 'Marrón', hex: '#A52A2A' },
+    { id: 'BEIGE', label: 'Beige', hex: '#F5F5DC' },
+    { id: 'GOLD', label: 'Dorado', hex: '#FFD700' },
+    { id: 'SILVER', label: 'Plateado', hex: '#C0C0C0' },
+    { id: 'NAVY', label: 'Azul Marino', hex: '#000080' },
 ];
+
+
 
 // Componente para el encabezado de cada acordeón
 const FilterAccordionHeader = React.memo(({ icon: Icon, title, activeCount = 0 }) => (
@@ -132,16 +138,16 @@ const ColorSelector = React.memo(({ color, isActive, onClick }) => (
 ColorSelector.displayName = 'ColorSelector';
 
 // Componente para el selector de tamaño
-const SizeSelector = React.memo(({ size, isActive, onClick }) => (
+const SizeSelector = React.memo(({ size, isActive, onClick, sx = {} }) => (
     <Box
         component={motion.div}
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: isActive ? 1.05 : 1 }}
+        whileTap={{ scale: isActive ? 0.95 : 1 }}
         onClick={onClick}
         onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
+            if ((e.key === 'Enter' || e.key === ' ') && onClick) {
                 onClick();
             }
         }}
@@ -162,17 +168,18 @@ const SizeSelector = React.memo(({ size, isActive, onClick }) => (
             fontWeight: isActive ? 400 : 500,
             fontFamily: typography.fontFamily,
             fontSize: { xs: '0.85rem', sm: '0.95rem' },
-            cursor: 'pointer',
+            cursor: onClick ? 'pointer' : 'not-allowed',
             transition: 'all 0.2s',
             userSelect: 'none',
             '&:hover': {
-                borderColor: vistelicaColors.primary,
-                bgcolor: alpha(vistelicaColors.primary, 0.05)
+                borderColor: onClick ? vistelicaColors.primary : alpha(vistelicaColors.secondary, 0.2),
+                bgcolor: onClick ? alpha(vistelicaColors.primary, 0.05) : 'transparent'
             },
             '&:focus-visible': {
-                outline: `2px solid ${vistelicaColors.primary}`,
+                outline: onClick ? `2px solid ${vistelicaColors.primary}` : 'none',
                 outlineOffset: '2px'
-            }
+            },
+            ...sx
         }}
     >
         {size.label}
@@ -192,6 +199,7 @@ const FilterSidebar = ({
                            selectedGender,
                            showFilters,
                            setShowFilters,
+                           availableSizes = [],
                            onSubcategorySelect,
                            products = [],
                        }) => {
@@ -474,14 +482,44 @@ const FilterSidebar = ({
                                         justifyContent: { xs: 'center', sm: 'flex-start' }
                                     }}
                                 >
-                                    {SIZES.map((size, index) => (
-                                        <SizeSelector
-                                            key={size.id}
-                                            size={size}
-                                            isActive={filters.sizes?.includes(size.id)}
-                                            onClick={() => handleSizeClick(size.id)}
-                                        />
-                                    ))}
+                                    {SIZES.map((size) => {
+                                        const isAvailable = availableSizes.includes(size.id);
+                                        return (
+                                            <Box
+                                                key={size.id}
+                                                sx={{
+                                                    position: 'relative',
+                                                    '&:after': !isAvailable ? {
+                                                        content: '""',
+                                                        position: 'absolute',
+                                                        top: '50%',
+                                                        left: '50%',
+                                                        width: '120%',
+                                                        height: '2px',
+                                                        backgroundColor: vistelicaColors.secondary,
+                                                        transform: 'translate(-50%, -50%) rotate(-15deg)',
+                                                        zIndex: 1,
+                                                        pointerEvents: 'none'
+                                                    } : {}
+                                                }}
+                                            >
+                                                <SizeSelector
+                                                    size={size}
+                                                    isActive={filters.sizes?.includes(size.id)}
+                                                    onClick={() => isAvailable && handleSizeClick(size.id)}
+                                                    sx={{
+                                                        opacity: isAvailable ? 1 : 0.5,
+                                                        cursor: isAvailable ? 'pointer' : 'not-allowed',
+                                                        '&:hover': {
+                                                            backgroundColor: isAvailable
+                                                                ? alpha(vistelicaColors.primary, 0.05)
+                                                                : 'transparent'
+                                                        }
+                                                    }}
+                                                />
+                                            </Box>
+                                        );
+                                    })}
                                 </Box>
                             </AccordionDetails>
                         </Accordion>

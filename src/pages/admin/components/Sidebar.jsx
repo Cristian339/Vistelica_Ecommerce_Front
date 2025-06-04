@@ -24,6 +24,7 @@ import BrightnessAutoRoundedIcon from '@mui/icons-material/BrightnessAutoRounded
 
 import ColorSchemeToggle from '@/theme/ColorSchemeToggle';
 import { closeSidebar } from '@/pages/admin/utils';
+import AssignmentReturnIcon from "@mui/icons-material/AssignmentReturn";
 
 function Toggler({ defaultExpanded = false, renderToggle, children }) {
     const [open, setOpen] = React.useState(defaultExpanded);
@@ -192,6 +193,17 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                             <WidgetsIcon />
                             <ListItemContent>
                                 <Typography level="title-sm">Subcategorías</Typography>
+                            </ListItemContent>
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem>
+                        <ListItemButton
+                            selected={activeTab === 'refunds'}
+                            onClick={() => setActiveTab('refunds')}
+                        >
+                            <AssignmentReturnIcon />
+                            <ListItemContent>
+                                <Typography level="title-sm">Devoluciones</Typography>
                             </ListItemContent>
                         </ListItemButton>
                     </ListItem>
