@@ -63,15 +63,15 @@ const AccountAddresses = () => {
     const [addressToDelete, setAddressToDelete] = useState(null);
     const [editingAddress, setEditingAddress] = useState(null);
     const [formData, setFormData] = useState({
-        alias: '',
+        label: '',
         street: '',
-        number: '',
+        numero: '',
         postal_code: '',
         city: '',
-        province: '',
+        state: '',
         country: 'España',
         description: '',
-        isDefault: false,
+        is_default: false,
         block: '',
         floor: '',
         door: ''
@@ -138,25 +138,25 @@ const AccountAddresses = () => {
 
             // Extraer número de la calle si existe
             let street = address.street || '';
-            let number = '';
+            let numero = '';
 
             // Intentar extraer el número de la dirección
             const streetMatch = street.match(/(.*?)(?:\s+(\d+.*))?$/);
             if (streetMatch && streetMatch[2]) {
                 street = streetMatch[1].trim();
-                number = streetMatch[2].trim();
+                numero = streetMatch[2].trim();
             }
 
             setFormData({
-                alias: address.label || '',
+                label: address.label || '',
                 street: street,
-                number: number,
+                numero: numero,
                 postal_code: address.postal_code || '',
                 city: address.city || '',
-                province: address.state || '',
+                state: address.state || '',
                 country: address.country || 'España',
                 description: address.description || '',
-                isDefault: address.is_default || false,
+                is_default: address.is_default || false,
                 block: address.block || '',
                 floor: address.floor || '',
                 door: address.door || ''
@@ -164,15 +164,15 @@ const AccountAddresses = () => {
         } else {
             setEditingAddress(null);
             setFormData({
-                alias: '',
+                label: '',
                 street: '',
-                number: '',
+                numero: '',
                 postal_code: '',
                 city: '',
-                province: '',
+                state: '',
                 country: 'España',
                 description: '',
-                isDefault: false,
+                is_default: false,
                 block: '',
                 floor: '',
                 door: ''
@@ -189,7 +189,7 @@ const AccountAddresses = () => {
         const {name, value, checked} = e.target;
         setFormData({
             ...formData,
-            [name]: name === 'isDefault' ? checked : value
+            [name]: name === 'is_default' ? checked : value
         });
     };
 
@@ -207,12 +207,24 @@ const AccountAddresses = () => {
         try {
             setLoading(true);
 
+            // Combinar street y numero
+            const combinedStreet = formData.numero
+                ? `${formData.street} ${formData.numero}`.trim()
+                : formData.street;
+
+            const addressData = {
+                ...formData,
+                street: combinedStreet,
+                // No incluimos el campo numero en los datos que se envían
+                state: formData.state // Asegurar que se use el nombre correcto del campo
+            };
+
             if (editingAddress) {
                 // Actualizar dirección existente
-                await addressService.updateAddress(editingAddress.id, formData);
+                await addressService.updateAddress(editingAddress.id, addressData);
 
                 // Si la dirección se marca como predeterminada, actualizar ese estado
-                if (formData.isDefault && !editingAddress.isDefault) {
+                if (formData.is_default && !editingAddress.is_default) {
                     await addressService.setDefaultAddress(editingAddress.id);
                 }
 
@@ -222,12 +234,11 @@ const AccountAddresses = () => {
                     severity: 'success'
                 });
             } else {
-                console.log("Datos pasados " + JSON.stringify(formData) );
                 // Crear nueva dirección
-                const newAddress = await addressService.addAddress(formData);
+                const newAddress = await addressService.addAddress(addressData);
 
                 // Si la dirección se marca como predeterminada, actualizar ese estado
-                if (formData.isDefault) {
+                if (formData.is_default) {
                     await addressService.setDefaultAddress(newAddress.id);
                 }
 
@@ -318,10 +329,10 @@ const AccountAddresses = () => {
         });
     };
 
-    const getAddressIcon = (alias) => {
-        if (!alias) return <LocationOnIcon/>;
+    const getAddressIcon = (label) => {
+        if (!label) return <LocationOnIcon/>;
 
-        const normalizedAlias = alias.toLowerCase();
+        const normalizedAlias = label.toLowerCase();
         if (normalizedAlias.includes('casa') || normalizedAlias.includes('hogar')) {
             return <HomeIcon/>;
         } else if (normalizedAlias.includes('trabajo') || normalizedAlias.includes('oficina')) {
@@ -790,10 +801,10 @@ const AccountAddresses = () => {
                         <Grid container spacing={{ xs: 2, sm: 3.5 }} justifyContent="center">
                             <Grid item xs={12}>
                                 <TextField
-                                    name="alias"
+                                    name="label"
                                     label="Nombre de la dirección"
                                     placeholder="Ej: Casa, Trabajo, etc."
-                                    value={formData.alias}
+                                    value={formData.label}
                                     onChange={handleChange}
                                     fullWidth
                                     required
@@ -829,9 +840,9 @@ const AccountAddresses = () => {
                             </Grid>
                             <Grid item xs={12} sm={4}>
                                 <TextField
-                                    name="number"
+                                    name="numero"
                                     label="Número"
-                                    value={formData.number}
+                                    value={formData.numero}
                                     onChange={handleChange}
                                     fullWidth
                                     sx={{
@@ -940,9 +951,9 @@ const AccountAddresses = () => {
                             </Grid>
                             <Grid item xs={12} sm={6}>
                                 <TextField
-                                    name="province"
+                                    name="state"
                                     label="Provincia"
-                                    value={formData.province}
+                                    value={formData.state}
                                     onChange={handleChange}
                                     fullWidth
                                     required
@@ -1069,7 +1080,7 @@ const AccountAddresses = () => {
                     <Box sx={{display: 'flex', alignItems: 'flex-start', gap: 2}}>
                         <InfoOutlinedIcon sx={{color: 'text.secondary', mt: 0.5}}/>
                         <DialogContentText id="alert-dialog-description" sx={{m: 0}}>
-                            ¿Estás seguro de que deseas eliminar la dirección <b>"{addressToDelete?.alias || ''}"</b>?
+                            ¿Estás seguro de que deseas eliminar la dirección <b>"{addressToDelete?.label || ''}"</b>?
                             <br/>
                             Esta acción no se puede deshacer.
                         </DialogContentText>

@@ -108,14 +108,9 @@ const cartService = {
             if (error.response?.status === 401) {
                 // Token inválido o expirado
                 console.error('Error de autenticación:', error);
-                throw new Error('Por favor, inicia sesión nuevamente');
             }
 
             console.error('Error al obtener productos entregados:', error);
-            throw new Error(
-                error.response?.data?.message ||
-                'Error al obtener los productos entregados'
-            );
         }
     },
 
@@ -231,7 +226,7 @@ const cartService = {
                 price,
                 size,
                 color,
-                discount_percentage // Nuevo parámetro añadido
+                discount_percentage
             });
             return response.data.data || response.data;
         } catch (error) {

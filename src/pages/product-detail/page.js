@@ -143,22 +143,15 @@ export default function ProductDetailPage() {
             if (!cart?.cart_id) {
                 throw new Error('No se pudo obtener el ID del carrito');
             }
-
-            // Imagen por defecto mejorada
-            const productImage = product.image_url || product.img_url ||
-                (product.images && product.images.length > 0 ? product.images[0].image_url : null);
-
             // Añadimos el producto al carrito
             await cartService.addToCart(
                 cart.cart_id,
                 product.product_id,
-                /*1,*/
                 quantity,
                 parseFloat(product.price),
                 selectedSize,
                 selectedColor,
-                product.discount_percentage,
-                product.image_url || product.img_url || product.images?.[0]
+                product.discount_percentage
             );
 
             toast.success('✅ Producto añadido al carrito', {
