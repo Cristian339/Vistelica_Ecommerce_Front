@@ -274,7 +274,7 @@ const ProductCard = React.memo(({ product }) => {
                                 margin: '0 auto'
                             }}
                         >
-                            ${typeof product.price === 'number' ? product.price.toFixed(2) : (parseFloat(product.price) || 0).toFixed(2)}
+                            {typeof product.price === 'number' ? product.price.toFixed(2) : (parseFloat(product.price) || 0).toFixed(2)}€
                         </Typography>
 
                         {/* Reseñas */}

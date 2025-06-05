@@ -140,7 +140,7 @@ const CarouselItem = React.memo(({ product }) => {
                             fontFamily: typography.fontFamily || 'Amethysta, sans-serif',
                         }}
                     >
-                        ${typeof product.price === 'number' ? product.price.toFixed(2) : product.price || '0.00'}
+                        {typeof product.price === 'number' ? product.price.toFixed(2) : product.price || '0.00'}€
                     </Typography>
                 </CardContent>
             </Card>

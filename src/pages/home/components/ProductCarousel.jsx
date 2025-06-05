@@ -180,7 +180,7 @@ const ProductCard = React.memo(({ product, onClick }) => {
                                 fontSize: '1.25rem',
                             }}
                         >
-                            ${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
+                            {typeof product.price === 'number' ? product.price.toFixed(2) : product.price}€
                         </Typography>
                     </Box>
                 </Box>

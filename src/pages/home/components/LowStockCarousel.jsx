@@ -386,7 +386,7 @@ const LowStockProductCard = React.memo(({ product, onClick }) => {
                                 lineHeight: 1
                             }}
                         >
-                            ${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
+                            {typeof product.price === 'number' ? product.price.toFixed(2) : product.price}€
                         </Typography>
 
                         {/* Precio original si hay descuento */}
