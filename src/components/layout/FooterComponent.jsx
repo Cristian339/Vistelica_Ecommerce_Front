@@ -292,7 +292,7 @@ const FooterComponent = () => {
                     scale: 1.1,
                     boxShadow: '0 8px 15px rgba(0,0,0,0.1)'
                 }}
-                whileTap={{ scale: 0.9 }}socialMedias
+                whileTap={{ scale: 0.9 }}
             >
                 <IconButton
                     onClick={scrollToTop}
