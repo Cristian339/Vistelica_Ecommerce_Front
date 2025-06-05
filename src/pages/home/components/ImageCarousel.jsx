@@ -48,14 +48,31 @@ const ProgressBar = React.memo(({ isActive, progress, onClick, index }) => (
 const Slide = React.memo(({ slide, isActive }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const imgRef = useRef(null);
+    const mediaRef = useRef(null);
+    const isVideo = Boolean(slide.video);
 
     useEffect(() => {
-        // Precarga de imagen cuando está a punto de mostrarse
-        if (imgRef.current && isActive) {
-            imgRef.current.loading = 'eager';
+        // Precarga de imagen o manejo del video cuando está activo
+        if (mediaRef.current && isActive) {
+            if (isVideo) {
+                if (isActive) {
+                    mediaRef.current.play().catch(err => console.log('Autoplay prevented:', err));
+                } else {
+                    mediaRef.current.pause();
+                }
+            } else {
+                mediaRef.current.loading = 'eager';
+            }
         }
-    }, [isActive]);
+    }, [isActive, isVideo]);
+
+    // Estilos comunes para imagen y video
+    const mediaStyles = {
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        display: 'block'
+    };
 
     return (
         <Box
@@ -73,19 +90,31 @@ const Slide = React.memo(({ slide, isActive }) => {
             role="tabpanel"
             aria-hidden={!isActive}
         >
-            <Box
-                component="img"
-                ref={imgRef}
-                src={slide.src}
-                alt={slide.alt}
-                loading={isActive ? "eager" : "lazy"}
-                sx={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    display: 'block'
-                }}
-            />
+            {/* Renderizado condicional para imagen o video */}
+            {isVideo ? (
+                <Box
+                    component="video"
+                    ref={mediaRef}
+                    src={slide.video}
+                    type={slide.type || "video/mp4"}
+                    autoPlay={isActive}
+                    muted
+                    loop
+                    playsInline
+                    aria-label={slide.alt}
+                    sx={mediaStyles}
+                />
+            ) : (
+                <Box
+                    component="img"
+                    ref={mediaRef}
+                    src={slide.src}
+                    alt={slide.alt}
+                    loading={isActive ? "eager" : "lazy"}
+                    sx={mediaStyles}
+                />
+            )}
+
             <Box
                 sx={{
                     position: 'absolute',
@@ -198,7 +227,8 @@ const ImageCarousel = () => {
             link: "/product-list/productList?filter=lowStock"
         },
         {
-            src: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743791578/vistelica/Carrusel/ctidxlquiebnqas0ivxk.jpg",
+            video: "https://res.cloudinary.com/dhyv4dpk2/video/upload/v1748724663/vistelica/home%20page/e68ykwd63eytr7cnzyyd.mp4",
+            type: "video/mp4",
             alt: "Tropical leaf",
             title: "Grandes ofertas",
             subtitle: "Aprovecha nuestras ofertas y descuentos exclusivos en productos seleccionados.",

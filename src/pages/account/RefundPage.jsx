@@ -212,8 +212,8 @@ const RefundPage = () => {
                                 alignItems: 'center',
                                 mb: 3
                             }}>
-                                <Typography variant="h4" component="h1" sx={{
-                                    fontWeight: 600,
+                                <Typography variant="h5" component="h1" sx={{
+                                    fontWeight: 400,
                                     color: vistelicaColors.primary,
                                     fontFamily: typography.fontFamily
                                 }}>

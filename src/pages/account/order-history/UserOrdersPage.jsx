@@ -25,6 +25,7 @@ import { getUserProfile } from '@/services/profileService';
 import SidebarMenu from '@/components/layout/SidebarMenu';
 import Navbar from "@/components/layout/HeaderComponent";
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import { typography } from '@/pages/shared-theme/themePrimitives';
 import Link from 'next/link';
 
 const getStatusColor = (status) => {
@@ -84,14 +85,20 @@ const UserOrdersPage = () => {
 
     if (loading && orders.length === 0) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                <CircularProgress />
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '100vh',}}
+            >
+                <CircularProgress sx={{ color: vistelicaColors.primary }} />
             </Box>
         );
     }
 
     return (
-        <div>
+        <Box sx={{ backgroundColor: vistelicaColors.background, minHeight: '100vh' }}>
             <Navbar />
             <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
                 <Grid container spacing={2} sx={{
@@ -99,15 +106,31 @@ const UserOrdersPage = () => {
                 }}>
                     {/* Sidebar solo visible en desktop */}
                     {!isMobile && (
-                        <Grid item md={3} lg={3}>
+                        <Grid item md={3} lg={5}>
                             <SidebarMenu username={userData?.name || 'Usuario'} />
                         </Grid>
                     )}
 
                     {/* Contenido principal - ancho completo en móviles */}
-                    <Grid item xs={12} md={9} lg={9}>
-                        <Paper elevation={0} sx={{ border: '1px solid #e0e0e0', p: { xs: 2, sm: 3 }, height: '100%' }}>
-                            <Typography variant="h5" component="h1" fontWeight="500" sx={{ mb: 2 }}>
+                    <Grid size={{ xs: 12, md: 9, lg: 9 }}>
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                border: `1px solid ${vistelicaColors.primary}`,
+                                p: { xs: 2, sm: 3 },
+                                height: '100%',
+                                borderRadius: 2,
+                            }}
+                        >
+                            <Typography
+                                variant="h5"
+                                component="h1"
+                                sx={{
+                                    mb: 2,
+                                    color: vistelicaColors.primary,
+                                    ...typography.h3
+                                }}
+                            >
                                 Mis Pedidos
                             </Typography>
 
@@ -117,41 +140,90 @@ const UserOrdersPage = () => {
                                 </Box>
                             ) : orders.length === 0 ? (
                                 <Box textAlign="center" py={4}>
-                                    <Typography variant="h6" color="text.secondary">
+                                    <Typography
+                                        variant="h6"
+                                        sx={{
+                                            color: vistelicaColors.secondary
+                                        }}
+                                    >
                                         No tienes pedidos aún.
                                     </Typography>
                                 </Box>
                             ) : (
-                                <TableContainer component={Paper} sx={{ mt: 2 }}>
-                                    <Table>
-                                        <TableHead>
+                                <TableContainer
+                                    component={Paper}
+                                    sx={{
+                                        mt: 2,
+                                        borderRadius: 1,
+                                        overflow: 'hidden',
+                                        boxShadow: 'none',
+                                        border: `1px solid ${vistelicaColors.primaryLight}`
+                                    }}
+                                >
+                                    <Table aria-label="Historial de pedidos">
+                                        <TableHead sx={{ backgroundColor: vistelicaColors.primary }}>
                                             <TableRow>
-                                                <TableCell sx={{ fontWeight: 600 }}>Número de Pedido</TableCell>
-                                                <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
-                                                <TableCell sx={{ fontWeight: 600 }}>Fecha de reparto</TableCell>
-                                                <TableCell align="right" sx={{ fontWeight: 600 }}>Total</TableCell>
+                                                <TableCell
+                                                    sx={{
+                                                        fontWeight: 400,
+                                                        ...typography.subtitle1,
+                                                        color: vistelicaColors.secondary
+                                                    }}
+                                                >
+                                                    Número de Pedido
+                                                </TableCell>
+                                                <TableCell
+                                                    sx={{
+                                                        fontWeight: 400,
+                                                        ...typography.subtitle1,
+                                                        color: vistelicaColors.secondary
+                                                    }}
+                                                >
+                                                    Estado
+                                                </TableCell>
+                                                <TableCell
+                                                    sx={{
+                                                        fontWeight: 400,
+                                                        ...typography.subtitle1,
+                                                        color: vistelicaColors.secondary
+                                                    }}
+                                                >
+                                                    Fecha de reparto
+                                                </TableCell>
+                                                <TableCell
+                                                    align="right"
+                                                    sx={{
+                                                        fontWeight: 400,
+                                                        ...typography.subtitle1,
+                                                        color: vistelicaColors.secondary
+                                                    }}
+                                                >
+                                                    Total
+                                                </TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
-                                            {orders.map((order, index) => (
+                                            {orders.map((order) => (
                                                 <TableRow
                                                     key={order.order_id}
                                                     component={Link}
                                                     href={`/account/order-history/OrderDetailsPage?id=${order.order_id}`}
                                                     sx={{
                                                         '&:hover': {
-                                                            backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                                                            backgroundColor: vistelicaColors.hoverLight,
                                                             cursor: 'pointer'
                                                         },
                                                         textDecoration: 'none',
-                                                        color: 'inherit'
+                                                        color: 'inherit',
+                                                        transition: 'background-color 0.2s'
                                                     }}
                                                 >
                                                     <TableCell>
                                                         <Typography
                                                             sx={{
                                                                 color: vistelicaColors.primary,
-                                                                fontWeight: 500
+                                                                fontWeight: 500,
+                                                                ...typography.body1
                                                             }}
                                                         >
                                                             {order.order_number}
@@ -162,12 +234,23 @@ const UserOrdersPage = () => {
                                                             label={order.status}
                                                             color={getStatusColor(order.status)}
                                                             size="small"
+                                                            sx={{
+                                                                fontWeight: 500,
+                                                                ...typography.caption
+                                                            }}
                                                         />
                                                     </TableCell>
-                                                    <TableCell>
+                                                    <TableCell sx={{ ...typography.body2 }}>
                                                         {new Date(order.estimated_delivery_date).toLocaleDateString('es-ES')}
                                                     </TableCell>
-                                                    <TableCell align="right" sx={{ fontWeight: 600 }}>
+                                                    <TableCell
+                                                        align="right"
+                                                        sx={{
+                                                            fontWeight: 400,
+                                                            ...typography.body1,
+                                                            color: vistelicaColors.primary
+                                                        }}
+                                                    >
                                                         {parseFloat(order.total_price).toFixed(2)}€
                                                     </TableCell>
                                                 </TableRow>
@@ -185,7 +268,7 @@ const UserOrdersPage = () => {
             {isMobile && (
                 <Fab
                     color="primary"
-                    aria-label="menu"
+                    aria-label="Abrir menú de usuario"
                     onClick={() => setSidebarOpen(true)}
                     sx={{
                         position: 'fixed',
@@ -195,6 +278,8 @@ const UserOrdersPage = () => {
                         '&:hover': {
                             backgroundColor: vistelicaColors.secondary
                         },
+                        transition: 'background-color 0.3s',
+                        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
                         zIndex: 1050
                     }}
                 >
@@ -210,7 +295,7 @@ const UserOrdersPage = () => {
                     setDrawerOpen={setSidebarOpen}
                 />
             )}
-        </div>
+        </Box>
     );
 };
 

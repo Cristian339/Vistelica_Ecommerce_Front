@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import {
     Typography,
@@ -66,11 +66,11 @@ const StyledListItemButton = styled(ListItemButton)(({ theme, selected }) => ({
     marginBottom: theme.spacing(1),
     borderRadius: '8px',
     transition: 'all 0.3s ease',
-    backgroundColor: selected ? `${vistelicaColors.tertiary}30` : 'transparent',
+    backgroundColor: selected ? `${vistelicaColors.primaryLight}` : 'transparent',
     cursor: 'pointer',
     padding: theme.spacing(1, 2),
     '&:hover': {
-        backgroundColor: `${vistelicaColors.tertiary}20`,
+        backgroundColor: `${vistelicaColors.primaryLight}`,
         transform: 'translateX(5px)',
     },
     '& .MuiListItemIcon-root': {
@@ -97,6 +97,20 @@ const UserAvatar = styled(Avatar)(({ theme }) => ({
     marginBottom: theme.spacing(2),
 }));
 
+// Extracción de componente memoizado para elementos de menú
+const MenuItem = React.memo(({ item, handleNavigation, listItemVariants }) => (
+    <motion.div custom={item.index} initial="hidden" animate="visible" variants={listItemVariants}>
+        <StyledListItemButton
+            selected={item.selected}
+            onClick={() => handleNavigation(item.path)}
+            aria-label={`Ir a ${item.text}`}
+        >
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.text} />
+        </StyledListItemButton>
+    </motion.div>
+));
+
 const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -105,18 +119,18 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
     const [password, setPassword] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
     const router = useRouter();
-    const { enqueueSnackbar } = useSnackbar();
     const currentPath = router.pathname;
-    const userInitial = username ? username.charAt(0).toUpperCase() : 'U';
 
-    const handleNavigation = (path) => {
+    const { enqueueSnackbar } = useSnackbar();
+
+    const handleNavigation = useCallback((path) => {
         router.push(path);
         if (isMobile && setDrawerOpen) {
             setDrawerOpen(false);
         }
-    };
+    }, [isMobile, router, setDrawerOpen]);
 
-    const handleLogout = async () => {
+    const handleLogout = useCallback(async () => {
         try {
             await logout();
             router.push('/sign-in-side/Sign-in-side');
@@ -124,9 +138,9 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
             console.error("Logout error:", error);
             enqueueSnackbar('Error al cerrar sesión', { variant: 'error' });
         }
-    };
+    }, [router, enqueueSnackbar]);
 
-    const handleDeleteAccount = async () => {
+    const handleDeleteAccount = useCallback(async () => {
         if (!password) {
             enqueueSnackbar('Por favor ingresa tu contraseña', { variant: 'warning' });
             return;
@@ -147,7 +161,71 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
             setPassword('');
             setDeleteDialogOpen(false);
         }
-    };
+    }, [password, router, enqueueSnackbar]);
+
+    // Optimizar el array de elementos de menú con useMemo
+    const menuItems = useMemo(() => [
+        {
+            index: 0,
+            text: "Mi cuenta",
+            icon: <PersonOutlineIcon />,
+            path: "/account/AccountLayout",
+            selected: currentPath === "/account/AccountLayout",
+            ariaLabel: "Ir a Mi cuenta"
+        },
+        {
+            index: 1,
+            text: "Pedidos",
+            icon: <LocalShippingOutlinedIcon />,
+            path: "/account/order-history/UserOrdersPage",
+            selected: currentPath.includes("/account/order-history"),
+            ariaLabel: "Ver mis pedidos"
+        },
+        {
+            index: 2,
+            text: "Direcciones",
+            icon: <LocationOnOutlinedIcon />,
+            path: "/account/AccountAddresses",
+            selected: currentPath === "/account/AccountAddresses",
+            ariaLabel: "Gestionar direcciones"
+        },
+        {
+            index: 3,
+            text: "Métodos de pago",
+            icon: <PaymentOutlinedIcon />,
+            path: "/account/AccountPaymentMethods",
+            selected: currentPath === "/account/AccountPaymentMethods",
+            ariaLabel: "Gestionar métodos de pago"
+        },
+        {
+            index: 4,
+            text: "Devoluciones",
+            icon: <AssignmentReturnOutlinedIcon />,
+            path: "/account/RefundPage",
+            selected: currentPath === "/account/RefundPage",
+            ariaLabel: "Ver mis devoluciones"
+        },
+    ], [currentPath]);
+
+    const userInitial = useMemo(() => username ? username.charAt(0).toUpperCase() : 'U', [username]);
+
+    const renderAvatar = useCallback(() => (
+        <Box sx={{ position: 'relative' }}>
+            <UserAvatar
+                src={avatarUrl}
+                alt={username || 'Usuario'}
+                imgProps={{
+                    loading: "lazy", // Optimizar carga de imagen
+                    onError: (e) => {
+                        e.target.onerror = null;
+                        e.target.style.display = 'none';
+                    }
+                }}
+            >
+                {!avatarUrl && userInitial}
+            </UserAvatar>
+        </Box>
+    ), [avatarUrl, username, userInitial]);
 
     const listItemVariants = {
         hidden: { opacity: 0, x: -20 },
@@ -158,43 +236,18 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
         })
     };
 
-    const menuItems = [
-        { text: "Mi cuenta", icon: <PersonOutlineIcon />, path: "/account/AccountLayout", selected: currentPath === "/account/AccountLayout" },
-        { text: "Pedidos", icon: <LocalShippingOutlinedIcon />, path: "/account/order-history/UserOrdersPage", selected: currentPath === "/order-history/AccountLayout" },
-        { text: "Direcciones", icon: <LocationOnOutlinedIcon />, path: "/account/AccountAddresses", selected: currentPath === "/account/AccountAddresses" },
-        { text: "Métodos de pago", icon: <PaymentOutlinedIcon />, path: "/account/AccountPaymentMethods", selected: currentPath === "/account/AccountPaymentMethods" },
-        { text: "Devoluciones", icon: <AssignmentReturnOutlinedIcon />,  path: "/account/RefundPage", selected: currentPath === "/account/RefundPage" },
-    ];
-
-    const renderAvatar = () => (
-        <Box sx={{ position: 'relative' }}>
-            <UserAvatar
-                src={avatarUrl}
-                alt={username || 'Usuario'}
-                imgProps={{
-                    onError: (e) => {
-                        e.target.onerror = null;
-                        e.target.style.display = 'none';
-                    }
-                }}
-            >
-                {!avatarUrl && userInitial}
-            </UserAvatar>
-        </Box>
-    );
-
     const sidebarContent = (
         <>
             <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', mb: 3 }}>
                 {isMobile && (
                     <Box sx={{ alignSelf: 'flex-end', mb: 1 }}>
-                        <IconButton onClick={() => setDrawerOpen(false)}>
+                        <IconButton onClick={() => setDrawerOpen(false)} aria-label="Cerrar menú">
                             <CloseIcon />
                         </IconButton>
                     </Box>
                 )}
                 {renderAvatar()}
-                <Typography variant="h5" component="h1" fontWeight="600" fontFamily={typography.fontFamily}
+                <Typography variant="h5" component="h1" fontWeight="400" fontFamily={typography.fontFamily}
                             sx={{ color: vistelicaColors.primary, textAlign: 'center', mb: 1 }}>
                     Hola {username || '—'}
                 </Typography>
@@ -203,17 +256,17 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
                 </Typography>
             </Box>
 
-            <Divider sx={{ mb: 2, borderColor: vistelicaColors.divider }} />
+            <Divider sx={{ mb: 2, borderColor: vistelicaColors.primary }} />
 
             <Box sx={{ px: { xs: 0, sm: 1 } }}>
                 <List disablePadding>
-                    {menuItems.map((item, index) => (
-                        <motion.div key={item.text} custom={index} initial="hidden" animate="visible" variants={listItemVariants}>
-                            <StyledListItemButton selected={item.selected} onClick={() => handleNavigation(item.path)}>
-                                <ListItemIcon>{item.icon}</ListItemIcon>
-                                <ListItemText primary={item.text} />
-                            </StyledListItemButton>
-                        </motion.div>
+                    {menuItems.map((item) => (
+                        <MenuItem
+                            key={item.text}
+                            item={item}
+                            handleNavigation={handleNavigation}
+                            listItemVariants={listItemVariants}
+                        />
                     ))}
 
                     <motion.div custom={menuItems.length} initial="hidden" animate="visible" variants={listItemVariants}>
@@ -239,27 +292,125 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
             </Box>
 
             {/* Diálogo para cerrar sesión */}
-            <Dialog open={logoutDialogOpen} onClose={() => setLogoutDialogOpen(false)}>
-                <DialogTitle>Cerrar sesión</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        ¿Estás seguro de que deseas cerrar la sesión?
+            <Dialog 
+                open={logoutDialogOpen} 
+                onClose={() => setLogoutDialogOpen(false)}
+                PaperProps={{
+                    sx: {
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        maxWidth: '450px',
+                        width: '100%'
+                    }
+                }}
+                sx={{ zIndex: 2000 }} // Aumentado z-index
+                aria-labelledby="logout-dialog-title"
+            >
+                <DialogTitle 
+                    id="logout-dialog-title" 
+                    sx={{ 
+                        bgcolor: vistelicaColors.primaryLight,
+                        color: vistelicaColors.primary,
+                        fontFamily: typography.fontFamily,
+                        fontWeight: 600,
+                        py: 2.5,
+                        borderBottom: `1px solid ${vistelicaColors.divider}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5
+                    }}
+                >
+                    <LogoutOutlinedIcon sx={{ color: vistelicaColors.primary }} />
+                    Cerrar sesión
+                </DialogTitle>
+                <DialogContent sx={{ py: 3, px: 3, mt: 1 }}>
+                    <DialogContentText sx={{
+                        color: vistelicaColors.secondary,
+                        fontFamily: typography.fontFamily
+                    }}>
+                        ¿Estás seguro de que deseas cerrar la sesión? Tendrás que volver a iniciar sesión para acceder a tu cuenta.
                     </DialogContentText>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setLogoutDialogOpen(false)}>Cancelar</Button>
-                    <Button onClick={handleLogout} color="primary" variant="contained">
+                <DialogActions sx={{
+                    p: 2.5,
+                    borderTop: `1px solid ${vistelicaColors.primary}`,
+                    bgcolor: '#fafafa',
+                    justifyContent: 'center',
+                    gap: 2
+                }}>
+                    <Button
+                        onClick={() => setLogoutDialogOpen(false)}
+                        sx={{
+                            color: vistelicaColors.secondary,
+                            fontFamily: typography.fontFamily,
+                            borderRadius: '8px',
+                            px: 3,
+                            '&:hover': {
+                                backgroundColor: 'rgba(0,0,0,0.05)'
+                            }
+                        }}
+                    >
+                        Cancelar
+                    </Button>
+                    <Button
+                        onClick={handleLogout}
+                        color="primary"
+                        variant="contained"
+                        sx={{
+                            backgroundColor: vistelicaColors.primary,
+                            fontFamily: typography.fontFamily,
+                            borderRadius: '8px',
+                            boxShadow: '0 2px 8px rgba(228, 176, 2, 0.3)',
+                            px: 3,
+                            '&:hover': {
+                                backgroundColor: vistelicaColors.secondary
+                            }
+                        }}
+                    >
                         Cerrar sesión
                     </Button>
                 </DialogActions>
             </Dialog>
 
-            {/* Diálogo para eliminar cuenta */}
-            <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-                <DialogTitle>Eliminar cuenta permanentemente</DialogTitle>
-                <DialogContent>
-                    <DialogContentText sx={{ mb: 2 }}>
-                        Esta acción eliminará todos tus datos de forma permanente. Para confirmar, ingresa tu contraseña:
+            {/* Diálogo para eliminar cuenta - MEJORADO */}
+            <Dialog 
+                open={deleteDialogOpen} 
+                onClose={() => setDeleteDialogOpen(false)}
+                PaperProps={{
+                    sx: {
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        maxWidth: '500px',
+                        width: '100%'
+                    }
+                }}
+                sx={{ zIndex: 2000 }} // Aumentado z-index
+                aria-labelledby="delete-account-dialog-title"
+            >
+                <DialogTitle 
+                    id="delete-account-dialog-title"
+                    sx={{ 
+                        bgcolor: vistelicaColors.primaryLight,
+                        color: vistelicaColors.secondary,
+                        fontFamily: typography.fontFamily,
+                        fontWeight: 600,
+                        py: 2.5,
+                        borderBottom: `1px solid ${vistelicaColors.divider}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5
+                    }}
+                >
+                    <DeleteOutlineOutlinedIcon sx={{ color: vistelicaColors.secondary }} />
+                    Eliminar cuenta permanentemente
+                </DialogTitle>
+                <DialogContent sx={{ py: 3, px: 3, mt: 1 }}>
+                    <DialogContentText sx={{
+                        color: vistelicaColors.primary,
+                        fontFamily: typography.fontFamily,
+                        mb: 2
+                    }}>
+                        Esta acción eliminará todos tus datos de forma permanente y no podrás recuperar tu cuenta después. Para confirmar, ingresa tu contraseña:
                     </DialogContentText>
                     <TextField
                         autoFocus
@@ -270,13 +421,41 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
                         variant="outlined"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        aria-label="Contraseña para confirmar eliminación de cuenta"
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                '&:hover fieldset': { borderColor: vistelicaColors.primary },
+                                '&.Mui-focused fieldset': { borderColor: vistelicaColors.primary }
+                            },
+                            '& .MuiInputLabel-root.Mui-focused': {
+                                color: vistelicaColors.primary
+                            },
+                            fontFamily: typography.fontFamily
+                        }}
                     />
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => {
-                        setDeleteDialogOpen(false);
-                        setPassword('');
-                    }}>
+                <DialogActions sx={{
+                    p: 2.5,
+                    borderTop: `1px solid ${vistelicaColors.primary}`,
+                    bgcolor: '#fafafa',
+                    justifyContent: 'center',
+                    gap: 2
+                }}>
+                    <Button
+                        onClick={() => {
+                            setDeleteDialogOpen(false);
+                            setPassword('');
+                        }}
+                        sx={{
+                            color: vistelicaColors.primary,
+                            fontFamily: typography.fontFamily,
+                            borderRadius: '8px',
+                            px: 3,
+                            '&:hover': {
+                                backgroundColor: 'rgba(0,0,0,0.05)'
+                            }
+                        }}
+                    >
                         Cancelar
                     </Button>
                     <Button
@@ -284,6 +463,14 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
                         color="error"
                         disabled={isDeleting}
                         startIcon={isDeleting ? <CircularProgress size={20} /> : null}
+                        variant="contained"
+                        sx={{
+                            borderRadius: '8px',
+                            boxShadow: '0 2px 8px rgba(239, 83, 80, 0.3)',
+                            px: 3,
+                            fontFamily: typography.fontFamily
+                        }}
+                        aria-busy={isDeleting}
                     >
                         {isDeleting ? 'Eliminando...' : 'Eliminar cuenta'}
                     </Button>
@@ -320,4 +507,4 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
     );
 };
 
-export default SidebarMenu;
+export default SidebarMenu; // Simplificar para evitar problemas
