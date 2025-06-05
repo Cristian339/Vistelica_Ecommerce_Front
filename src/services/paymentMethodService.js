@@ -72,6 +72,41 @@ const paymentMethodService = {
         }
     },
 
+
+
+    /**
+     * Actualiza un método de pago existente
+     * @param {number} methodId - ID del método de pago a actualizar
+     * @param {Object} data - Datos a actualizar
+     * @returns {Promise<Object>} - Método de pago actualizado
+     */
+    async updatePaymentMethod(methodId, data) {
+        try {
+            const token = this.getAuthToken();
+            if (!token) {
+                throw new Error('Usuario no autenticado');
+            }
+
+            const response = await axios.put(
+                `${API_URL}/payment-methods/${methodId}`,
+                data,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            return response.data.data || response.data;
+        } catch (error) {
+            return handleError(error, 'Error al actualizar el método de pago');
+        }
+    },
+
+
+
+
     /**
      * Establece un método de pago como predeterminado
      * @param {number} methodId - ID del método de pago

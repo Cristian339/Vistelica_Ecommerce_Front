@@ -71,7 +71,6 @@ const ProductDetail = ({
     // Verificar si el producto está en la wishlist al cargar el componente
     useEffect(() => {
         let isMounted = true;
-
         const checkWishlistStatus = async () => {
             const token = getToken();
 
@@ -228,15 +227,9 @@ const ProductDetail = ({
         }
 
         setErrorMessage(null);
+        console.log("El numero " + quantity);
         try {
-            await onAddToCart({
-                productId: product.product_id,
-                quantity: quantity,
-                price: parseFloat(hasDiscount ? discountedPrice : originalPrice),
-                size: selectedSize,
-                color: selectedColor,
-                discount_percentage: hasDiscount ? parseFloat(product.discount_percentage) : null
-            });
+            await onAddToCart(quantity);
         } catch (error) {
             setErrorMessage('Error al añadir al carrito');
             console.error('Error adding to cart:', error);
@@ -361,7 +354,6 @@ const ProductDetail = ({
                                 <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto', mt: {xs: 1, sm: 0} }}>
                                     <motion.div
                                         initial={false}
-                                        animate={loadingWishlist ? { rotate: [0, 360] } : {}}
                                         transition={{ duration: 1, repeat: Infinity }}
                                     >
                                         <IconButton
@@ -586,7 +578,7 @@ const ProductDetail = ({
                         {/* Información adicional - sin ShippingInfo */}
                         <motion.div variants={itemFade}>
                             <Box sx={{ mt: 3 }}>
-                                <ProductInfo description={product?.description || 'Descripción no disponible'} />
+                                <ProductInfo product={product || 'Descripción no disponible'} />
                                 <CompositionCare composition={product?.composition || '100% Algodón'} />
                             </Box>
                         </motion.div>

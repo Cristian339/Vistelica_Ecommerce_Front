@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     Accordion, AccordionSummary, AccordionDetails,
     Typography, Box, Paper, Divider, Chip, IconButton,
@@ -19,6 +19,8 @@ const ProductInfo = ({ product }) => {
     const [expanded, setExpanded] = useState(false);
     const [highlightedParagraph, setHighlightedParagraph] = useState(null);
 
+
+
     const description = product?.description || '';
 
     const theme = useTheme();
@@ -28,6 +30,10 @@ const ProductInfo = ({ product }) => {
     // Dividir la descripción en párrafos para animación
     const paragraphs = description.split('\n').filter(p => p.trim().length > 0);
 
+
+    useEffect(() => {
+        console.log("La descripcion es: " + description);
+    }, []);
     // Animaciones optimizadas
     const containerVariants = {
         hidden: { opacity: 0, y: isMobile ? 5 : 10 },
