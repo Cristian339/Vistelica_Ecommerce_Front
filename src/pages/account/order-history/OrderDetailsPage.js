@@ -208,7 +208,7 @@ const OrderDetailsPage = () => {
                                 </IconButton>
                                 <Box sx={{ flexGrow: 1 }}>
                                     <Typography variant="h5" component="h1" fontWeight="500">
-                                        Pedido #{orderData.order_id}
+                                        Pedido #{orderData.order_number}
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary">
                                         Realizado el {new Date(orderData.created_at).toLocaleDateString('es-ES', {
