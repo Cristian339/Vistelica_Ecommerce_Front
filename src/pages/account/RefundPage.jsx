@@ -152,18 +152,15 @@ const RefundPage = () => {
                 selectedImage
             );
 
-            if (result.success) {
-                // Cerrar el diálogo primero
-                handleCloseRefundDialog();
 
-                // Mostrar mensaje de éxito
-                setSuccessDialog(true);
 
-                // Recargar los pedidos para mostrar el estado actualizado
-                await fetchDeliveredOrders();
-            } else {
-                setError(result.message || 'Error al procesar la devolución');
-            }
+            // Cerrar el diálogo primero
+            handleCloseRefundDialog();
+            // Mostrar mensaje de éxito
+            setSuccessDialog(true);
+            // Recargar los pedidos para mostrar el estado actualizado
+            await fetchDeliveredOrders();
+
         } catch (err) {
             setError(err.message || 'Error al procesar la devolución');
             console.error('Error submitting refund:', err);

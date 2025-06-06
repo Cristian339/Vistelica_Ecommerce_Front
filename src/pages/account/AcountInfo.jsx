@@ -51,9 +51,10 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
     const [saving, setSaving] = useState(false);
     const [avatarMenu, setAvatarMenu] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState(null);
-    const [avatarType, setAvatarType] = useState('url');
+    const [avatarType, setAvatarType] = useState(null);
     const fileInputRef = useRef(null);
     const [originalData, setOriginalData] = useState({});
+    const [imageProcessing, setImageProcessing] = useState(false);
     const [toast, setToast] = useState({
         open: false,
         message: '',
@@ -74,6 +75,7 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
         minLength: false,
         isValid: false
     });
+
     const validatePassword = (password) => {
         const minLength = password.length >= 6;
 
@@ -105,7 +107,42 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
             address: userObj.address || '',
         };
     };
+// Función para comprimir imagen
+    const compressImage = (file, maxWidth = 800, maxHeight = 600, quality = 0.7) => {
+        return new Promise((resolve) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
 
+            img.onload = () => {
+                // Calcular nuevas dimensiones manteniendo proporción
+                let { width, height } = img;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = (width * maxHeight) / height;
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                // Dibujar imagen redimensionada
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Convertir a blob comprimido
+                canvas.toBlob(resolve, 'image/jpeg', quality);
+            };
+
+            img.src = URL.createObjectURL(file);
+        });
+    };
     const handleEmailChangeOpen = () => {
         setEmailChangeOpen(true);
         setEmailChangeStep(0);
@@ -195,19 +232,73 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
             fileInputRef.current.click();
         }
     };
-
-    const handleFileChange = (e) => {
+    const handleFileChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                setAvatarPreview(e.target.result);
-                setFormData({
-                    ...formData,
-                    avatar: e.target.result
+            setImageProcessing(true); // Iniciar indicador de carga
+
+            // Validar tipo de archivo
+            if (!file.type.startsWith('image/')) {
+                setToast({
+                    open: true,
+                    message: 'Por favor selecciona un archivo de imagen válido',
+                    severity: 'error'
                 });
-            };
-            reader.readAsDataURL(file);
+                setImageProcessing(false);
+                return;
+            }
+
+            // Validar tamaño original (máximo 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                setToast({
+                    open: true,
+                    message: 'La imagen es demasiado grande. Máximo 10MB permitido.',
+                    severity: 'error'
+                });
+                setImageProcessing(false);
+                return;
+            }
+
+            try {
+                // Comprimir imagen
+                const compressedFile = await compressImage(file);
+
+                // Verificar tamaño después de compresión
+                if (compressedFile.size > 2 * 1024 * 1024) { // 2MB máximo después de compresión
+                    setToast({
+                        open: true,
+                        message: 'La imagen sigue siendo muy grande después de la compresión. Intenta con una imagen más pequeña.',
+                        severity: 'error'
+                    });
+                    setImageProcessing(false);
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    setAvatarPreview(e.target.result);
+                    setFormData({
+                        ...formData,
+                        avatar: e.target.result
+                    });
+
+                    setToast({
+                        open: true,
+                        message: 'Imagen cargada y optimizada correctamente',
+                        severity: 'success'
+                    });
+                    setImageProcessing(false);
+                };
+                reader.readAsDataURL(compressedFile);
+            } catch (error) {
+                console.error('Error al procesar la imagen:', error);
+                setToast({
+                    open: true,
+                    message: 'Error al procesar la imagen. Intenta con otra imagen.',
+                    severity: 'error'
+                });
+                setImageProcessing(false);
+            }
         }
     };
 
@@ -388,8 +479,13 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                                             height: 30
                                         }}
                                         onClick={handleAvatarMenuClick}
+                                        disabled={imageProcessing}
                                     >
-                                        <EditIcon sx={{ fontSize: 16, color: vistelicaColors.primary }} />
+                                        {imageProcessing ? (
+                                            <CircularProgress size={16} />
+                                        ) : (
+                                            <EditIcon sx={{ fontSize: 16, color: vistelicaColors.primary }} />
+                                        )}
                                     </IconButton>
                                 )}
                                 <Menu
@@ -503,6 +599,11 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                                 value={formData.avatar || ''}
                                 name="avatar"
                                 onChange={handleAvatarUrlChange}
+                                onKeyPress={(e) => {
+                                    if (e.key === 'Enter') {
+                                        handleSave();
+                                    }
+                                }}
                                 variant="outlined"
                                 size="small"
                                 InputProps={{
@@ -525,6 +626,7 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                                         },
                                     }
                                 }}
+
                             />
                         </Box>
                     )}
