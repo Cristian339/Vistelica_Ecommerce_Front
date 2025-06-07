@@ -116,7 +116,9 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
                     getCurrentUser()
                 ]);
 
-                setHasPurchasedProduct(deliveredProducts.includes(Number(productId)));
+                // Validación defensiva
+                const productIds = Array.isArray(deliveredProducts) ? deliveredProducts : [];
+                setHasPurchasedProduct(productIds.includes(Number(productId)));
                 setCurrentUser(user);
             } catch (error) {
                 console.error("Error verificando entrega:", error);
@@ -266,10 +268,11 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
         setSelectedReviewForMenu(null);
     }, []);
 
-    const handleOpenReportModal = useCallback(() => {
+    const handleOpenReportModal = useCallback((review = null) => {
+        const reviewToReport = review || selectedReviewForMenu;
         setReportModal({
             open: true,
-            reviewId: selectedReviewForMenu?.review_id,
+            reviewId: reviewToReport?.review_id,
             selectedReason: '',
             otherReasonText: '',
             submitting: false
