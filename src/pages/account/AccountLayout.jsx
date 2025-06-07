@@ -1,7 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Container, Grid, Box, useMediaQuery, Fab } from '@mui/material';
+import {
+    Container,
+    Grid,
+    Box,
+    useMediaQuery,
+    Fab,
+    CircularProgress
+} from '@mui/material';
 import SidebarMenu from '@/components/layout/SidebarMenu';
 import AccountInfo from './AcountInfo';
 import { getUserProfile } from '@/services/profileService';
@@ -49,29 +56,63 @@ const AccountLayout = () => {
     const userAvatar = userData?.avatar || userData?.profilePic;
     const userName = userData?.name || 'Usuario';
 
+    // Si está cargando, mostrar un indicador centrado
+    if (loading) {
+        return (
+            <Box sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh',
+                width: '100%',
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                backgroundColor: 'rgba(255,255,255,0.8)',
+                zIndex: 1200
+            }}>
+                <CircularProgress sx={{ color: vistelicaColors.primary }} />
+            </Box>
+        );
+    }
+
     return (
         <div>
             <Navbar />
-            <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
-                <Grid container spacing={2} sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
+            <Container
+                maxWidth="lg"
+                sx={{
+                    py: { xs: 2, md: 4 },
+                    px: { xs: 1.5, md: 2 }
+                }}
+            >
+                <Grid container spacing={3} sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
                     {/* Sidebar para desktop */}
                     {!isMobile && (
-                        <Grid item md={3} lg={3}>
-                            <SidebarMenu
-                                username={userName}
-                                avatarUrl={userAvatar}
-                                key="desktop-sidebar"
-                            />
+                        <Grid size={{ xs: 12, md: 3, lg: 4 }}>
+                            <Box sx={{ position: 'sticky', top: 24 }}>
+                                <SidebarMenu
+                                    username={userName}
+                                    avatarUrl={userAvatar}
+                                    key="desktop-sidebar"
+                                />
+                            </Box>
                         </Grid>
                     )}
 
                     {/* Contenido principal */}
-                    <Grid item xs={12} md={9} lg={9}>
-                        <Box component={motion.div} initial="hidden" animate="visible" variants={contentVariants}>
+                    <Grid size={{ xs: 12, md: 9, lg: 9 }}>
+                        <Box
+                            component={motion.div}
+                            initial="hidden"
+                            animate="visible"
+                            variants={contentVariants}
+                            sx={{ width: '100%' }}
+                        >
                             <AccountInfo
                                 userData={userData}
                                 setUserData={setUserData}
-                                loading={loading}
+                                loading={false}
                             />
                         </Box>
                     </Grid>

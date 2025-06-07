@@ -408,7 +408,7 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                 <Divider sx={{ mb: 3 }} />
                 <Grid container spacing={3}>
                     {[1, 2, 3, 4].map((item) => (
-                        <Grid item xs={12} sm={6} key={item}>
+                        <Grid size={{ xs: 12, sm: 6 }} key={item}>
                             <Skeleton variant="text" width="100%" height={24} />
                             <Skeleton variant="text" width="80%" height={40} />
                         </Grid>
@@ -642,7 +642,7 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.5, delay: 0.2 }}
                     >
-                        <Grid item xs={12} sm={6}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                 <PersonIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
                                 <Typography
@@ -682,7 +682,7 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                             )}
                         </Grid>
 
-                        <Grid item xs={12} sm={6}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                 <PersonIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
                                 <Typography
@@ -722,7 +722,91 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                             )}
                         </Grid>
 
-                        <Grid item xs={12} sm={6}>
+
+
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                <PhoneIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
+                                <Typography
+                                    variant="subtitle1"
+                                    fontWeight="500"
+                                    sx={{ color: vistelicaColors.primary }}
+                                >
+                                    Teléfono
+                                </Typography>
+                            </Box>
+                            {isEditing ? (
+                                <TextField
+                                    fullWidth
+                                    name="phone"
+                                    value={formData.phone || ''}
+                                    onChange={handleChange}
+                                    variant="outlined"
+                                    size="small"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: `${vistelicaColors.divider}`,
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: `${vistelicaColors.primary}`,
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: `${vistelicaColors.primary}`,
+                                            },
+                                        }
+                                    }}
+                                />
+                            ) : (
+                                <Typography variant="body1" sx={{ mt: 1.5, fontSize: '1.05rem' }}>
+                                    {userData?.phone || 'No especificado'}
+                                </Typography>
+                            )}
+                        </Grid>
+
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                <CalendarMonthIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
+                                <Typography
+                                    variant="subtitle1"
+                                    fontWeight="500"
+                                    sx={{ color: vistelicaColors.primary }}
+                                >
+                                    Fecha de nacimiento
+                                </Typography>
+                            </Box>
+                            {isEditing ? (
+                                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+                                    <DatePicker
+                                        label="Fecha de nacimiento"
+                                        value={formData.born_date ? new Date(formData.born_date) : null}
+                                        onChange={handleDateChange}
+                                        slotProps={{
+                                            textField: {
+                                                fullWidth: true,
+                                                variant: "outlined",
+                                                size: "small",
+                                                sx: {
+                                                    '& .MuiOutlinedInput-root': {
+                                                        '&:hover fieldset': {borderColor: vistelicaColors.primary},
+                                                        '&.Mui-focused fieldset': {borderColor: vistelicaColors.primary}
+                                                    },
+                                                    '& .MuiInputLabel-root.Mui-focused': {
+                                                        color: vistelicaColors.primary
+                                                    }
+                                                }
+                                            }
+                                        }}
+                                    />
+                                </LocalizationProvider>
+                            ) : (
+                                <Typography variant="body1" sx={{ mt: 1.5, fontSize: '1.05rem' }}>
+                                    {userData?.born_date ? new Date(userData.born_date).toLocaleDateString('es-ES') : 'No especificado'}
+                                </Typography>
+                            )}
+                        </Grid>
+
+                        <Grid size={{ xs: 12, sm: 6 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                 <EmailIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
                                 <Typography
@@ -775,88 +859,6 @@ const AccountInfo = ({ userData, setUserData, loading }) => {
                             ) : (
                                 <Typography variant="body1" sx={{ mt: 1.5, fontSize: '1.05rem' }}>
                                     {userData?.email || 'No especificado'}
-                                </Typography>
-                            )}
-                        </Grid>
-
-                        <Grid item xs={12} sm={6}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                <PhoneIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
-                                <Typography
-                                    variant="subtitle1"
-                                    fontWeight="500"
-                                    sx={{ color: vistelicaColors.primary }}
-                                >
-                                    Teléfono
-                                </Typography>
-                            </Box>
-                            {isEditing ? (
-                                <TextField
-                                    fullWidth
-                                    name="phone"
-                                    value={formData.phone || ''}
-                                    onChange={handleChange}
-                                    variant="outlined"
-                                    size="small"
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            '& fieldset': {
-                                                borderColor: `${vistelicaColors.divider}`,
-                                            },
-                                            '&:hover fieldset': {
-                                                borderColor: `${vistelicaColors.primary}`,
-                                            },
-                                            '&.Mui-focused fieldset': {
-                                                borderColor: `${vistelicaColors.primary}`,
-                                            },
-                                        }
-                                    }}
-                                />
-                            ) : (
-                                <Typography variant="body1" sx={{ mt: 1.5, fontSize: '1.05rem' }}>
-                                    {userData?.phone || 'No especificado'}
-                                </Typography>
-                            )}
-                        </Grid>
-
-                        <Grid item xs={12} sm={6}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                <CalendarMonthIcon sx={{ color: vistelicaColors.primary, mr: 1 }} />
-                                <Typography
-                                    variant="subtitle1"
-                                    fontWeight="500"
-                                    sx={{ color: vistelicaColors.primary }}
-                                >
-                                    Fecha de nacimiento
-                                </Typography>
-                            </Box>
-                            {isEditing ? (
-                                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-                                    <DatePicker
-                                        label="Fecha de nacimiento"
-                                        value={formData.born_date ? new Date(formData.born_date) : null}
-                                        onChange={handleDateChange}
-                                        slotProps={{
-                                            textField: {
-                                                fullWidth: true,
-                                                variant: "outlined",
-                                                size: "small",
-                                                sx: {
-                                                    '& .MuiOutlinedInput-root': {
-                                                        '&:hover fieldset': {borderColor: vistelicaColors.primary},
-                                                        '&.Mui-focused fieldset': {borderColor: vistelicaColors.primary}
-                                                    },
-                                                    '& .MuiInputLabel-root.Mui-focused': {
-                                                        color: vistelicaColors.primary
-                                                    }
-                                                }
-                                            }
-                                        }}
-                                    />
-                                </LocalizationProvider>
-                            ) : (
-                                <Typography variant="body1" sx={{ mt: 1.5, fontSize: '1.05rem' }}>
-                                    {userData?.born_date ? new Date(userData.born_date).toLocaleDateString('es-ES') : 'No especificado'}
                                 </Typography>
                             )}
                         </Grid>

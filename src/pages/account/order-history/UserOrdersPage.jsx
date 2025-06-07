@@ -27,6 +27,7 @@ import Navbar from "@/components/layout/HeaderComponent";
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 import { typography } from '@/pages/shared-theme/themePrimitives';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -54,6 +55,11 @@ const UserOrdersPage = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const contentVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -90,7 +96,9 @@ const UserOrdersPage = () => {
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    height: '100vh',}}
+                    height: '100vh',
+                    width: '100%',
+                }}
             >
                 <CircularProgress sx={{ color: vistelicaColors.primary }} />
             </Box>
@@ -106,160 +114,171 @@ const UserOrdersPage = () => {
                 }}>
                     {/* Sidebar solo visible en desktop */}
                     {!isMobile && (
-                        <Grid item md={3} lg={5}>
-                            <SidebarMenu username={userData?.name || 'Usuario'} />
+                        <Grid size={{ xs: 12, md: 3, lg: 5.5 }}>
+                            <Box sx={{ position: 'sticky', top: 24 }}>
+                                <SidebarMenu username={userData?.name || 'Usuario'} />
+                            </Box>
                         </Grid>
                     )}
 
                     {/* Contenido principal - ancho completo en móviles */}
                     <Grid size={{ xs: 12, md: 9, lg: 9 }}>
-                        <Paper
-                            elevation={0}
-                            sx={{
-                                border: `1px solid ${vistelicaColors.primary}`,
-                                p: { xs: 2, sm: 3 },
-                                height: '100%',
-                                borderRadius: 2,
-                            }}
+                        <Box
+                            component={motion.div}
+                            initial="hidden"
+                            animate="visible"
+                            variants={contentVariants}
                         >
-                            <Typography
-                                variant="h5"
-                                component="h1"
+                            <Paper
+                                elevation={2}
                                 sx={{
-                                    mb: 2,
-                                    color: vistelicaColors.primary,
-                                    ...typography.h3
+                                    p: { xs: 2, sm: 3 },
+                                    borderRadius: 2,
+                                    boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                                    background: 'linear-gradient(to bottom right, #fdfbf6, #fff)',
+                                    border: `1px solid ${vistelicaColors.divider}`,
+                                    overflow: 'hidden',
                                 }}
                             >
-                                Mis Pedidos
-                            </Typography>
-
-                            {error ? (
-                                <Box textAlign="center" py={4}>
-                                    <Typography color="error">{error}</Typography>
-                                </Box>
-                            ) : orders.length === 0 ? (
-                                <Box textAlign="center" py={4}>
-                                    <Typography
-                                        variant="h6"
-                                        sx={{
-                                            color: vistelicaColors.secondary
-                                        }}
-                                    >
-                                        No tienes pedidos aún.
-                                    </Typography>
-                                </Box>
-                            ) : (
-                                <TableContainer
-                                    component={Paper}
+                                <Typography
+                                    variant="h5"
+                                    component="h1"
                                     sx={{
-                                        mt: 2,
-                                        borderRadius: 1,
-                                        overflow: 'hidden',
-                                        boxShadow: 'none',
-                                        border: `1px solid ${vistelicaColors.primaryLight}`
+                                        mb: 2,
+                                        color: vistelicaColors.primary,
+                                        ...typography.h3
                                     }}
                                 >
-                                    <Table aria-label="Historial de pedidos">
-                                        <TableHead sx={{ backgroundColor: vistelicaColors.primary }}>
-                                            <TableRow>
-                                                <TableCell
-                                                    sx={{
-                                                        fontWeight: 400,
-                                                        ...typography.subtitle1,
-                                                        color: vistelicaColors.secondary
-                                                    }}
-                                                >
-                                                    Número de Pedido
-                                                </TableCell>
-                                                <TableCell
-                                                    sx={{
-                                                        fontWeight: 400,
-                                                        ...typography.subtitle1,
-                                                        color: vistelicaColors.secondary
-                                                    }}
-                                                >
-                                                    Estado
-                                                </TableCell>
-                                                <TableCell
-                                                    sx={{
-                                                        fontWeight: 400,
-                                                        ...typography.subtitle1,
-                                                        color: vistelicaColors.secondary
-                                                    }}
-                                                >
-                                                    Fecha de reparto
-                                                </TableCell>
-                                                <TableCell
-                                                    align="right"
-                                                    sx={{
-                                                        fontWeight: 400,
-                                                        ...typography.subtitle1,
-                                                        color: vistelicaColors.secondary
-                                                    }}
-                                                >
-                                                    Total
-                                                </TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {orders.map((order) => (
-                                                <TableRow
-                                                    key={order.order_id}
-                                                    component={Link}
-                                                    href={`/account/order-history/OrderDetailsPage?id=${order.order_id}`}
-                                                    sx={{
-                                                        '&:hover': {
-                                                            backgroundColor: vistelicaColors.hoverLight,
-                                                            cursor: 'pointer'
-                                                        },
-                                                        textDecoration: 'none',
-                                                        color: 'inherit',
-                                                        transition: 'background-color 0.2s'
-                                                    }}
-                                                >
-                                                    <TableCell>
-                                                        <Typography
-                                                            sx={{
-                                                                color: vistelicaColors.primary,
-                                                                fontWeight: 500,
-                                                                ...typography.body1
-                                                            }}
-                                                        >
-                                                            {order.order_number}
-                                                        </Typography>
+                                    Mis Pedidos
+                                </Typography>
+
+                                {error ? (
+                                    <Box textAlign="center" py={4}>
+                                        <Typography color="error">{error}</Typography>
+                                    </Box>
+                                ) : orders.length === 0 ? (
+                                    <Box textAlign="center" py={4}>
+                                        <Typography
+                                            variant="h6"
+                                            sx={{
+                                                color: vistelicaColors.secondary
+                                            }}
+                                        >
+                                            No tienes pedidos aún.
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    <TableContainer
+                                        component={Paper}
+                                        sx={{
+                                            mt: 2,
+                                            borderRadius: 1,
+                                            overflow: 'hidden',
+                                            boxShadow: 'none',
+                                            border: `1px solid ${vistelicaColors.primaryLight}`
+                                        }}
+                                    >
+                                        <Table aria-label="Historial de pedidos">
+                                            <TableHead sx={{ backgroundColor: vistelicaColors.primary }}>
+                                                <TableRow>
+                                                    <TableCell
+                                                        sx={{
+                                                            fontWeight: 400,
+                                                            ...typography.subtitle1,
+                                                            color: vistelicaColors.secondary
+                                                        }}
+                                                    >
+                                                        Número de Pedido
                                                     </TableCell>
-                                                    <TableCell>
-                                                        <Chip
-                                                            label={order.status}
-                                                            color={getStatusColor(order.status)}
-                                                            size="small"
-                                                            sx={{
-                                                                fontWeight: 500,
-                                                                ...typography.caption
-                                                            }}
-                                                        />
+                                                    <TableCell
+                                                        sx={{
+                                                            fontWeight: 400,
+                                                            ...typography.subtitle1,
+                                                            color: vistelicaColors.secondary
+                                                        }}
+                                                    >
+                                                        Estado
                                                     </TableCell>
-                                                    <TableCell sx={{ ...typography.body2 }}>
-                                                        {new Date(order.estimated_delivery_date).toLocaleDateString('es-ES')}
+                                                    <TableCell
+                                                        sx={{
+                                                            fontWeight: 400,
+                                                            ...typography.subtitle1,
+                                                            color: vistelicaColors.secondary
+                                                        }}
+                                                    >
+                                                        Fecha de reparto
                                                     </TableCell>
                                                     <TableCell
                                                         align="right"
                                                         sx={{
                                                             fontWeight: 400,
-                                                            ...typography.body1,
-                                                            color: vistelicaColors.primary
+                                                            ...typography.subtitle1,
+                                                            color: vistelicaColors.secondary
                                                         }}
                                                     >
-                                                        {parseFloat(order.total_price).toFixed(2)}€
+                                                        Total
                                                     </TableCell>
                                                 </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            )}
-                        </Paper>
+                                            </TableHead>
+                                            <TableBody>
+                                                {orders.map((order) => (
+                                                    <TableRow
+                                                        key={order.order_id}
+                                                        component={Link}
+                                                        href={`/account/order-history/OrderDetailsPage?id=${order.order_id}`}
+                                                        sx={{
+                                                            '&:hover': {
+                                                                backgroundColor: vistelicaColors.hoverLight,
+                                                                cursor: 'pointer'
+                                                            },
+                                                            textDecoration: 'none',
+                                                            color: 'inherit',
+                                                            transition: 'background-color 0.2s'
+                                                        }}
+                                                    >
+                                                        <TableCell>
+                                                            <Typography
+                                                                sx={{
+                                                                    color: vistelicaColors.primary,
+                                                                    fontWeight: 500,
+                                                                    ...typography.body1
+                                                                }}
+                                                            >
+                                                                {order.order_number}
+                                                            </Typography>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Chip
+                                                                label={order.status}
+                                                                color={getStatusColor(order.status)}
+                                                                size="small"
+                                                                sx={{
+                                                                    fontWeight: 500,
+                                                                    ...typography.caption
+                                                                }}
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell sx={{ ...typography.body2 }}>
+                                                            {new Date(order.estimated_delivery_date).toLocaleDateString('es-ES')}
+                                                        </TableCell>
+                                                        <TableCell
+                                                            align="right"
+                                                            sx={{
+                                                                fontWeight: 400,
+                                                                ...typography.body1,
+                                                                color: vistelicaColors.primary
+                                                            }}
+                                                        >
+                                                            {parseFloat(order.total_price).toFixed(2)}€
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                )}
+                            </Paper>
+                        </Box>
                     </Grid>
                 </Grid>
             </Container>

@@ -310,9 +310,9 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
                     id="logout-dialog-title" 
                     sx={{ 
                         bgcolor: vistelicaColors.primaryLight,
-                        color: vistelicaColors.primary,
+                        color: vistelicaColors.secondary,
                         fontFamily: typography.fontFamily,
-                        fontWeight: 600,
+                        fontWeight: 400,
                         py: 2.5,
                         borderBottom: `1px solid ${vistelicaColors.divider}`,
                         display: 'flex',
@@ -320,7 +320,7 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
                         gap: 1.5
                     }}
                 >
-                    <LogoutOutlinedIcon sx={{ color: vistelicaColors.primary }} />
+                    <LogoutOutlinedIcon sx={{ color: vistelicaColors.secondary }} />
                     Cerrar sesión
                 </DialogTitle>
                 <DialogContent sx={{ py: 3, px: 3, mt: 1 }}>
@@ -393,7 +393,7 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
                         bgcolor: vistelicaColors.primaryLight,
                         color: vistelicaColors.secondary,
                         fontFamily: typography.fontFamily,
-                        fontWeight: 600,
+                        fontWeight: 400,
                         py: 2.5,
                         borderBottom: `1px solid ${vistelicaColors.divider}`,
                         display: 'flex',
@@ -406,7 +406,7 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
                 </DialogTitle>
                 <DialogContent sx={{ py: 3, px: 3, mt: 1 }}>
                     <DialogContentText sx={{
-                        color: vistelicaColors.primary,
+                        color: vistelicaColors.secondary,
                         fontFamily: typography.fontFamily,
                         mb: 2
                     }}>

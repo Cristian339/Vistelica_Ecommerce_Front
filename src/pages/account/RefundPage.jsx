@@ -24,7 +24,10 @@ import {
     Fab,
     useMediaQuery,
     useTheme,
-    Paper
+    Paper,
+    Avatar,
+    Badge,
+    Tooltip
 } from '@mui/material';
 import SidebarMenu from '@/components/layout/SidebarMenu';
 import { requestRefund, getDeliveredOrdersWithDetails } from '@/services/productService';
@@ -38,6 +41,16 @@ import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import Close from '@mui/icons-material/Close';
 import Navbar from "@/components/layout/HeaderComponent";
 import MenuIcon from '@mui/icons-material/Menu';
+import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const RefundPage = () => {
     const theme = useTheme();
@@ -57,6 +70,11 @@ const RefundPage = () => {
     const [processingRefund, setProcessingRefund] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+
+    const contentVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+    };
 
     const fetchDeliveredOrders = async () => {
         try {
@@ -169,6 +187,19 @@ const RefundPage = () => {
         }
     };
 
+    const getStatusIcon = (status) => {
+        switch (status.toLowerCase()) {
+            case 'revision':
+                return <HourglassEmptyIcon sx={{ color: '#ff9800' }} />;
+            case 'aceptado':
+                return <ThumbUpIcon sx={{ color: '#4caf50' }} />;
+            case 'rechazado':
+                return <ThumbDownIcon sx={{ color: '#f44336' }} />;
+            default:
+                return <AssignmentReturnIcon sx={{ color: vistelicaColors.secondary }} />;
+        }
+    };
+
     const getRefundStatusColor = (status) => {
         switch (status) {
             case 'Revision': return 'warning';
@@ -184,239 +215,406 @@ const RefundPage = () => {
         return new Date(dateString).toLocaleDateString('es-ES', options);
     };
 
+    if (loading && orders.length === 0) {
+        return (
+            <Box sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh',
+                width: '100%'
+            }}>
+                <CircularProgress sx={{ color: vistelicaColors.primary }} />
+            </Box>
+        );
+    }
+
     return (
         <div>
             <Navbar />
             <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
                 <Grid container spacing={4}>
                     {!isMobile && (
-                        <Grid item md={3}>
-                            <SidebarMenu />
+                        <Grid size={{ xs: 12, md: 3, lg: 4.5 }}>
+                            <Box sx={{ position: 'sticky', top: 24 }}>
+                                <SidebarMenu />
+                            </Box>
                         </Grid>
                     )}
 
-                    <Grid item xs={12} md={9}>
-                        <Paper elevation={0} sx={{
-                            border: '1px solid #e0e0e0',
-                            borderRadius: '12px',
-                            p: { xs: 2, sm: 3 },
-                            background: '#fff',
-                            boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
-                        }}>
-                            <Box sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                mb: 3
+                    <Grid size={{ xs: 12, md: 9, lg: 7 }}>
+                        <Box
+                            component={motion.div}
+                            initial="hidden"
+                            animate="visible"
+                            variants={contentVariants}
+                        >
+                            <Paper elevation={2} sx={{
+                                borderRadius: '12px',
+                                p: { xs: 2, sm: 3 },
+                                background: 'linear-gradient(to bottom right, #fdfbf6, #fff)',
+                                boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                                border: `1px solid ${vistelicaColors.divider}`,
                             }}>
-                                <Typography variant="h5" component="h1" sx={{
-                                    fontWeight: 400,
-                                    color: vistelicaColors.primary,
-                                    fontFamily: typography.fontFamily
+                                <Box sx={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    mb: 3
                                 }}>
-                                    Mis Devoluciones
-                                </Typography>
-                            </Box>
-                            <Divider sx={{ mb: 3, borderColor: vistelicaColors.divider }} />
-
-                            {loading ? (
-                                <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-                                    <CircularProgress color="primary" />
+                                    <Typography variant="h5" component="h1" sx={{
+                                        fontWeight: 400,
+                                        color: vistelicaColors.primary,
+                                        fontFamily: typography.fontFamily,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1
+                                    }}>
+                                        <AssignmentReturnIcon sx={{ color: vistelicaColors.primary }} />
+                                        Mis Devoluciones
+                                    </Typography>
                                 </Box>
-                            ) : error ? (
-                                <Box
-                                    bgcolor="error.light"
-                                    p={2}
-                                    borderRadius={2}
-                                    textAlign="center"
-                                    sx={{ borderLeft: `4px solid ${vistelicaColors.error}` }}
-                                >
-                                    <Typography color="error">{error}</Typography>
-                                    <Button
-                                        onClick={fetchDeliveredOrders}
-                                        variant="outlined"
-                                        sx={{ mt: 1 }}
+                                <Divider sx={{ mb: 3, borderColor: vistelicaColors.divider }} />
+
+                                {loading ? (
+                                    <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+                                        <CircularProgress color="primary" />
+                                    </Box>
+                                ) : error ? (
+                                    <Box
+                                        bgcolor="error.light"
+                                        p={2}
+                                        borderRadius={2}
+                                        textAlign="center"
+                                        sx={{ borderLeft: `4px solid ${vistelicaColors.error}` }}
                                     >
-                                        Reintentar
-                                    </Button>
-                                </Box>
-                            ) : orders.length === 0 ? (
-                                <Box
-                                    textAlign="center"
-                                    p={4}
-                                    sx={{
-                                        backgroundColor: '#f9f9f9',
-                                        borderRadius: '8px',
-                                        border: '1px dashed #e0e0e0'
-                                    }}
-                                >
-                                    <AssignmentReturnIcon sx={{
-                                        fontSize: 60,
-                                        color: vistelicaColors.secondary,
-                                        mb: 2
-                                    }} />
-                                    <Typography variant="h6" sx={{ mb: 1 }}>
-                                        No tienes pedidos entregados
-                                    </Typography>
-                                    <Typography variant="body1" color="text.secondary">
-                                        Cuando recibas un pedido, podrás solicitar devoluciones aquí.
-                                    </Typography>
-                                </Box>
-                            ) : (
-                                <List sx={{ width: '100%' }}>
-                                    {orders.map((order) => (
-                                        <Card
-                                            key={order.order_id}
-                                            sx={{
-                                                mb: 3,
-                                                borderRadius: '12px',
-                                                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                                                borderLeft: `4px solid ${vistelicaColors.primary}`,
-                                                overflow: 'hidden',
-                                                transition: 'all 0.3s ease',
-                                                '&:hover': {
-                                                    boxShadow: '0 4px 12px rgba(0,0,0,0.12)'
-                                                }
-                                            }}
+                                        <Typography color="error">{error}</Typography>
+                                        <Button
+                                            onClick={fetchDeliveredOrders}
+                                            variant="outlined"
+                                            sx={{ mt: 1 }}
                                         >
-                                            <Box
-                                                sx={{
-                                                    display: 'flex',
-                                                    justifyContent: 'space-between',
-                                                    alignItems: 'center',
-                                                    p: 2,
-                                                    backgroundColor: '#fafafa',
-                                                    cursor: 'pointer',
-                                                    '&:hover': {
-                                                        backgroundColor: '#f5f5f5'
-                                                    }
-                                                }}
-                                                onClick={() => handleToggleOrder(order.order_id)}
+                                            Reintentar
+                                        </Button>
+                                    </Box>
+                                ) : orders.length === 0 ? (
+                                    <Box
+                                        textAlign="center"
+                                        p={4}
+                                        sx={{
+                                            backgroundColor: '#f9f9f9',
+                                            borderRadius: '8px',
+                                            border: '1px dashed #e0e0e0'
+                                        }}
+                                    >
+                                        <AssignmentReturnIcon sx={{
+                                            fontSize: 60,
+                                            color: vistelicaColors.secondary,
+                                            mb: 2
+                                        }} />
+                                        <Typography variant="h6" sx={{ mb: 1 }}>
+                                            No tienes pedidos entregados
+                                        </Typography>
+                                        <Typography variant="body1" color="text.secondary">
+                                            Cuando recibas un pedido, podrás solicitar devoluciones aquí.
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    <List sx={{ width: '100%' }}>
+                                        {orders.map((order) => (
+                                            <motion.div
+                                                key={order.order_id}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ duration: 0.3 }}
+                                                layout
                                             >
-                                                <Box>
-                                                    <Typography variant="subtitle1" fontWeight="600">
-                                                        Pedido #{order.order_number}
-                                                    </Typography>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        {formatDate(order.created_at)} • ${order.total_price}
-                                                    </Typography>
-                                                </Box>
-                                                <IconButton size="small">
-                                                    {expandedOrder === order.order_id ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                                                </IconButton>
-                                            </Box>
-
-                                            <Collapse in={expandedOrder === order.order_id}>
-                                                <Divider />
-                                                <CardContent sx={{ p: 0 }}>
-                                                    <List>
-                                                        {order.details.map((detail) => (
-                                                            <ListItem
-                                                                key={detail.order_detail_id}
+                                                <Card
+                                                    sx={{
+                                                        mb: 3,
+                                                        borderRadius: '12px',
+                                                        boxShadow: '0 3px 10px rgba(0,0,0,0.08)',
+                                                        background: 'linear-gradient(145deg, #ffffff, #f9f7f0)',
+                                                        borderLeft: `4px solid ${vistelicaColors.primary}`,
+                                                        overflow: 'hidden',
+                                                        transition: 'all 0.3s ease',
+                                                        '&:hover': {
+                                                            boxShadow: '0 6px 15px rgba(0,0,0,0.12)',
+                                                            transform: 'translateY(-2px)'
+                                                        }
+                                                    }}
+                                                >
+                                                    <Box
+                                                        onClick={() => handleToggleOrder(order.order_id)}
+                                                        sx={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            alignItems: 'center',
+                                                            p: { xs: 1.5, sm: 2 },
+                                                            cursor: 'pointer',
+                                                            backgroundColor: expandedOrder === order.order_id ? 'rgba(228, 176, 2, 0.05)' : 'transparent',
+                                                            transition: 'background-color 0.2s ease',
+                                                            borderBottom: expandedOrder === order.order_id ? `1px solid ${vistelicaColors.divider}` : 'none',
+                                                            '&:hover': {
+                                                                backgroundColor: 'rgba(228, 176, 2, 0.08)'
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                            <Avatar
                                                                 sx={{
-                                                                    p: 2,
-                                                                    borderBottom: '1px solid rgba(0,0,0,0.08)',
-                                                                    '&:last-child': { borderBottom: 'none' }
+                                                                    bgcolor: vistelicaColors.primaryLight,
+                                                                    color: vistelicaColors.primary,
+                                                                    mr: 2
                                                                 }}
                                                             >
-                                                                <Box sx={{
-                                                                    display: 'flex',
-                                                                    width: '100%',
-                                                                    alignItems: 'center'
-                                                                }}>
-                                                                    <Box sx={{
-                                                                        width: 60,
-                                                                        height: 60,
-                                                                        backgroundColor: '#f5f5f5',
-                                                                        borderRadius: '8px',
-                                                                        display: 'flex',
-                                                                        alignItems: 'center',
-                                                                        justifyContent: 'center',
-                                                                        mr: 2,
-                                                                        flexShrink: 0
-                                                                    }}>
-                                                                        <AssignmentReturnIcon sx={{ color: vistelicaColors.secondary }} />
-                                                                    </Box>
-
-                                                                    <Box sx={{ flexGrow: 1 }}>
-                                                                        <Typography variant="subtitle1" fontWeight="500">
-                                                                            {detail.product.name}
-                                                                        </Typography>
+                                                                <ShoppingBagIcon sx={{ color: vistelicaColors.secondary}}/>
+                                                            </Avatar>
+                                                            <Box>
+                                                                <Typography variant="subtitle1" fontWeight="400" sx={{ color: vistelicaColors.primary }}>
+                                                                    Pedido #{order.order_number}
+                                                                </Typography>
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 2, mt: 0.5 }}>
+                                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                        <CalendarTodayIcon sx={{ color: vistelicaColors.secondary, fontSize: '0.9rem', mr: 0.5 }} />
                                                                         <Typography variant="body2" color="text.secondary">
-                                                                            Cantidad: {detail.quantity} • ${detail.price} c/u
+                                                                            {formatDate(order.created_at)}
                                                                         </Typography>
-                                                                        {detail.estado_devolucion !== 'Nada' && (
-                                                                            <Box sx={{ mt: 1 }}>
-                                                                                <Chip
-                                                                                    label={`Estado: ${detail.estado_devolucion}`}
-                                                                                    color={getRefundStatusColor(detail.estado_devolucion)}
-                                                                                    size="small"
-                                                                                    sx={{
-                                                                                        borderRadius: '4px',
-                                                                                        fontWeight: 500
-                                                                                    }}
-                                                                                />
-                                                                                {detail.motivo_devolucion && (
-                                                                                    <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
-                                                                                        "{detail.motivo_devolucion}"
-                                                                                    </Typography>
-                                                                                )}
-                                                                                {detail.foto_devolucion_url && (
-                                                                                    <Box sx={{ mt: 1 }}>
-                                                                                        <Typography variant="caption" display="block" color="text.secondary">
-                                                                                            Foto adjunta:
-                                                                                        </Typography>
-                                                                                        <Box
-                                                                                            component="img"
-                                                                                            src={detail.foto_devolucion_url}
-                                                                                            alt="Foto de devolución"
-                                                                                            sx={{
-                                                                                                maxWidth: '100px',
-                                                                                                maxHeight: '100px',
-                                                                                                borderRadius: '4px',
-                                                                                                border: '1px solid #e0e0e0',
-                                                                                                mt: 1
-                                                                                            }}
-                                                                                        />
-                                                                                    </Box>
-                                                                                )}
-                                                                            </Box>
-                                                                        )}
                                                                     </Box>
-
-                                                                    {detail.estado_devolucion === 'Nada' && (
-                                                                        <Button
-                                                                            variant="outlined"
-                                                                            color="secondary"
-                                                                            startIcon={<AssignmentReturnIcon />}
-                                                                            onClick={() => handleOpenRefundDialog(
-                                                                                detail.order_detail_id,
-                                                                                detail.product.name
-                                                                            )}
-                                                                            sx={{
-                                                                                ml: 2,
-                                                                                minWidth: '120px',
-                                                                                borderRadius: '8px',
-                                                                                borderWidth: '2px',
-                                                                                '&:hover': {
-                                                                                    borderWidth: '2px'
-                                                                                }
-                                                                            }}
-                                                                        >
-                                                                            Devolver
-                                                                        </Button>
-                                                                    )}
+                                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                        <AttachMoneyIcon sx={{ color: vistelicaColors.secondary, fontSize: '1rem', mr: 0.5 }} />
+                                                                        <Typography variant="body2" color="text.secondary" fontWeight="500">
+                                                                            {parseFloat(order.total_price).toFixed(2)}€
+                                                                        </Typography>
+                                                                    </Box>
                                                                 </Box>
-                                                            </ListItem>
-                                                        ))}
-                                                    </List>
-                                                </CardContent>
-                                            </Collapse>
-                                        </Card>
-                                    ))}
-                                </List>
-                            )}
-                        </Paper>
+                                                            </Box>
+                                                        </Box>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                            <Badge
+                                                                badgeContent={order.details.length}
+                                                                color="primary"
+                                                                sx={{ mr: 1 }}
+                                                            >
+                                                                <ShoppingBagIcon sx={{ color: vistelicaColors.secondary }} />
+                                                            </Badge>
+                                                            <IconButton
+                                                                size="small"
+                                                                sx={{
+                                                                    transition: 'transform 0.2s ease',
+                                                                    transform: expandedOrder === order.order_id ? 'rotate(180deg)' : 'rotate(0deg)'
+                                                                }}
+                                                            >
+                                                                <ExpandMoreIcon />
+                                                            </IconButton>
+                                                        </Box>
+                                                    </Box>
+
+                                                    <AnimatePresence>
+                                                        {expandedOrder === order.order_id && (
+                                                            <motion.div
+                                                                initial={{ opacity: 0, height: 0 }}
+                                                                animate={{ opacity: 1, height: 'auto' }}
+                                                                exit={{ opacity: 0, height: 0 }}
+                                                                transition={{ duration: 0.3 }}
+                                                            >
+                                                                <CardContent sx={{ p: 0 }}>
+                                                                    <List sx={{
+                                                                        py: 0,
+                                                                        background: 'linear-gradient(to bottom, rgba(249, 247, 240, 0.4), rgba(255, 255, 255, 0.8))'
+                                                                    }}>
+                                                                        {order.details.map((detail) => (
+                                                                            <ListItem
+                                                                                key={detail.order_detail_id}
+                                                                                sx={{
+                                                                                    p: { xs: 1.5, sm: 2 },
+                                                                                    borderBottom: '1px solid rgba(0,0,0,0.06)',
+                                                                                    '&:last-child': { borderBottom: 'none' },
+                                                                                    transition: 'background-color 0.2s',
+                                                                                    '&:hover': {
+                                                                                        backgroundColor: 'rgba(0,0,0,0.01)'
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                <Box sx={{
+                                                                                    display: 'flex',
+                                                                                    width: '100%',
+                                                                                    flexDirection: { xs: 'column', sm: 'row' },
+                                                                                    alignItems: { xs: 'flex-start', sm: 'center' },
+                                                                                    gap: 2
+                                                                                }}>
+                                                                                    <Box sx={{
+                                                                                        width: { xs: 60, sm: 70 },
+                                                                                        height: { xs: 60, sm: 70 },
+                                                                                        backgroundColor: detail.estado_devolucion !== 'Nada'
+                                                                                            ? getStatusBackground(detail.estado_devolucion)
+                                                                                            : '#f5f5f5',
+                                                                                        borderRadius: '10px',
+                                                                                        display: 'flex',
+                                                                                        flexDirection: 'column',
+                                                                                        alignItems: 'center',
+                                                                                        justifyContent: 'center',
+                                                                                        flexShrink: 0,
+                                                                                        border: '1px solid rgba(0,0,0,0.05)',
+                                                                                        boxShadow: detail.estado_devolucion !== 'Nada'
+                                                                                            ? '0 2px 8px rgba(0,0,0,0.1)'
+                                                                                            : 'none'
+                                                                                    }}>
+                                                                                        {detail.estado_devolucion !== 'Nada'
+                                                                                            ? getStatusIcon(detail.estado_devolucion)
+                                                                                            : <AssignmentReturnIcon sx={{ color: vistelicaColors.secondary }} />
+                                                                                        }
+                                                                                        {detail.estado_devolucion !== 'Nada' && (
+                                                                                            <Typography
+                                                                                                variant="caption"
+                                                                                                sx={{
+                                                                                                    mt: 0.5,
+                                                                                                    fontWeight: 'bold',
+                                                                                                    fontSize: '0.65rem',
+                                                                                                    color: getStatusColor(detail.estado_devolucion)
+                                                                                                }}
+                                                                                            >
+                                                                                                {detail.estado_devolucion}
+                                                                                            </Typography>
+                                                                                        )}
+                                                                                    </Box>
+
+                                                                                    <Box sx={{ flexGrow: 1 }}>
+                                                                                        <Typography
+                                                                                            variant="subtitle1"
+                                                                                            fontWeight="500"
+                                                                                            sx={{
+                                                                                                color: detail.estado_devolucion !== 'Nada'
+                                                                                                    ? getStatusColor(detail.estado_devolucion)
+                                                                                                    : 'text.primary'
+                                                                                            }}
+                                                                                        >
+                                                                                            {detail.product.name}
+                                                                                        </Typography>
+
+                                                                                        <Box sx={{
+                                                                                            display: 'flex',
+                                                                                            flexWrap: 'wrap',
+                                                                                            gap: 1,
+                                                                                            mt: 0.5
+                                                                                        }}>
+                                                                                            <Chip
+                                                                                                label={`Cantidad: ${detail.quantity}`}
+                                                                                                size="small"
+                                                                                                variant="outlined"
+                                                                                                sx={{
+                                                                                                    borderColor: vistelicaColors.divider,
+                                                                                                    fontSize: '0.75rem'
+                                                                                                }}
+                                                                                            />
+                                                                                            <Chip
+                                                                                                label={`${parseFloat(detail.price).toFixed(2)}€ c/u`}
+                                                                                                size="small"
+                                                                                                variant="outlined"
+                                                                                                sx={{
+                                                                                                    borderColor: vistelicaColors.divider,
+                                                                                                    fontSize: '0.75rem'
+                                                                                                }}
+                                                                                            />
+                                                                                            {detail.product.description && (
+                                                                                                <Tooltip title={detail.product.description}>
+                                                                                                    <Chip
+                                                                                                        icon={<InfoOutlinedIcon fontSize="small" />}
+                                                                                                        label="Detalles"
+                                                                                                        size="small"
+                                                                                                        variant="outlined"
+                                                                                                        sx={{
+                                                                                                            borderColor: vistelicaColors.divider,
+                                                                                                            fontSize: '0.75rem'
+                                                                                                        }}
+                                                                                                    />
+                                                                                                </Tooltip>
+                                                                                            )}
+                                                                                        </Box>
+
+                                                                                        {detail.estado_devolucion !== 'Nada' && (
+                                                                                            <Box sx={{ mt: 1.5, pl: 1, borderLeft: `3px solid ${getStatusBorderColor(detail.estado_devolucion)}` }}>
+                                                                                                {detail.motivo_devolucion && (
+                                                                                                    <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
+                                                                                                        "{detail.motivo_devolucion}"
+                                                                                                    </Typography>
+                                                                                                )}
+                                                                                                {detail.foto_devolucion_url && (
+                                                                                                    <Box sx={{ mt: 1.5 }}>
+                                                                                                        <Typography variant="caption" display="block" color="text.secondary" sx={{ mb: 0.5 }}>
+                                                                                                            Imagen adjunta:
+                                                                                                        </Typography>
+                                                                                                        <Box
+                                                                                                            component="img"
+                                                                                                            src={detail.foto_devolucion_url}
+                                                                                                            alt="Foto de devolución"
+                                                                                                            sx={{
+                                                                                                                maxWidth: '120px',
+                                                                                                                height: 'auto',
+                                                                                                                borderRadius: '6px',
+                                                                                                                border: '1px solid #e0e0e0',
+                                                                                                                boxShadow: '0 2px 5px rgba(0,0,0,0.08)',
+                                                                                                                transition: 'transform 0.2s',
+                                                                                                                cursor: 'pointer',
+                                                                                                                '&:hover': {
+                                                                                                                    transform: 'scale(1.02)'
+                                                                                                                }
+                                                                                                            }}
+                                                                                                            onClick={() => {
+                                                                                                                window.open(detail.foto_devolucion_url, '_blank');
+                                                                                                            }}
+                                                                                                        />
+                                                                                                    </Box>
+                                                                                                )}
+                                                                                            </Box>
+                                                                                        )}
+                                                                                    </Box>
+
+                                                                                    {detail.estado_devolucion === 'Nada' && (
+                                                                                        <Button
+                                                                                            variant="contained"
+                                                                                            startIcon={<AssignmentReturnIcon />}
+                                                                                            onClick={(e) => {
+                                                                                                e.stopPropagation();
+                                                                                                handleOpenRefundDialog(
+                                                                                                    detail.order_detail_id,
+                                                                                                    detail.product.name
+                                                                                                );
+                                                                                            }}
+                                                                                            sx={{
+                                                                                                ml: { xs: 0, sm: 2 },
+                                                                                                mt: { xs: 1, sm: 0 },
+                                                                                                alignSelf: { xs: 'flex-start', sm: 'center' },
+                                                                                                backgroundColor: vistelicaColors.secondary,
+                                                                                                color: '#fff',
+                                                                                                borderRadius: '8px',
+                                                                                                boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                                                                                                '&:hover': {
+                                                                                                    backgroundColor: vistelicaColors.primary,
+                                                                                                    transform: 'translateY(-2px)',
+                                                                                                    boxShadow: '0 4px 10px rgba(0,0,0,0.15)'
+                                                                                                },
+                                                                                                transition: 'all 0.2s ease'
+                                                                                            }}
+                                                                                        >
+                                                                                            Solicitar devolución
+                                                                                        </Button>
+                                                                                    )}
+                                                                                </Box>
+                                                                            </ListItem>
+                                                                        ))}
+                                                                    </List>
+                                                                </CardContent>
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </Card>
+                                            </motion.div>
+                                        ))}
+                                    </List>
+                                )}
+                            </Paper>
+                        </Box>
                     </Grid>
                 </Grid>
             </Container>
@@ -448,9 +646,21 @@ const RefundPage = () => {
                     </Typography>
                 </DialogTitle>
                 <DialogContent sx={{ p: 3 }}>
-                    <Typography variant="body1" sx={{ mb: 2 }}>
-                        Estás solicitando la devolución de: <strong>{refundDialog.productName}</strong>
-                    </Typography>
+                    <Box sx={{
+                        p: 2,
+                        mb: 2,
+                        backgroundColor: vistelicaColors.primaryLight,
+                        border: `1px solid ${vistelicaColors.divider}`,
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2
+                    }}>
+                        <ShoppingBagIcon sx={{ color: vistelicaColors.primary }} />
+                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                            <Box component="span" sx={{ color: vistelicaColors.primary }}>{refundDialog.productName}</Box>
+                        </Typography>
+                    </Box>
 
                     <TextField
                         autoFocus
@@ -479,7 +689,8 @@ const RefundPage = () => {
                         helperText={error && error.includes('motivo') ? error : ''}
                     />
 
-                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <PhotoCamera sx={{ color: vistelicaColors.secondary, fontSize: '1.2rem' }} />
                         Adjunta una foto del producto (opcional):
                     </Typography>
 
@@ -492,80 +703,108 @@ const RefundPage = () => {
                         disabled={processingRefund}
                     />
 
-                    <label htmlFor="refund-image-upload">
-                        <Button
-                            variant="outlined"
-                            component="span"
-                            startIcon={<PhotoCamera />}
-                            disabled={processingRefund}
-                            sx={{
-                                borderColor: vistelicaColors.primary,
-                                color: vistelicaColors.primary,
-                                '&:hover': {
-                                    borderColor: vistelicaColors.secondary,
-                                    backgroundColor: 'rgba(118, 179, 167, 0.04)'
-                                }
-                            }}
-                        >
-                            Seleccionar Imagen
-                        </Button>
-                    </label>
-
-                    {imagePreview && (
-                        <Box sx={{ mt: 2, position: 'relative', display: 'inline-block' }}>
-                            <Box
-                                component="img"
-                                src={imagePreview}
-                                alt="Preview"
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <label htmlFor="refund-image-upload">
+                            <Button
+                                variant="outlined"
+                                component="span"
+                                startIcon={<PhotoCamera />}
+                                disabled={processingRefund}
+                                fullWidth
                                 sx={{
-                                    maxWidth: '100%',
-                                    maxHeight: '200px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #e0e0e0'
-                                }}
-                            />
-                            <IconButton
-                                size="small"
-                                onClick={handleRemoveImage}
-                                sx={{
-                                    position: 'absolute',
-                                    top: 8,
-                                    right: 8,
-                                    backgroundColor: 'rgba(0,0,0,0.5)',
-                                    color: 'white',
+                                    borderColor: vistelicaColors.primary,
+                                    color: vistelicaColors.primary,
+                                    borderWidth: '1.5px',
+                                    py: 1.2,
                                     '&:hover': {
-                                        backgroundColor: 'rgba(0,0,0,0.7)'
+                                        borderColor: vistelicaColors.secondary,
+                                        backgroundColor: 'rgba(118, 179, 167, 0.04)'
                                     }
                                 }}
                             >
-                                <Close fontSize="small" />
-                            </IconButton>
-                        </Box>
-                    )}
+                                Seleccionar Imagen
+                            </Button>
+                        </label>
 
-                    {error && error.includes('imagen') && (
-                        <Typography color="error" variant="caption" sx={{ mt: 1, display: 'block' }}>
-                            {error}
+                        {imagePreview && (
+                            <Box sx={{
+                                position: 'relative',
+                                display: 'inline-block',
+                                maxWidth: '100%',
+                                mx: 'auto',
+                                mt: 1
+                            }}>
+                                <Box
+                                    component="img"
+                                    src={imagePreview}
+                                    alt="Preview"
+                                    sx={{
+                                        width: '100%',
+                                        maxHeight: '200px',
+                                        objectFit: 'contain',
+                                        borderRadius: '8px',
+                                        border: '1px solid #e0e0e0',
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                                    }}
+                                />
+                                <IconButton
+                                    size="small"
+                                    onClick={handleRemoveImage}
+                                    sx={{
+                                        position: 'absolute',
+                                        top: 8,
+                                        right: 8,
+                                        backgroundColor: 'rgba(0,0,0,0.6)',
+                                        color: 'white',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(0,0,0,0.8)'
+                                        }
+                                    }}
+                                >
+                                    <Close fontSize="small" />
+                                </IconButton>
+                            </Box>
+                        )}
+
+                        {error && error.includes('imagen') && (
+                            <Typography color="error" variant="caption" sx={{ mt: 1, display: 'block' }}>
+                                {error}
+                            </Typography>
+                        )}
+                    </Box>
+
+                    <Box sx={{
+                        mt: 3,
+                        p: 2,
+                        borderRadius: '8px',
+                        backgroundColor: '#f9f9f9',
+                        border: '1px dashed #ddd'
+                    }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <InfoOutlinedIcon sx={{ fontSize: '1rem' }} />
+                            Sube una foto que muestre el problema con el producto (máx. 5MB, formatos: JPG, PNG)
                         </Typography>
-                    )}
-
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                        * Sube una foto que muestre el problema con el producto (máx. 5MB, formatos: JPG, PNG)
-                    </Typography>
+                    </Box>
                 </DialogContent>
                 <DialogActions sx={{
                     p: 2,
                     borderTop: `1px solid ${vistelicaColors.divider}`,
-                    bgcolor: '#fafafa'
+                    bgcolor: '#fafafa',
+                    gap: 2,
+                    justifyContent: 'center'
                 }}>
                     <Button
                         onClick={handleCloseRefundDialog}
                         disabled={processingRefund}
+                        variant="outlined"
                         sx={{
                             color: 'text.secondary',
+                            borderColor: '#ddd',
                             '&:hover': {
-                                backgroundColor: 'rgba(0,0,0,0.05)'
-                            }
+                                backgroundColor: 'rgba(0,0,0,0.05)',
+                                borderColor: '#ccc'
+                            },
+                            minWidth: '120px'
                         }}
                     >
                         Cancelar
@@ -581,9 +820,12 @@ const RefundPage = () => {
                                 backgroundColor: vistelicaColors.secondary
                             },
                             px: 3,
-                            borderRadius: '8px'
+                            py: 1,
+                            borderRadius: '8px',
+                            fontWeight: 600,
+                            minWidth: '180px'
                         }}
-                        startIcon={processingRefund ? <CircularProgress size={20} color="inherit" /> : null}
+                        startIcon={processingRefund ? <CircularProgress size={20} color="inherit" /> : <AssignmentReturnIcon />}
                     >
                         {processingRefund ? 'Enviando...' : 'Solicitar Devolución'}
                     </Button>
@@ -616,32 +858,66 @@ const RefundPage = () => {
                     </Typography>
                 </DialogTitle>
                 <DialogContent sx={{ p: 3 }}>
-                    <Typography variant="body1">
-                        Tu solicitud de devolución ha sido enviada correctamente y está en proceso de revisión.
-                    </Typography>
-                    <Typography variant="body2" sx={{ mt: 2, fontStyle: 'italic' }}>
-                        Te notificaremos por email cuando tengamos una respuesta.
-                    </Typography>
+                    <Box sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        textAlign: 'center',
+                        py: 2
+                    }}>
+                        <Avatar sx={{
+                            bgcolor: '#e8f5e9',
+                            width: 60,
+                            height: 60,
+                            mb: 2
+                        }}>
+                            <CheckCircleIcon sx={{ color: '#4caf50', fontSize: '2rem' }} />
+                        </Avatar>
+
+                        <Typography variant="h6" gutterBottom>
+                            ¡Gracias por tu solicitud!
+                        </Typography>
+
+                        <Typography variant="body1">
+                            Tu solicitud de devolución ha sido enviada correctamente y está en proceso de revisión.
+                        </Typography>
+
+                        <Box sx={{
+                            mt: 2,
+                            p: 2,
+                            backgroundColor: '#f5f5f5',
+                            borderRadius: '8px',
+                            width: '100%'
+                        }}>
+                            <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#666' }}>
+                                Te notificaremos por email cuando tengamos una respuesta.
+                            </Typography>
+                        </Box>
+                    </Box>
                 </DialogContent>
                 <DialogActions sx={{
                     p: 2,
                     borderTop: `1px solid ${vistelicaColors.divider}`,
-                    bgcolor: '#fafafa'
+                    bgcolor: '#fafafa',
+                    justifyContent: 'center'
                 }}>
                     <Button
                         onClick={() => setSuccessDialog(false)}
                         variant="contained"
                         color="primary"
+                        startIcon={<CheckCircleIcon />}
                         sx={{
-                            backgroundColor: vistelicaColors.primary,
+                            backgroundColor: '#4caf50',
                             '&:hover': {
-                                backgroundColor: vistelicaColors.secondary
+                                backgroundColor: '#3d8b40'
                             },
-                            px: 3,
-                            borderRadius: '8px'
+                            px: 4,
+                            py: 1,
+                            borderRadius: '8px',
+                            fontWeight: 600
                         }}
                     >
-                        Cerrar
+                        Entendido
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -674,6 +950,34 @@ const RefundPage = () => {
             )}
         </div>
     );
+
+    // Funciones auxiliares para los colores según el estado
+    function getStatusBackground(status) {
+        switch (status.toLowerCase()) {
+            case 'revision': return 'rgba(255, 152, 0, 0.1)';
+            case 'aceptado': return 'rgba(76, 175, 80, 0.1)';
+            case 'rechazado': return 'rgba(244, 67, 54, 0.1)';
+            default: return '#f5f5f5';
+        }
+    }
+
+    function getStatusColor(status) {
+        switch (status.toLowerCase()) {
+            case 'revision': return '#ff9800';
+            case 'aceptado': return '#4caf50';
+            case 'rechazado': return '#f44336';
+            default: return 'text.primary';
+        }
+    }
+
+    function getStatusBorderColor(status) {
+        switch (status.toLowerCase()) {
+            case 'revision': return '#ff9800';
+            case 'aceptado': return '#4caf50';
+            case 'rechazado': return '#f44336';
+            default: return vistelicaColors.divider;
+        }
+    }
 };
 
 export default RefundPage;

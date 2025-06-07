@@ -48,12 +48,12 @@ import paymentMethodService from '@/services/paymentMethodService';
 import { getCurrentUser } from '@/services/authService';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from "@mui/material/FormControlLabel";
+import { motion } from 'framer-motion';
 
 const AccountPaymentMethods = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [sidebarOpen, setSidebarOpen] = useState(false);
-
     const [userData, setUserData] = useState(null);
     const [paymentMethods, setPaymentMethods] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -81,6 +81,11 @@ const AccountPaymentMethods = () => {
         { value: 'mastercard', label: 'MasterCard' },
         { value: 'amex', label: 'American Express' }
     ];
+
+    const contentVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -289,8 +294,14 @@ const AccountPaymentMethods = () => {
 
     if (loading && paymentMethods.length === 0) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                <CircularProgress />
+            <Box sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh',
+                width: '100%'
+            }}>
+                <CircularProgress sx={{ color: vistelicaColors.primary }} />
             </Box>
         );
     }
@@ -299,290 +310,310 @@ const AccountPaymentMethods = () => {
         <div>
             <Navbar />
             <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
-                <Grid container spacing={2} sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
+                <Grid container spacing={3} sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
                     {!isMobile && (
-                        <Grid item md={3} lg={3}>
-                            <SidebarMenu username={userData?.name || 'Usuario'} />
+                        <Grid size={{ xs: 12, md: 3, lg: 5.5 }}>
+                            <Box sx={{ position: 'sticky', top: 24 }}>
+                                <SidebarMenu username={userData?.name || 'Usuario'} />
+                            </Box>
                         </Grid>
                     )}
 
-                    <Grid item xs={12} md={9} lg={9}>
-                        <Paper elevation={0} sx={{ border: '1px solid #e0e0e0', p: { xs: 2, sm: 3 }, height: '100%' }}>
-                            <Box sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: { xs: 'flex-start', sm: 'center' },
-                                flexDirection: { xs: 'column', sm: 'row' },
-                                gap: { xs: 2, sm: 0 },
-                                mb: 2
-                            }}>
-                                <Typography variant="h5" component="h1" fontWeight="500">
-                                    Mis tarjetas de crédito
-                                </Typography>
-                                <Button
-                                    variant="contained"
-                                    startIcon={<AddIcon />}
-                                    onClick={() => handleOpenDialog()}
-                                    fullWidth={isMobile}
-                                    sx={{
-                                        backgroundColor: vistelicaColors.primary,
-                                        '&:hover': {
-                                            backgroundColor: vistelicaColors.secondary,
-                                        }
-                                    }}
-                                >
-                                    Nueva tarjeta
-                                </Button>
-                            </Box>
-                            <Divider sx={{ mb: { xs: 2, sm: 4 } }} />
-
-                            {paymentMethods.length === 0 ? (
-                                <Box sx={{ textAlign: 'center', py: 4 }}>
-                                    <CreditCardIcon sx={{ fontSize: 60, color: vistelicaColors.secondary, mb: 2 }} />
-                                    <Typography variant="body1">
-                                        No tienes tarjetas guardadas
+                    <Grid size={{ xs: 12, md: 9, lg: 9 }}>
+                        <Box
+                            component={motion.div}
+                            initial="hidden"
+                            animate="visible"
+                            variants={contentVariants}
+                        >
+                            <Paper
+                                elevation={2}
+                                sx={{
+                                    p: { xs: 2, sm: 3 },
+                                    borderRadius: '12px',
+                                    boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                                    background: 'linear-gradient(to bottom right, #fdfbf6, #fff)',
+                                    border: `1px solid ${vistelicaColors.divider}`,
+                                    overflow: 'hidden',
+                                }}
+                            >
+                                <Box sx={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    color: vistelicaColors.primary,
+                                    alignItems: { xs: 'flex-start', sm: 'center' },
+                                    flexDirection: { xs: 'column', sm: 'row' },
+                                    gap: { xs: 2, sm: 0 },
+                                    mb: 2
+                                }}>
+                                    <Typography variant="h5" component="h1" fontWeight="500">
+                                        Mis tarjetas de crédito
                                     </Typography>
                                     <Button
-                                        variant="outlined"
+                                        variant="contained"
                                         startIcon={<AddIcon />}
-                                        sx={{ mt: 2 }}
                                         onClick={() => handleOpenDialog()}
                                         fullWidth={isMobile}
+                                        sx={{
+                                            backgroundColor: vistelicaColors.primary,
+                                            '&:hover': {
+                                                backgroundColor: vistelicaColors.secondary,
+                                            }
+                                        }}
                                     >
-                                        Añadir tarjeta
+                                        Nueva tarjeta
                                     </Button>
                                 </Box>
-                            ) : (
-                                <Grid container spacing={2}>
-                                    {paymentMethods.map((method) => (
-                                        <Grid item xs={12} sm={6} key={method.payment_method_id}>
-                                            <Zoom in={true} style={{ transitionDelay: '100ms' }}>
-                                                <Card sx={{
-                                                    position: 'relative',
-                                                    border: method.is_default ? `2px solid ${vistelicaColors.primary}` : '1px solid #e0e0e0',
-                                                    boxShadow: method.is_default ? `0 4px 12px rgba(228, 176, 2, 0.3)` : '0 1px 5px rgba(0, 0, 0, 0.05)',
-                                                    borderRadius: '12px',
-                                                    transition: 'all 0.3s ease',
-                                                    transform: method.is_default ? 'scale(1.02)' : 'scale(1)',
-                                                    '&:hover': {
-                                                        boxShadow: '0 6px 14px rgba(0, 0, 0, 0.1)',
-                                                        transform: method.is_default ? 'scale(1.03)' : 'scale(1.01)'
-                                                    },
-                                                    height: { xs: '280px', sm: '320px' },
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    background: method.is_default ? 'linear-gradient(to bottom right, #fffdf7, #fff)' : '#fff',
-                                                }}>
-                                                    <CardContent sx={{
-                                                        pt: { xs: 2, sm: 3 },
-                                                        pb: 1,
-                                                        flexGrow: 1,
-                                                        overflow: 'auto'
+                                <Divider sx={{ mb: { xs: 2, sm: 4 } }} />
+
+                                {paymentMethods.length === 0 ? (
+                                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                                        <CreditCardIcon sx={{ fontSize: 60, color: vistelicaColors.secondary, mb: 2 }} />
+                                        <Typography variant="body1">
+                                            No tienes tarjetas guardadas
+                                        </Typography>
+                                        <Button
+                                            variant="outlined"
+                                            startIcon={<AddIcon />}
+                                            sx={{ mt: 2 }}
+                                            onClick={() => handleOpenDialog()}
+                                            fullWidth={isMobile}
+                                        >
+                                            Añadir tarjeta
+                                        </Button>
+                                    </Box>
+                                ) : (
+                                    <Grid container spacing={2}>
+                                        {paymentMethods.map((method) => (
+                                            <Grid size={{ xs: 12, sm: 6 }} key={method.payment_method_id}>
+                                                <Zoom in={true} style={{ transitionDelay: '100ms' }}>
+                                                    <Card sx={{
+                                                        position: 'relative',
+                                                        border: method.is_default ? `2px solid ${vistelicaColors.primary}` : '1px solid #e0e0e0',
+                                                        boxShadow: method.is_default ? `0 4px 12px rgba(228, 176, 2, 0.3)` : '0 1px 5px rgba(0, 0, 0, 0.05)',
+                                                        borderRadius: '12px',
+                                                        transition: 'all 0.3s ease',
+                                                        transform: method.is_default ? 'scale(1.02)' : 'scale(1)',
+                                                        '&:hover': {
+                                                            boxShadow: '0 6px 14px rgba(0, 0, 0, 0.1)',
+                                                            transform: method.is_default ? 'scale(1.03)' : 'scale(1.01)'
+                                                        },
+                                                        height: { xs: '280px', sm: '320px' },
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        background: method.is_default ? 'linear-gradient(to bottom right, #fffdf7, #fff)' : '#fff',
                                                     }}>
-                                                        <Box sx={{
-                                                            display: 'flex',
-                                                            alignItems: 'flex-start',
-                                                            mb: 1.5
+                                                        <CardContent sx={{
+                                                            pt: { xs: 2, sm: 3 },
+                                                            pb: 1,
+                                                            flexGrow: 1,
+                                                            overflow: 'auto'
                                                         }}>
-                                                            <CreditCardIcon sx={{ color: vistelicaColors.secondary }} fontSize="large" />
-                                                            <Box sx={{ width: '100%' }}>
-                                                                <Typography
-                                                                    variant="h6"
-                                                                    sx={{
-                                                                        fontWeight: 600,
-                                                                        color: method.is_default ? vistelicaColors.secondary : 'text.primary',
-                                                                        mb: method.is_default ? 1 : 0
-                                                                    }}
-                                                                >
-                                                                    Tarjeta de crédito
-                                                                </Typography>
-                                                                {method.is_default && (
-                                                                    <Box
-                                                                        component="span"
+                                                            <Box sx={{
+                                                                display: 'flex',
+                                                                alignItems: 'flex-start',
+                                                                mb: 1.5
+                                                            }}>
+                                                                <CreditCardIcon sx={{ color: vistelicaColors.secondary }} fontSize="large" />
+                                                                <Box sx={{ width: '100%' }}>
+                                                                    <Typography
+                                                                        variant="h6"
                                                                         sx={{
-                                                                            display: 'inline-flex',
-                                                                            alignItems: 'center',
-                                                                            color: vistelicaColors.primary,
-                                                                            fontSize: '0.85rem',
-                                                                            fontWeight: 'bold',
-                                                                            backgroundColor: 'rgba(228, 176, 2, 0.1)',
-                                                                            px: 1.5,
-                                                                            py: 0.5,
-                                                                            borderRadius: 1,
-                                                                            width: 'fit-content'
+                                                                            fontWeight: 600,
+                                                                            color: method.is_default ? vistelicaColors.secondary : 'text.primary',
+                                                                            mb: method.is_default ? 1 : 0
                                                                         }}
                                                                     >
-                                                                        <StarIcon fontSize="small" sx={{ mr: 0.5 }} />
-                                                                        Predeterminada
+                                                                        Tarjeta de crédito
+                                                                    </Typography>
+                                                                    {method.is_default && (
+                                                                        <Box
+                                                                            component="span"
+                                                                            sx={{
+                                                                                display: 'inline-flex',
+                                                                                alignItems: 'center',
+                                                                                color: vistelicaColors.primary,
+                                                                                fontSize: '0.85rem',
+                                                                                fontWeight: 'bold',
+                                                                                backgroundColor: 'rgba(228, 176, 2, 0.1)',
+                                                                                px: 1.5,
+                                                                                py: 0.5,
+                                                                                borderRadius: 1,
+                                                                                width: 'fit-content'
+                                                                            }}
+                                                                        >
+                                                                            <StarIcon fontSize="small" sx={{ mr: 0.5 }} />
+                                                                            Predeterminada
+                                                                        </Box>
+                                                                    )}
+                                                                </Box>
+                                                            </Box>
+
+                                                            <Box sx={{
+                                                                display: 'flex',
+                                                                flexDirection: 'column',
+                                                                gap: 1.2,
+                                                                mt: 2
+                                                            }}>
+                                                                <Box sx={{
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: 1,
+                                                                    mt: 0.5
+                                                                }}>
+                                                                    <CreditCardIcon sx={{ color: vistelicaColors.secondary }} fontSize="small" />
+                                                                    <Typography variant="body2">
+                                                                        <Box component="span" sx={{
+                                                                            color: vistelicaColors.primary,
+                                                                            fontWeight: 600
+                                                                        }}>
+                                                                            Tarjeta:
+                                                                        </Box> {method.provider} •••• {method.card_last_four}
+                                                                    </Typography>
+                                                                </Box>
+
+                                                                {method.card_holder_name && (
+                                                                    <Box sx={{
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: 1,
+                                                                        mt: 0.5
+                                                                    }}>
+                                                                        <Typography variant="body2" color="text.secondary">
+                                                                            <Box component="span" sx={{
+                                                                                color: vistelicaColors.primary,
+                                                                                fontWeight: 600
+                                                                            }}>
+                                                                                Titular:
+                                                                            </Box> {method.card_holder_name}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                )}
+
+                                                                {method.expiry_month && method.expiry_year && (
+                                                                    <Box sx={{
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: 1,
+                                                                        mt: 0.5
+                                                                    }}>
+                                                                        <Typography variant="body2" color="text.secondary">
+                                                                            <Box component="span" sx={{
+                                                                                color: vistelicaColors.primary,
+                                                                                fontWeight: 600
+                                                                            }}>
+                                                                                Vence:
+                                                                            </Box> {method.expiry_month.toString().padStart(2, '0')}/{method.expiry_year.toString().slice(-2)}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                )}
+
+                                                                {method.created_at && (
+                                                                    <Box sx={{
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: 1,
+                                                                        mt: 0.5
+                                                                    }}>
+                                                                        <AccessTimeIcon
+                                                                            sx={{ color: vistelicaColors.secondary }}
+                                                                            fontSize="small" />
+                                                                        <Typography variant="body2" fontSize="0.75rem">
+                                                                            <Box component="span" sx={{
+                                                                                color: vistelicaColors.primary,
+                                                                                fontWeight: 600
+                                                                            }}>
+                                                                                Fecha de creación:
+                                                                            </Box> {formatDate(method.created_at)}
+                                                                        </Typography>
                                                                     </Box>
                                                                 )}
                                                             </Box>
-                                                        </Box>
+                                                        </CardContent>
 
-                                                        <Box sx={{
-                                                            display: 'flex',
-                                                            flexDirection: 'column',
-                                                            gap: 1.2,
-                                                            mt: 2
-                                                        }}>
-                                                            <Box sx={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: 1,
-                                                                mt: 0.5
-                                                            }}>
-                                                                <CreditCardIcon sx={{ color: vistelicaColors.secondary }} fontSize="small" />
-                                                                <Typography variant="body2">
-                                                                    <Box component="span" sx={{
-                                                                        color: vistelicaColors.primary,
-                                                                        fontWeight: 600
-                                                                    }}>
-                                                                        Tarjeta:
-                                                                    </Box> {method.provider} •••• {method.card_last_four}
-                                                                </Typography>
-                                                            </Box>
+                                                        <Divider sx={{ mx: 2, opacity: 0.6, my: 0.5 }} />
 
-                                                            {method.card_holder_name && (
-                                                                <Box sx={{
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    gap: 1,
-                                                                    mt: 0.5
-                                                                }}>
-                                                                    <Typography variant="body2" color="text.secondary">
-                                                                        <Box component="span" sx={{
-                                                                            color: vistelicaColors.primary,
-                                                                            fontWeight: 600
-                                                                        }}>
-                                                                            Titular:
-                                                                        </Box> {method.card_holder_name}
-                                                                    </Typography>
-                                                                </Box>
-                                                            )}
-
-                                                            {method.expiry_month && method.expiry_year && (
-                                                                <Box sx={{
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    gap: 1,
-                                                                    mt: 0.5
-                                                                }}>
-                                                                    <Typography variant="body2" color="text.secondary">
-                                                                        <Box component="span" sx={{
-                                                                            color: vistelicaColors.primary,
-                                                                            fontWeight: 600
-                                                                        }}>
-                                                                            Vence:
-                                                                        </Box> {method.expiry_month.toString().padStart(2, '0')}/{method.expiry_year.toString().slice(-2)}
-                                                                    </Typography>
-                                                                </Box>
-                                                            )}
-
-                                                            {method.created_at && (
-                                                                <Box sx={{
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    gap: 1,
-                                                                    mt: 0.5
-                                                                }}>
-                                                                    <AccessTimeIcon
-                                                                        sx={{ color: vistelicaColors.secondary }}
-                                                                        fontSize="small" />
-                                                                    <Typography variant="body2" fontSize="0.75rem">
-                                                                        <Box component="span" sx={{
-                                                                            color: vistelicaColors.primary,
-                                                                            fontWeight: 600
-                                                                        }}>
-                                                                            Fecha de creación:
-                                                                        </Box> {formatDate(method.created_at)}
-                                                                    </Typography>
-                                                                </Box>
-                                                            )}
-                                                        </Box>
-                                                    </CardContent>
-
-                                                    <Divider sx={{ mx: 2, opacity: 0.6, my: 0.5 }} />
-
-                                                    <CardActions sx={{
-                                                        justifyContent: 'space-between',
-                                                        p: { xs: 0.5, sm: 1 },
-                                                        backgroundColor: method.is_default ? 'rgba(228, 176, 2, 0.03)' : 'transparent',
-                                                        flexDirection: 'row',
-                                                        flexWrap: 'nowrap'
-                                                    }}>
-                                                        <Box sx={{
-                                                            display: 'flex',
-                                                            width: '100%',
+                                                        <CardActions sx={{
                                                             justifyContent: 'space-between',
-                                                            alignItems: 'center'
+                                                            p: { xs: 0.5, sm: 1 },
+                                                            backgroundColor: method.is_default ? 'rgba(228, 176, 2, 0.03)' : 'transparent',
+                                                            flexDirection: 'row',
+                                                            flexWrap: 'nowrap'
                                                         }}>
-                                                            {!method.is_default && (
-                                                                <Tooltip title="Establecer como predeterminada">
-                                                                    <IconButton
-                                                                        size="small"
-                                                                        onClick={() => handleSetDefaultMethod(method.payment_method_id)}
-                                                                        sx={{
-                                                                            color: vistelicaColors.primary,
-                                                                            '&:hover': {
-                                                                                backgroundColor: 'rgba(228, 176, 2, 0.1)',
-                                                                                transform: 'scale(1.1)'
-                                                                            }
-                                                                        }}
-                                                                    >
-                                                                        <StarIcon />
-                                                                    </IconButton>
-                                                                </Tooltip>
-                                                            )}
-
-                                                            {method.is_default && <Box sx={{ width: '36px' }}></Box>}
-
                                                             <Box sx={{
                                                                 display: 'flex',
-                                                                gap: 1,
-                                                                justifyContent: 'flex-end'
+                                                                width: '100%',
+                                                                justifyContent: 'space-between',
+                                                                alignItems: 'center'
                                                             }}>
-                                                                <Tooltip title="Editar tarjeta">
-                                                                    <Button
-                                                                        size="small"
-                                                                        onClick={() => handleOpenDialog(method)}
-                                                                        startIcon={<EditIcon />}
-                                                                        sx={{
-                                                                            color: vistelicaColors.secondary,
-                                                                            minWidth: { xs: '36px', sm: '64px' },
-                                                                            px: { xs: 0.5, sm: 1 }
-                                                                        }}
-                                                                    >
-                                                                        {!isMobile && 'Editar'}
-                                                                    </Button>
-                                                                </Tooltip>
-                                                                <Tooltip
-                                                                    title={method.is_default ? "No se puede eliminar la tarjeta predeterminada" : "Eliminar tarjeta"}>
-                                                                    <span>
+                                                                {!method.is_default && (
+                                                                    <Tooltip title="Establecer como predeterminada">
+                                                                        <IconButton
+                                                                            size="small"
+                                                                            onClick={() => handleSetDefaultMethod(method.payment_method_id)}
+                                                                            sx={{
+                                                                                color: vistelicaColors.primary,
+                                                                                '&:hover': {
+                                                                                    backgroundColor: 'rgba(228, 176, 2, 0.1)',
+                                                                                    transform: 'scale(1.1)'
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            <StarIcon />
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                )}
+
+                                                                {method.is_default && <Box sx={{ width: '36px' }}></Box>}
+
+                                                                <Box sx={{
+                                                                    display: 'flex',
+                                                                    gap: 1,
+                                                                    justifyContent: 'flex-end'
+                                                                }}>
+                                                                    <Tooltip title="Editar tarjeta">
                                                                         <Button
                                                                             size="small"
-                                                                            onClick={() => openConfirmDeleteDialog(method)}
-                                                                            disabled={method.is_default}
-                                                                            startIcon={<DeleteIcon />}
+                                                                            onClick={() => handleOpenDialog(method)}
+                                                                            startIcon={<EditIcon />}
                                                                             sx={{
-                                                                                color: method.is_default ? 'rgba(0,0,0,0.26)' : vistelicaColors.error,
+                                                                                color: vistelicaColors.secondary,
                                                                                 minWidth: { xs: '36px', sm: '64px' },
                                                                                 px: { xs: 0.5, sm: 1 }
                                                                             }}
                                                                         >
-                                                                            {!isMobile && 'Eliminar'}
+                                                                            {!isMobile && 'Editar'}
                                                                         </Button>
-                                                                    </span>
-                                                                </Tooltip>
+                                                                    </Tooltip>
+                                                                    <Tooltip
+                                                                        title={method.is_default ? "No se puede eliminar la tarjeta predeterminada" : "Eliminar tarjeta"}>
+                                                                        <span>
+                                                                            <Button
+                                                                                size="small"
+                                                                                onClick={() => openConfirmDeleteDialog(method)}
+                                                                                disabled={method.is_default}
+                                                                                startIcon={<DeleteIcon />}
+                                                                                sx={{
+                                                                                    color: method.is_default ? 'rgba(0,0,0,0.26)' : vistelicaColors.error,
+                                                                                    minWidth: { xs: '36px', sm: '64px' },
+                                                                                    px: { xs: 0.5, sm: 1 }
+                                                                                }}
+                                                                            >
+                                                                                {!isMobile && 'Eliminar'}
+                                                                            </Button>
+                                                                        </span>
+                                                                    </Tooltip>
+                                                                </Box>
                                                             </Box>
-                                                        </Box>
-                                                    </CardActions>
-                                                </Card>
-                                            </Zoom>
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            )}
-                        </Paper>
+                                                        </CardActions>
+                                                    </Card>
+                                                </Zoom>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                )}
+                            </Paper>
+                        </Box>
                     </Grid>
                 </Grid>
             </Container>
@@ -644,8 +675,8 @@ const AccountPaymentMethods = () => {
                         px: { xs: 2, sm: 3 }
                     }}
                 >
-                    <CreditCardIcon sx={{ color: vistelicaColors.secondary }} />
-                    <Typography variant="h6" fontWeight="600" fontSize={{ xs: '1.1rem', sm: '1.25rem' }}>
+                    <CreditCardIcon sx={{ color: vistelicaColors.primary }} />
+                    <Typography variant="h6" fontWeight="400" fontSize={{ xs: '1.1rem', sm: '1.25rem',color: vistelicaColors.primary }}>
                         {editingMethod ? 'Editar tarjeta' : 'Añadir nueva tarjeta'}
                     </Typography>
                 </DialogTitle>
@@ -671,7 +702,7 @@ const AccountPaymentMethods = () => {
                         textAlign: 'center'
                     }}>
                         <Grid container spacing={{ xs: 2, sm: 3.5 }} justifyContent="center">
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <FormControl fullWidth>
                                     <FormLabel component="legend" sx={{ textAlign: 'left', mb: 1, fontWeight: 500 }}>
                                         Tipo de tarjeta
@@ -703,7 +734,7 @@ const AccountPaymentMethods = () => {
                                 </FormControl>
                             </Grid>
 
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <TextField
                                     name="card_last_four"
                                     label="Últimos 4 dígitos"
@@ -734,7 +765,7 @@ const AccountPaymentMethods = () => {
                                 />
                             </Grid>
 
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <TextField
                                     name="card_holder_name"
                                     label="Nombre del titular"
@@ -754,7 +785,7 @@ const AccountPaymentMethods = () => {
                                 />
                             </Grid>
 
-                            <Grid item xs={6}>
+                            <Grid size={{ xs: 6 }}>
                                 <TextField
                                     name="expiry_month"
                                     label="Mes de expiración"
@@ -779,7 +810,7 @@ const AccountPaymentMethods = () => {
                                 />
                             </Grid>
 
-                            <Grid item xs={6}>
+                            <Grid size={{ xs: 6 }}>
                                 <TextField
                                     name="expiry_year"
                                     label="Año de expiración"
@@ -804,7 +835,7 @@ const AccountPaymentMethods = () => {
                                 />
                             </Grid>
 
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <FormControlLabel
                                     control={
                                         <Checkbox

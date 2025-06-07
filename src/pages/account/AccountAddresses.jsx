@@ -49,6 +49,7 @@ import BusinessIcon from '@mui/icons-material/Business';
 import PlaceIcon from '@mui/icons-material/Place';
 import MarkunreadMailboxIcon from '@mui/icons-material/MarkunreadMailbox';
 import FlagIcon from '@mui/icons-material/Flag';
+import { motion } from 'framer-motion';
 
 const AccountAddresses = () => {
     const theme = useTheme();
@@ -81,6 +82,11 @@ const AccountAddresses = () => {
         message: '',
         severity: 'success'
     });
+
+    const contentVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+    };
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -356,80 +362,103 @@ const AccountAddresses = () => {
 
     if (loading && addresses.length === 0) {
         return (
-            <Box sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>
-                <CircularProgress/>
+            <Box sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh',
+                width: '100%'
+            }}>
+                <CircularProgress />
             </Box>
         );
     }
 
     return (
         <div>
-            <Navbar/>
-            <Container maxWidth="lg" sx={{py: {xs: 2, md: 4}}}>
+            <Navbar />
+            <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
                 <Grid container spacing={2} sx={{
-                    flexWrap: {xs: 'wrap', md: 'nowrap'}
+                    flexWrap: { xs: 'wrap', md: 'nowrap' }
                 }}>
                     {/* Sidebar solo visible en desktop */}
                     {!isMobile && (
-                        <Grid item md={3} lg={3}>
-                            <SidebarMenu username={userData?.name || 'Usuario'}/>
+                        <Grid size={{ xs: 12, md: 3, lg: 5.5 }}>
+                            <Box sx={{ position: 'sticky', top: 24 }}>
+                                <SidebarMenu username={userData?.name || 'Usuario'} />
+                            </Box>
                         </Grid>
                     )}
 
                     {/* Contenido principal - ancho completo en móviles */}
-                    <Grid item xs={12} md={9} lg={9}>
-                        <Paper elevation={0} sx={{border: '1px solid #e0e0e0', p: {xs: 2, sm: 3}, height: '100%'}}>
-                            <Box sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: {xs: 'flex-start', sm: 'center'},
-                                flexDirection: {xs: 'column', sm: 'row'},
-                                gap: {xs: 2, sm: 0},
-                                mb: 2
-                            }}>
-                                <Typography variant="h5" component="h1" fontWeight="500">
-                                    Mis direcciones
-                                </Typography>
-                                <Button
-                                    variant="contained"
-                                    startIcon={<AddIcon/>}
-                                    onClick={() => handleOpenDialog()}
-                                    fullWidth={isMobile}
-                                    sx={{
-                                        backgroundColor: vistelicaColors.primary,
-                                        '&:hover': {
-                                            backgroundColor: vistelicaColors.secondary,
-                                        }
-                                    }}
-                                >
-                                    Nueva dirección
-                                </Button>
-                            </Box>
-                            <Divider sx={{mb: {xs: 2, sm: 4}}}/>
-
-                            {addresses.length === 0 ? (
-                                <Box sx={{textAlign: 'center', py: 4}}>
-                                    <LocationOnIcon sx={{fontSize: 60, color: vistelicaColors.secondary, mb: 2}}/>
-                                    <Typography variant="body1">
-                                        No tienes direcciones guardadas
+                    <Grid size={{ xs: 12, md: 9, lg: 9 }}>
+                        <Box
+                            component={motion.div}
+                            initial="hidden"
+                            animate="visible"
+                            variants={contentVariants}
+                        >
+                            <Paper
+                                elevation={2}
+                                sx={{
+                                    p: { xs: 2, sm: 3 },
+                                    borderRadius: '12px',
+                                    boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                                    background: 'linear-gradient(to bottom right, #fdfbf6, #fff)',
+                                    border: `1px solid ${vistelicaColors.divider}`,
+                                }}
+                            >
+                                <Box sx={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    color: vistelicaColors.primary,
+                                    alignItems: { xs: 'flex-start', sm: 'center' },
+                                    flexDirection: { xs: 'column', sm: 'row' },
+                                    gap: { xs: 2, sm: 0 },
+                                    mb: 2
+                                }}>
+                                    <Typography variant="h5" component="h1" fontWeight="500">
+                                        Mis direcciones
                                     </Typography>
                                     <Button
-                                        variant="outlined"
-                                        startIcon={<AddIcon/>}
-                                        sx={{mt: 2}}
+                                        variant="contained"
+                                        startIcon={<AddIcon />}
                                         onClick={() => handleOpenDialog()}
                                         fullWidth={isMobile}
+                                        sx={{
+                                            backgroundColor: vistelicaColors.primary,
+                                            '&:hover': {
+                                                backgroundColor: vistelicaColors.secondary,
+                                            }
+                                        }}
                                     >
-                                        Añadir dirección
+                                        Nueva dirección
                                     </Button>
                                 </Box>
-                            ) : (
-                                <Grid container spacing={2}>
-                                    {Array.isArray(addresses) && addresses.map((address) => (
-                                        <Grid item xs={12} sm={6} key={address.id}>
-                                            <Zoom in={true} style={{transitionDelay: '100ms'}}>
-                                                <Card
-                                                    sx={{
+                                <Divider sx={{ mb: { xs: 2, sm: 4 } }} />
+
+                                {addresses.length === 0 ? (
+                                    <Box sx={{textAlign: 'center', py: 4}}>
+                                        <LocationOnIcon sx={{fontSize: 60, color: vistelicaColors.secondary, mb: 2}}/>
+                                        <Typography variant="body1">
+                                            No tienes direcciones guardadas
+                                        </Typography>
+                                        <Button
+                                            variant="outlined"
+                                            startIcon={<AddIcon/>}
+                                            sx={{mt: 2}}
+                                            onClick={() => handleOpenDialog()}
+                                            fullWidth={isMobile}
+                                        >
+                                            Añadir dirección
+                                        </Button>
+                                    </Box>
+                                ) : (
+                                    <Grid container spacing={2}>
+                                        {Array.isArray(addresses) && addresses.map((address) => (
+                                            <Grid size={{ xs: 12, sm: 6 }} key={address.id}>
+                                                <Zoom in={true} style={{ transitionDelay: '100ms' }}>
+                                                    <Card sx={{
                                                         position: 'relative',
                                                         border: address.is_default ? `2px solid ${vistelicaColors.primary}` : '1px solid #e0e0e0',
                                                         boxShadow: address.is_default ? `0 4px 12px rgba(228, 176, 2, 0.3)` : '0 1px 5px rgba(0, 0, 0, 0.05)',
@@ -444,243 +473,242 @@ const AccountAddresses = () => {
                                                         display: 'flex',
                                                         flexDirection: 'column',
                                                         background: address.is_default ? 'linear-gradient(to bottom right, #fffdf7, #fff)' : '#fff',
-                                                    }}
-                                                >
-                                                    <CardContent sx={{
-                                                        pt: {xs: 2, sm: 3},
-                                                        pb: 1,
-                                                        flexGrow: 1,
-                                                        overflow: 'auto'
                                                     }}>
-                                                        <Box sx={{
-                                                            display: 'flex',
-                                                            alignItems: 'flex-start',
-                                                            mb: 1.5
+                                                        <CardContent sx={{
+                                                            pt: {xs: 2, sm: 3},
+                                                            pb: 1,
+                                                            flexGrow: 1,
+                                                            overflow: 'auto'
                                                         }}>
-                                                            <Box sx={{
-                                                                mr: 1.5,
-                                                                backgroundColor: address.is_default ? 'rgba(228, 176, 2, 0.15)' : 'rgba(0, 0, 0, 0.04)',
-                                                                borderRadius: '50%',
-                                                                width: 36,
-                                                                height: 36,
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                color: address.is_default ? vistelicaColors.primary : 'text.secondary',
-                                                                flexShrink: 0
-                                                            }}>
-                                                                {getAddressIcon(address.label)}
-                                                            </Box>
-                                                            <Box sx={{width: '100%'}}>
-                                                                <Typography
-                                                                    variant="h6"
-                                                                    sx={{
-                                                                        fontWeight: 600,
-                                                                        color: address.is_default ? vistelicaColors.secondary : 'text.primary',
-                                                                        mb: address.is_default ? 1 : 0
-                                                                    }}
-                                                                >
-                                                                    {address.label || 'Dirección sin nombre'}
-                                                                </Typography>
-                                                                {address.is_default && (
-                                                                    <Box
-                                                                        component="span"
-                                                                        sx={{
-                                                                            display: 'inline-flex',
-                                                                            alignItems: 'center',
-                                                                            color: vistelicaColors.primary,
-                                                                            fontSize: '0.85rem', // Más grande
-                                                                            fontWeight: 'bold',
-                                                                            backgroundColor: 'rgba(228, 176, 2, 0.1)',
-                                                                            px: 1.5, // Más padding horizontal
-                                                                            py: 0.5, // Más padding vertical
-                                                                            borderRadius: 1,
-                                                                            width: 'fit-content'
-                                                                        }}
-                                                                    >
-                                                                        <StarIcon fontSize="small" sx={{mr: 0.5}}/>
-                                                                        Predeterminada
-                                                                    </Box>
-                                                                )}
-                                                                {/* Dentro del CardContent, después del campo de calle */}
-                                                                {address.block && (
-                                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                                                                        <Typography variant="body2" color="text.secondary">
-                                                                            <Box component="span" sx={{ color: vistelicaColors.primary, fontWeight: 600 }}>
-                                                                                Bloque:
-                                                                            </Box> {address.block}
-                                                                        </Typography>
-                                                                    </Box>
-                                                                )}
-                                                                {address.floor && (
-                                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                                                                        <Typography variant="body2" color="text.secondary">
-                                                                            <Box component="span" sx={{ color: vistelicaColors.primary, fontWeight: 600 }}>
-                                                                                Piso:
-                                                                            </Box> {address.floor}
-                                                                        </Typography>
-                                                                    </Box>
-                                                                )}
-                                                                {address.door && (
-                                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                                                                        <Typography variant="body2" color="text.secondary">
-                                                                            <Box component="span" sx={{ color: vistelicaColors.primary, fontWeight: 600 }}>
-                                                                                Puerta:
-                                                                            </Box> {address.door}
-                                                                        </Typography>
-                                                                    </Box>
-                                                                )}
-                                                            </Box>
-                                                        </Box>
-
-                                                        <Box sx={{
-                                                            display: 'flex',
-                                                            flexDirection: 'column',
-                                                            gap: 1.2,
-                                                            mt: 2
-                                                        }}>
-                                                            {/* Dirección completa */}
                                                             <Box sx={{
                                                                 display: 'flex',
                                                                 alignItems: 'flex-start',
-                                                                gap: 1
+                                                                mb: 1.5
                                                             }}>
-                                                                <LocationOnIcon
-                                                                    sx={{color: vistelicaColors.secondary, mt: 0.3}}
-                                                                    fontSize="small"/>
-                                                                <Box>
-                                                                    <Typography variant="body2" sx={{fontWeight: 500}}>
-                                                                        {address.street || 'Sin calle'}
+                                                                <Box sx={{
+                                                                    mr: 1.5,
+                                                                    backgroundColor: address.is_default ? 'rgba(228, 176, 2, 0.15)' : 'rgba(0, 0, 0, 0.04)',
+                                                                    borderRadius: '50%',
+                                                                    width: 36,
+                                                                    height: 36,
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    color: address.is_default ? vistelicaColors.primary : 'text.secondary',
+                                                                    flexShrink: 0
+                                                                }}>
+                                                                    {getAddressIcon(address.label)}
+                                                                </Box>
+                                                                <Box sx={{width: '100%'}}>
+                                                                    <Typography
+                                                                        variant="h6"
+                                                                        sx={{
+                                                                            fontWeight: 600,
+                                                                            color: address.is_default ? vistelicaColors.secondary : 'text.primary',
+                                                                            mb: address.is_default ? 1 : 0
+                                                                        }}
+                                                                    >
+                                                                        {address.label || 'Dirección sin nombre'}
                                                                     </Typography>
-                                                                    <Typography variant="body2" color="text.secondary">
-                                                                        {address.city || 'Sin ciudad'}, {address.state || 'Sin provincia'}
-                                                                    </Typography>
-                                                                    <Typography variant="body2" color="text.secondary">
-                                                                        {address.country || 'España'}
-                                                                    </Typography>
+                                                                    {address.is_default && (
+                                                                        <Box
+                                                                            component="span"
+                                                                            sx={{
+                                                                                display: 'inline-flex',
+                                                                                alignItems: 'center',
+                                                                                color: vistelicaColors.primary,
+                                                                                fontSize: '0.85rem', // Más grande
+                                                                                fontWeight: 'bold',
+                                                                                backgroundColor: 'rgba(228, 176, 2, 0.1)',
+                                                                                px: 1.5, // Más padding horizontal
+                                                                                py: 0.5, // Más padding vertical
+                                                                                borderRadius: 1,
+                                                                                width: 'fit-content'
+                                                                            }}
+                                                                        >
+                                                                            <StarIcon fontSize="small" sx={{mr: 0.5}}/>
+                                                                            Predeterminada
+                                                                        </Box>
+                                                                    )}
+                                                                    {/* Dentro del CardContent, después del campo de calle */}
+                                                                    {address.block && (
+                                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                                                            <Typography variant="body2" color="text.secondary">
+                                                                                <Box component="span" sx={{ color: vistelicaColors.primary, fontWeight: 600 }}>
+                                                                                    Bloque:
+                                                                                </Box> {address.block}
+                                                                            </Typography>
+                                                                        </Box>
+                                                                    )}
+                                                                    {address.floor && (
+                                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                                                            <Typography variant="body2" color="text.secondary">
+                                                                                <Box component="span" sx={{ color: vistelicaColors.primary, fontWeight: 600 }}>
+                                                                                    Piso:
+                                                                                </Box> {address.floor}
+                                                                            </Typography>
+                                                                        </Box>
+                                                                    )}
+                                                                    {address.door && (
+                                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                                                            <Typography variant="body2" color="text.secondary">
+                                                                                <Box component="span" sx={{ color: vistelicaColors.primary, fontWeight: 600 }}>
+                                                                                    Puerta:
+                                                                                </Box> {address.door}
+                                                                            </Typography>
+                                                                        </Box>
+                                                                    )}
                                                                 </Box>
                                                             </Box>
 
-                                                            {/* Código postal */}
                                                             <Box sx={{
                                                                 display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: 1,
-                                                                mt: 0.5
+                                                                flexDirection: 'column',
+                                                                gap: 1.2,
+                                                                mt: 2
                                                             }}>
-                                                                <MarkunreadMailboxIcon
-                                                                    sx={{color: vistelicaColors.secondary}}
-                                                                    fontSize="small"/>
-                                                                <Typography variant="body2">
-                                                                    <Box component="span" sx={{
-                                                                        color: vistelicaColors.primary,
-                                                                        fontWeight: 600
-                                                                    }}>
-                                                                        Código postal:
-                                                                    </Box> {address.postal_code || 'No especificado'}
-                                                                </Typography>
-                                                            </Box>
+                                                                {/* Dirección completa */}
+                                                                <Box sx={{
+                                                                    display: 'flex',
+                                                                    alignItems: 'flex-start',
+                                                                    gap: 1
+                                                                }}>
+                                                                    <LocationOnIcon
+                                                                        sx={{color: vistelicaColors.secondary, mt: 0.3}}
+                                                                        fontSize="small"/>
+                                                                    <Box>
+                                                                        <Typography variant="body2" sx={{fontWeight: 500}}>
+                                                                            {address.street || 'Sin calle'}
+                                                                        </Typography>
+                                                                        <Typography variant="body2" color="text.secondary">
+                                                                            {address.city || 'Sin ciudad'}, {address.state || 'Sin provincia'}
+                                                                        </Typography>
+                                                                        <Typography variant="body2" color="text.secondary">
+                                                                            {address.country || 'España'}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                </Box>
 
-                                                            {/* País */}
-                                                            <Box sx={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: 1,
-                                                                mt: 0.5
-                                                            }}>
-                                                                <FlagIcon sx={{color: vistelicaColors.secondary}}
-                                                                          fontSize="small"/>
-                                                                <Typography variant="body2">
-                                                                    <Box component="span" sx={{
-                                                                        color: vistelicaColors.primary,
-                                                                        fontWeight: 600
-                                                                    }}>
-                                                                        País:
-                                                                    </Box> {address.country || 'No especificado'}
-                                                                </Typography>
-                                                            </Box>
-
-                                                            {/* Fecha de creación */}
-                                                            {address.created_at && (
+                                                                {/* Código postal */}
                                                                 <Box sx={{
                                                                     display: 'flex',
                                                                     alignItems: 'center',
                                                                     gap: 1,
                                                                     mt: 0.5
                                                                 }}>
-                                                                    <AccessTimeIcon
+                                                                    <MarkunreadMailboxIcon
                                                                         sx={{color: vistelicaColors.secondary}}
                                                                         fontSize="small"/>
-                                                                    <Typography variant="body2" fontSize="0.75rem">
+                                                                    <Typography variant="body2">
                                                                         <Box component="span" sx={{
                                                                             color: vistelicaColors.primary,
                                                                             fontWeight: 600
                                                                         }}>
-                                                                            Fecha de creación:
-                                                                        </Box> {formatDate(address.created_at)}
+                                                                            Código postal:
+                                                                        </Box> {address.postal_code || 'No especificado'}
                                                                     </Typography>
                                                                 </Box>
-                                                            )}
-                                                        </Box>
-                                                    </CardContent>
 
-                                                    <Divider sx={{mx: 2, opacity: 0.6, my: 0.5}}/>
-
-                                                    <CardActions sx={{
-                                                        justifyContent: 'space-between',
-                                                        p: {xs: 0.5, sm: 1},
-                                                        backgroundColor: address.is_default ? 'rgba(228, 176, 2, 0.03)' : 'transparent',
-                                                        flexDirection: 'row',
-                                                        flexWrap: 'nowrap'
-                                                    }}>
-                                                        <Box sx={{
-                                                            display: 'flex',
-                                                            width: '100%',
-                                                            justifyContent: 'space-between',
-                                                            alignItems: 'center'
-                                                        }}>
-                                                            {!address.is_default && (
-                                                                <Tooltip
-                                                                    title="Establecer como dirección predeterminada">
-                                                                    <IconButton
-                                                                        size="small"
-                                                                        onClick={() => handleSetDefaultAddress(address.id)}
-                                                                        sx={{
+                                                                {/* País */}
+                                                                <Box sx={{
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: 1,
+                                                                    mt: 0.5
+                                                                }}>
+                                                                    <FlagIcon sx={{color: vistelicaColors.secondary}}
+                                                                              fontSize="small"/>
+                                                                    <Typography variant="body2">
+                                                                        <Box component="span" sx={{
                                                                             color: vistelicaColors.primary,
-                                                                            '&:hover': {
-                                                                                backgroundColor: 'rgba(228, 176, 2, 0.1)',
-                                                                                transform: 'scale(1.1)'
-                                                                            }
-                                                                        }}
-                                                                    >
-                                                                        <StarIcon/>
-                                                                    </IconButton>
-                                                                </Tooltip>
-                                                            )}
+                                                                            fontWeight: 600
+                                                                        }}>
+                                                                            País:
+                                                                        </Box> {address.country || 'No especificado'}
+                                                                    </Typography>
+                                                                </Box>
 
-                                                            {address.is_default && <Box sx={{width: '36px'}}></Box>}
+                                                                {/* Fecha de creación */}
+                                                                {address.created_at && (
+                                                                    <Box sx={{
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: 1,
+                                                                        mt: 0.5
+                                                                    }}>
+                                                                        <AccessTimeIcon
+                                                                            sx={{color: vistelicaColors.secondary}}
+                                                                            fontSize="small"/>
+                                                                        <Typography variant="body2" fontSize="0.75rem">
+                                                                            <Box component="span" sx={{
+                                                                                color: vistelicaColors.primary,
+                                                                                fontWeight: 600
+                                                                            }}>
+                                                                                Fecha de creación:
+                                                                            </Box> {formatDate(address.created_at)}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                )}
+                                                            </Box>
+                                                        </CardContent>
 
+                                                        <Divider sx={{mx: 2, opacity: 0.6, my: 0.5}}/>
+
+                                                        <CardActions sx={{
+                                                            justifyContent: 'space-between',
+                                                            p: {xs: 0.5, sm: 1},
+                                                            backgroundColor: address.is_default ? 'rgba(228, 176, 2, 0.03)' : 'transparent',
+                                                            flexDirection: 'row',
+                                                            flexWrap: 'nowrap'
+                                                        }}>
                                                             <Box sx={{
                                                                 display: 'flex',
-                                                                gap: 1,
-                                                                justifyContent: 'flex-end'
+                                                                width: '100%',
+                                                                justifyContent: 'space-between',
+                                                                alignItems: 'center'
                                                             }}>
-                                                                <Tooltip title="Editar dirección">
-                                                                    <Button
-                                                                        size="small"
-                                                                        onClick={() => handleOpenDialog(address)}
-                                                                        startIcon={<EditIcon/>}
-                                                                        sx={{
-                                                                            color: vistelicaColors.secondary,
-                                                                            minWidth: {xs: '36px', sm: '64px'},
-                                                                            px: {xs: 0.5, sm: 1}
-                                                                        }}
-                                                                    >
-                                                                        {!isMobile && 'Editar'}
-                                                                    </Button>
-                                                                </Tooltip>
-                                                                <Tooltip
-                                                                    title={address.is_default ? "No se puede eliminar la dirección predeterminada" : "Eliminar dirección"}>
+                                                                {!address.is_default && (
+                                                                    <Tooltip
+                                                                        title="Establecer como dirección predeterminada">
+                                                                        <IconButton
+                                                                            size="small"
+                                                                            onClick={() => handleSetDefaultAddress(address.id)}
+                                                                            sx={{
+                                                                                color: vistelicaColors.primary,
+                                                                                '&:hover': {
+                                                                                    backgroundColor: 'rgba(228, 176, 2, 0.1)',
+                                                                                    transform: 'scale(1.1)'
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            <StarIcon/>
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                )}
+
+                                                                {address.is_default && <Box sx={{width: '36px'}}></Box>}
+
+                                                                <Box sx={{
+                                                                    display: 'flex',
+                                                                    gap: 1,
+                                                                    justifyContent: 'flex-end'
+                                                                }}>
+                                                                    <Tooltip title="Editar dirección">
+                                                                        <Button
+                                                                            size="small"
+                                                                            onClick={() => handleOpenDialog(address)}
+                                                                            startIcon={<EditIcon/>}
+                                                                            sx={{
+                                                                                color: vistelicaColors.secondary,
+                                                                                minWidth: {xs: '36px', sm: '64px'},
+                                                                                px: {xs: 0.5, sm: 1}
+                                                                            }}
+                                                                        >
+                                                                            {!isMobile && 'Editar'}
+                                                                        </Button>
+                                                                    </Tooltip>
+                                                                    <Tooltip
+                                                                        title={address.is_default ? "No se puede eliminar la dirección predeterminada" : "Eliminar dirección"}>
                                         <span>
                                             <Button
                                                 size="small"
@@ -696,17 +724,18 @@ const AccountAddresses = () => {
                                                 {!isMobile && 'Eliminar'}
                                             </Button>
                                         </span>
-                                                                </Tooltip>
+                                                                    </Tooltip>
+                                                                </Box>
                                                             </Box>
-                                                        </Box>
-                                                    </CardActions>
-                                                </Card>
-                                            </Zoom>
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            )}
-                        </Paper>
+                                                        </CardActions>
+                                                    </Card>
+                                                </Zoom>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                )}
+                            </Paper>
+                        </Box>
                     </Grid>
                 </Grid>
             </Container>
@@ -772,8 +801,8 @@ const AccountAddresses = () => {
                         px: {xs: 2, sm: 3}
                     }}
                 >
-                    <LocationOnIcon sx={{color: vistelicaColors.secondary}}/>
-                    <Typography variant="h6" fontWeight="600" fontSize={{xs: '1.1rem', sm: '1.25rem'}}>
+                    <LocationOnIcon sx={{color: vistelicaColors.primary}}/>
+                    <Typography variant="h6" fontWeight="400" fontSize={{xs: '1.1rem', sm: '1.25rem',color: vistelicaColors.primary}}>
                         {editingAddress ? 'Editar dirección' : 'Añadir nueva dirección'}
                     </Typography>
                 </DialogTitle>
@@ -799,7 +828,7 @@ const AccountAddresses = () => {
                         textAlign: 'center'
                     }}>
                         <Grid container spacing={{ xs: 2, sm: 3.5 }} justifyContent="center">
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <TextField
                                     name="label"
                                     label="Nombre de la dirección"
@@ -819,7 +848,7 @@ const AccountAddresses = () => {
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={8}>
+                            <Grid size={{ xs: 12, sm: 8 }}>
                                 <TextField
                                     name="street"
                                     label="Calle"
@@ -838,7 +867,7 @@ const AccountAddresses = () => {
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={4}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <TextField
                                     name="numero"
                                     label="Número"
@@ -856,7 +885,7 @@ const AccountAddresses = () => {
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={4}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <TextField
                                     name="postal_code"
                                     label="Código postal"
@@ -875,7 +904,7 @@ const AccountAddresses = () => {
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={8}>
+                            <Grid size={{ xs: 12, sm: 8 }}>
                                 <TextField
                                     name="city"
                                     label="Ciudad"
@@ -895,7 +924,7 @@ const AccountAddresses = () => {
                                 />
                             </Grid>
                             {/* Dentro del Grid container del DialogContent, después del campo de número */}
-                            <Grid item xs={12} sm={4}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <TextField
                                     name="block"
                                     label="Bloque"
@@ -913,7 +942,7 @@ const AccountAddresses = () => {
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={4}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <TextField
                                     name="floor"
                                     label="Piso"
@@ -931,7 +960,7 @@ const AccountAddresses = () => {
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={4}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <TextField
                                     name="door"
                                     label="Puerta"
@@ -949,7 +978,7 @@ const AccountAddresses = () => {
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <TextField
                                     name="state"
                                     label="Provincia"
@@ -968,7 +997,7 @@ const AccountAddresses = () => {
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <TextField
                                     name="country"
                                     label="País"
@@ -987,7 +1016,7 @@ const AccountAddresses = () => {
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <TextField
                                     name="description"
                                     label="Instrucciones de entrega"
@@ -1072,7 +1101,7 @@ const AccountAddresses = () => {
                     }}
                 >
                     <DeleteIcon sx={{color: '#d32f2f'}}/>
-                    <Typography variant="h6" fontWeight="600">
+                    <Typography variant="h6" fontWeight="400" fontSize={{color: vistelicaColors.error }}>
                         Confirmar eliminación
                     </Typography>
                 </DialogTitle>
