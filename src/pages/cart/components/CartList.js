@@ -129,7 +129,7 @@ const CartList = React.memo(({ cartItems, onUpdate, userId, sessionId }) => {
                             <Typography
                                 variant="h6"
                                 sx={{
-                                    fontWeight: 600,
+                                    fontWeight: 400,
                                     fontFamily: typography.fontFamily.heading,
                                     fontSize: { xs: '1.1rem', sm: '1.25rem' }
                                 }}
@@ -347,7 +347,7 @@ const PurchaseInfoItem = React.memo(({ icon, title, description, delay = 0 }) =>
                     p: 2,
                     height: '100%',
                     border: '1px solid rgba(0,0,0,0.05)',
-                    background: `linear-gradient(145deg, white, ${vistelicaColors.backgroundLight})`,
+                    background: `linear-gradient(145deg, white, ${vistelicaColors.quaternary})`,
                     transition: 'all 0.3s ease'
                 }}
             >

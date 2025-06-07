@@ -12,7 +12,7 @@ import AutomaticCarousel from "@/pages/home/components/AutomaticCarousel";
 import ProductCarousel from "@/pages/home/components/ProductCarousel";
 import { useRouter } from 'next/navigation';
 import LowStockCarousel from './components/LowStockCarousel';
-
+import ChatbotComponent from '@/components/chatbot/ChatbotComponent';
 const HomePage = () => {
     const router = useRouter();
 
@@ -78,6 +78,7 @@ const HomePage = () => {
             </div>
             <AutomaticCarousel/>
             <FooterComponent/>
+            <ChatbotComponent />
         </div>
     );
 };

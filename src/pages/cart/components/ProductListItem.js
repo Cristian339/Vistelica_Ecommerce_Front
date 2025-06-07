@@ -246,8 +246,8 @@ export default function ProductListItem({
                                     <Typography
                                         variant="h6"
                                         sx={{
-                                            fontWeight: 700,
-                                            color: vistelicaColors.text,
+                                            fontWeight: 400,
+                                            color: vistelicaColors.secondary,
                                             fontFamily: typography.fontFamily.heading,
                                             fontSize: '1.15rem',
                                             mb: 1.5,
@@ -367,7 +367,7 @@ export default function ProductListItem({
                                                     color: vistelicaColors.success,
                                                     fontFamily: typography.fontFamily.body,
                                                     fontSize: '0.8rem',
-                                                    fontWeight: 600,
+                                                    fontWeight: 400,
                                                     border: `1px solid ${vistelicaColors.success}30`,
                                                     '& .MuiChip-icon': {
                                                         color: vistelicaColors.success
@@ -401,7 +401,7 @@ export default function ProductListItem({
                                         <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
                                             <motion.div animate={animatePrice ? { scale: [1, 1.1, 1] } : {}}>
                                                 <Typography sx={{
-                                                    fontWeight: 800,
+                                                    fontWeight: 600,
                                                     fontSize: '1.2rem',
                                                     fontFamily: typography.fontFamily.heading,
                                                     display: 'inline-flex',
