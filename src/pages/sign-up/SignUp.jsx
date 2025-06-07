@@ -363,7 +363,7 @@ export default function SignUp(props) {
 
                     // Redirigir después del registro exitoso
                     setTimeout(() => {
-                        window.location.href = 'sign-in-side/Sign-in-side'; // Cambia la URL según tu ruta de inicio de sesión
+                        window.location.href = '/sign-in-side/Sign-in-side'; // Cambia la URL según tu ruta de inicio de sesión
                     }, 2000);
                 } catch (error) {
                     console.error('Error al registrar usuario:', error);
