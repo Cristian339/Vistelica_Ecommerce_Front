@@ -230,11 +230,12 @@ const PaymentForm = React.forwardRef(({
     };
 
     const handleCreateOrder = (data, actions) => {
+        const formattedAmount = amount.replace(/[^\d.]/g, '');
         return actions.order.create({
             purchase_units: [
                 {
                     amount: {
-                        value: amount,
+                        value: formattedAmount,
                     },
                 },
             ],

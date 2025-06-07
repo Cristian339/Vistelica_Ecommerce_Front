@@ -138,6 +138,10 @@ const AccountAddresses = () => {
     }, []);
 
 
+
+    const userAvatar = userData?.avatar || userData?.profilePic;
+    const userName = userData?.name || 'Usuario';
+
     const handleOpenDialog = (address = null) => {
         if (address) {
             setEditingAddress(address);
@@ -385,7 +389,11 @@ const AccountAddresses = () => {
                     {!isMobile && (
                         <Grid size={{ xs: 12, md: 3, lg: 5.5 }}>
                             <Box sx={{ position: 'sticky', top: 24 }}>
-                                <SidebarMenu username={userData?.name || 'Usuario'} />
+                                <SidebarMenu
+                                    username={userName}
+                                    avatarUrl={userAvatar}
+                                    key="desktop-sidebar"
+                                />
                             </Box>
                         </Grid>
                     )}
@@ -530,34 +538,6 @@ const AccountAddresses = () => {
                                                                             Predeterminada
                                                                         </Box>
                                                                     )}
-                                                                    {/* Dentro del CardContent, después del campo de calle */}
-                                                                    {address.block && (
-                                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                                                                            <Typography variant="body2" color="text.secondary">
-                                                                                <Box component="span" sx={{ color: vistelicaColors.primary, fontWeight: 600 }}>
-                                                                                    Bloque:
-                                                                                </Box> {address.block}
-                                                                            </Typography>
-                                                                        </Box>
-                                                                    )}
-                                                                    {address.floor && (
-                                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                                                                            <Typography variant="body2" color="text.secondary">
-                                                                                <Box component="span" sx={{ color: vistelicaColors.primary, fontWeight: 600 }}>
-                                                                                    Piso:
-                                                                                </Box> {address.floor}
-                                                                            </Typography>
-                                                                        </Box>
-                                                                    )}
-                                                                    {address.door && (
-                                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                                                                            <Typography variant="body2" color="text.secondary">
-                                                                                <Box component="span" sx={{ color: vistelicaColors.primary, fontWeight: 600 }}>
-                                                                                    Puerta:
-                                                                                </Box> {address.door}
-                                                                            </Typography>
-                                                                        </Box>
-                                                                    )}
                                                                 </Box>
                                                             </Box>
 
@@ -588,6 +568,38 @@ const AccountAddresses = () => {
                                                                         </Typography>
                                                                     </Box>
                                                                 </Box>
+
+                                                                {(address.block || address.floor || address.door) && (
+                                                                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                                                                        <HomeIcon sx={{ mr: 1, color: 'text.primary' }} />
+                                                                        <Typography variant="body2" color="text.primary">
+                                                                            {address.block && (
+                                                                                <>
+                                                                                    <Box component="span" sx={{ fontWeight: 600 }}>
+                                                                                        Bloque:
+                                                                                    </Box> {address.block}
+                                                                                </>
+                                                                            )}
+                                                                            {address.floor && (
+                                                                                <>
+                                                                                    {address.block && ', '}
+                                                                                    <Box component="span" sx={{ fontWeight: 600 }}>
+                                                                                        Piso:
+                                                                                    </Box> {address.floor}
+                                                                                </>
+                                                                            )}
+                                                                            {address.door && (
+                                                                                <>
+                                                                                    {(address.block || address.floor) && ', '}
+                                                                                    <Box component="span" sx={{ fontWeight: 600 }}>
+                                                                                        Puerta:
+                                                                                    </Box> {address.door}
+                                                                                </>
+                                                                            )}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                )}
+
 
                                                                 {/* Código postal */}
                                                                 <Box sx={{
@@ -627,6 +639,7 @@ const AccountAddresses = () => {
                                                                         </Box> {address.country || 'No especificado'}
                                                                     </Typography>
                                                                 </Box>
+
 
                                                                 {/* Fecha de creación */}
                                                                 {address.created_at && (
@@ -765,9 +778,11 @@ const AccountAddresses = () => {
             {/* SidebarMenu para móvil como drawer */}
             {isMobile && (
                 <SidebarMenu
-                    username={userData?.name || 'Usuario'}
+                    username={userName}
+                    avatarUrl={userAvatar}
                     drawerOpen={sidebarOpen}
                     setDrawerOpen={setSidebarOpen}
+                    key="mobile-sidebar"
                 />
             )}
 

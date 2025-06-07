@@ -253,7 +253,8 @@ const ProductInfo = ({ product }) => {
                                         borderRadius: '0 0 12px 12px',
                                         position: 'relative',
                                         overflow: 'hidden',
-                                        background: 'linear-gradient(135deg, #ffffff 25%, #fafafa 100%)'
+                                        background: 'linear-gradient(135deg, #ffffff 25%, #fafafa 100%)',
+                                        maxWidth: '400px',
                                     }}>
                                         {paragraphs.length > 0 ? (
                                             paragraphs.map((paragraph, index) => (

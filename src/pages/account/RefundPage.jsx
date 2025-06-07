@@ -51,11 +51,13 @@ import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import { motion, AnimatePresence } from 'framer-motion';
+import {getUserProfile} from "@/services/profileService";
 
 const RefundPage = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [userData, setUserData] = useState(null);
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -75,6 +77,37 @@ const RefundPage = () => {
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
     };
+
+    useEffect(() => {
+        const fetchUserProfile = async () => {
+            try {
+                setLoading(true);
+                const profile = await getUserProfile();
+                console.log(JSON.stringify(profile));
+                setUserData(profile);
+
+                // Guardar datos en localStorage para persistencia
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('userData', JSON.stringify({
+                        name: profile.name,
+                        avatar: profile.avatar || profile.profilePic
+                    }));
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUserProfile();
+    }, []);
+
+
+
+    // Datos del usuario para pasar a los componentes
+    const userAvatar = userData?.avatar || userData?.profilePic;
+    const userName = userData?.name || 'Usuario';
 
     const fetchDeliveredOrders = async () => {
         try {
@@ -237,7 +270,11 @@ const RefundPage = () => {
                     {!isMobile && (
                         <Grid size={{ xs: 12, md: 3, lg: 4.5 }}>
                             <Box sx={{ position: 'sticky', top: 24 }}>
-                                <SidebarMenu />
+                                <SidebarMenu
+                                    username={userName}
+                                    avatarUrl={userAvatar}
+                                    key="desktop-sidebar"
+                                />
                             </Box>
                         </Grid>
                     )}
@@ -393,11 +430,17 @@ const RefundPage = () => {
                                                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                                             <Badge
                                                                 badgeContent={order.details.length}
-                                                                color="primary"
-                                                                sx={{ mr: 1 }}
+                                                                sx={{
+                                                                    mr: 1,
+                                                                    '& .MuiBadge-badge': {
+                                                                        backgroundColor: vistelicaColors.primary,
+                                                                        color: '#fff',
+                                                                    },
+                                                                }}
                                                             >
                                                                 <ShoppingBagIcon sx={{ color: vistelicaColors.secondary }} />
                                                             </Badge>
+
                                                             <IconButton
                                                                 size="small"
                                                                 sx={{
@@ -640,8 +683,8 @@ const RefundPage = () => {
                     gap: 2,
                     py: 2.5
                 }}>
-                    <AssignmentReturnIcon sx={{ color: vistelicaColors.primary }} />
-                    <Typography variant="h6" fontWeight="600">
+                    <AssignmentReturnIcon sx={{ color: vistelicaColors.secondary }} />
+                    <Typography variant="h6" fontWeight="400">
                         Solicitar devolución
                     </Typography>
                 </DialogTitle>
@@ -649,7 +692,6 @@ const RefundPage = () => {
                     <Box sx={{
                         p: 2,
                         mb: 2,
-                        backgroundColor: vistelicaColors.primaryLight,
                         border: `1px solid ${vistelicaColors.divider}`,
                         borderRadius: '8px',
                         display: 'flex',
@@ -881,18 +923,6 @@ const RefundPage = () => {
                         <Typography variant="body1">
                             Tu solicitud de devolución ha sido enviada correctamente y está en proceso de revisión.
                         </Typography>
-
-                        <Box sx={{
-                            mt: 2,
-                            p: 2,
-                            backgroundColor: '#f5f5f5',
-                            borderRadius: '8px',
-                            width: '100%'
-                        }}>
-                            <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#666' }}>
-                                Te notificaremos por email cuando tengamos una respuesta.
-                            </Typography>
-                        </Box>
                     </Box>
                 </DialogContent>
                 <DialogActions sx={{
@@ -944,8 +974,11 @@ const RefundPage = () => {
 
             {isMobile && (
                 <SidebarMenu
+                    username={userName}
+                    avatarUrl={userAvatar}
                     drawerOpen={sidebarOpen}
                     setDrawerOpen={setSidebarOpen}
+                    key="mobile-sidebar"
                 />
             )}
         </div>

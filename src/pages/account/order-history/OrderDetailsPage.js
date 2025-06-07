@@ -116,6 +116,11 @@ const OrderDetailsPage = () => {
         fetchData();
     }, [orderId]);
 
+
+    const userAvatar = userData?.avatar || userData?.profilePic;
+    const userName = userData?.name || 'Usuario';
+
+
     const handleGoBack = () => {
         router.push('/account/order-history/UserOrdersPage');
     };
@@ -186,7 +191,11 @@ const OrderDetailsPage = () => {
                     {!isMobile && (
                         <Grid size={{ xs: 12, md: 3, lg: 5 }}>
                             <Box sx={{ position: 'sticky', top: 24 }}>
-                                <SidebarMenu username={userData?.name || 'Usuario'} />
+                                <SidebarMenu
+                                    username={userName}
+                                    avatarUrl={userAvatar}
+                                    key="desktop-sidebar"
+                                />
                             </Box>
                         </Grid>
                     )}
@@ -670,9 +679,11 @@ const OrderDetailsPage = () => {
             {/* SidebarMenu para móvil como drawer */}
             {isMobile && (
                 <SidebarMenu
-                    username={userData?.name || 'Usuario'}
+                    username={userName}
+                    avatarUrl={userAvatar}
                     drawerOpen={sidebarOpen}
                     setDrawerOpen={setSidebarOpen}
+                    key="mobile-sidebar"
                 />
             )}
         </Box>

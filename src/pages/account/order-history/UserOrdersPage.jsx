@@ -89,6 +89,10 @@ const UserOrdersPage = () => {
         fetchData();
     }, []);
 
+
+    const userAvatar = userData?.avatar || userData?.profilePic;
+    const userName = userData?.name || 'Usuario';
+
     if (loading && orders.length === 0) {
         return (
             <Box
@@ -116,7 +120,11 @@ const UserOrdersPage = () => {
                     {!isMobile && (
                         <Grid size={{ xs: 12, md: 3, lg: 5.5 }}>
                             <Box sx={{ position: 'sticky', top: 24 }}>
-                                <SidebarMenu username={userData?.name || 'Usuario'} />
+                                <SidebarMenu
+                                    username={userName}
+                                    avatarUrl={userAvatar}
+                                    key="desktop-sidebar"
+                                />
                             </Box>
                         </Grid>
                     )}
@@ -309,9 +317,11 @@ const UserOrdersPage = () => {
             {/* SidebarMenu para móvil como drawer */}
             {isMobile && (
                 <SidebarMenu
-                    username={userData?.name || 'Usuario'}
+                    username={userName}
+                    avatarUrl={userAvatar}
                     drawerOpen={sidebarOpen}
                     setDrawerOpen={setSidebarOpen}
+                    key="mobile-sidebar"
                 />
             )}
         </Box>
