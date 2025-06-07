@@ -33,6 +33,7 @@ import SidebarMenu from '@/components/layout/SidebarMenu';
 import Navbar from "@/components/layout/HeaderComponent";
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 import { typography } from '@/pages/shared-theme/themePrimitives';
+import { motion } from 'framer-motion';
 
 const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -76,6 +77,11 @@ const OrderDetailsPage = () => {
     const [orderData, setOrderData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const contentVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -121,6 +127,7 @@ const OrderDetailsPage = () => {
                 justifyContent: 'center',
                 alignItems: 'center',
                 height: '100vh',
+                width: '100%',
                 backgroundColor: vistelicaColors.background
             }}>
                 <CircularProgress sx={{ color: vistelicaColors.primary }} />
@@ -149,7 +156,7 @@ const OrderDetailsPage = () => {
                             sx={{
                                 color: vistelicaColors.primary,
                                 '&:hover': {
-                                    backgroundColor: vistelicaColors.hoverLight
+                                    backgroundColor: vistelicaColors.primaryLight
                                 }
                             }}
                             aria-label="Volver atrás"
@@ -177,402 +184,394 @@ const OrderDetailsPage = () => {
                 }}>
                     {/* Sidebar solo visible en desktop */}
                     {!isMobile && (
-                        <Grid item md={3} lg={3}>
-                            <SidebarMenu username={userData?.name || 'Usuario'} />
+                        <Grid size={{ xs: 12, md: 3, lg: 5 }}>
+                            <Box sx={{ position: 'sticky', top: 24 }}>
+                                <SidebarMenu username={userData?.name || 'Usuario'} />
+                            </Box>
                         </Grid>
                     )}
 
                     {/* Contenido principal */}
                     <Grid size={{ xs: 12, md: 9, lg: 9 }}>
-                        <Paper
-                            elevation={0}
-                            sx={{
-                                border: `1px solid ${vistelicaColors.borderLight}`,
-                                p: { xs: 2, sm: 3 },
-                                borderRadius: 2,
-                                backgroundColor: vistelicaColors.surface
-                            }}
+                        <Box
+                            component={motion.div}
+                            initial="hidden"
+                            animate="visible"
+                            variants={contentVariants}
                         >
-                            {/* Header con botón de regreso */}
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                                <IconButton
-                                    onClick={handleGoBack}
-                                    sx={{
-                                        mr: 2,
-                                        color: vistelicaColors.primary,
-                                        '&:hover': { backgroundColor: vistelicaColors.hoverLight }
-                                    }}
-                                    aria-label="Volver a la lista de pedidos"
-                                >
-                                    <ArrowBack />
-                                </IconButton>
-                                <Box sx={{ flexGrow: 1 }}>
-                                    <Typography variant="h5" component="h1" fontWeight="500">
-                                        Pedido #{orderData.order_number}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Realizado el {new Date(orderData.created_at).toLocaleDateString('es-ES', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                    })}
-                                    </Typography>
+                            <Paper
+                                elevation={2}
+                                sx={{
+                                    p: { xs: 2, sm: 3 },
+                                    borderRadius: 2,
+                                    boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                                    background: 'linear-gradient(to bottom right, #fdfbf6, #fff)',
+                                    border: `1px solid ${vistelicaColors.divider}`,
+                                    overflow: 'hidden',
+                                }}
+                            >
+                                {/* Header con botón de regreso */}
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                                    <IconButton
+                                        onClick={handleGoBack}
+                                        sx={{
+                                            mr: 2,
+                                            color: vistelicaColors.primary,
+                                            '&:hover': { backgroundColor: vistelicaColors.hoverLight }
+                                        }}
+                                        aria-label="Volver a la lista de pedidos"
+                                    >
+                                        <ArrowBack />
+                                    </IconButton>
+                                    <Box sx={{ flexGrow: 1 }}>
+                                        <Typography variant="h5" component="h1" fontWeight="500">
+                                            Pedido #{orderData.order_number}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            Realizado el {new Date(orderData.created_at).toLocaleDateString('es-ES', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                        </Typography>
+                                    </Box>
+                                    <Chip
+                                        label={orderData.status}
+                                        color={getStatusColor(orderData.status)}
+                                        sx={{ fontWeight: 500 }}
+                                    />
                                 </Box>
-                                <Chip
-                                    label={orderData.status}
-                                    color={getStatusColor(orderData.status)}
-                                    sx={{ fontWeight: 500 }}
-                                />
-                            </Box>
 
-                            <Divider sx={{ mb: 3 }} />
+                                <Divider sx={{ mb: 3 }} />
 
-                            <Grid container spacing={3}>
-                                {/* Información del pedido */}
-                                <Grid item xs={12} md={8}>
-                                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 500 }}>
-                                        Productos
-                                    </Typography>
+                                <Grid container spacing={3}>
+                                    {/* Información del pedido */}
+                                    <Grid size={{ xs: 12, md: 8 }}>
+                                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 500 }}>
+                                            Productos
+                                        </Typography>
 
-                                    {orderData.details.map((detail, index) => (
-                                        <Card key={detail.order_detail_id} sx={{ mb: 2, border: '1px solid #e0e0e0' }}>
-                                            <CardContent>
-                                                <Grid container spacing={2} alignItems="center">
-                                                    <Grid size={{ xs: 12, sm: 8 }}>
-                                                        <Typography
-                                                            variant="h6"
-                                                            sx={{
-                                                                fontSize: '1.1rem',
-                                                                mb: 1,
-                                                                ...typography.subtitle1,
-                                                                color: vistelicaColors.primary
-                                                            }}
-                                                        >
-                                                            {detail.product.name}
-                                                        </Typography>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                mb: 2,
-                                                                ...typography.body2,
-                                                                color: vistelicaColors.secondary
-                                                            }}
-                                                        >
-                                                            {detail.product.description}
-                                                        </Typography>
-                                                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                                            <Chip
-                                                                label={`Talla: ${detail.size}`}
-                                                                size="small"
-                                                                variant="outlined"
+                                        {orderData.details.map((detail, index) => (
+                                            <Card key={detail.order_detail_id} sx={{ mb: 2, border: '1px solid #e0e0e0' }}>
+                                                <CardContent>
+                                                    <Grid container spacing={2} alignItems="center">
+                                                        <Grid size={{ xs: 12, sm: 8 }}>
+                                                            <Typography
+                                                                variant="h6"
                                                                 sx={{
-                                                                    borderColor: vistelicaColors.borderMedium,
-                                                                    ...typography.caption
+                                                                    fontSize: '1.1rem',
+                                                                    mb: 1,
+                                                                    ...typography.subtitle1,
+                                                                    color: vistelicaColors.primary
                                                                 }}
-                                                            />
-                                                            <Chip
-                                                                label={`Color: ${detail.color}`}
-                                                                size="small"
-                                                                variant="outlined"
+                                                            >
+                                                                {detail.product.name}
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="body2"
                                                                 sx={{
-                                                                    borderColor: vistelicaColors.borderMedium,
-                                                                    ...typography.caption
+                                                                    mb: 2,
+                                                                    ...typography.body2,
+                                                                    color: vistelicaColors.secondary
                                                                 }}
-                                                            />
-                                                            <Chip
-                                                                label={`Cantidad: ${detail.quantity}`}
-                                                                size="small"
-                                                                variant="outlined"
-                                                                sx={{
-                                                                    borderColor: vistelicaColors.borderMedium,
-                                                                    ...typography.caption
-                                                                }}
-                                                            />
-                                                            {detail.product.discount_percentage > 0 && (
+                                                            >
+                                                                {detail.product.description}
+                                                            </Typography>
+                                                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                                                                 <Chip
-                                                                    label={`-${detail.product.discount_percentage}%`}
+                                                                    label={`Talla: ${detail.size}`}
                                                                     size="small"
+                                                                    variant="outlined"
                                                                     sx={{
-                                                                        backgroundColor: vistelicaColors.error,
-                                                                        color: 'white',
+                                                                        borderColor: vistelicaColors.primary,
                                                                         ...typography.caption
                                                                     }}
                                                                 />
-                                                            )}
-                                                        </Box>
+                                                                <Chip
+                                                                    label={`Color: ${detail.color}`}
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    sx={{
+                                                                        borderColor: vistelicaColors.primary,
+                                                                        ...typography.caption
+                                                                    }}
+                                                                />
+                                                                <Chip
+                                                                    label={`Cantidad: ${detail.quantity}`}
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    sx={{
+                                                                        borderColor: vistelicaColors.primary,
+                                                                        ...typography.caption
+                                                                    }}
+                                                                />
+                                                                {detail.product.discount_percentage > 0 && (
+                                                                    <Chip
+                                                                        label={`-${detail.product.discount_percentage}%`}
+                                                                        size="small"
+                                                                        sx={{
+                                                                            backgroundColor: vistelicaColors.error,
+                                                                            color: 'white',
+                                                                            ...typography.caption
+                                                                        }}
+                                                                    />
+                                                                )}
+                                                            </Box>
+                                                        </Grid>
+                                                        <Grid size={{ xs: 12, sm: 4 }} sx={{ textAlign: { xs: 'left', sm: 'right' } }}>
+                                                            <Typography
+                                                                variant="h6"
+                                                                sx={{
+                                                                    fontWeight: 600,
+                                                                    ...typography.subtitle1,
+                                                                    color: vistelicaColors.primary
+                                                                }}
+                                                            >
+                                                                {(parseFloat(detail.price) * detail.quantity).toFixed(2)}€
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    color: vistelicaColors.secondary,
+                                                                    ...typography.body2
+                                                                }}
+                                                            >
+                                                                {detail.price}€ x {detail.quantity}
+                                                            </Typography>
+                                                        </Grid>
                                                     </Grid>
-                                                    <Grid size={{ xs: 12, sm: 4 }} sx={{ textAlign: { xs: 'left', sm: 'right' } }}>
-                                                        <Typography
-                                                            variant="h6"
-                                                            sx={{
-                                                                fontWeight: 600,
-                                                                ...typography.subtitle1,
-                                                                color: vistelicaColors.primary
-                                                            }}
-                                                        >
-                                                            {(parseFloat(detail.price) * detail.quantity).toFixed(2)}€
-                                                        </Typography>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                color: vistelicaColors.secondary,
-                                                                ...typography.body2
-                                                            }}
-                                                        >
-                                                            {detail.price}€ x {detail.quantity}
-                                                        </Typography>
-                                                    </Grid>
-                                                </Grid>
-                                            </CardContent>
-                                        </Card>
-                                    ))}
+                                                </CardContent>
+                                            </Card>
+                                        ))}
 
-                                    {/* Resumen de precios */}
-                                    <Paper
-                                        sx={{
-                                            p: 2,
-                                            mt: 3,
-                                            backgroundColor: vistelicaColors.backgroundLight,
-                                            borderRadius: 1,
-                                            border: `1px solid ${vistelicaColors.borderLight}`
-                                        }}
-                                    >
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                            <Typography sx={{ ...typography.body1, color: vistelicaColors.secondary }}>
-                                                Subtotal:
-                                            </Typography>
-                                            <Typography sx={{ ...typography.body1, color: vistelicaColors.primary }}>
-                                                {calculateSubtotal().toFixed(2)}€
-                                            </Typography>
-                                        </Box>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                            <Typography sx={{ ...typography.body1, color: vistelicaColors.secondary }}>
-                                                Envío:
-                                            </Typography>
-                                            <Typography sx={{ ...typography.body1, color: vistelicaColors.primary }}>
-                                                {parseFloat(orderData.shipping_cost) === 0 ? 'Gratis' : `${orderData.shipping_cost}€`}
-                                            </Typography>
-                                        </Box>
-                                        <Divider sx={{ my: 1, borderColor: vistelicaColors.divider }} />
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                            <Typography
-                                                variant="h6"
-                                                sx={{
-                                                    fontWeight: 600,
-                                                    ...typography.subtitle1,
-                                                    color: vistelicaColors.primary
-                                                }}
-                                            >
-                                                Total:
-                                            </Typography>
-                                            <Typography
-                                                variant="h6"
-                                                sx={{
-                                                    fontWeight: 600,
-                                                    ...typography.subtitle1,
-                                                    color: vistelicaColors.primary
-                                                }}
-                                            >
-                                                {parseFloat(orderData.total_price).toFixed(2)}€
-                                            </Typography>
-                                        </Box>
-                                    </Paper>
-                                </Grid>
-
-                                {/* Información lateral */}
-                                <Grid size={{ xs: 12, md: 4 }}>
-                                    {/* Dirección de envío */}
-                                    <Card
-                                        sx={{
-                                            mb: 2,
-                                            border: `1px solid ${vistelicaColors.borderLight}`,
-                                            borderRadius: 1,
-                                            backgroundColor: vistelicaColors.surface
-                                        }}
-                                    >
-                                        <CardContent>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                                <LocationOn sx={{ mr: 1, color: vistelicaColors.primary }} />
-                                                <Typography
-                                                    variant="h6"
-                                                    sx={{
-                                                        fontSize: '1rem',
-                                                        fontWeight: 500,
-                                                        ...typography.subtitle1,
-                                                        color: vistelicaColors.primary
-                                                    }}
-                                                >
-                                                    Dirección de Envío
+                                        {/* Resumen de precios */}
+                                        <Paper
+                                            sx={{
+                                                p: 2,
+                                                mt: 3,
+                                                backgroundColor: vistelicaColors.backgroundLight,
+                                                borderRadius: 1,
+                                                border: `1px solid ${vistelicaColors.borderLight}`
+                                            }}
+                                        >
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                                <Typography sx={{ ...typography.body1, color: vistelicaColors.secondary }}>
+                                                    Subtotal:
                                                 </Typography>
-                                            </Box>
-                                            <Typography variant="body2" sx={{ mb: 0.5, ...typography.body2 }}>
-                                                {orderData.address.label}
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ mb: 0.5, ...typography.body2 }}>
-                                                {orderData.address.street}
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ mb: 0.5, ...typography.body2 }}>
-                                                {orderData.address.city}, {orderData.address.state}
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ ...typography.body2 }}>
-                                                {orderData.address.postal_code}, {orderData.address.country}
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-
-                                    {/* Información de pago */}
-                                    <Card
-                                        sx={{
-                                            mb: 2,
-                                            border: `1px solid ${vistelicaColors.borderLight}`,
-                                            borderRadius: 1,
-                                            backgroundColor: vistelicaColors.surface
-                                        }}
-                                    >
-                                        <CardContent>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                                <Payment sx={{ mr: 1, color: vistelicaColors.primary }} />
-                                                <Typography
-                                                    variant="h6"
-                                                    sx={{
-                                                        fontSize: '1rem',
-                                                        fontWeight: 500,
-                                                        ...typography.subtitle1,
-                                                        color: vistelicaColors.primary
-                                                    }}
-                                                >
-                                                    Información de Pago
-                                                </Typography>
-                                            </Box>
-                                            {orderData.payments.map((payment) => (
-                                                <Box key={payment.payment_id}>
-                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                ...typography.body2,
-                                                                color: vistelicaColors.secondary
-                                                            }}
-                                                        >
-                                                            Método:
-                                                        </Typography>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                fontWeight: 500,
-                                                                ...typography.body2,
-                                                                color: vistelicaColors.primary
-                                                            }}
-                                                        >
-                                                            {payment.payment_method}
-                                                        </Typography>
-                                                    </Box>
-                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                ...typography.body2,
-                                                                color: vistelicaColors.secondary
-                                                            }}
-                                                        >
-                                                            Estado:
-                                                        </Typography>
-                                                        <Chip
-                                                            label={payment.payment_status}
-                                                            color={getPaymentStatusColor(payment.payment_status)}
-                                                            size="small"
-                                                            sx={{ ...typography.caption }}
-                                                        />
-                                                    </Box>
-                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                ...typography.body2,
-                                                                color: vistelicaColors.secondary
-                                                            }}
-                                                        >
-                                                            Fecha:
-                                                        </Typography>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                ...typography.body2,
-                                                                color: vistelicaColors.primary
-                                                            }}
-                                                        >
-                                                            {new Date(payment.payment_date).toLocaleDateString('es-ES')}
-                                                        </Typography>
-                                                    </Box>
-                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                ...typography.body2,
-                                                                color: vistelicaColors.secondary
-                                                            }}
-                                                        >
-                                                            Monto:
-                                                        </Typography>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                fontWeight: 500,
-                                                                ...typography.body2,
-                                                                color: vistelicaColors.primary
-                                                            }}
-                                                        >
-                                                            {parseFloat(payment.amount).toFixed(2)}€
-                                                        </Typography>
-                                                    </Box>
-                                                </Box>
-                                            ))}
-                                        </CardContent>
-                                    </Card>
-
-                                    {/* Estado de envío */}
-                                    <Card
-                                        sx={{
-                                            border: `1px solid ${vistelicaColors.borderLight}`,
-                                            borderRadius: 1,
-                                            backgroundColor: vistelicaColors.surface
-                                        }}
-                                    >
-                                        <CardContent>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                                <LocalShipping sx={{ mr: 1, color: vistelicaColors.primary }} />
-                                                <Typography
-                                                    variant="h6"
-                                                    sx={{
-                                                        fontSize: '1rem',
-                                                        fontWeight: 500,
-                                                        ...typography.subtitle1,
-                                                        color: vistelicaColors.primary
-                                                    }}
-                                                >
-                                                    Estado de Envío
+                                                <Typography sx={{ ...typography.body1, color: vistelicaColors.primary }}>
+                                                    {calculateSubtotal().toFixed(2)}€
                                                 </Typography>
                                             </Box>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                                <Typography sx={{ ...typography.body1, color: vistelicaColors.secondary }}>
+                                                    Envío:
+                                                </Typography>
+                                                <Typography sx={{ ...typography.body1, color: vistelicaColors.primary }}>
+                                                    {parseFloat(orderData.shipping_cost) === 0 ? 'Gratis' : `${orderData.shipping_cost}€`}
+                                                </Typography>
+                                            </Box>
+                                            <Divider sx={{ my: 1, borderColor: vistelicaColors.divider }} />
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                                 <Typography
-                                                    variant="body2"
+                                                    variant="h6"
                                                     sx={{
-                                                        ...typography.body2,
-                                                        color: vistelicaColors.secondary
+                                                        fontWeight: 600,
+                                                        ...typography.subtitle1,
+                                                        color: vistelicaColors.primary
                                                     }}
                                                 >
-                                                    Estado actual:
+                                                    Total:
                                                 </Typography>
-                                                <Chip
-                                                    label={orderData.status}
-                                                    color={getStatusColor(orderData.status)}
-                                                    size="small"
-                                                    sx={{ ...typography.caption }}
-                                                />
+                                                <Typography
+                                                    variant="h6"
+                                                    sx={{
+                                                        fontWeight: 600,
+                                                        ...typography.subtitle1,
+                                                        color: vistelicaColors.primary
+                                                    }}
+                                                >
+                                                    {parseFloat(orderData.total_price).toFixed(2)}€
+                                                </Typography>
                                             </Box>
-                                            {orderData.estimated_delivery_date && (
+                                        </Paper>
+                                    </Grid>
+
+                                    {/* Información lateral */}
+                                    <Grid size={{ xs: 12, md: 4 }}>
+                                        {/* Dirección de envío */}
+                                        <Card
+                                            sx={{
+                                                mb: 2,
+                                                border: `1px solid ${vistelicaColors.borderLight}`,
+                                                borderRadius: 1,
+                                                backgroundColor: vistelicaColors.surface
+                                            }}
+                                        >
+                                            <CardContent>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                                    <LocationOn sx={{ mr: 1, color: vistelicaColors.primary }} />
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{
+                                                            fontSize: '1rem',
+                                                            fontWeight: 500,
+                                                            ...typography.subtitle1,
+                                                            color: vistelicaColors.primary
+                                                        }}
+                                                    >
+                                                        Dirección de Envío
+                                                    </Typography>
+                                                </Box>
+                                                <Typography variant="body2" sx={{ mb: 0.5, ...typography.body2 }}>
+                                                    {orderData.address.label}
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ mb: 0.5, ...typography.body2 }}>
+                                                    {orderData.address.street}
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ mb: 0.5, ...typography.body2 }}>
+                                                    {orderData.address.city}, {orderData.address.state}
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ ...typography.body2 }}>
+                                                    {orderData.address.postal_code}, {orderData.address.country}
+                                                </Typography>
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Información de pago */}
+                                        <Card
+                                            sx={{
+                                                mb: 2,
+                                                border: `1px solid ${vistelicaColors.borderLight}`,
+                                                borderRadius: 1,
+                                                backgroundColor: vistelicaColors.surface
+                                            }}
+                                        >
+                                            <CardContent>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                                    <Payment sx={{ mr: 1, color: vistelicaColors.primary }} />
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{
+                                                            fontSize: '1rem',
+                                                            fontWeight: 500,
+                                                            ...typography.subtitle1,
+                                                            color: vistelicaColors.primary
+                                                        }}
+                                                    >
+                                                        Información de Pago
+                                                    </Typography>
+                                                </Box>
+                                                {orderData.payments.map((payment) => (
+                                                    <Box key={payment.payment_id}>
+                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    ...typography.body2,
+                                                                    color: vistelicaColors.secondary
+                                                                }}
+                                                            >
+                                                                Método:
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    fontWeight: 500,
+                                                                    ...typography.body2,
+                                                                    color: vistelicaColors.primary
+                                                                }}
+                                                            >
+                                                                {payment.payment_method}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    ...typography.body2,
+                                                                    color: vistelicaColors.secondary
+                                                                }}
+                                                            >
+                                                                Estado:
+                                                            </Typography>
+                                                            <Chip
+                                                                label={payment.payment_status}
+                                                                color={getPaymentStatusColor(payment.payment_status)}
+                                                                size="small"
+                                                                sx={{ ...typography.caption }}
+                                                            />
+                                                        </Box>
+                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    ...typography.body2,
+                                                                    color: vistelicaColors.secondary
+                                                                }}
+                                                            >
+                                                                Fecha:
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    ...typography.body2,
+                                                                    color: vistelicaColors.primary
+                                                                }}
+                                                            >
+                                                                {new Date(payment.payment_date).toLocaleDateString('es-ES')}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    ...typography.body2,
+                                                                    color: vistelicaColors.secondary
+                                                                }}
+                                                            >
+                                                                Monto:
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    fontWeight: 500,
+                                                                    ...typography.body2,
+                                                                    color: vistelicaColors.primary
+                                                                }}
+                                                            >
+                                                                {parseFloat(payment.amount).toFixed(2)}€
+                                                            </Typography>
+                                                        </Box>
+                                                    </Box>
+                                                ))}
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Estado de envío */}
+                                        <Card
+                                            sx={{
+                                                border: `1px solid ${vistelicaColors.borderLight}`,
+                                                borderRadius: 1,
+                                                backgroundColor: vistelicaColors.surface
+                                            }}
+                                        >
+                                            <CardContent>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                                    <LocalShipping sx={{ mr: 1, color: vistelicaColors.primary }} />
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{
+                                                            fontSize: '1rem',
+                                                            fontWeight: 500,
+                                                            ...typography.subtitle1,
+                                                            color: vistelicaColors.primary
+                                                        }}
+                                                    >
+                                                        Estado de Envío
+                                                    </Typography>
+                                                </Box>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                                     <Typography
                                                         variant="body2"
@@ -581,47 +580,66 @@ const OrderDetailsPage = () => {
                                                             color: vistelicaColors.secondary
                                                         }}
                                                     >
-                                                        Entrega estimada:
+                                                        Estado actual:
                                                     </Typography>
-                                                    <Typography
-                                                        variant="body2"
-                                                        sx={{
-                                                            ...typography.body2,
-                                                            color: vistelicaColors.primary
-                                                        }}
-                                                    >
-                                                        {new Date(orderData.estimated_delivery_date).toLocaleDateString('es-ES')}
-                                                    </Typography>
+                                                    <Chip
+                                                        label={orderData.status}
+                                                        color={getStatusColor(orderData.status)}
+                                                        size="small"
+                                                        sx={{ ...typography.caption }}
+                                                    />
                                                 </Box>
-                                            )}
-                                            {orderData.delivered_at && (
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <Typography
-                                                        variant="body2"
-                                                        sx={{
-                                                            ...typography.body2,
-                                                            color: vistelicaColors.secondary
-                                                        }}
-                                                    >
-                                                        Entregado:
-                                                    </Typography>
-                                                    <Typography
-                                                        variant="body2"
-                                                        sx={{
-                                                            fontWeight: 500,
-                                                            ...typography.body2,
-                                                            color: vistelicaColors.success
-                                                        }}
-                                                    >
-                                                        {new Date(orderData.delivered_at).toLocaleDateString('es-ES')}
-                                                    </Typography>
-                                                </Box>
-                                            )}
-                                        </CardContent>
-                                    </Card>
+                                                {orderData.estimated_delivery_date && (
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                                        <Typography
+                                                            variant="body2"
+                                                            sx={{
+                                                                ...typography.body2,
+                                                                color: vistelicaColors.secondary
+                                                            }}
+                                                        >
+                                                            Entrega estimada:
+                                                        </Typography>
+                                                        <Typography
+                                                            variant="body2"
+                                                            sx={{
+                                                                ...typography.body2,
+                                                                color: vistelicaColors.primary
+                                                            }}
+                                                        >
+                                                            {new Date(orderData.estimated_delivery_date).toLocaleDateString('es-ES')}
+                                                        </Typography>
+                                                    </Box>
+                                                )}
+                                                {orderData.delivered_at && (
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <Typography
+                                                            variant="body2"
+                                                            sx={{
+                                                                ...typography.body2,
+                                                                color: vistelicaColors.secondary
+                                                            }}
+                                                        >
+                                                            Entregado:
+                                                        </Typography>
+                                                        <Typography
+                                                            variant="body2"
+                                                            sx={{
+                                                                fontWeight: 500,
+                                                                ...typography.body2,
+                                                                color: vistelicaColors.success
+                                                            }}
+                                                        >
+                                                            {new Date(orderData.delivered_at).toLocaleDateString('es-ES')}
+                                                        </Typography>
+                                                    </Box>
+                                                )}
+                                            </CardContent>
+                                        </Card>
+                                    </Grid>
                                 </Grid>
-                            </Grid>
-                        </Paper>
+                            </Paper>
+                        </Box>
                     </Grid>
                 </Grid>
             </Container>
@@ -651,13 +669,11 @@ const OrderDetailsPage = () => {
 
             {/* SidebarMenu para móvil como drawer */}
             {isMobile && (
-
                 <SidebarMenu
                     username={userData?.name || 'Usuario'}
                     drawerOpen={sidebarOpen}
                     setDrawerOpen={setSidebarOpen}
                 />
-
             )}
         </Box>
     );
