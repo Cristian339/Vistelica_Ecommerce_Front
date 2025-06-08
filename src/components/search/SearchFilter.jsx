@@ -358,7 +358,7 @@ export default function SearchFilter({ isOpen, onClose, router }) {
     useEffect(() => {
         const timer = setTimeout(() => {
             performSearch(searchQuery);
-        }, 500);
+        }, 300);
         return () => clearTimeout(timer);
     }, [searchQuery, performSearch, selectedCategoryIds]);
 
