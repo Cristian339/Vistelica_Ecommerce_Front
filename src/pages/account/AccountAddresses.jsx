@@ -63,6 +63,14 @@ const AccountAddresses = () => {
     const [confirmDeleteDialog, setConfirmDeleteDialog] = useState(false);
     const [addressToDelete, setAddressToDelete] = useState(null);
     const [editingAddress, setEditingAddress] = useState(null);
+    const [errors, setErrors] = useState({
+        label: false,
+        street: false,
+        postal_code: false,
+        city: false,
+        state: false,
+        country: false
+    });
     const [formData, setFormData] = useState({
         label: '',
         street: '',
@@ -142,6 +150,23 @@ const AccountAddresses = () => {
     const userAvatar = userData?.avatar || userData?.profilePic;
     const userName = userData?.name || 'Usuario';
 
+
+    const validateForm = () => {
+        const newErrors = {
+            label: !formData.label,
+            street: !formData.street,
+            postal_code: !formData.postal_code,
+            city: !formData.city,
+            state: !formData.state,
+            country: !formData.country
+        };
+
+        setErrors(newErrors);
+
+        // Retorna true si no hay errores
+        return !Object.values(newErrors).some(error => error);
+    };
+
     const handleOpenDialog = (address = null) => {
         if (address) {
             setEditingAddress(address);
@@ -201,6 +226,14 @@ const AccountAddresses = () => {
             ...formData,
             [name]: name === 'is_default' ? checked : value
         });
+
+        // Validación en tiempo real para campos obligatorios
+        if (['label', 'street', 'postal_code', 'city', 'state', 'country'].includes(name)) {
+            setErrors({
+                ...errors,
+                [name]: !value
+            });
+        }
     };
 
     const openConfirmDeleteDialog = (address) => {
@@ -217,6 +250,15 @@ const AccountAddresses = () => {
         try {
             setLoading(true);
 
+            if (!validateForm()) {
+                setSnackbar({
+                    open: true,
+                    message: 'Por favor completa todos los campos obligatorios',
+                    severity: 'error'
+                });
+                return;
+            }
+
             // Combinar street y numero
             const combinedStreet = formData.numero
                 ? `${formData.street} ${formData.numero}`.trim()
@@ -225,8 +267,7 @@ const AccountAddresses = () => {
             const addressData = {
                 ...formData,
                 street: combinedStreet,
-                // No incluimos el campo numero en los datos que se envían
-                state: formData.state // Asegurar que se use el nombre correcto del campo
+                state: formData.state
             };
 
             if (editingAddress) {
@@ -852,6 +893,8 @@ const AccountAddresses = () => {
                                     onChange={handleChange}
                                     fullWidth
                                     required
+                                    error={errors.label}
+                                    helperText={errors.label ? "Este campo es obligatorio" : ""}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             '&:hover fieldset': {borderColor: vistelicaColors.primary},
@@ -871,6 +914,8 @@ const AccountAddresses = () => {
                                     onChange={handleChange}
                                     fullWidth
                                     required
+                                    error={errors.street}
+                                    helperText={errors.street ? "Este campo es obligatorio" : ""}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             '&:hover fieldset': {borderColor: vistelicaColors.primary},
@@ -908,6 +953,8 @@ const AccountAddresses = () => {
                                     onChange={handleChange}
                                     fullWidth
                                     required
+                                    error={errors.postal_code}
+                                    helperText={errors.postal_code ? "Este campo es obligatorio" : ""}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             '&:hover fieldset': {borderColor: vistelicaColors.primary},
@@ -927,6 +974,8 @@ const AccountAddresses = () => {
                                     onChange={handleChange}
                                     fullWidth
                                     required
+                                    error={errors.city}
+                                    helperText={errors.city ? "Este campo es obligatorio" : ""}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             '&:hover fieldset': {borderColor: vistelicaColors.primary},
@@ -1001,6 +1050,8 @@ const AccountAddresses = () => {
                                     onChange={handleChange}
                                     fullWidth
                                     required
+                                    error={errors.state}
+                                    helperText={errors.state ? "Este campo es obligatorio" : ""}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             '&:hover fieldset': {borderColor: vistelicaColors.primary},
@@ -1020,6 +1071,8 @@ const AccountAddresses = () => {
                                     onChange={handleChange}
                                     fullWidth
                                     required
+                                    error={errors.country}
+                                    helperText={errors.country ? "Este campo es obligatorio" : ""}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             '&:hover fieldset': {borderColor: vistelicaColors.primary},
@@ -1076,7 +1129,7 @@ const AccountAddresses = () => {
                     <Button
                         onClick={handleSaveAddress}
                         variant="contained"
-                        disabled={loading}
+                        disabled={loading || Object.values(errors).some(error => error)}
                         sx={{
                             backgroundColor: vistelicaColors.primary,
                             '&:hover': {

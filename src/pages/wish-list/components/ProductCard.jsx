@@ -102,29 +102,8 @@ const ProductCard = ({ product, onRemoveFromWishlist, showRemoveWishlist }) => {
             if (onRemoveFromWishlist) {
                 onRemoveFromWishlist(productId);
             }
-
-            toast.success('Producto eliminado de favoritos', {
-                position: "bottom-right",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-            });
         } catch (error) {
             console.error('Error removing from wishlist:', error);
-            toast.error('Error al eliminar de favoritos', {
-                position: "bottom-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-            });
         }
     };
 
@@ -143,9 +122,11 @@ const ProductCard = ({ product, onRemoveFromWishlist, showRemoveWishlist }) => {
                 cart = await cartService.createCart(user?.user_id, sessionId);
             }
 
+            console.log("Carrituuuuuu " + JSON.stringify(cart));
+
             // Añadir producto al carrito
             await cartService.addToCart(
-                cart.order_id,
+                cart.cart_id,
                 product.id || product.product_id,
                 1,
                 parseFloat(product.price),
@@ -153,7 +134,6 @@ const ProductCard = ({ product, onRemoveFromWishlist, showRemoveWishlist }) => {
                 null  // Color
             );
 
-            // Eliminamos la llamada a handleRemoveFromWishlist para que no se elimine de la lista
             toast.success('✅ Producto añadido al carrito', {
                 position: "bottom-right",
                 autoClose: 3000,
@@ -164,6 +144,7 @@ const ProductCard = ({ product, onRemoveFromWishlist, showRemoveWishlist }) => {
                 progress: undefined,
                 theme: "light",
             });
+
         } catch (error) {
             console.error('Error al añadir al carrito:', error);
             toast.error(`❌ ${error.message || 'Error al añadir al carrito'}`, {
@@ -285,7 +266,7 @@ const ProductCard = ({ product, onRemoveFromWishlist, showRemoveWishlist }) => {
                         mt: 'auto'
                     }}
                 >
-                    ${typeof product.price === 'number' ? product.price.toFixed(2) : (parseFloat(product.price) || 0).toFixed(2)}
+                    {typeof product.price === 'number' ? product.price.toFixed(2) : (parseFloat(product.price) || 0).toFixed(2)}€
                 </Typography>
             </CardContent>
 
