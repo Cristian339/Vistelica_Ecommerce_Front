@@ -200,7 +200,7 @@ const FooterComponent = () => {
             title: "Ayuda",
             links: [
                 { href: "/preguntas-frecuentes", text: "Preguntas frecuentes" },
-                { href: "/guia-tallas", text: "Guía de tallas" },
+                { href: "/guia-tallas/MenSizeGuidePage", text: "Guía de tallas" },
                 { href: "/cambio-devolucion", text: "Cambios/devoluciones como invitado" },
                 { href: "/contacto", text: "Contacto" },
                 { href: "/bases-sorteo", text: "Bases Sorteo" },
@@ -221,11 +221,12 @@ const FooterComponent = () => {
         {
             title: "Legal",
             links: [
-                { href: "/aviso-legal", text: "Aviso legal" },
-                { href: "/politica-privacidad", text: "Política de privacidad" },
+                { href: "/legal-notice/LegalNotice", text: "Aviso legal" },
+                { href: "/privacy-policy/PrivacyPolicy", text: "Política de privacidad" },
                 { href: "/politica-cookies", text: "Política de Cookies" },
                 { href: "/datos-seguros", text: "Sus datos seguros" },
-                { href: "/condiciones-uso", text: "Condiciones de uso" }
+                { href: "/condiciones/TermsOfUse", text: "Condiciones de uso" },
+                { href: "/about-us/AboutUs", text: "Sobre nosotros" }
             ]
         }
     ], []);

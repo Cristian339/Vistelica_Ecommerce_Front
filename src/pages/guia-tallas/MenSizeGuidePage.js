@@ -25,6 +25,7 @@ import { useRouter } from 'next/navigation';
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import Navbar from "@/components/layout/HeaderComponent";
 
 // Definición de estilos de fuente
 const titleFont = {
@@ -167,6 +168,7 @@ const MenSizeGuideContent = () => {
 
     return (
         <>
+            <Navbar/>
             <Head>
                 <title>Guía de Tallas Hombre | Tu Marca</title>
                 <meta name="description" content="Guía de tallas para ropa de hombre" />
