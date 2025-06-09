@@ -23,20 +23,68 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import HomeIcon from '@mui/icons-material/Home';
 import BusinessIcon from '@mui/icons-material/Business';
 import PlaceIcon from '@mui/icons-material/Place';
-import StarIcon from '@mui/icons-material/Star';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import SearchIcon from '@mui/icons-material/Search';
 import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
-import Divider from '@mui/material/Divider';
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 import { typography } from '@/pages/shared-theme/themePrimitives';
+import StarIcon from '@mui/icons-material/Star';
 
 const FormGrid = styled(Grid)(({ theme }) => ({
     display: 'flex',
     flexDirection: 'column',
+    marginBottom: theme.spacing(2),
 }));
 
-export default function AddressForm({ onDataChange }) {
+// Estilo personalizado para los inputs
+const StyledOutlinedInput = styled(OutlinedInput)(({ theme }) => ({
+    borderRadius: '8px',
+    transition: 'all 0.2s',
+    '&.MuiOutlinedInput-root': {
+        '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: vistelicaColors.primary,
+        },
+        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: vistelicaColors.primary,
+            boxShadow: `0 0 0 3px ${vistelicaColors.primary}20`,
+        }
+    }
+}));
+
+// Estilo para las etiquetas
+const StyledFormLabel = styled(FormLabel)(({ theme }) => ({
+    fontFamily: typography.fontFamily,
+    marginBottom: '6px',
+    fontWeight: 500,
+    fontSize: '0.9rem',
+    color: '#424242',
+}));
+
+// Título de sección con la paleta primary
+const SectionTitle = styled(Typography)(({ theme }) => ({
+    fontSize: '1.25rem',
+    fontWeight: 700,
+    marginBottom: theme.spacing(3),
+    marginTop: theme.spacing(2),
+    color: '#212121',
+    fontFamily: typography.fontFamily,
+    position: 'relative',
+    paddingBottom: theme.spacing(1),
+    '&:after': {
+        content: '""',
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        width: '50px',
+        height: '3px',
+        backgroundColor: vistelicaColors.primary,
+        borderRadius: '2px'
+    }
+}));
+
+// Convertir a componente memo para mejorar el rendimiento
+const AddressForm = React.memo(function AddressForm({ onDataChange }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedAddressId, setSelectedAddressId] = useState(null);
@@ -222,25 +270,37 @@ export default function AddressForm({ onDataChange }) {
     if (loading) {
         return (
             <Grid container justifyContent="center" alignItems="center" sx={{ minHeight: '200px' }}>
-                <CircularProgress sx={{ color: vistelicaColors.primary }} />
+                <CircularProgress sx={{ color: vistelicaColors.primary }} aria-label="Cargando datos de dirección" />
             </Grid>
         );
     }
 
     if (error) {
         return (
-            <Alert severity="error" role="alert">{error}</Alert>
+            <Alert severity="error" role="alert"
+                   sx={{
+                       borderRadius: '8px',
+                       boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+                       marginBottom: 2
+                   }}
+            >
+                {error}
+            </Alert>
         );
     }
 
     return (
         <>
+            <SectionTitle variant="h6">
+                Dirección de envío
+            </SectionTitle>
+
             <Grid container spacing={3}>
-                <FormGrid size={{ xs: 12, md: 6 }}>
-                    <FormLabel htmlFor="firstName" required sx={{ fontFamily: typography.fontFamily }}>
+                <FormGrid item xs={12} md={6}>
+                    <StyledFormLabel htmlFor="firstName" required>
                         Nombre
-                    </FormLabel>
-                    <OutlinedInput
+                    </StyledFormLabel>
+                    <StyledOutlinedInput
                         id="firstName"
                         name="firstName"
                         type="text"
@@ -251,21 +311,14 @@ export default function AddressForm({ onDataChange }) {
                         value={formData.firstName}
                         onChange={handleChange}
                         aria-required="true"
-                        sx={{
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            }
-                        }}
+                        fullWidth
                     />
                 </FormGrid>
-                <FormGrid size={{ xs: 12, md: 6 }}>
-                    <FormLabel htmlFor="lastName" required sx={{ fontFamily: typography.fontFamily }}>
+                <FormGrid item xs={12} md={6}>
+                    <StyledFormLabel htmlFor="lastName" required>
                         Apellido
-                    </FormLabel>
-                    <OutlinedInput
+                    </StyledFormLabel>
+                    <StyledOutlinedInput
                         id="lastName"
                         name="lastName"
                         type="text"
@@ -276,21 +329,14 @@ export default function AddressForm({ onDataChange }) {
                         value={formData.lastName}
                         onChange={handleChange}
                         aria-required="true"
-                        sx={{
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            }
-                        }}
+                        fullWidth
                     />
                 </FormGrid>
-                <FormGrid size={12}>
-                    <FormLabel htmlFor="address1" required sx={{ fontFamily: typography.fontFamily }}>
+                <FormGrid item xs={12}>
+                    <StyledFormLabel htmlFor="address1" required>
                         Dirección línea 1
-                    </FormLabel>
-                    <OutlinedInput
+                    </StyledFormLabel>
+                    <StyledOutlinedInput
                         id="address1"
                         name="address1"
                         type="text"
@@ -301,19 +347,14 @@ export default function AddressForm({ onDataChange }) {
                         value={formData.address1}
                         onChange={handleChange}
                         aria-required="true"
-                        sx={{
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            }
-                        }}
+                        fullWidth
                     />
                 </FormGrid>
-                <FormGrid size={12}>
-                    <FormLabel htmlFor="address2" sx={{ fontFamily: typography.fontFamily }}>Dirección línea 2</FormLabel>
-                    <OutlinedInput
+                <FormGrid item xs={12}>
+                    <StyledFormLabel htmlFor="address2">
+                        Dirección línea 2
+                    </StyledFormLabel>
+                    <StyledOutlinedInput
                         id="address2"
                         name="address2"
                         type="text"
@@ -322,21 +363,14 @@ export default function AddressForm({ onDataChange }) {
                         size="small"
                         value={formData.address2}
                         onChange={handleChange}
-                        sx={{
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            }
-                        }}
+                        fullWidth
                     />
                 </FormGrid>
-                <FormGrid size={6}>
-                    <FormLabel htmlFor="city" required sx={{ fontFamily: typography.fontFamily }}>
+                <FormGrid item xs={12} sm={6}>
+                    <StyledFormLabel htmlFor="city" required>
                         Ciudad
-                    </FormLabel>
-                    <OutlinedInput
+                    </StyledFormLabel>
+                    <StyledOutlinedInput
                         id="city"
                         name="city"
                         type="text"
@@ -347,21 +381,14 @@ export default function AddressForm({ onDataChange }) {
                         value={formData.city}
                         onChange={handleChange}
                         aria-required="true"
-                        sx={{
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            }
-                        }}
+                        fullWidth
                     />
                 </FormGrid>
-                <FormGrid size={6}>
-                    <FormLabel htmlFor="state" required sx={{ fontFamily: typography.fontFamily }}>
+                <FormGrid item xs={12} sm={6}>
+                    <StyledFormLabel htmlFor="state" required>
                         Provincia
-                    </FormLabel>
-                    <OutlinedInput
+                    </StyledFormLabel>
+                    <StyledOutlinedInput
                         id="state"
                         name="state"
                         type="text"
@@ -372,21 +399,14 @@ export default function AddressForm({ onDataChange }) {
                         value={formData.state}
                         onChange={handleChange}
                         aria-required="true"
-                        sx={{
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            }
-                        }}
+                        fullWidth
                     />
                 </FormGrid>
-                <FormGrid size={6}>
-                    <FormLabel htmlFor="zip" required sx={{ fontFamily: typography.fontFamily }}>
+                <FormGrid item xs={12} sm={6}>
+                    <StyledFormLabel htmlFor="zip" required>
                         Código Postal
-                    </FormLabel>
-                    <OutlinedInput
+                    </StyledFormLabel>
+                    <StyledOutlinedInput
                         id="zip"
                         name="zip"
                         type="text"
@@ -397,21 +417,14 @@ export default function AddressForm({ onDataChange }) {
                         value={formData.zip}
                         onChange={handleChange}
                         aria-required="true"
-                        sx={{
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            }
-                        }}
+                        fullWidth
                     />
                 </FormGrid>
-                <FormGrid size={6}>
-                    <FormLabel htmlFor="country" required sx={{ fontFamily: typography.fontFamily }}>
+                <FormGrid item xs={12} sm={6}>
+                    <StyledFormLabel htmlFor="country" required>
                         País
-                    </FormLabel>
-                    <OutlinedInput
+                    </StyledFormLabel>
+                    <StyledOutlinedInput
                         id="country"
                         name="country"
                         type="text"
@@ -422,19 +435,14 @@ export default function AddressForm({ onDataChange }) {
                         value={formData.country}
                         onChange={handleChange}
                         aria-required="true"
-                        sx={{
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            }
-                        }}
+                        fullWidth
                     />
                 </FormGrid>
-                <FormGrid size={{ xs: 12, md: 4 }}>
-                    <FormLabel htmlFor="block" sx={{ fontFamily: typography.fontFamily }}>Bloque</FormLabel>
-                    <OutlinedInput
+                <FormGrid item xs={12} sm={4}>
+                    <StyledFormLabel htmlFor="block">
+                        Bloque
+                    </StyledFormLabel>
+                    <StyledOutlinedInput
                         id="block"
                         name="block"
                         type="text"
@@ -442,19 +450,14 @@ export default function AddressForm({ onDataChange }) {
                         size="small"
                         value={formData.block}
                         onChange={handleChange}
-                        sx={{
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            }
-                        }}
+                        fullWidth
                     />
                 </FormGrid>
-                <FormGrid size={{ xs: 12, md: 4 }}>
-                    <FormLabel htmlFor="floor" sx={{ fontFamily: typography.fontFamily }}>Piso</FormLabel>
-                    <OutlinedInput
+                <FormGrid item xs={12} sm={4}>
+                    <StyledFormLabel htmlFor="floor">
+                        Piso
+                    </StyledFormLabel>
+                    <StyledOutlinedInput
                         id="floor"
                         name="floor"
                         type="text"
@@ -462,19 +465,14 @@ export default function AddressForm({ onDataChange }) {
                         size="small"
                         value={formData.floor}
                         onChange={handleChange}
-                        sx={{
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            }
-                        }}
+                        fullWidth
                     />
                 </FormGrid>
-                <FormGrid size={{ xs: 12, md: 4 }}>
-                    <FormLabel htmlFor="door" sx={{ fontFamily: typography.fontFamily }}>Puerta</FormLabel>
-                    <OutlinedInput
+                <FormGrid item xs={12} sm={4}>
+                    <StyledFormLabel htmlFor="door">
+                        Puerta
+                    </StyledFormLabel>
+                    <StyledOutlinedInput
                         id="door"
                         name="door"
                         type="text"
@@ -482,32 +480,30 @@ export default function AddressForm({ onDataChange }) {
                         size="small"
                         value={formData.door}
                         onChange={handleChange}
-                        sx={{
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: vistelicaColors.primary
-                            }
-                        }}
+                        fullWidth
                     />
                 </FormGrid>
-                <Grid size={12}>
+                <Grid item xs={12}>
                     <Box display="flex" justifyContent="center" mt={2}>
                         <Button
                             variant="outlined"
-                            color="primary"
                             onClick={handleOpenDialog}
                             startIcon={<SearchIcon />}
                             sx={{
+                                borderRadius: '30px',
                                 borderColor: vistelicaColors.primary,
                                 color: vistelicaColors.primary,
-                                fontWeight: 'bold',
+                                fontWeight: 600,
+                                padding: '8px 24px',
                                 fontFamily: typography.fontFamily,
+                                transition: 'all 0.3s',
+                                boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
                                 '&:hover': {
                                     borderColor: vistelicaColors.secondary,
                                     backgroundColor: `${vistelicaColors.primary}10`,
-                                }
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                    transform: 'translateY(-2px)'
+                                },
                             }}
                         >
                             Buscar mis direcciones
@@ -525,18 +521,19 @@ export default function AddressForm({ onDataChange }) {
                 aria-labelledby="dialog-title"
                 PaperProps={{
                     sx: {
-                        borderRadius: '12px',
+                        borderRadius: '16px',
                         overflow: 'hidden',
                         maxWidth: {xs: '95%', sm: '700px'},
                         margin: '0 auto',
-                        width: '100%'
+                        width: '100%',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.15)'
                     }
                 }}
             >
                 <DialogTitle
                     id="dialog-title"
                     sx={{
-                        bgcolor: `${vistelicaColors.primary}10`,
+                        background: `linear-gradient(45deg, ${vistelicaColors.primary}15, ${vistelicaColors.secondary}05)`,
                         borderBottom: '1px solid #eaeaea',
                         display: 'flex',
                         alignItems: 'center',
@@ -548,8 +545,16 @@ export default function AddressForm({ onDataChange }) {
                         fontFamily: typography.fontFamily
                     }}
                 >
-                    <LocationOnIcon sx={{ color: vistelicaColors.primary }}/>
-                    <Typography variant="h6" fontWeight="600" fontSize={{xs: '1.1rem', sm: '1.25rem'}} fontFamily={typography.fontFamily}>
+                    <LocationOnIcon sx={{
+                        color: vistelicaColors.primary,
+                        fontSize: '28px'
+                    }}/>
+                    <Typography
+                        variant="h6"
+                        fontWeight="600"
+                        fontSize={{xs: '1.1rem', sm: '1.25rem'}}
+                        fontFamily={typography.fontFamily}
+                    >
                         Seleccionar dirección
                     </Typography>
                 </DialogTitle>
@@ -567,12 +572,19 @@ export default function AddressForm({ onDataChange }) {
                                         <SearchIcon />
                                     </InputAdornment>
                                 ),
+                                sx: {
+                                    borderRadius: '8px',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                                }
                             }}
                             size="small"
                             sx={{
                                 '& .MuiOutlinedInput-root': {
                                     '&:hover fieldset': {borderColor: vistelicaColors.primary},
-                                    '&.Mui-focused fieldset': {borderColor: vistelicaColors.primary}
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: vistelicaColors.primary,
+                                        boxShadow: `0 0 0 3px ${vistelicaColors.primary}20`
+                                    }
                                 },
                                 '& .MuiInputLabel-root.Mui-focused': {
                                     color: vistelicaColors.primary
@@ -583,49 +595,87 @@ export default function AddressForm({ onDataChange }) {
                     </Box>
 
                     {filteredAddresses.length === 0 ? (
-                        <Box sx={{ textAlign: 'center', py: 4 }}>
-                            <LocationOnIcon sx={{ fontSize: 60, color: vistelicaColors.primary, mb: 2 }}/>
-                            <Typography variant="body1" fontFamily={typography.fontFamily}>
+                        <Box sx={{
+                            textAlign: 'center',
+                            py: 6,
+                            backgroundColor: '#f9f9f9',
+                            borderRadius: '12px'
+                        }}>
+                            <LocationOnIcon sx={{
+                                fontSize: 70,
+                                color: '#bdbdbd',
+                                mb: 2,
+                                opacity: 0.7
+                            }}/>
+                            <Typography
+                                variant="body1"
+                                fontFamily={typography.fontFamily}
+                                sx={{ color: '#757575' }}
+                            >
                                 No tienes direcciones guardadas
                             </Typography>
                         </Box>
                     ) : (
-                        <Grid container spacing={2} sx={{ maxHeight: '400px', overflow: 'auto' }}>
+                        <Grid container spacing={2} sx={{ maxHeight: '400px', overflow: 'auto', pr: 1 }}>
                             {filteredAddresses.map((address) => (
-                                <Grid size={12} key={address.id}>
+                                <Grid item xs={12} key={address.id}>
                                     <Card
                                         sx={{
                                             border: address.is_default ? `2px solid ${vistelicaColors.primary}` : '1px solid #e0e0e0',
-                                            boxShadow: address.is_default ? `0 2px 8px ${vistelicaColors.primary}20` : '0 1px 5px rgba(0, 0, 0, 0.05)',
-                                            borderRadius: '8px',
-                                            transition: 'all 0.2s ease',
+                                            boxShadow: address.is_default ? `0 3px 10px ${vistelicaColors.primary}30` : '0 2px 8px rgba(0, 0, 0, 0.06)',
+                                            borderRadius: '12px',
+                                            transition: 'all 0.3s ease',
                                             '&:hover': {
-                                                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+                                                boxShadow: '0 5px 15px rgba(0, 0, 0, 0.12)',
                                                 transform: 'translateY(-2px)'
                                             },
-                                            background: address.is_default ? 'linear-gradient(to bottom right, #fffdf7, #fff)' : '#fff',
+                                            background: address.is_default
+                                                ? `linear-gradient(to right, ${vistelicaColors.primary}05, #fff)`
+                                                : '#fff',
+                                            overflow: 'visible',
                                         }}
                                     >
-                                        <CardActionArea onClick={() => handleSelectAddress(address)}>
+                                        <CardActionArea
+                                            onClick={() => handleSelectAddress(address)}
+                                            sx={{
+                                                borderRadius: '12px',
+                                                height: '100%'
+                                            }}
+                                        >
                                             <CardContent sx={{ p: 2 }}>
                                                 <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
                                                     <Box sx={{
                                                         mr: 1.5,
-                                                        backgroundColor: address.is_default ? `${vistelicaColors.primary}15` : 'rgba(0, 0, 0, 0.04)',
-                                                        borderRadius: '50%',
-                                                        width: 36,
-                                                        height: 36,
+                                                        backgroundColor: address.is_default
+                                                            ? `${vistelicaColors.primary}15`
+                                                            : 'rgba(0, 0, 0, 0.05)',
+                                                        borderRadius: '12px',
+                                                        width: 42,
+                                                        height: 42,
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
-                                                        color: address.is_default ? vistelicaColors.primary : 'text.secondary',
-                                                        flexShrink: 0
+                                                        color: address.is_default ? vistelicaColors.primary : '#666',
+                                                        flexShrink: 0,
+                                                        boxShadow: address.is_default
+                                                            ? `0 2px 8px ${vistelicaColors.primary}30`
+                                                            : 'none'
                                                     }}>
                                                         {getAddressIcon(address.label)}
                                                     </Box>
                                                     <Box sx={{ width: '100%' }}>
-                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                                                            <Typography variant="subtitle1" fontWeight="600" color={address.is_default ? vistelicaColors.primary : 'text.primary'} fontFamily={typography.fontFamily}>
+                                                        <Box sx={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            alignItems: 'center',
+                                                            mb: 0.5
+                                                        }}>
+                                                            <Typography
+                                                                variant="subtitle1"
+                                                                fontWeight="600"
+                                                                color={address.is_default ? vistelicaColors.primary : 'text.primary'}
+                                                                fontFamily={typography.fontFamily}
+                                                            >
                                                                 {address.label || 'Dirección sin nombre'}
                                                             </Typography>
                                                             {address.is_default && (
@@ -635,44 +685,96 @@ export default function AddressForm({ onDataChange }) {
                                                                     color: vistelicaColors.primary,
                                                                     fontSize: '0.75rem',
                                                                     fontWeight: 'bold',
-                                                                    backgroundColor: `${vistelicaColors.primary}10`,
-                                                                    px: 1,
+                                                                    backgroundColor: `${vistelicaColors.primary}15`,
+                                                                    px: 1.5,
                                                                     py: 0.5,
-                                                                    borderRadius: 1,
-                                                                    fontFamily: typography.fontFamily
+                                                                    borderRadius: 10,
+                                                                    fontFamily: typography.fontFamily,
+                                                                    boxShadow: `0 2px 5px ${vistelicaColors.primary}20`
                                                                 }}>
-                                                                    <StarIcon fontSize="small" sx={{ mr: 0.5 }}/>
+                                                                    <CheckCircleOutlineIcon
+                                                                        fontSize="small"
+                                                                        sx={{ mr: 0.5, fontSize: '14px' }}
+                                                                    />
                                                                     Predeterminada
                                                                 </Box>
                                                             )}
                                                         </Box>
-                                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }} fontFamily={typography.fontFamily}>
+                                                        <Typography
+                                                            variant="body2"
+                                                            color="text.primary"
+                                                            sx={{ mb: 0.5, fontWeight: 500 }}
+                                                            fontFamily={typography.fontFamily}
+                                                        >
                                                             {address.street}
                                                         </Typography>
-                                                        <Typography variant="body2" color="text.secondary" fontFamily={typography.fontFamily}>
+                                                        <Typography
+                                                            variant="body2"
+                                                            color="text.secondary"
+                                                            fontFamily={typography.fontFamily}
+                                                        >
                                                             {address.city}, {address.state}, {address.postal_code}
                                                         </Typography>
-                                                        <Typography variant="body2" color="text.secondary" fontFamily={typography.fontFamily}>
+                                                        <Typography
+                                                            variant="body2"
+                                                            color="text.secondary"
+                                                            fontFamily={typography.fontFamily}
+                                                        >
                                                             {address.country || 'España'}
                                                         </Typography>
-                                                        {address.block && (
-                                                            <Typography variant="body2" color="text.secondary" fontFamily={typography.fontFamily}>
-                                                                <Box component="span" sx={{ fontWeight: 600 }}>Bloque:</Box> {address.block}
-                                                            </Typography>
+
+                                                        {/* Información adicional con mejor diseño */}
+                                                        {(address.block || address.floor || address.door) && (
+                                                            <Box
+                                                                sx={{
+                                                                    mt: 1,
+                                                                    pt: 1,
+                                                                    borderTop: '1px dashed #e0e0e0',
+                                                                    display: 'flex',
+                                                                    flexWrap: 'wrap',
+                                                                    gap: 1
+                                                                }}
+                                                            >
+                                                                {address.block && (
+                                                                    <Box component="span" sx={{
+                                                                        backgroundColor: '#f5f5f5',
+                                                                        px: 1,
+                                                                        py: 0.3,
+                                                                        borderRadius: 1,
+                                                                        fontSize: '0.75rem',
+                                                                        color: '#666'
+                                                                    }}>
+                                                                        Bloque: {address.block}
+                                                                    </Box>
+                                                                )}
+
+                                                                {address.floor && (
+                                                                    <Box component="span" sx={{
+                                                                        backgroundColor: '#f5f5f5',
+                                                                        px: 1,
+                                                                        py: 0.3,
+                                                                        borderRadius: 1,
+                                                                        fontSize: '0.75rem',
+                                                                        color: '#666'
+                                                                    }}>
+                                                                        Piso: {address.floor}
+                                                                    </Box>
+                                                                )}
+
+                                                                {address.door && (
+                                                                    <Box component="span" sx={{
+                                                                        backgroundColor: '#f5f5f5',
+                                                                        px: 1,
+                                                                        py: 0.3,
+                                                                        borderRadius: 1,
+                                                                        fontSize: '0.75rem',
+                                                                        color: '#666'
+                                                                    }}>
+                                                                        Puerta: {address.door}
+                                                                    </Box>
+                                                                )}
+                                                            </Box>
                                                         )}
-                                                        {address.floor && (
-                                                            <Typography variant="body2" color="text.secondary" fontFamily={typography.fontFamily}>
-                                                                <Box component="span" sx={{ fontWeight: 600 }}>Piso:</Box> {address.floor}
-                                                            </Typography>
-                                                        )}
-                                                        {address.door && (
-                                                            <Typography variant="body2" color="text.secondary" fontFamily={typography.fontFamily}>
-                                                                <Box component="span" sx={{ fontWeight: 600 }}>Puerta:</Box> {address.door}
-                                                            </Typography>
-                                                        )}
-                                                        <Typography variant="caption" color="text.disabled" fontFamily={typography.fontFamily}>
-                                                            ID: {address.id}
-                                                        </Typography>
                                                     </Box>
                                                 </Box>
                                             </CardContent>
@@ -694,14 +796,17 @@ export default function AddressForm({ onDataChange }) {
                         onClick={handleCloseDialog}
                         variant="outlined"
                         sx={{
+                            borderRadius: '8px',
                             borderColor: '#999',
                             color: '#666',
                             fontFamily: typography.fontFamily,
+                            fontWeight: 600,
+                            px: 4,
+                            py: 1,
                             '&:hover': {
                                 borderColor: '#666',
                                 backgroundColor: 'rgba(0,0,0,0.05)'
                             },
-                            px: 3
                         }}
                     >
                         Cancelar
@@ -710,4 +815,8 @@ export default function AddressForm({ onDataChange }) {
             </Dialog>
         </>
     );
-}
+});
+
+// Añadir displayName para herramientas de desarrollo
+AddressForm.displayName = 'AddressForm';
+export default AddressForm;

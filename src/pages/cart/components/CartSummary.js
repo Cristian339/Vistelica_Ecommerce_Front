@@ -16,10 +16,10 @@ const CartSummary = React.memo(({
                                     totalPrice = 0,
                                     itemCount = 0,
                                     isGuest = false,
-                                    onCheckout
+                                    onCheckout,
+                                    isProcessing = false
                                 }) => {
     const router = useRouter();
-    const [isProcessing, setIsProcessing] = useState(false);
     const [showSecurityBadge, setShowSecurityBadge] = useState(false);
     const [animateTotal, setAnimateTotal] = useState(false);
     const [orderReference, setOrderReference] = useState('');
@@ -76,24 +76,16 @@ const CartSummary = React.memo(({
 
     // Handler de checkout optimizado con useCallback
     const handleCheckoutClick = useCallback(() => {
-        setIsProcessing(true);
-
+        if (isProcessing) return;
         if (!isAuthenticated) {
             setOpenSnackbar(true);
             setTimeout(() => {
                 router.push('/sign-in-side/Sign-in-side');
-                setIsProcessing(false);
             }, 1500);
             return;
         }
-
-        // Usuario autenticado
-        setTimeout(() => {
-            if (onCheckout) onCheckout();
-            router.push('/checkout/Checkout');
-            setIsProcessing(false);
-        }, 800);
-    }, [isAuthenticated, router, onCheckout]);
+        if (onCheckout) onCheckout();
+    }, [isProcessing, isAuthenticated, router, onCheckout]);
 
     // Renderizado optimizado para partículas
     const renderParticles = useCallback(() => {
@@ -413,7 +405,7 @@ const CartSummary = React.memo(({
             {isProcessing ? 'Procesando...' : 'Finalizar compra'}
         </Button>
     </span>
-</Tooltip>
+                        </Tooltip>
 
                         {/* Componente de insignias de seguridad */}
                         <SecurityBadges showSecurityBadge={showSecurityBadge} />

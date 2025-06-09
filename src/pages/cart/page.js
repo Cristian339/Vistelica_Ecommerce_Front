@@ -29,6 +29,7 @@ const CartPage = React.memo(() => {
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isProcessing, setIsProcessing] = useState(false);
     const router = useRouter();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -153,14 +154,22 @@ const CartPage = React.memo(() => {
         await loadCartData();
     }, [loadCartData]);
 
-    const handleCheckout = useCallback(() => {
-        const isGuest = !getCurrentUser() && cartService.getSessionId();
-        if (isGuest) {
-            router.push('/sign-in-side');
-        } else {
-            router.push('/checkout/Checkout');
+    const handleCheckout = useCallback(async () => {
+        if (isProcessing) return; // Evita múltiples clics
+        setIsProcessing(true);
+        try {
+            const user = await getCurrentUser();
+            const isGuest = !user && cartService.getSessionId();
+            if (isGuest) {
+                router.push('/sign-in-side');
+            } else {
+                router.push('/checkout/Checkout');
+            }
+        } catch (e) {
+            setIsProcessing(false); // Permite reintentar si hay error
         }
-    }, [router]);
+        // No se desactiva isProcessing aquí porque la navegación desmonta el componente
+    }, [router, isProcessing]);
 
     // Memoizar los contenedores y componentes para mejorar el rendimiento
     const loadingComponent = useMemo(() => (
@@ -608,6 +617,7 @@ const CartPage = React.memo(() => {
                             itemCount={cartTotal.itemCount}
                             isGuest={!cart.user && cart.session_id}
                             onCheckout={handleCheckout}
+                            isProcessing={isProcessing}
                         />
                     </Box>
                 </Box>
@@ -620,3 +630,4 @@ const CartPage = React.memo(() => {
 CartPage.displayName = 'CartPage';
 
 export default CartPage;
+

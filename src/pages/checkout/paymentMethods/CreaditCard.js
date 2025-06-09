@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from 'react';
+import { useCallback } from 'react';
 import {
     Box,
     Typography,
@@ -23,6 +24,8 @@ import { loadStripe } from '@stripe/stripe-js';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CreditCardRoundedIcon from '@mui/icons-material/CreditCardRounded';
 import paymentService from '@/services/paymentService';
+import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import { typography } from '@/pages/shared-theme/themePrimitives';
 
 const stripePromise = loadStripe("pk_test_51RPncWQc122Tani8pkjulLHNj5pnGssS5aP8eyTIKO7kBECr0X9ndIax3yFYraPQca5Ax6uH4l528N1zzsqLI8Rn00qx93QGQO");
 
@@ -32,21 +35,29 @@ const PaymentContainer = styled('div')(({ theme }) => ({
     justifyContent: 'space-between',
     width: '100%',
     height: 'auto',
-    padding: theme.spacing(3),
-    borderRadius: `calc(${theme.shape.borderRadius}px + 4px)`,
-    border: '1px solid',
-    borderColor: theme.palette.divider,
+    padding: theme.spacing(3.5),
+    borderRadius: '16px',
+    border: '1px solid #eaeaea',
     backgroundColor: theme.palette.background.paper,
-    boxShadow: '0px 4px 8px hsla(210, 0%, 0%, 0.05)',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+        boxShadow: '0 6px 25px rgba(0,0,0,0.08)',
+    }
 }));
 
 const StripeInputContainer = styled('div')(({ theme }) => ({
-    padding: '12px',
-    border: `1px solid ${theme.palette.divider}`,
-    borderRadius: theme.shape.borderRadius,
+    padding: '12px 16px',
+    border: `1px solid #d9d9d9`,
+    borderRadius: '8px',
     backgroundColor: theme.palette.background.paper,
+    transition: 'all 0.3s ease',
+    '&:hover': {
+        borderColor: vistelicaColors.primary,
+    },
     '& .StripeElement--focus': {
-        borderColor: theme.palette.primary.main,
+        borderColor: vistelicaColors.primary,
+        boxShadow: `0 0 0 2px ${vistelicaColors.primary}20`,
     },
 }));
 
@@ -56,12 +67,48 @@ const SuccessContainer = styled('div')(({ theme }) => ({
     alignItems: 'center',
     justifyContent: 'center',
     padding: theme.spacing(4),
-    border: '1px solid #4caf50',
-    borderRadius: theme.shape.borderRadius,
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-    textAlign: 'center'
+    border: '1px solid #b7eb8f',
+    borderRadius: '16px',
+    backgroundColor: 'rgba(82, 196, 26, 0.05)',
+    textAlign: 'center',
+    boxShadow: '0 4px 20px rgba(82, 196, 26, 0.1)',
+    transition: 'all 0.3s ease'
 }));
 
+const StyledButton = styled(Button)(({ theme }) => ({
+    borderRadius: '10px',
+    padding: '12px 24px',
+    fontFamily: typography.fontFamily,
+    fontWeight: 600,
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+    transition: 'all 0.3s ease',
+    textTransform: 'none',
+    fontSize: '1rem',
+    backgroundColor: vistelicaColors.primary,
+    '&:hover': {
+        backgroundColor: `${vistelicaColors.primary}e0`,
+        boxShadow: '0 6px 15px rgba(0,0,0,0.15)',
+        transform: 'translateY(-2px)'
+    },
+    '&.Mui-disabled': {
+        backgroundColor: '#bdbdbd',
+        color: '#fff'
+    }
+}));
+
+const StyledOutlinedInput = styled(OutlinedInput)(({ theme }) => ({
+    borderRadius: '8px',
+    '&:hover .MuiOutlinedInput-notchedOutline': {
+        borderColor: vistelicaColors.primary,
+    },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: vistelicaColors.primary,
+        borderWidth: '2px',
+    },
+    fontFamily: typography.fontFamily
+}));
+
+// Optimizamos el componente principal con React.memo
 function CreditCardForm({ amount, onPaymentSuccess, onPaymentMethodChange }) {
     const stripe = useStripe();
     const elements = useElements();
@@ -73,9 +120,10 @@ function CreditCardForm({ amount, onPaymentSuccess, onPaymentMethodChange }) {
     React.useEffect(() => {
         // Notificar al padre que se seleccionó este método
         onPaymentMethodChange();
-    }, []);
+    }, [onPaymentMethodChange]);
 
-    const handleSubmit = async (event) => {
+    // Optimizar el manejo del formulario con useCallback
+    const handleSubmit = useCallback(async (event) => {
         event.preventDefault();
         setError(null);
         setIsProcessing(true);
@@ -102,7 +150,12 @@ function CreditCardForm({ amount, onPaymentSuccess, onPaymentMethodChange }) {
 
             if (result) {
                 setPaymentSuccess(true);
-                onPaymentSuccess(); // Notificar éxito al padre
+                console.log('Pago con tarjeta exitoso, notificando al componente padre');
+
+                // Importante - asegurar la notificación al padre
+                if (typeof onPaymentSuccess === 'function') {
+                    onPaymentSuccess(); // Notificar éxito al padre
+                }
             } else {
                 throw new Error('El pago no se completó correctamente');
             }
@@ -112,16 +165,44 @@ function CreditCardForm({ amount, onPaymentSuccess, onPaymentMethodChange }) {
         } finally {
             setIsProcessing(false);
         }
-    };
+    }, [stripe, elements, name, amount, onPaymentSuccess]);
+
+    const handleNameChange = useCallback((e) => {
+        setName(e.target.value);
+    }, []);
 
     if (paymentSuccess) {
         return (
             <SuccessContainer>
-                <CheckCircleIcon sx={{ fontSize: 60, color: 'success.main', mb: 2 }} />
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: 'success.main' }}>
+                <CheckCircleIcon
+                    sx={{
+                        fontSize: 64,
+                        color: '#52c41a',
+                        mb: 2,
+                        filter: 'drop-shadow(0 2px 6px rgba(82, 196, 26, 0.3))'
+                    }}
+                />
+                <Typography
+                    variant="h5"
+                    gutterBottom
+                    sx={{
+                        fontWeight: 700,
+                        color: '#52c41a',
+                        fontFamily: typography.fontFamily,
+                        mb: 1.5
+                    }}
+                >
                     Pago exitoso
                 </Typography>
-                <Typography variant="body1" sx={{ mb: 2 }}>
+                <Typography
+                    variant="body1"
+                    sx={{
+                        mb: 2,
+                        fontFamily: typography.fontFamily,
+                        color: '#333',
+                        fontSize: '1rem'
+                    }}
+                >
                     Tu pago se ha procesado correctamente.
                 </Typography>
             </SuccessContainer>
@@ -131,21 +212,70 @@ function CreditCardForm({ amount, onPaymentSuccess, onPaymentMethodChange }) {
     return (
         <Box sx={{ width: '100%' }}>
             <Collapse in={!!error}>
-                <Alert severity="error" sx={{ mb: 2 }}>
+                <Alert
+                    severity="error"
+                    sx={{
+                        mb: 2,
+                        borderRadius: '8px',
+                        '& .MuiAlert-icon': {
+                            color: '#ff4d4f'
+                        }
+                    }}
+                >
                     {error}
                 </Alert>
             </Collapse>
 
             <Box component="form" onSubmit={handleSubmit}>
                 <PaymentContainer>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <CreditCardRoundedIcon sx={{ fontSize: 40, mr: 1 }} />
-                        <Typography variant="h6">Tarjeta de crédito/débito</Typography>
+                    <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        mb: 3,
+                        pb: 2,
+                        borderBottom: '1px solid #f0f0f0'
+                    }}>
+                        <Box
+                            sx={{
+                                backgroundColor: `${vistelicaColors.primary}15`,
+                                p: 1.2,
+                                borderRadius: '12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                mr: 2
+                            }}
+                        >
+                            <CreditCardRoundedIcon
+                                sx={{
+                                    fontSize: 28,
+                                    color: vistelicaColors.primary
+                                }}
+                            />
+                        </Box>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                fontWeight: 400,
+                                fontFamily: typography.fontFamily,
+                                color: '#333'
+                            }}
+                        >
+                            Tarjeta de crédito/débito
+                        </Typography>
                     </Box>
 
                     {/* Número de tarjeta */}
-                    <Box sx={{ mb: 2 }}>
-                        <Typography variant="body2" sx={{ mb: 1, fontWeight: 'medium' }}>
+                    <Box sx={{ mb: 3 }}>
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                mb: 1,
+                                fontWeight: 'medium',
+                                fontFamily: typography.fontFamily,
+                                color: '#444'
+                            }}
+                        >
                             Número de tarjeta
                         </Typography>
                         <StripeInputContainer>
@@ -154,11 +284,17 @@ function CreditCardForm({ amount, onPaymentSuccess, onPaymentMethodChange }) {
                                     style: {
                                         base: {
                                             fontSize: '16px',
-                                            color: 'text.primary',
+                                            color: '#424770',
+                                            fontFamily: typography.fontFamily,
                                             '::placeholder': {
-                                                color: 'text.disabled',
+                                                color: '#aab7c4',
                                             },
+                                            iconColor: vistelicaColors.primary
                                         },
+                                        invalid: {
+                                            color: '#9e2146',
+                                            iconColor: '#fa755a'
+                                        }
                                     },
                                     showIcon: true,
                                 }}
@@ -166,10 +302,23 @@ function CreditCardForm({ amount, onPaymentSuccess, onPaymentMethodChange }) {
                         </StripeInputContainer>
                     </Box>
 
-                    <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                    <Box sx={{
+                        display: 'flex',
+                        gap: 2,
+                        mb: 3,
+                        flexDirection: { xs: 'column', sm: 'row' }
+                    }}>
                         {/* Fecha de expiración */}
                         <Box sx={{ flex: 1 }}>
-                            <Typography variant="body2" sx={{ mb: 1, fontWeight: 'medium' }}>
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    mb: 1,
+                                    fontWeight: 'medium',
+                                    fontFamily: typography.fontFamily,
+                                    color: '#444'
+                                }}
+                            >
                                 Fecha de expiración
                             </Typography>
                             <StripeInputContainer>
@@ -178,8 +327,15 @@ function CreditCardForm({ amount, onPaymentSuccess, onPaymentMethodChange }) {
                                         style: {
                                             base: {
                                                 fontSize: '16px',
-                                                color: 'text.primary',
+                                                color: '#424770',
+                                                fontFamily: typography.fontFamily,
+                                                '::placeholder': {
+                                                    color: '#aab7c4',
+                                                }
                                             },
+                                            invalid: {
+                                                color: '#9e2146',
+                                            }
                                         },
                                     }}
                                 />
@@ -188,7 +344,15 @@ function CreditCardForm({ amount, onPaymentSuccess, onPaymentMethodChange }) {
 
                         {/* CVC */}
                         <Box sx={{ flex: 1 }}>
-                            <Typography variant="body2" sx={{ mb: 1, fontWeight: 'medium' }}>
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    mb: 1,
+                                    fontWeight: 'medium',
+                                    fontFamily: typography.fontFamily,
+                                    color: '#444'
+                                }}
+                            >
                                 Código de seguridad (CVC)
                             </Typography>
                             <StripeInputContainer>
@@ -197,8 +361,15 @@ function CreditCardForm({ amount, onPaymentSuccess, onPaymentMethodChange }) {
                                         style: {
                                             base: {
                                                 fontSize: '16px',
-                                                color: 'text.primary',
+                                                color: '#424770',
+                                                fontFamily: typography.fontFamily,
+                                                '::placeholder': {
+                                                    color: '#aab7c4',
+                                                }
                                             },
+                                            invalid: {
+                                                color: '#9e2146',
+                                            }
                                         },
                                     }}
                                 />
@@ -206,48 +377,73 @@ function CreditCardForm({ amount, onPaymentSuccess, onPaymentMethodChange }) {
                         </Box>
                     </Box>
 
-                    {/* Nombre del titular */}
+                    {/* Nombre del titular - Mejorar responsividad */}
                     <Box sx={{ mb: 2 }}>
-                        <Typography variant="body2" sx={{ mb: 1, fontWeight: 'medium' }}>
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                mb: 1,
+                                fontWeight: 'medium',
+                                fontFamily: typography.fontFamily,
+                                color: '#444'
+                            }}
+                        >
                             Nombre del titular
                         </Typography>
-                        <OutlinedInput
+                        <StyledOutlinedInput
                             fullWidth
                             value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            onChange={handleNameChange}
                             placeholder="Como aparece en la tarjeta"
                             required
+                            size="medium"
+                            sx={{
+                                fontSize: { xs: '0.9rem', sm: '1rem' } // Tamaño responsivo
+                            }}
+                            inputProps={{
+                                'aria-label': 'Nombre del titular',
+                            }}
                         />
                     </Box>
                 </PaymentContainer>
 
-                <Button
+                <StyledButton
                     type="submit"
                     fullWidth
                     variant="contained"
-                    size="large"
                     disabled={!stripe || isProcessing}
-                    sx={{ mt: 3 }}
+                    sx={{
+                        mt: 3,
+                        height: { xs: '48px', sm: '52px' } // Altura responsiva
+                    }}
                 >
                     {isProcessing ? (
                         <>
-                            <CircularProgress size={24} sx={{ mr: 1 }} />
+                            <CircularProgress
+                                size={24}
+                                sx={{
+                                    mr: 1.5,
+                                    color: 'white'
+                                }}
+                                thickness={4}
+                            />
                             Procesando pago...
                         </>
                     ) : (
-                        `Pagar`
+                        `Pagar ${amount}`
                     )}
-                </Button>
+                </StyledButton>
             </Box>
         </Box>
     );
 }
 
-export default function CreditCard({
-                                       amount,
-                                       onPaymentSuccess,
-                                       onPaymentMethodChange
-                                   }) {
+// Optimizar el componente exportado con React.memo
+export default React.memo(function CreditCard({
+    amount,
+    onPaymentSuccess,
+    onPaymentMethodChange
+}) {
     return (
         <Elements stripe={stripePromise}>
             <CreditCardForm
@@ -257,4 +453,4 @@ export default function CreditCard({
             />
         </Elements>
     );
-}
+});

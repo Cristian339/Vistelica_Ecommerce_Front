@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     Box,
     Typography,
@@ -19,7 +20,10 @@ import { loadStripe } from '@stripe/stripe-js';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import paymentService from '@/services/paymentService';
 import AppleIcon from '@mui/icons-material/Apple';
+import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import { typography } from '@/pages/shared-theme/themePrimitives';
 
+// Cargar Stripe sólo una vez
 const stripePromise = loadStripe("pk_test_51RPncWQc122Tani8pkjulLHNj5pnGssS5aP8eyTIKO7kBECr0X9ndIax3yFYraPQca5Ax6uH4l528N1zzsqLI8Rn00qx93QGQO");
 
 const PaymentContainer = styled('div')(({ theme }) => ({
@@ -28,13 +32,17 @@ const PaymentContainer = styled('div')(({ theme }) => ({
     alignItems: 'center',
     justifyContent: 'center',
     padding: theme.spacing(4),
-    borderRadius: theme.shape.borderRadius,
-    border: '1px solid',
-    borderColor: theme.palette.divider,
+    borderRadius: '16px',
+    border: '1px solid #eaeaea',
     backgroundColor: theme.palette.background.paper,
     maxWidth: '500px',
     margin: '0 auto',
-    minHeight: '300px'
+    minHeight: '300px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+        boxShadow: '0 6px 25px rgba(0,0,0,0.08)',
+    }
 }));
 
 const SuccessContainer = styled('div')(({ theme }) => ({
@@ -43,30 +51,45 @@ const SuccessContainer = styled('div')(({ theme }) => ({
     alignItems: 'center',
     justifyContent: 'center',
     padding: theme.spacing(4),
-    border: '1px solid #4caf50',
-    borderRadius: theme.shape.borderRadius,
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    border: '1px solid #b7eb8f',
+    borderRadius: '16px',
+    backgroundColor: 'rgba(82, 196, 26, 0.05)',
     maxWidth: '500px',
     margin: '0 auto',
-    textAlign: 'center'
+    textAlign: 'center',
+    boxShadow: '0 4px 20px rgba(82, 196, 26, 0.1)',
+    transition: 'all 0.3s ease'
 }));
 
-function ApplePayComponent({
-                               amount,
-                               onPaymentSuccess,
-                               onPaymentMethodChange,
-                               setPaymentData
-                           }) {
+const AppleIconWrapper = styled(Box)(({ theme }) => ({
+    backgroundColor: '#000000',
+    width: 64,
+    height: 64,
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: theme.spacing(3),
+    boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+}));
+
+// Componente optimizado con memo
+const ApplePayComponent = React.memo(function ApplePayComponent({
+    amount,
+    onPaymentSuccess,
+    onPaymentMethodChange,
+    setPaymentData
+}) {
     const stripe = useStripe();
     const elements = useElements();
-    const [paymentRequest, setPaymentRequest] = React.useState(null);
-    const [loading, setLoading] = React.useState(false);
-    const [error, setError] = React.useState(null);
-    const [success, setSuccess] = React.useState(false);
+    const [paymentRequest, setPaymentRequest] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(false);
 
     const amountInCents = paymentService.convertEurosToCents(amount);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (!stripe || !elements) return;
 
         // Notificar al padre que se seleccionó este método
@@ -92,7 +115,7 @@ function ApplePayComponent({
             }
         });
 
-        pr.on('paymentmethod', async (ev) => {
+        const handlePaymentMethod = async (ev) => {
             setLoading(true);
             setError(null);
 
@@ -139,27 +162,45 @@ function ApplePayComponent({
             } finally {
                 setLoading(false);
             }
-        });
-    }, [stripe, elements, amountInCents, onPaymentSuccess, onPaymentMethodChange, setPaymentData]);
+        };
+
+        pr.on('paymentmethod', handlePaymentMethod);
+
+        // Limpiar listener al desmontar
+        return () => {
+            pr.off('paymentmethod', handlePaymentMethod);
+        };
+    }, [stripe, elements, amountInCents, onPaymentSuccess, onPaymentMethodChange, setPaymentData, amount]);
 
     if (success) {
         return (
             <SuccessContainer>
                 <CheckCircleIcon sx={{
-                    fontSize: 60,
-                    color: 'success.main',
-                    mb: 2
+                    fontSize: 64,
+                    color: '#52c41a',
+                    mb: 2,
+                    filter: 'drop-shadow(0 2px 6px rgba(82, 196, 26, 0.3))'
                 }} />
                 <Typography variant="h5" gutterBottom sx={{
-                    fontWeight: 'bold',
-                    color: 'success.main'
+                    fontWeight: 700,
+                    color: '#52c41a',
+                    fontFamily: typography.fontFamily,
+                    mb: 1.5
                 }}>
                     Pago exitoso
                 </Typography>
-                <Typography variant="body1" sx={{ mb: 2 }}>
+                <Typography variant="body1" sx={{
+                    mb: 2,
+                    fontFamily: typography.fontFamily,
+                    fontSize: '1rem',
+                    color: '#333'
+                }}>
                     Tu pago de {(amountInCents / 100).toFixed(2)}€ se ha procesado correctamente con Apple Pay.
                 </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                <Typography variant="body2" sx={{
+                    color: 'text.secondary',
+                    fontFamily: typography.fontFamily
+                }}>
                     Recibirás un correo de confirmación con los detalles.
                 </Typography>
             </SuccessContainer>
@@ -169,20 +210,38 @@ function ApplePayComponent({
     return (
         <Box sx={{ width: '100%' }}>
             <Collapse in={!!error}>
-                <Alert severity="error" sx={{ mb: 2 }}>
+                <Alert
+                    severity="error"
+                    sx={{
+                        mb: 2,
+                        borderRadius: '8px',
+                        '& .MuiAlert-icon': {
+                            color: '#ff4d4f'
+                        }
+                    }}
+                >
                     {error}
                 </Alert>
             </Collapse>
 
             <PaymentContainer>
-                <AppleIcon sx={{
-                    fontSize: 48,
-                    color: '#000000', // Color negro típico de Apple
-                    mb: 2
-                }} />
-                <Typography variant="h6" gutterBottom sx={{
-                    fontWeight: 'medium'
-                }}>
+                <AppleIconWrapper>
+                    <AppleIcon sx={{
+                        fontSize: 36,
+                        color: '#ffffff',
+                        filter: 'drop-shadow(0 1px 2px rgba(255,255,255,0.3))'
+                    }} />
+                </AppleIconWrapper>
+                <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{
+                        fontWeight: 600,
+                        fontFamily: typography.fontFamily,
+                        color: '#151515',
+                        mb: 1
+                    }}
+                >
                     Pago con Apple Pay
                 </Typography>
 
@@ -190,26 +249,56 @@ function ApplePayComponent({
                     <Box sx={{
                         display: 'flex',
                         flexDirection: 'column',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        mt: 2
                     }}>
-                        <CircularProgress sx={{ mb: 2 }} />
-                        <Typography variant="body2">
+                        <CircularProgress
+                            size={38}
+                            thickness={4}
+                            sx={{
+                                mb: 2,
+                                color: vistelicaColors.primary
+                            }}
+                        />
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                fontFamily: typography.fontFamily,
+                                color: 'text.secondary'
+                            }}
+                        >
                             Procesando pago...
                         </Typography>
                     </Box>
                 ) : paymentRequest ? (
                     <>
-                        <Typography variant="body2" sx={{
-                            mb: 3,
-                            textAlign: 'center'
-                        }}>
+                        <Typography
+                            variant="body1"
+                            sx={{
+                                mb: 3,
+                                textAlign: 'center',
+                                color: '#555',
+                                fontFamily: typography.fontFamily,
+                                maxWidth: '90%',
+                                mx: 'auto'
+                            }}
+                        >
                             Paga de forma rápida y segura con tu dispositivo Apple.
                         </Typography>
-                        <div style={{
-                            width: '100%',
-                            maxWidth: '300px',
-                            minHeight: '50px'
-                        }}>
+                        <Box
+                            sx={{
+                                width: '100%',
+                                maxWidth: '320px',
+                                minHeight: '50px',
+                                my: 1,
+                                '.paymentRequestButton': {
+                                    '&:hover': {
+                                        transform: 'scale(1.01)',
+                                        transition: 'transform 0.2s ease'
+                                    }
+                                }
+                            }}
+                        >
                             <PaymentRequestButtonElement
                                 options={{
                                     paymentRequest,
@@ -217,29 +306,51 @@ function ApplePayComponent({
                                         paymentRequestButton: {
                                             theme: 'dark',
                                             height: '48px',
-                                            type: 'buy' // Estilo específico para Apple Pay
+                                            type: 'buy'
                                         }
                                     }
                                 }}
+                                className="paymentRequestButton"
                             />
-                        </div>
+                        </Box>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                mt: 2,
+                                color: 'text.secondary',
+                                fontFamily: typography.fontFamily,
+                                textAlign: 'center',
+                                display: 'block'
+                            }}
+                        >
+                            Transacción segura y protegida
+                        </Typography>
                     </>
                 ) : (
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography
+                        variant="body2"
+                        sx={{
+                            color: 'text.secondary',
+                            fontFamily: typography.fontFamily,
+                            mt: 2,
+                            textAlign: 'center'
+                        }}
+                    >
                         {error ? 'Error al cargar Apple Pay' : 'Cargando opciones de pago...'}
                     </Typography>
                 )}
             </PaymentContainer>
         </Box>
     );
-}
+});
 
-export default function ApplePayWrapper({
-                                            amount,
-                                            onPaymentSuccess,
-                                            onPaymentMethodChange,
-                                            setPaymentData
-                                        }) {
+// Optimizar el wrapper con React.memo
+export default React.memo(function ApplePayWrapper({
+    amount,
+    onPaymentSuccess,
+    onPaymentMethodChange,
+    setPaymentData
+}) {
     return (
         <Elements stripe={stripePromise}>
             <ApplePayComponent
@@ -250,4 +361,4 @@ export default function ApplePayWrapper({
             />
         </Elements>
     );
-}
+});

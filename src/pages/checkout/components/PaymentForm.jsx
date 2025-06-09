@@ -15,6 +15,7 @@ import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormLabel from '@mui/material/FormLabel';
 import FormHelperText from '@mui/material/FormHelperText';
+import Grid from '@mui/material/Grid';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import RadioGroup from '@mui/material/RadioGroup';
 import Stack from '@mui/material/Stack';
@@ -30,60 +31,75 @@ import GoogleIcon from '@mui/icons-material/Google';
 import AppleIcon from '@mui/icons-material/Apple';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Collapse from "@mui/material/Collapse";
+import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import { typography } from '@/pages/shared-theme/themePrimitives';
+
+const SectionTitle = styled(Typography)(({ theme }) => ({
+    fontSize: '1.25rem',
+    fontWeight: 700,
+    marginBottom: theme.spacing(2.5),
+    color: '#212121',
+    fontFamily: typography.fontFamily,
+    position: 'relative',
+    paddingBottom: theme.spacing(1),
+    '&:after': {
+        content: '""',
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        width: '50px',
+        height: '3px',
+        backgroundColor: vistelicaColors.primary,
+        borderRadius: '2px'
+    }
+}));
 
 const Card = styled(MuiCard)(({ theme, selected }) => ({
     border: '1px solid',
-    borderColor: (theme.vars || theme).palette.divider,
+    borderColor: selected ? vistelicaColors.primary : theme.palette.divider,
+    borderRadius: '10px',
     width: '100%',
+    boxShadow: selected ? `0px 2px 12px ${vistelicaColors.primary}30` : 'none',
+    transition: 'all 0.3s ease',
+    marginBottom: theme.spacing(1.5),
     '&:hover': {
-        background:
-            'linear-gradient(to bottom right, hsla(210, 100%, 97%, 0.5) 25%, hsla(210, 100%, 90%, 0.3) 100%)',
-        borderColor: 'primary.light',
-        boxShadow: '0px 2px 8px hsla(0, 0%, 0%, 0.1)',
-        ...theme.applyStyles('dark', {
-            background:
-                'linear-gradient(to right bottom, hsla(210, 100%, 12%, 0.2) 25%, hsla(210, 100%, 16%, 0.2) 100%)',
-            borderColor: 'primary.dark',
-            boxShadow: '0px 1px 8px hsla(210, 100%, 25%, 0.5) ',
-        }),
-    },
-    [theme.breakpoints.up('md')]: {
-        flexGrow: 1,
-        maxWidth: `calc(33.33% - ${theme.spacing(1.3)})`,
-    },
-    ...(selected && {
-        borderColor: (theme.vars || theme).palette.primary.light,
-        ...theme.applyStyles('dark', {
-            borderColor: (theme.vars || theme).palette.primary.dark,
-        }),
-    }),
+        background: `linear-gradient(to bottom right, ${vistelicaColors.primary}10, ${vistelicaColors.primary}05)`,
+        borderColor: vistelicaColors.primary,
+        boxShadow: `0px 2px 10px ${vistelicaColors.primary}20`,
+        transform: 'translateY(-3px)',
+    }
 }));
 
-const SuccessContainer = styled('div')(({ theme }) => ({
+const SuccessContainer = styled(Box)(({ theme }) => ({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     padding: theme.spacing(4),
     border: '1px solid #4caf50',
-    borderRadius: theme.shape.borderRadius,
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    borderRadius: '12px',
+    backgroundColor: 'rgba(76, 175, 80, 0.05)',
     maxWidth: '500px',
     margin: '0 auto',
-    textAlign: 'center'
+    textAlign: 'center',
+    boxShadow: '0 3px 15px rgba(0, 0, 0, 0.05)',
+    transition: 'all 0.3s ease'
 }));
 
-const GooglePayButton = styled('div')(({ theme }) => ({
+const GooglePayButton = styled(Box)(({ theme }) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     padding: theme.spacing(2),
     backgroundColor: theme.palette.common.white,
     border: '1px solid #ddd',
-    borderRadius: theme.shape.borderRadius,
+    borderRadius: '10px',
     cursor: 'pointer',
+    transition: 'all 0.2s ease',
     '&:hover': {
         backgroundColor: '#f5f5f5',
+        boxShadow: '0 3px 8px rgba(0,0,0,0.1)',
+        transform: 'translateY(-2px)'
     },
     ...theme.applyStyles('dark', {
         backgroundColor: '#424242',
@@ -97,6 +113,63 @@ const GooglePayButton = styled('div')(({ theme }) => ({
 const FormGrid = styled('div')(() => ({
     display: 'flex',
     flexDirection: 'column',
+}));
+
+const PaymentMethodIcon = styled(Box)(({ theme, selected, paymentType }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 42,
+    height: 42,
+    borderRadius: '50%',
+    backgroundColor: selected ? `${vistelicaColors.primary}15` : 'rgba(0, 0, 0, 0.04)',
+    color: selected ? vistelicaColors.primary : theme.palette.text.secondary,
+    transition: 'all 0.3s ease',
+    marginRight: theme.spacing(2),
+    boxShadow: selected ? `0 3px 8px ${vistelicaColors.primary}20` : 'none',
+}));
+
+const StyledCheckbox = styled(Checkbox)(({ theme }) => ({
+    color: theme.palette.text.secondary,
+    '&.Mui-checked': {
+        color: vistelicaColors.primary,
+    }
+}));
+
+const PaymentMethodsPanel = styled(Box)(({ theme }) => ({
+    backgroundColor: '#f9fafb',
+    borderRadius: '12px',
+    padding: theme.spacing(2.5),
+    border: '1px solid #eaeaea',
+    height: '100%',
+    [theme.breakpoints.down('md')]: {
+        marginBottom: theme.spacing(3),
+    }
+}));
+
+const PaymentMethodLabel = styled(Typography)(({ theme }) => ({
+    fontSize: '1rem',
+    fontWeight: 600,
+    color: '#424242',
+    fontFamily: typography.fontFamily,
+    marginBottom: theme.spacing(2),
+    textAlign: 'center',
+    position: 'relative',
+    '&:after': {
+        content: '""',
+        position: 'absolute',
+        bottom: -8,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '40px',
+        height: '3px',
+        backgroundColor: vistelicaColors.primary,
+        borderRadius: '2px'
+    }
+}));
+
+const PaymentFormContainer = styled(Box)(({ theme }) => ({
+    flexGrow: 1,
 }));
 
 const PaymentForm = React.forwardRef(({
@@ -244,8 +317,8 @@ const PaymentForm = React.forwardRef(({
 
     const handleApprove = (data, actions) => {
         setIsProcessing(true);
-        setErrors({}); // Limpiar errores previos
-        setPaypalSuccess(false); // Resetear estado de éxito
+        setErrors({});
+        setPaypalSuccess(false);
 
         return actions.order.capture()
             .then((details) => {
@@ -293,256 +366,431 @@ const PaymentForm = React.forwardRef(({
                     paypal: errorMessage,
                     paypalDetails: error
                 });
-
-                // Opcional: Reintentar lógica
-                /*
-                if (hasRetryAttempts) {
-                    return actions.restart();
-                }
-                */
             })
             .finally(() => {
                 setIsProcessing(false);
             });
     };
 
+    // Renderizado del formulario de pago seleccionado
+    const renderPaymentFormContent = () => {
+        switch(paymentType) {
+            case 'creditCard':
+                return (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <CreditCard
+                            amount={amount}
+                            onPaymentSuccess={onPaymentSuccess}
+                            onPaymentMethodChange={onPaymentMethodChange}
+                            setPaymentData={setPaymentData}
+                        />
+                        <FormControlLabel
+                            control={
+                                <StyledCheckbox
+                                    name="saveCard"
+                                    sx={{
+                                        color: 'text.secondary',
+                                        '&.Mui-checked': {
+                                            color: vistelicaColors.primary,
+                                        }
+                                    }}
+                                />
+                            }
+                            label={
+                                <Typography
+                                    sx={{
+                                        fontFamily: typography.fontFamily,
+                                        fontSize: '0.9rem',
+                                        color: 'text.secondary'
+                                    }}
+                                >
+                                    Recordar los datos de la tarjeta para la próxima vez
+                                </Typography>
+                            }
+                        />
+                    </Box>
+                );
+            case 'paypal':
+                return (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        {paypalSuccess ? (
+                            <SuccessContainer>
+                                <CheckCircleIcon sx={{
+                                    fontSize: 60,
+                                    color: 'success.main',
+                                    mb: 2,
+                                    filter: 'drop-shadow(0 3px 6px rgba(76, 175, 80, 0.3))'
+                                }} />
+                                <Typography
+                                    variant="h5"
+                                    gutterBottom
+                                    sx={{
+                                        fontWeight: 700,
+                                        color: 'success.main',
+                                        fontFamily: typography.fontFamily
+                                    }}
+                                >
+                                    Pago exitoso
+                                </Typography>
+                                <Typography
+                                    variant="body1"
+                                    sx={{
+                                        mb: 2,
+                                        fontFamily: typography.fontFamily
+                                    }}
+                                >
+                                    Tu pago se ha procesado correctamente con PayPal.
+                                </Typography>
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        color: 'text.secondary',
+                                        fontFamily: typography.fontFamily
+                                    }}
+                                >
+                                    Recibirás un correo de confirmación con los detalles.
+                                </Typography>
+                            </SuccessContainer>
+                        ) : (
+                            <>
+                                <Typography
+                                    variant="subtitle1"
+                                    sx={{
+                                        fontWeight: 500,
+                                        fontFamily: typography.fontFamily,
+                                        color: vistelicaColors.primary
+                                    }}
+                                >
+                                    Pago con PayPal
+                                </Typography>
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                    gutterBottom
+                                    sx={{ fontFamily: typography.fontFamily }}
+                                >
+                                    Haz clic en el botón de PayPal para completar tu compra simulada
+                                </Typography>
+                                <Collapse in={!!errors.paypal}>
+                                    <Alert
+                                        severity="error"
+                                        sx={{
+                                            mb: 2,
+                                            borderRadius: '8px'
+                                        }}
+                                    >
+                                        {errors.paypal}
+                                    </Alert>
+                                </Collapse>
+                                <Box sx={{
+                                    maxWidth: 450,
+                                    mx: 'auto',
+                                    width: '100%',
+                                    position: 'relative',
+                                    '.paypal-buttons': {
+                                        borderRadius: '8px',
+                                        overflow: 'hidden'
+                                    }
+                                }}>
+                                    {isProcessing && (
+                                        <Box sx={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            backgroundColor: 'rgba(255,255,255,0.8)',
+                                            zIndex: 1,
+                                            borderRadius: '8px'
+                                        }}>
+                                            <CircularProgress sx={{ color: vistelicaColors.primary }} />
+                                        </Box>
+                                    )}
+                                    <PayPalScriptProvider options={paypalOptions}>
+                                        <PayPalButtons
+                                            createOrder={handleCreateOrder}
+                                            onApprove={handleApprove}
+                                            style={{
+                                                layout: "vertical",
+                                                shape: "rect",
+                                                color: "blue"
+                                            }}
+                                        />
+                                    </PayPalScriptProvider>
+                                </Box>
+                            </>
+                        )}
+                    </Box>
+                );
+            case 'applePay':
+                return (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <ApplePayWrapper
+                            amount={amount}
+                            onPaymentSuccess={onPaymentSuccess}
+                            onPaymentMethodChange={onPaymentMethodChange}
+                            setPaymentData={setPaymentData}
+                        />
+                    </Box>
+                );
+            case 'googlePay':
+                return (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <GooglePayWrapper
+                            amount={amount}
+                            onPaymentSuccess={onPaymentSuccess}
+                            onPaymentMethodChange={onPaymentMethodChange}
+                            setPaymentData={setPaymentData}
+                        />
+                    </Box>
+                );
+            default:
+                return null;
+        }
+    };
+
     return (
-        <Stack spacing={{ xs: 3, sm: 6 }} useFlexGap>
-            <FormControl component="fieldset" fullWidth>
-                <RadioGroup
-                    aria-label="Payment options"
-                    name="paymentType"
-                    value={paymentType}
-                    onChange={handlePaymentTypeChange}
-                    sx={{
-                        display: 'flex',
-                        flexDirection: { xs: 'column', sm: 'row' },
-                        gap: 2,
-                    }}
-                >
-                    <Card selected={paymentType === 'creditCard'}>
-                        <CardActionArea
-                            onClick={() => handlePaymentTypeChange({ target: { value: 'creditCard' }})}
-                            sx={{
-                                '.MuiCardActionArea-focusHighlight': {
-                                    backgroundColor: 'transparent',
-                                },
-                                '&:focus-visible': {
-                                    backgroundColor: 'action.hover',
-                                },
-                            }}
-                        >
-                            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <CreditCardRoundedIcon
-                                    fontSize="small"
-                                    sx={[
-                                        (theme) => ({
-                                            color: 'grey.400',
-                                            ...theme.applyStyles('dark', {
-                                                color: 'grey.600',
-                                            }),
-                                        }),
-                                        paymentType === 'creditCard' && {
-                                            color: 'primary.main',
-                                        },
-                                    ]}
-                                />
-                                <Typography sx={{ fontWeight: 'medium' }}>Tarjeta</Typography>
-                            </CardContent>
-                        </CardActionArea>
-                    </Card>
+        <Box sx={{ width: '100%' }}>
+            <Box sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', md: 'row' },
+                alignItems: 'flex-start',
+                gap: 3
+            }}>
+                {/* Panel de selección de métodos de pago (lateral) */}
+                <Box sx={{
+                    width: { xs: '100%', md: '250px' },
+                    flexShrink: 0,
+                    order: { xs: 2, md: 1 }
+                }}>
+                    <PaymentMethodsPanel>
+                        <PaymentMethodLabel>
+                            Seleccionar método de pago
+                        </PaymentMethodLabel>
+                        <FormControl component="fieldset" fullWidth>
+                            <RadioGroup
+                                aria-label="Opciones de pago"
+                                name="paymentType"
+                                value={paymentType}
+                                onChange={handlePaymentTypeChange}
+                                sx={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: 1.5
+                                }}
+                            >
+                                {/* Opciones de métodos de pago (tarjeta, PayPal, etc.) */}
+                                <Card selected={paymentType === 'creditCard'}>
+                                    <CardActionArea
+                                        onClick={() => handlePaymentTypeChange({ target: { value: 'creditCard' }})}
+                                        sx={{
+                                            borderRadius: '10px',
+                                            padding: 1,
+                                            '.MuiCardActionArea-focusHighlight': {
+                                                backgroundColor: 'transparent',
+                                            },
+                                            '&:focus-visible': {
+                                                backgroundColor: `${vistelicaColors.primary}10`,
+                                                outline: `2px solid ${vistelicaColors.primary}`,
+                                            },
+                                        }}
+                                    >
+                                        <CardContent sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            p: 1,
+                                            '&:last-child': { pb: 1 }
+                                        }}>
+                                            <PaymentMethodIcon selected={paymentType === 'creditCard'}>
+                                                <CreditCardRoundedIcon fontSize={paymentType === 'creditCard' ? "medium" : "small"} />
+                                            </PaymentMethodIcon>
+                                            <Box>
+                                                <Typography
+                                                    sx={{
+                                                        fontWeight: 'medium',
+                                                        fontFamily: typography.fontFamily
+                                                    }}
+                                                >
+                                                    Tarjeta
+                                                </Typography>
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
+                                                        color: 'text.secondary',
+                                                        fontFamily: typography.fontFamily
+                                                    }}
+                                                >
+                                                    Visa, Mastercard
+                                                </Typography>
+                                            </Box>
+                                        </CardContent>
+                                    </CardActionArea>
+                                </Card>
 
-                    <Card selected={paymentType === 'paypal'}>
-                        <CardActionArea
-                            onClick={() => handlePaymentTypeChange({ target: { value: 'paypal' }})}
-                            sx={{
-                                '.MuiCardActionArea-focusHighlight': {
-                                    backgroundColor: 'transparent',
-                                },
-                                '&:focus-visible': {
-                                    backgroundColor: 'action.hover',
-                                },
-                            }}
-                        >
-                            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <PaymentIcon
-                                    fontSize="small"
-                                    sx={[
-                                        (theme) => ({
-                                            color: 'grey.400',
-                                            ...theme.applyStyles('dark', {
-                                                color: 'grey.600',
-                                            }),
-                                        }),
-                                        paymentType === 'paypal' && {
-                                            color: 'primary.main',
-                                        },
-                                    ]}
-                                />
-                                <Typography sx={{ fontWeight: 'medium' }}>PayPal</Typography>
-                            </CardContent>
-                        </CardActionArea>
-                    </Card>
+                                {/* Repetir estructura similar para otros métodos de pago */}
+                                <Card selected={paymentType === 'paypal'}>
+                                    <CardActionArea
+                                        onClick={() => handlePaymentTypeChange({ target: { value: 'paypal' }})}
+                                        sx={{
+                                            borderRadius: '10px',
+                                            padding: 1,
+                                            '.MuiCardActionArea-focusHighlight': {
+                                                backgroundColor: 'transparent',
+                                            },
+                                            '&:focus-visible': {
+                                                backgroundColor: `${vistelicaColors.primary}10`,
+                                                outline: `2px solid ${vistelicaColors.primary}`,
+                                            },
+                                        }}
+                                    >
+                                        <CardContent sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            p: 1,
+                                            '&:last-child': { pb: 1 }
+                                        }}>
+                                            <PaymentMethodIcon selected={paymentType === 'paypal'}>
+                                                <PaymentIcon fontSize={paymentType === 'paypal' ? "medium" : "small"} />
+                                            </PaymentMethodIcon>
+                                            <Box>
+                                                <Typography
+                                                    sx={{
+                                                        fontWeight: 'medium',
+                                                        fontFamily: typography.fontFamily
+                                                    }}
+                                                >
+                                                    PayPal
+                                                </Typography>
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
+                                                        color: 'text.secondary',
+                                                        fontFamily: typography.fontFamily
+                                                    }}
+                                                >
+                                                    Pago rápido y seguro
+                                                </Typography>
+                                            </Box>
+                                        </CardContent>
+                                    </CardActionArea>
+                                </Card>
 
-                    <Card selected={paymentType === 'applePay'}>
-                        <CardActionArea
-                            onClick={() => handlePaymentTypeChange({ target: { value: 'applePay' }})}
-                            sx={{
-                                '.MuiCardActionArea-focusHighlight': {
-                                    backgroundColor: 'transparent',
-                                },
-                                '&:focus-visible': {
-                                    backgroundColor: 'action.hover',
-                                },
-                            }}
-                        >
-                            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <AppleIcon
-                                    fontSize="small"
-                                    sx={[
-                                        (theme) => ({
-                                            color: 'grey.400',
-                                            ...theme.applyStyles('dark', {
-                                                color: 'grey.600',
-                                            }),
-                                        }),
-                                        paymentType === 'applePay' && {
-                                            color: 'primary.main',
-                                        },
-                                    ]}
-                                />
-                                <Typography sx={{ fontWeight: 'medium' }}>Apple Pay</Typography>
-                            </CardContent>
-                        </CardActionArea>
-                    </Card>
-                    <Card selected={paymentType === 'googlePay'}>
-                        <CardActionArea
-                            onClick={() => handlePaymentTypeChange({ target: { value: 'googlePay' }})}
-                            sx={{
-                                '.MuiCardActionArea-focusHighlight': {
-                                    backgroundColor: 'transparent',
-                                },
-                                '&:focus-visible': {
-                                    backgroundColor: 'action.hover',
-                                },
-                            }}
-                        >
-                            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <GoogleIcon
-                                    fontSize="small"
-                                    sx={[
-                                        (theme) => ({
-                                            color: 'grey.400',
-                                            ...theme.applyStyles('dark', {
-                                                color: 'grey.600',
-                                            }),
-                                        }),
-                                        paymentType === 'googlePay' && {
-                                            color: '#4285F4',
-                                        },
-                                    ]}
-                                />
-                                <Typography sx={{ fontWeight: 'medium' }}>Google Pay</Typography>
-                            </CardContent>
-                        </CardActionArea>
-                    </Card>
-                </RadioGroup>
-            </FormControl>
+                                <Card selected={paymentType === 'applePay'}>
+                                    <CardActionArea
+                                        onClick={() => handlePaymentTypeChange({ target: { value: 'applePay' }})}
+                                        sx={{
+                                            borderRadius: '10px',
+                                            padding: 1,
+                                            '.MuiCardActionArea-focusHighlight': {
+                                                backgroundColor: 'transparent',
+                                            },
+                                            '&:focus-visible': {
+                                                backgroundColor: `${vistelicaColors.primary}10`,
+                                                outline: `2px solid ${vistelicaColors.primary}`,
+                                            },
+                                        }}
+                                    >
+                                        <CardContent sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            p: 1,
+                                            '&:last-child': { pb: 1 }
+                                        }}>
+                                            <PaymentMethodIcon selected={paymentType === 'applePay'}>
+                                                <AppleIcon fontSize={paymentType === 'applePay' ? "medium" : "small"} />
+                                            </PaymentMethodIcon>
+                                            <Box>
+                                                <Typography
+                                                    sx={{
+                                                        fontWeight: 'medium',
+                                                        fontFamily: typography.fontFamily
+                                                    }}
+                                                >
+                                                    Apple Pay
+                                                </Typography>
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
+                                                        color: 'text.secondary',
+                                                        fontFamily: typography.fontFamily
+                                                    }}
+                                                >
+                                                    Para dispositivos Apple
+                                                </Typography>
+                                            </Box>
+                                        </CardContent>
+                                    </CardActionArea>
+                                </Card>
 
-            {paymentType === 'creditCard' && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <CreditCard
-                        amount={amount}
-                        onPaymentSuccess={onPaymentSuccess}  // Usar la prop
-                        onPaymentMethodChange={onPaymentMethodChange}  // Usar la prop
-                        setPaymentData={setPaymentData}
-                    />
-                    <FormControlLabel
-                        control={<Checkbox name="saveCard" />}
-                        label="Recordar los datos de la tarjeta para la próxima vez"
-                    />
+                                <Card selected={paymentType === 'googlePay'}>
+                                    <CardActionArea
+                                        onClick={() => handlePaymentTypeChange({ target: { value: 'googlePay' }})}
+                                        sx={{
+                                            borderRadius: '10px',
+                                            padding: 1,
+                                            '.MuiCardActionArea-focusHighlight': {
+                                                backgroundColor: 'transparent',
+                                            },
+                                            '&:focus-visible': {
+                                                backgroundColor: `${vistelicaColors.primary}10`,
+                                                outline: `2px solid ${vistelicaColors.primary}`,
+                                            },
+                                        }}
+                                    >
+                                        <CardContent sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            p: 1,
+                                            '&:last-child': { pb: 1 }
+                                        }}>
+                                            <PaymentMethodIcon selected={paymentType === 'googlePay'}>
+                                                <GoogleIcon fontSize={paymentType === 'googlePay' ? "medium" : "small"} />
+                                            </PaymentMethodIcon>
+                                            <Box>
+                                                <Typography
+                                                    sx={{
+                                                        fontWeight: 'medium',
+                                                        fontFamily: typography.fontFamily
+                                                    }}
+                                                >
+                                                    Google Pay
+                                                </Typography>
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
+                                                        color: 'text.secondary',
+                                                        fontFamily: typography.fontFamily
+                                                    }}
+                                                >
+                                                    Para dispositivos Android
+                                                </Typography>
+                                            </Box>
+                                        </CardContent>
+                                    </CardActionArea>
+                                </Card>
+                            </RadioGroup>
+                        </FormControl>
+                    </PaymentMethodsPanel>
                 </Box>
-            )}
 
-            {paymentType === 'paypal' && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    {paypalSuccess ? (
-                        <SuccessContainer>
-                            <CheckCircleIcon sx={{ fontSize: 60, color: 'success.main', mb: 2 }} />
-                            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: 'success.main' }}>
-                                Pago exitoso
-                            </Typography>
-                            <Typography variant="body1" sx={{ mb: 2 }}>
-                                Tu pago se ha procesado correctamente con PayPal.
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                Recibirás un correo de confirmación con los detalles.
-                            </Typography>
-                        </SuccessContainer>
-                    ) : (
-                        <>
-                            <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
-                                Pago con PayPal
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" gutterBottom>
-                                Haz clic en el botón de PayPal para completar tu compra simulada
-                            </Typography>
-                            <Collapse in={!!errors.paypal}>
-                                <Alert severity="error" sx={{ mb: 2 }}>
-                                    {errors.paypal}
-                                </Alert>
-                            </Collapse>
-                            <Box sx={{ maxWidth: 450, mx: 'auto', width: '100%', position: 'relative' }}>
-                                {isProcessing && (
-                                    <Box sx={{
-                                        position: 'absolute',
-                                        top: 0,
-                                        left: 0,
-                                        right: 0,
-                                        bottom: 0,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        backgroundColor: 'rgba(255,255,255,0.7)',
-                                        zIndex: 1
-                                    }}>
-                                        <CircularProgress />
-                                    </Box>
-                                )}
-                                <PayPalScriptProvider options={paypalOptions}>
-                                    <PayPalButtons
-                                        createOrder={handleCreateOrder}
-                                        onApprove={handleApprove}
-                                        style={{ layout: "vertical" }}
-                                    />
-                                </PayPalScriptProvider>
-                            </Box>
-                        </>
-                    )}
+                {/* Contenedor del formulario del método seleccionado */}
+                <Box sx={{
+                    flexGrow: 1,
+                    width: { xs: '100%', md: 'calc(100% - 280px)' },
+                    order: { xs: 1, md: 2 }
+                }}>
+                    <PaymentFormContainer>
+                        <SectionTitle variant="h6">
+                            Método de pago seleccionado
+                        </SectionTitle>
+                        {renderPaymentFormContent()}
+                    </PaymentFormContainer>
                 </Box>
-            )}
-
-            {paymentType === 'applePay' && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <ApplePayWrapper
-                        amount={amount}
-                        onPaymentSuccess={onPaymentSuccess}  // Usar la prop
-                        onPaymentMethodChange={onPaymentMethodChange}  // Usar la prop
-                        setPaymentData={setPaymentData}
-                    />
-                </Box>
-            )}
-            {paymentType === 'googlePay' && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <GooglePayWrapper
-                        amount={amount}
-                        onPaymentSuccess={onPaymentSuccess}  // Usar la prop
-                        onPaymentMethodChange={onPaymentMethodChange}  // Usar la prop
-                        setPaymentData={setPaymentData}
-                    />
-                </Box>
-            )}
-        </Stack>
+            </Box>
+        </Box>
     );
 });
 

@@ -21,6 +21,16 @@ export default function Review({ paymentData, shippingData = null }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Solo mantener el objeto de nombres de métodos de pago
+    const paymentMethodNames = {
+        creditCard: 'Tarjeta de crédito',
+        paypal: 'PayPal',
+        applePay: 'Apple Pay',
+        googlePay: 'Google Pay',
+        bankTransfer: 'Transferencia bancaria',
+        default: 'Método de pago seleccionado'
+    };
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -101,28 +111,6 @@ export default function Review({ paymentData, shippingData = null }) {
         return Number(price).toFixed(2) + " €";
     };
 
-    // Función simplificada para obtener el nombre del método de pago
-    const getPaymentMethodName = () => {
-        if (!paymentData || !paymentData.type) {
-            return 'Tarjeta de crédito'; // Default
-        }
-
-        switch (paymentData.type) {
-            case 'creditCard':
-                return 'Tarjeta de crédito';
-            case 'paypal':
-                return 'PayPal';
-            case 'applePay':
-                return 'Apple Pay';
-            case 'googlePay':
-                return 'Google Pay';
-            case 'bankTransfer':
-                return 'Transferencia bancaria';
-            default:
-                return 'Método de pago seleccionado';
-        }
-    };
-
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
@@ -147,6 +135,7 @@ export default function Review({ paymentData, shippingData = null }) {
     const shippingCost = calculateShippingCost(subtotal);
     const totalPrice = subtotal + shippingCost;
     const totalProducts = cartData.products.reduce((sum, item) => sum + item.quantity, 0);
+    const isFreeShipping = subtotal >= 50;
 
     return (
         <Stack spacing={2}>
@@ -221,7 +210,10 @@ export default function Review({ paymentData, shippingData = null }) {
                         Método de pago
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                        {getPaymentMethodName()}
+                        {/* Usar el objeto paymentMethodNames en lugar de la función getPaymentMethodName */}
+                        {paymentData?.type
+                            ? paymentMethodNames[paymentData.type] || paymentMethodNames.default
+                            : paymentMethodNames.default}
                     </Typography>
 
                     {/* Mostrar información adicional solo si es necesario */}
@@ -231,8 +223,6 @@ export default function Review({ paymentData, shippingData = null }) {
                         </Typography>
                     )}
                 </div>
-
-
             </Stack>
         </Stack>
     );

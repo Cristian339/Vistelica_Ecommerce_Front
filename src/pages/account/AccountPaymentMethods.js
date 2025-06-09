@@ -295,18 +295,6 @@ const AccountPaymentMethods = () => {
         });
     };
 
-    const getPaymentMethodIcon = (provider) => {
-        switch (provider) {
-            case 'visa':
-                return <text alt="Visa" style={{ width: 8, height: 14 }} />;
-            case 'mastercard':
-                return <text alt="MasterCard" style={{ width: 8, height: 14 }} />;
-            case 'amex':
-                return <text alt="American Express" style={{ width: 8, height: 14 }} />;
-            default:
-                return <CreditCardIcon />;
-        }
-    };
 
     const formatDate = (dateString) => {
         if (!dateString) return '';
