@@ -97,6 +97,19 @@ const AccountPaymentMethods = () => {
 
                 const methods = await paymentMethodService.getUserPaymentMethods();
                 setPaymentMethods(methods);
+
+
+
+                const profile = await getUserProfile();
+                setUserData(profile);
+
+                // Guardar datos en localStorage para persistencia
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('userData', JSON.stringify({
+                        name: profile.name,
+                        avatar: profile.avatar || profile.profilePic
+                    }));
+                }
             } catch (error) {
                 console.error('Error al cargar los métodos de pago:', error);
                 setSnackbar({
@@ -112,33 +125,9 @@ const AccountPaymentMethods = () => {
         fetchData();
     }, []);
 
-    useEffect(() => {
-        const fetchUserProfile = async () => {
-            try {
-                setLoading(true);
-                const profile = await getUserProfile();
-                setUserData(profile);
 
-                // Guardar datos en localStorage para persistencia
-                if (typeof window !== 'undefined') {
-                    localStorage.setItem('userData', JSON.stringify({
-                        name: profile.name,
-                        avatar: profile.avatar || profile.profilePic
-                    }));
-                }
-            } catch (error) {
-                console.error('Error loading profile:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchUserProfile();
-    }, []);
-
-
-    const userAvatar = userData?.avatar || userData?.profilePic;
-    const userName = userData?.name || 'Usuario';
+    const userAvatar = userData?.avatar;
+    const userName = userData?.name;
 
     const handleOpenDialog = (method = null) => {
         if (method) {

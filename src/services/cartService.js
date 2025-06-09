@@ -217,8 +217,9 @@ const cartService = {
      * @param {string|null} color - Color seleccionado
      * @returns {Promise<Object>} - Item añadido
      */
-    async addToCart(orderId, productId, quantity, price, size = null, color = null, discount_percentage = null) {
+    async addToCart(orderId, productId, quantity = 1, price, size = null, color = null, discount_percentage = null) {
         try {
+            console.log("El id del carrito " + orderId);
             const response = await axios.post(`${API_URL}/cart/items`, {
                 orderId,
                 productId,
