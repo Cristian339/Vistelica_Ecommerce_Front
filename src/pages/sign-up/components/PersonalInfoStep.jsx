@@ -6,8 +6,8 @@ import FormLabel from '@mui/material/FormLabel';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import { styled } from '@mui/material/styles';
-import { vistelicaColors } from '../../shared-theme/vistelicaColors';
 import { useColorScheme } from '@mui/material/styles';
+import { vistelicaColors } from '../../shared-theme/vistelicaColors';
 
 // Botón primario con hover amarillo
 const PrimaryButton = styled(Button)(() => ({
@@ -25,7 +25,20 @@ const PrimaryButton = styled(Button)(() => ({
     transition: 'all 0.3s ease',
 }));
 
-export default function PersonalInfoStep({ formData, onChange, nameError, nameErrorMessage, lastNameError, lastNameErrorMessage, born_dateError, born_dateErrorMessage, onBack, required }) {
+export default function PersonalInfoStep({
+                                             formData,
+                                             onChange,
+                                             nameError,
+                                             nameErrorMessage,
+                                             lastNameError,
+                                             lastNameErrorMessage,
+                                             born_dateError,
+                                             born_dateErrorMessage,
+                                             phoneError,
+                                             phoneErrorMessage,
+                                             onBack,
+                                             required = {}
+                                         }) {
     const { mode } = useColorScheme();
 
     return (
@@ -35,19 +48,21 @@ export default function PersonalInfoStep({ formData, onChange, nameError, nameEr
                     color: mode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
                     fontWeight: 500
                 }}>
-                    Nombre{required ? ' *' : ''}
+                    Nombre{required.name ? ' *' : ''}
                 </FormLabel>
                 <TextField
-                    autoComplete="name"
                     name="name"
-                    required={required}
+                    required={required.name}
                     fullWidth
                     id="name"
-                    placeholder="Jon"
+                    placeholder="Juan"
                     value={formData.name}
                     onChange={onChange}
                     error={nameError}
                     helperText={nameErrorMessage}
+                    FormHelperTextProps={{
+                        sx: { fontWeight: 700 }
+                    }}
                     sx={{
                         '& .MuiOutlinedInput-root': {
                             '&.Mui-focused fieldset': {
@@ -57,24 +72,27 @@ export default function PersonalInfoStep({ formData, onChange, nameError, nameEr
                     }}
                 />
             </FormControl>
+
             <FormControl>
                 <FormLabel htmlFor="lastName" sx={{
                     color: mode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
                     fontWeight: 500
                 }}>
-                    Apellidos{required ? ' *' : ''}
+                    Apellido{required.lastName ? ' *' : ''}
                 </FormLabel>
                 <TextField
-                    autoComplete="family-name"
                     name="lastName"
-                    required={required}
+                    required={required.lastName}
                     fullWidth
                     id="lastName"
-                    placeholder="Snow"
+                    placeholder="Pérez"
                     value={formData.lastName}
                     onChange={onChange}
                     error={lastNameError}
                     helperText={lastNameErrorMessage}
+                    FormHelperTextProps={{
+                        sx: { fontWeight: 700 }
+                    }}
                     sx={{
                         '& .MuiOutlinedInput-root': {
                             '&.Mui-focused fieldset': {
@@ -84,25 +102,26 @@ export default function PersonalInfoStep({ formData, onChange, nameError, nameEr
                     }}
                 />
             </FormControl>
+
             <FormControl>
                 <FormLabel htmlFor="born_date" sx={{
                     color: mode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
                     fontWeight: 500
                 }}>
-                    Fecha de nacimiento{required ? ' *' : ''}
+                    Fecha de nacimiento{required.born_date ? ' *' : ''}
                 </FormLabel>
                 <TextField
                     name="born_date"
-                    type="date"
-                    required={required}
+                    required={required.born_date}
                     fullWidth
                     id="born_date"
+                    type="date"
                     value={formData.born_date}
                     onChange={onChange}
                     error={born_dateError}
                     helperText={born_dateErrorMessage}
-                    InputLabelProps={{
-                        shrink: true,
+                    FormHelperTextProps={{
+                        sx: { fontWeight: 700 }
                     }}
                     sx={{
                         '& .MuiOutlinedInput-root': {
@@ -113,6 +132,42 @@ export default function PersonalInfoStep({ formData, onChange, nameError, nameEr
                     }}
                 />
             </FormControl>
+
+            <FormControl>
+                <FormLabel htmlFor="phone" sx={{
+                    color: mode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
+                    fontWeight: 500
+                }}>
+                    Teléfono{required.phone ? ' *' : ''}
+                </FormLabel>
+                <TextField
+                    name="phone"
+                    required={required.phone}
+                    fullWidth
+                    id="phone"
+                    placeholder="611778899"
+                    value={formData.phone}
+                    onChange={onChange}
+                    error={phoneError}
+                    helperText={phoneErrorMessage}
+                    type="tel"
+                    inputProps={{
+                        pattern: "[0-9]*",
+                        inputMode: "numeric"
+                    }}
+                    FormHelperTextProps={{
+                        sx: { fontWeight: 700 }
+                    }}
+                    sx={{
+                        '& .MuiOutlinedInput-root': {
+                            '&.Mui-focused fieldset': {
+                                borderColor: vistelicaColors.primary,
+                            }
+                        }
+                    }}
+                />
+            </FormControl>
+
             <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
                 <Button
                     type="button"
@@ -132,7 +187,11 @@ export default function PersonalInfoStep({ formData, onChange, nameError, nameEr
                 >
                     Atrás
                 </Button>
-                <PrimaryButton type="submit" fullWidth variant="contained">
+                <PrimaryButton
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                >
                     Continuar
                 </PrimaryButton>
             </Stack>

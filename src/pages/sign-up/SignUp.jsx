@@ -1,5 +1,12 @@
 import * as React from 'react';
-import {registerUser, checkEmailAvailability, checkPhoneAvailability} from '../../services/authService';
+import {
+    initiateRegistration,
+    verifyRegistration,
+    resendVerificationCode,
+    cancelRegistration,
+    checkEmailAvailability,
+    checkPhoneAvailability
+} from '../../services/authService';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
 import Typography from '@mui/material/Typography';
@@ -17,10 +24,12 @@ import {SitemarkIcon} from './components/CustomIcons';
 import RegistrationOptions from './components/RegistrationOptions';
 import AccountInfoStep from './components/AccountInfoStep';
 import PersonalInfoStep from './components/PersonalInfoStep';
-import ContactInfoStep from './components/ContactInfoStep';
+import ContactInfoStep from './components/PersonalizationStep';
 import AdditionalAddressStep from './components/AdditionalAddressStep';
 import { useColorScheme } from '@mui/material/styles';
 import { vistelicaColors } from '../shared-theme/vistelicaColors';
+import PersonalizationStep from "./components/PersonalizationStep";
+import EmailVerificationStep from './components/EmailVerificationStep'; // Nuevo componente
 
 const Card = styled(MuiCard)(() => {
     const { mode } = useColorScheme();
@@ -30,12 +39,12 @@ const Card = styled(MuiCard)(() => {
         flexDirection: 'column',
         alignSelf: 'center',
         width: '100%',
-        maxWidth: '450px', // Ancho máximo fijo
-        padding: '24px', // Reducir padding
-        gap: '12px', // Reducir gap
+        maxWidth: '450px',
+        padding: '24px',
+        gap: '12px',
         margin: 'auto',
-        maxHeight: '90vh', // Altura máxima del viewport
-        overflowY: 'auto', // Permitir scroll vertical
+        maxHeight: '90vh',
+        overflowY: 'auto',
         backgroundColor: mode === 'dark'
             ? vistelicaColors.cardBackground.dark
             : vistelicaColors.cardBackground.light,
@@ -68,28 +77,17 @@ const Card = styled(MuiCard)(() => {
             }
         },
     };
-    /*
-    '&::-webkit-scrollbar': {
-            display: 'none',
-            width: 0,
-        },
-        // Para Firefox
-        scrollbarWidth: 'none',
-        // Para Internet Explorer y Edge legacy
-        '-ms-overflow-style': 'none',
-
-    * */
 });
 
 const SignUpContainer = styled(Stack)(() => {
     const { mode } = useColorScheme();
 
     return {
-        height: '100vh', // Altura completa del viewport
+        height: '100vh',
         minHeight: '100vh',
         padding: '16px',
-        justifyContent: 'center', // Centrar verticalmente
-        alignItems: 'center', // Centrar horizontalmente
+        justifyContent: 'center',
+        alignItems: 'center',
         '@media (min-width: 600px)': {
             padding: '32px',
         },
@@ -107,7 +105,7 @@ const SignUpContainer = styled(Stack)(() => {
     };
 });
 
-const steps = ['Cuenta', 'Información personal', 'Dirección adicional', 'Contacto'];
+const steps = ['Cuenta', 'Información personal', 'Dirección adicional', 'Personalización', 'Verificación'];
 
 export default function SignUp(props) {
     const { mode } = useColorScheme();
@@ -115,6 +113,11 @@ export default function SignUp(props) {
 
     const [showEmailForm, setShowEmailForm] = React.useState(false);
     const [activeStep, setActiveStep] = React.useState(0);
+
+    // Estados para el registro y verificación
+    const [registrationToken, setRegistrationToken] = React.useState('');
+    const [isWaitingVerification, setIsWaitingVerification] = React.useState(false);
+
     const [formData, setFormData] = React.useState({
         name: '',
         lastName: '',
@@ -148,7 +151,6 @@ export default function SignUp(props) {
     const [lastNameErrorMessage, setLastNameErrorMessage] = React.useState('');
     const [born_dateError, setBorn_dateError] = React.useState(false);
     const [born_dateErrorMessage, setBorn_dateErrorMessage] = React.useState('');
-
     const [phoneError, setPhoneError] = React.useState(false);
     const [phoneErrorMessage, setPhoneErrorMessage] = React.useState('');
 
@@ -233,7 +235,6 @@ export default function SignUp(props) {
                     isValid = false;
                 } else {
                     try {
-                        // Check if email is already registered
                         const emailResult = await checkEmailAvailability(email.value);
 
                         if (!emailResult.available) {
@@ -266,6 +267,7 @@ export default function SignUp(props) {
                 const name = document.getElementById('name');
                 const lastName = document.getElementById('lastName');
                 const born_date = document.getElementById('born_date');
+                const phone = document.getElementById('phone');
                 isValid = true;
 
                 if (!name?.value || name.value.trim() === '') {
@@ -295,24 +297,12 @@ export default function SignUp(props) {
                     setBorn_dateErrorMessage('');
                 }
 
-                return isValid;
-
-            case 2: // Additional address
-                return validateAdditionalAddress();
-
-            case 3: // Contact info
-                const address = document.getElementById('address');
-                const phone = document.getElementById('phone');
-                isValid = true;
-
-
                 if (!phone?.value || phone.value.trim() === '') {
                     setPhoneError(true);
                     setPhoneErrorMessage('El teléfono es requerido.');
                     isValid = false;
                 } else {
                     try {
-                        // Check if phone is already registered
                         const phoneResult = await checkPhoneAvailability(phone.value);
 
                         if (!phoneResult.available) {
@@ -333,6 +323,15 @@ export default function SignUp(props) {
 
                 return isValid;
 
+            case 2: // Additional address
+                return validateAdditionalAddress();
+
+            case 3: // Personalization
+                return true;
+
+            case 4: // Email verification
+                return true;
+
             default:
                 return true;
         }
@@ -343,11 +342,10 @@ export default function SignUp(props) {
         const isValid = await validateCurrentStep();
 
         if (isValid) {
-            if (activeStep === steps.length - 1) {
+            if (activeStep === steps.length - 2) { // Paso de personalización (antes de verificación)
                 // Validar que todos los campos requeridos estén completos
                 if (!formData.name || !formData.lastName || !formData.email ||
-                    !formData.password  || !formData.phone ||
-                    !formData.born_date) {
+                    !formData.password || !formData.phone || !formData.born_date) {
                     setSubmitError('Por favor completa todos los campos requeridos.');
                     return;
                 }
@@ -357,26 +355,93 @@ export default function SignUp(props) {
                 setSubmitSuccess(false);
 
                 try {
-                    const response = await registerUser(formData);
-                    console.log('Usuario registrado exitosamente:', response);
-                    setSubmitSuccess(true);
+                    // Iniciar el proceso de registro (envía email de verificación)
+                    const response = await initiateRegistration(formData);
+                    console.log('Registro iniciado exitosamente:', response);
 
-                    // Redirigir después del registro exitoso
-                    setTimeout(() => {
-                        window.location.href = '/sign-in-side/Sign-in-side'; // Cambia la URL según tu ruta de inicio de sesión
-                    }, 2000);
+                    // Guardar el token de registro
+                    setRegistrationToken(response.registrationToken);
+                    setIsWaitingVerification(true);
+
+                    // Avanzar al paso de verificación
+                    handleNext();
+
                 } catch (error) {
-                    console.error('Error al registrar usuario:', error);
+                    console.error('Error al iniciar registro:', error);
                     setSubmitError(
                         error.response?.data?.message ||
-                        'Ocurrió un error al registrar. Por favor, intenta nuevamente.'
+                        error.message ||
+                        'Ocurrió un error al iniciar el registro. Por favor, intenta nuevamente.'
                     );
                 } finally {
                     setIsSubmitting(false);
                 }
-            } else {
+            } else if (activeStep < steps.length - 1) {
                 handleNext();
             }
+        }
+    };
+
+    const handleVerificationSuccess = async (verificationCode) => {
+        setIsSubmitting(true);
+        setSubmitError('');
+
+        try {
+            const response = await verifyRegistration(registrationToken, verificationCode);
+            console.log('Verificación exitosa:', response);
+
+            if (response.success) {
+                setSubmitSuccess(true);
+
+                // Redirigir al login después de un delay
+                setTimeout(() => {
+                    window.location.href = '/sign-in-side/Sign-in-side';
+                }, 2000);
+            } else {
+                throw new Error(response.message || 'Error en la verificación');
+            }
+
+        } catch (error) {
+            console.error('Error al verificar registro:', error);
+            // Re-lanzar el error para que lo maneje el componente EmailVerificationStep
+            throw new Error(
+                error.response?.data?.message ||
+                error.message ||
+                'Código de verificación incorrecto. Por favor, intenta nuevamente.'
+            );
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+
+    const handleResendVerificationCode = async () => {
+        try {
+            const response = await resendVerificationCode(registrationToken);
+            console.log('Código reenviado:', response);
+            return { success: true, message: response.message };
+        } catch (error) {
+            console.error('Error al reenviar código:', error);
+            throw new Error(
+                error.response?.data?.message ||
+                error.message ||
+                'Error al reenviar el código de verificación.'
+            );
+        }
+    };
+
+    const handleCancelRegistration = async () => {
+        try {
+            await cancelRegistration(registrationToken);
+            // Volver al inicio del formulario
+            setActiveStep(0);
+            setRegistrationToken('');
+            setIsWaitingVerification(false);
+            setSubmitError('');
+            setSubmitSuccess(false);
+        } catch (error) {
+            console.error('Error al cancelar registro:', error);
+            setSubmitError('Error al cancelar el registro.');
         }
     };
 
@@ -396,8 +461,8 @@ export default function SignUp(props) {
                         mb: 2
                     }}>
                         <SitemarkIcon sx={{ color: vistelicaColors.primary }}/>
-
                     </Box>
+
                     <Typography
                         component="h1"
                         variant="h4"
@@ -413,6 +478,7 @@ export default function SignUp(props) {
                     >
                         Vistélica
                     </Typography>
+
                     <Typography
                         component="h1"
                         variant="h4"
@@ -452,17 +518,19 @@ export default function SignUp(props) {
                                 ))}
                             </Stepper>
 
-                            <Typography
-                                variant="subtitle2"
-                                sx={{
-                                    mb: 2,
-                                    color: mode === 'dark' ?
-                                        vistelicaColors.tertiary :
-                                        vistelicaColors.primary
-                                }}
-                            >
-                                Los campos marcados con * son obligatorios
-                            </Typography>
+                            {activeStep < steps.length - 1 && (
+                                <Typography
+                                    variant="subtitle2"
+                                    sx={{
+                                        mb: 2,
+                                        color: mode === 'dark' ?
+                                            vistelicaColors.tertiary :
+                                            vistelicaColors.primary
+                                    }}
+                                >
+                                    Los campos marcados con * son obligatorios
+                                </Typography>
+                            )}
 
                             <Box
                                 component="form"
@@ -491,8 +559,15 @@ export default function SignUp(props) {
                                         lastNameErrorMessage={lastNameErrorMessage}
                                         born_dateError={born_dateError}
                                         born_dateErrorMessage={born_dateErrorMessage}
+                                        phoneError={phoneError}
+                                        phoneErrorMessage={phoneErrorMessage}
                                         onBack={handleBack}
-                                        required={true}
+                                        required={{
+                                            name: true,
+                                            lastName: true,
+                                            born_date: true,
+                                            phone: true
+                                        }}
                                     />
                                 )}
 
@@ -508,21 +583,29 @@ export default function SignUp(props) {
                                 )}
 
                                 {activeStep === 3 && (
-                                    <ContactInfoStep
+                                    <PersonalizationStep
                                         formData={formData}
                                         onChange={handleChange}
-                                        phoneError={phoneError}
-                                        phoneErrorMessage={phoneErrorMessage}
                                         onBack={handleBack}
                                         required={{
-
-                                            phone: true,
                                             avatar: false
                                         }}
                                     />
                                 )}
 
-                                {isSubmitting && (
+                                {activeStep === 4 && (
+                                    <EmailVerificationStep
+                                        email={formData.email}
+                                        registrationToken={registrationToken}
+                                        onVerificationSuccess={handleVerificationSuccess}
+                                        onResendCode={handleResendVerificationCode}
+                                        onCancel={handleCancelRegistration}
+                                        onBack={handleBack}
+                                        isSubmitting={isSubmitting}
+                                    />
+                                )}
+
+                                {isSubmitting && activeStep < 4 && (
                                     <Box sx={{display: 'flex', justifyContent: 'center', mt: 2}}>
                                         <CircularProgress size={24} sx={{ color: vistelicaColors.primary }}/>
                                         <Typography sx={{
@@ -531,7 +614,7 @@ export default function SignUp(props) {
                                                 vistelicaColors.quaternary :
                                                 vistelicaColors.secondary
                                         }}>
-                                            Enviando información...
+                                            {activeStep === 3 ? 'Enviando código de verificación...' : 'Enviando información...'}
                                         </Typography>
                                     </Box>
                                 )}
@@ -552,7 +635,7 @@ export default function SignUp(props) {
                                             }
                                         }}
                                     >
-                                        ¡Registro exitoso! Redirigiendo a la página de inicio de sesión...
+                                        ¡Registro completado exitosamente! Redirigiendo al inicio de sesión...
                                     </Alert>
                                 )}
                             </Box>

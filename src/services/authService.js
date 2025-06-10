@@ -9,19 +9,130 @@ import { auth, googleProvider, facebookProvider } from "./firebase";
 
 const API_URL = 'http://localhost:5000/api';
 
+// ========== MÉTODOS DE REGISTRO CON VERIFICACIÓN ==========
+
 /**
- * Registra un nuevo usuario en el sistema
+ * Inicia el proceso de registro enviando código de verificación
+ * @param {Object} userData - Datos del usuario a registrar
+ * @returns {Promise<Object>} - Respuesta con registrationToken
+ */
+export const initiateRegistration = async (userData) => {
+    try {
+        const response = await axios.post(`${API_URL}/initiate-registration`, userData);
+        return response.data;
+    } catch (error) {
+        console.error("Error iniciando registro:", error);
+        if (error.response) {
+            throw new Error(error.response.data.message || 'Error al iniciar el registro');
+        }
+        throw error;
+    }
+};
+
+/**
+ * Verifica el código y completa el registro del usuario
+ * @param {string} registrationToken - Token de registro recibido
+ * @param {string} verificationCode - Código de verificación del email
+ * @returns {Promise<Object>} - Datos del usuario registrado y token JWT
+ */
+export const verifyRegistration = async (registrationToken, verificationCode) => {
+    try {
+        const response = await axios.post(`${API_URL}/verify-registration`, {
+            registrationToken,
+            verificationCode
+        });
+
+        // Si el registro es exitoso, guardamos el token JWT
+        if (response.data.success && response.data.token) {
+            localStorage.setItem('token', response.data.token);
+        }
+
+        return response.data;
+    } catch (error) {
+        console.error("Error verificando registro:", error);
+        if (error.response) {
+            throw new Error(error.response.data.message || 'Error al verificar el registro');
+        }
+        throw error;
+    }
+};
+
+/**
+ * Reenvía el código de verificación
+ * @param {string} registrationToken - Token de registro
+ * @returns {Promise<Object>} - Respuesta del servidor
+ */
+export const resendVerificationCode = async (registrationToken) => {
+    try {
+        const response = await axios.post(`${API_URL}/resend-verification-code`, {
+            registrationToken
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error reenviando código:", error);
+        if (error.response) {
+            throw new Error(error.response.data.message || 'Error al reenviar código de verificación');
+        }
+        throw error;
+    }
+};
+
+/**
+ * Cancela un proceso de registro pendiente
+ * @param {string} registrationToken - Token de registro a cancelar
+ * @returns {Promise<Object>} - Respuesta del servidor
+ */
+export const cancelRegistration = async (registrationToken) => {
+    try {
+        const response = await axios.post(`${API_URL}/cancel-registration`, {
+            registrationToken
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error cancelando registro:", error);
+        if (error.response) {
+            throw new Error(error.response.data.message || 'Error al cancelar registro');
+        }
+        throw error;
+    }
+};
+
+/**
+ * Obtiene el estado de un registro pendiente
+ * @param {string} registrationToken - Token de registro
+ * @returns {Promise<Object>} - Estado del registro
+ */
+export const getRegistrationStatus = async (registrationToken) => {
+    try {
+        const response = await axios.get(`${API_URL}/registration-status/${registrationToken}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error obteniendo estado de registro:", error);
+        if (error.response) {
+            throw new Error(error.response.data.message || 'Error al obtener estado del registro');
+        }
+        throw error;
+    }
+};
+
+// ========== MÉTODO DEPRECADO (mantener para compatibilidad) ==========
+
+/**
+ * Registra un nuevo usuario en el sistema (DEPRECADO)
  * @param {Object} userData - Datos del usuario a registrar
  * @returns {Promise} - Datos del usuario registrado
+ * @deprecated Usar initiateRegistration + verifyRegistration en su lugar
  */
 export const registerUser = async (userData) => {
     try {
         const response = await axios.post(`${API_URL}/register`, userData);
         return response.data;
     } catch (error) {
+        console.error("Error registrando usuario (método deprecado):", error);
         throw error;
     }
 };
+
 
 
 /**
@@ -36,9 +147,6 @@ export const getAuthHeaders = () => {
         Authorization: `Bearer ${token}`
     };
 };
-
-
-
 
 /**
  * Obtiene los datos del usuario actualmente autenticado
@@ -189,7 +297,6 @@ export const completePasswordReset = async (token, code, newPassword) => {
     }
 };
 
-
 /**
  * Verifica que la contraseña actual sea correcta
  * @param {string} password - Contraseña actual a verificar
@@ -211,8 +318,6 @@ export const verifyPassword = async (password) => {
         console.error('Error al verificar contraseña:', error);
     }
 };
-
-
 
 /**
  * Cambia la contraseña del usuario
@@ -326,8 +431,6 @@ export const registerSocialUser = async (userData) => {
 
         const firebaseToken = await currentUser.getIdToken();
 
-
-
         const response = await axios.post(`${API_URL}/social-auth`, userData, {
             headers: {
                 'Authorization': `Bearer ${firebaseToken}`
@@ -344,6 +447,7 @@ export const registerSocialUser = async (userData) => {
         throw error;
     }
 };
+
 export const getToken = () => {
     if (typeof window !== 'undefined') {
         const token = localStorage.getItem('token');
@@ -393,7 +497,6 @@ export const logout = async () => {
     }
 };
 
-
 /**
  * Elimina permanentemente la cuenta del usuario y todos sus datos asociados
  * @param {string} password - Contraseña actual del usuario para verificación
@@ -442,10 +545,6 @@ export const deleteAccount = async (password) => {
         }
     }
 };
-
-
-
-
 
 /**
  * Solicita el cambio de email enviando un código de verificación al email actual

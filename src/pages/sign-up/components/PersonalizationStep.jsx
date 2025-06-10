@@ -5,10 +5,6 @@ import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
-import Divider from '@mui/material/Divider';
-import Typography from '@mui/material/Typography';
-import Link from '@mui/material/Link';
-import { GoogleIcon, FacebookIcon } from './CustomIcons';
 import { styled } from '@mui/material/styles';
 import { useColorScheme } from '@mui/material/styles';
 import { vistelicaColors } from '../../shared-theme/vistelicaColors';
@@ -29,49 +25,11 @@ const PrimaryButton = styled(Button)(() => ({
     transition: 'all 0.3s ease',
 }));
 
-// StyledLink con los colores de Vistélica
-const StyledLink = styled(Link)(() => ({
-    color: vistelicaColors.primary,
-    '&:hover': {
-        color: vistelicaColors.primaryDark,
-    },
-}));
-
-export default function ContactInfoStep({ formData, onChange, phoneError, phoneErrorMessage, onBack, required = {} }) {
+export default function PersonalizationStep({ formData, onChange, onBack, required = {} }) {
     const { mode } = useColorScheme();
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-
-            <FormControl>
-                <FormLabel htmlFor="phone" sx={{
-                    color: mode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
-                    fontWeight: 500
-                }}>
-                    Teléfono{required.phone ? ' *' : ''}
-                </FormLabel>
-                <TextField
-                    name="phone"
-                    required={required.phone}
-                    fullWidth
-                    id="phone"
-                    placeholder="555-123-4567"
-                    value={formData.phone}
-                    onChange={onChange}
-                    error={phoneError}
-                    helperText={phoneErrorMessage}
-                    FormHelperTextProps={{
-                        sx: { fontWeight: 700 }
-                    }}
-                    sx={{
-                        '& .MuiOutlinedInput-root': {
-                            '&.Mui-focused fieldset': {
-                                borderColor: vistelicaColors.primary,
-                            }
-                        }
-                    }}
-                />
-            </FormControl>
             <FormControl>
                 <FormLabel htmlFor="avatar" sx={{
                     color: mode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
