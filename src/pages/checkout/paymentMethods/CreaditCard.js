@@ -440,10 +440,10 @@ function CreditCardForm({ amount, onPaymentSuccess, onPaymentMethodChange }) {
 
 // Optimizar el componente exportado con React.memo
 export default React.memo(function CreditCard({
-    amount,
-    onPaymentSuccess,
-    onPaymentMethodChange
-}) {
+                                                  amount,
+                                                  onPaymentSuccess,
+                                                  onPaymentMethodChange
+                                              }) {
     return (
         <Elements stripe={stripePromise}>
             <CreditCardForm

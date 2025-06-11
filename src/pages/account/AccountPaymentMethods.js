@@ -30,26 +30,26 @@ import {
     Select,
     MenuItem as SelectMenuItem,
     FormControl,
-    FormLabel
+    FormLabel,
+    FormControlLabel,
+    Checkbox
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
-import { Container } from '@mui/system';
-import SidebarMenu from '@/components/layout/SidebarMenu';
-import Navbar from "@/components/layout/HeaderComponent";
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 import StarIcon from '@mui/icons-material/Star';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import { Container } from '@mui/system';
+import { motion } from 'framer-motion';
+import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import SidebarMenu from '@/components/layout/SidebarMenu';
+import Navbar from "@/components/layout/HeaderComponent";
 import paymentMethodService from '@/services/paymentMethodService';
 import { getCurrentUser } from '@/services/authService';
-import Checkbox from '@mui/material/Checkbox';
-import FormControlLabel from "@mui/material/FormControlLabel";
-import { motion } from 'framer-motion';
-import {getUserProfile} from "@/services/profileService";
+import { getUserProfile } from "@/services/profileService";
 
 const AccountPaymentMethods = () => {
     const theme = useTheme();
@@ -62,10 +62,16 @@ const AccountPaymentMethods = () => {
     const [confirmDeleteDialog, setConfirmDeleteDialog] = useState(false);
     const [methodToDelete, setMethodToDelete] = useState(null);
     const [editingMethod, setEditingMethod] = useState(null);
+    const [showFullNumbers, setShowFullNumbers] = useState(false);
+    const [formErrors, setFormErrors] = useState({
+        card_number: '',
+        expiry_month: '',
+        expiry_year: ''
+    });
     const [formData, setFormData] = useState({
         type: 'credit_card',
         provider: 'visa',
-        card_last_four: '',
+        card_number: '',
         card_holder_name: '',
         expiry_month: '',
         expiry_year: '',
@@ -93,17 +99,12 @@ const AccountPaymentMethods = () => {
             try {
                 setLoading(true);
                 const user = await getCurrentUser();
-                setUserData(user);
-
                 const methods = await paymentMethodService.getUserPaymentMethods();
+                const profile = await getUserProfile();
+
+                setUserData(profile);
                 setPaymentMethods(methods);
 
-
-
-                const profile = await getUserProfile();
-                setUserData(profile);
-
-                // Guardar datos en localStorage para persistencia
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('userData', JSON.stringify({
                         name: profile.name,
@@ -111,10 +112,10 @@ const AccountPaymentMethods = () => {
                     }));
                 }
             } catch (error) {
-                console.error('Error al cargar los métodos de pago:', error);
+                console.error('Error cargando métodos de pago:', error);
                 setSnackbar({
                     open: true,
-                    message: 'Error al cargar los métodos de pago',
+                    message: 'Error cargando métodos de pago',
                     severity: 'error'
                 });
             } finally {
@@ -125,9 +126,57 @@ const AccountPaymentMethods = () => {
         fetchData();
     }, []);
 
+    const formatCardNumber = (number) => {
+        if (!number) return '';
+        if (!showFullNumbers) return `•••• •••• •••• ${number.slice(-4)}`;
+        return number.replace(/(\d{4})/g, '$1 ').trim();
+    };
 
-    const userAvatar = userData?.avatar;
-    const userName = userData?.name;
+    const validateForm = () => {
+        const errors = {
+            card_number: '',
+            expiry_month: '',
+            expiry_year: ''
+        };
+        let isValid = true;
+
+
+        const cardNumberDigits = formData.card_number.replace(/\s/g, '').length;
+        if (cardNumberDigits !== 16) {
+            errors.card_number = 'El número de tarjeta debe tener 16 dígitos';
+            isValid = false;
+        }
+
+        // Validar número de tarjeta (mínimo 4 dígitos)
+        if (formData.card_number.replace(/\s/g, '').length < 4) {
+            errors.card_number = 'El número de tarjeta debe tener al menos 4 dígitos';
+            isValid = false;
+        }
+
+        // Validar mes de expiración (1-12)
+        const month = parseInt(formData.expiry_month);
+        if (isNaN(month) || month < 1 || month > 12) {
+            errors.expiry_month = 'Mes inválido (1-12)';
+            isValid = false;
+        }
+
+        // Validar año de expiración (>= año actual)
+        const currentYear = new Date().getFullYear();
+        const year = parseInt(formData.expiry_year);
+        if (isNaN(year) || year < currentYear) {
+            errors.expiry_year = `El año debe ser ${currentYear} o mayor`;
+            isValid = false;
+        }
+
+        // Si el año es el actual, validar que el mes no sea pasado
+        if (year === currentYear && month < new Date().getMonth() + 1) {
+            errors.expiry_month = 'El mes no puede ser anterior al actual';
+            isValid = false;
+        }
+
+        setFormErrors(errors);
+        return isValid;
+    };
 
     const handleOpenDialog = (method = null) => {
         if (method) {
@@ -135,7 +184,7 @@ const AccountPaymentMethods = () => {
             setFormData({
                 type: method.type,
                 provider: method.provider,
-                card_last_four: method.card_last_four || '',
+                card_number: method.card_number || '',
                 card_holder_name: method.card_holder_name || '',
                 expiry_month: method.expiry_month || '',
                 expiry_year: method.expiry_year || '',
@@ -146,64 +195,120 @@ const AccountPaymentMethods = () => {
             setFormData({
                 type: 'credit_card',
                 provider: 'visa',
-                card_last_four: '',
+                card_number: '',
                 card_holder_name: '',
                 expiry_month: '',
                 expiry_year: '',
                 is_default: false
             });
         }
+        setFormErrors({
+            card_number: '',
+            expiry_month: '',
+            expiry_year: ''
+        });
         setOpenDialog(true);
     };
 
-    const handleCloseDialog = () => {
-        setOpenDialog(false);
-    };
 
     const handleChange = (e) => {
         const { name, value, checked } = e.target;
+
+        // Limpiar espacios en blanco del número de tarjeta
+        const processedValue = name === 'card_number'
+            ? value.replace(/\s/g, '')
+            : value;
+
         setFormData({
             ...formData,
-            [name]: name === 'is_default' ? checked : value
+            [name]: name === 'is_default' ? checked : processedValue
         });
-    };
 
-    const openConfirmDeleteDialog = (method) => {
-        setMethodToDelete(method);
-        setConfirmDeleteDialog(true);
-    };
+        // Validación en tiempo real para el número de tarjeta
+        if (name === 'card_number') {
+            const digits = processedValue.replace(/\s/g, '').length;
+            if (digits > 0 && digits !== 16) {
+                setFormErrors({
+                    ...formErrors,
+                    card_number: 'El número de tarjeta debe tener 16 dígitos'
+                });
+            } else {
+                setFormErrors({
+                    ...formErrors,
+                    card_number: ''
+                });
+            }
+        }
 
-    const closeConfirmDeleteDialog = () => {
-        setConfirmDeleteDialog(false);
-        setMethodToDelete(null);
+        // Validación en tiempo real para el mes
+        if (name === 'expiry_month') {
+            const month = parseInt(processedValue);
+            if (processedValue && (isNaN(month) || month < 1 || month > 12)) {
+                setFormErrors({
+                    ...formErrors,
+                    expiry_month: 'Mes inválido (1-12)'
+                });
+            } else {
+                setFormErrors({
+                    ...formErrors,
+                    expiry_month: ''
+                });
+            }
+        }
+
+        // Validación en tiempo real para el año
+        if (name === 'expiry_year') {
+            const year = parseInt(processedValue);
+            const currentYear = new Date().getFullYear();
+            if (processedValue && (isNaN(year) || year < currentYear)) {
+                setFormErrors({
+                    ...formErrors,
+                    expiry_year: `El año debe ser ${currentYear} o mayor`
+                });
+            } else {
+                setFormErrors({
+                    ...formErrors,
+                    expiry_year: ''
+                });
+            }
+        }
     };
 
     const handleSavePaymentMethod = async () => {
+        if (!validateForm()) return;
+
         try {
             setLoading(true);
 
             if (editingMethod) {
-                await paymentMethodService.updatePaymentMethod(editingMethod.payment_method_id, formData);
+                await paymentMethodService.updatePaymentMethod(
+                    editingMethod.payment_method_id,
+                    formData
+                );
 
                 if (formData.is_default && !editingMethod.is_default) {
-                    await paymentMethodService.setDefaultPaymentMethod(editingMethod.payment_method_id);
+                    await paymentMethodService.setDefaultPaymentMethod(
+                        editingMethod.payment_method_id
+                    );
                 }
 
                 setSnackbar({
                     open: true,
-                    message: 'Tarjeta actualizada correctamente',
+                    message: 'Método de pago actualizado correctamente',
                     severity: 'success'
                 });
             } else {
                 const newMethod = await paymentMethodService.createPaymentMethod(formData);
 
                 if (formData.is_default) {
-                    await paymentMethodService.setDefaultPaymentMethod(newMethod.payment_method_id);
+                    await paymentMethodService.setDefaultPaymentMethod(
+                        newMethod.payment_method_id
+                    );
                 }
 
                 setSnackbar({
                     open: true,
-                    message: 'Tarjeta añadida correctamente',
+                    message: 'Método de pago añadido correctamente',
                     severity: 'success'
                 });
             }
@@ -212,10 +317,10 @@ const AccountPaymentMethods = () => {
             setPaymentMethods(updatedMethods);
             handleCloseDialog();
         } catch (error) {
-            console.error('Error al guardar la tarjeta:', error);
+            console.error('Error guardando método de pago:', error);
             setSnackbar({
                 open: true,
-                message: 'Error al guardar la tarjeta',
+                message: 'Error guardando método de pago',
                 severity: 'error'
             });
         } finally {
@@ -224,8 +329,6 @@ const AccountPaymentMethods = () => {
     };
 
     const handleDeletePaymentMethod = async () => {
-        if (!methodToDelete) return;
-
         try {
             setLoading(true);
             await paymentMethodService.deletePaymentMethod(methodToDelete.payment_method_id);
@@ -235,16 +338,16 @@ const AccountPaymentMethods = () => {
 
             setSnackbar({
                 open: true,
-                message: 'Tarjeta eliminada correctamente',
+                message: 'Payment method deleted',
                 severity: 'success'
             });
 
             closeConfirmDeleteDialog();
         } catch (error) {
-            console.error('Error al eliminar la tarjeta:', error);
+            console.error('Error deleting payment method:', error);
             setSnackbar({
                 open: true,
-                message: 'Error al eliminar la tarjeta',
+                message: 'Error deleting payment method',
                 severity: 'error'
             });
         } finally {
@@ -262,14 +365,14 @@ const AccountPaymentMethods = () => {
 
             setSnackbar({
                 open: true,
-                message: 'Tarjeta predeterminada actualizada',
+                message: 'Default payment method updated',
                 severity: 'success'
             });
         } catch (error) {
-            console.error('Error al establecer la tarjeta predeterminada:', error);
+            console.error('Error setting default method:', error);
             setSnackbar({
                 open: true,
-                message: 'Error al establecer la tarjeta predeterminada',
+                message: 'Error setting default method',
                 severity: 'error'
             });
         } finally {
@@ -277,40 +380,33 @@ const AccountPaymentMethods = () => {
         }
     };
 
-    const handleCloseSnackbar = () => {
-        setSnackbar({
-            ...snackbar,
-            open: false
-        });
+    const openConfirmDeleteDialog = (method) => {
+        setMethodToDelete(method);
+        setConfirmDeleteDialog(true);
     };
 
+    const closeConfirmDeleteDialog = () => {
+        setConfirmDeleteDialog(false);
+        setMethodToDelete(null);
+    };
+
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+    };
+
+    const handleCloseSnackbar = () => {
+        setSnackbar({ ...snackbar, open: false });
+    };
 
     const formatDate = (dateString) => {
         if (!dateString) return '';
-        try {
-            return new Date(dateString).toLocaleDateString('es-ES', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-            });
-        } catch (e) {
-            return '';
-        }
+        return new Date(dateString).toLocaleDateString('es-ES', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
     };
 
-    if (loading && paymentMethods.length === 0) {
-        return (
-            <Box sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '100vh',
-                width: '100%'
-            }}>
-                <CircularProgress sx={{ color: vistelicaColors.primary }} />
-            </Box>
-        );
-    }
 
     return (
         <div>
@@ -321,8 +417,8 @@ const AccountPaymentMethods = () => {
                         <Grid size={{ xs: 12, md: 3, lg: 5.5 }}>
                             <Box sx={{ position: 'sticky', top: 24 }}>
                                 <SidebarMenu
-                                    username={userName}
-                                    avatarUrl={userAvatar}
+                                    username={userData?.name}
+                                    avatarUrl={userData?.avatar}
                                     key="desktop-sidebar"
                                 />
                             </Box>
@@ -357,22 +453,40 @@ const AccountPaymentMethods = () => {
                                     mb: 2
                                 }}>
                                     <Typography variant="h5" component="h1" fontWeight="500">
-                                        Mis tarjetas de crédito
+                                        Mis Métodos de Pago
                                     </Typography>
-                                    <Button
-                                        variant="contained"
-                                        startIcon={<AddIcon />}
-                                        onClick={() => handleOpenDialog()}
-                                        fullWidth={isMobile}
-                                        sx={{
-                                            backgroundColor: vistelicaColors.primary,
-                                            '&:hover': {
-                                                backgroundColor: vistelicaColors.secondary,
+
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={showFullNumbers}
+                                                    onChange={(e) => setShowFullNumbers(e.target.checked)}
+                                                    sx={{
+                                                        color: vistelicaColors.primary,
+                                                        '&.Mui-checked': {
+                                                            color: vistelicaColors.primary,
+                                                        },
+                                                    }}
+                                                />
                                             }
-                                        }}
-                                    >
-                                        Nueva tarjeta
-                                    </Button>
+                                            label="Mostrar números completos"
+                                        />
+
+                                        <Button
+                                            variant="contained"
+                                            startIcon={<AddIcon />}
+                                            onClick={() => handleOpenDialog()}
+                                            sx={{
+                                                backgroundColor: vistelicaColors.primary,
+                                                '&:hover': {
+                                                    backgroundColor: vistelicaColors.secondary,
+                                                }
+                                            }}
+                                        >
+                                            Añadir Nuevo
+                                        </Button>
+                                    </Box>
                                 </Box>
                                 <Divider sx={{ mb: { xs: 2, sm: 4 } }} />
 
@@ -380,16 +494,15 @@ const AccountPaymentMethods = () => {
                                     <Box sx={{ textAlign: 'center', py: 4 }}>
                                         <CreditCardIcon sx={{ fontSize: 60, color: vistelicaColors.secondary, mb: 2 }} />
                                         <Typography variant="body1">
-                                            No tienes tarjetas guardadas
+                                            No tienes métodos de pago guardados
                                         </Typography>
                                         <Button
                                             variant="outlined"
                                             startIcon={<AddIcon />}
                                             sx={{ mt: 2 }}
                                             onClick={() => handleOpenDialog()}
-                                            fullWidth={isMobile}
                                         >
-                                            Añadir tarjeta
+                                            Añadir Método de Pago
                                         </Button>
                                     </Box>
                                 ) : (
@@ -408,7 +521,7 @@ const AccountPaymentMethods = () => {
                                                             boxShadow: '0 6px 14px rgba(0, 0, 0, 0.1)',
                                                             transform: method.is_default ? 'scale(1.03)' : 'scale(1.01)'
                                                         },
-                                                        height: { xs: '280px', sm: '320px' },
+                                                        height: '100%',
                                                         display: 'flex',
                                                         flexDirection: 'column',
                                                         background: method.is_default ? 'linear-gradient(to bottom right, #fffdf7, #fff)' : '#fff',
@@ -434,7 +547,7 @@ const AccountPaymentMethods = () => {
                                                                             mb: method.is_default ? 1 : 0
                                                                         }}
                                                                     >
-                                                                        Tarjeta de crédito
+                                                                        {method.type === 'credit_card' ? 'Tarjeta de Crédito' : 'Método de Pago'}
                                                                     </Typography>
                                                                     {method.is_default && (
                                                                         <Box
@@ -453,7 +566,7 @@ const AccountPaymentMethods = () => {
                                                                             }}
                                                                         >
                                                                             <StarIcon fontSize="small" sx={{ mr: 0.5 }} />
-                                                                            Predeterminada
+                                                                            Predeterminado
                                                                         </Box>
                                                                     )}
                                                                 </Box>
@@ -478,7 +591,7 @@ const AccountPaymentMethods = () => {
                                                                             fontWeight: 600
                                                                         }}>
                                                                             Tarjeta:
-                                                                        </Box> {method.provider} •••• {method.card_last_four}
+                                                                        </Box> {method.provider} {formatCardNumber(method.card_number)}
                                                                     </Typography>
                                                                 </Box>
 
@@ -512,7 +625,7 @@ const AccountPaymentMethods = () => {
                                                                                 color: vistelicaColors.primary,
                                                                                 fontWeight: 600
                                                                             }}>
-                                                                                Vence:
+                                                                                Expira:
                                                                             </Box> {method.expiry_month.toString().padStart(2, '0')}/{method.expiry_year.toString().slice(-2)}
                                                                         </Typography>
                                                                     </Box>
@@ -533,7 +646,7 @@ const AccountPaymentMethods = () => {
                                                                                 color: vistelicaColors.primary,
                                                                                 fontWeight: 600
                                                                             }}>
-                                                                                Fecha de creación:
+                                                                                Creado:
                                                                             </Box> {formatDate(method.created_at)}
                                                                         </Typography>
                                                                     </Box>
@@ -557,7 +670,7 @@ const AccountPaymentMethods = () => {
                                                                 alignItems: 'center'
                                                             }}>
                                                                 {!method.is_default && (
-                                                                    <Tooltip title="Establecer como predeterminada">
+                                                                    <Tooltip title="Establecer como predeterminado">
                                                                         <IconButton
                                                                             size="small"
                                                                             onClick={() => handleSetDefaultMethod(method.payment_method_id)}
@@ -581,7 +694,7 @@ const AccountPaymentMethods = () => {
                                                                     gap: 1,
                                                                     justifyContent: 'flex-end'
                                                                 }}>
-                                                                    <Tooltip title="Editar tarjeta">
+                                                                    <Tooltip title="Editar">
                                                                         <Button
                                                                             size="small"
                                                                             onClick={() => handleOpenDialog(method)}
@@ -596,7 +709,7 @@ const AccountPaymentMethods = () => {
                                                                         </Button>
                                                                     </Tooltip>
                                                                     <Tooltip
-                                                                        title={method.is_default ? "No se puede eliminar la tarjeta predeterminada" : "Eliminar tarjeta"}>
+                                                                        title={method.is_default ? "No se puede eliminar el método predeterminado" : "Eliminar"}>
                                                                         <span>
                                                                             <Button
                                                                                 size="small"
@@ -628,36 +741,7 @@ const AccountPaymentMethods = () => {
                 </Grid>
             </Container>
 
-            {isMobile && (
-                <Fab
-                    color="primary"
-                    aria-label="menu"
-                    onClick={() => setSidebarOpen(true)}
-                    sx={{
-                        position: 'fixed',
-                        bottom: 16,
-                        right: 16,
-                        backgroundColor: vistelicaColors.primary,
-                        '&:hover': {
-                            backgroundColor: vistelicaColors.secondary
-                        },
-                        zIndex: 1050
-                    }}
-                >
-                    <MenuIcon />
-                </Fab>
-            )}
-
-            {isMobile && (
-                <SidebarMenu
-                    username={userName}
-                    avatarUrl={userAvatar}
-                    drawerOpen={sidebarOpen}
-                    setDrawerOpen={setSidebarOpen}
-                    key="mobile-sidebar"
-                />
-            )}
-
+            {/* Diálogo para añadir/editar método de pago */}
             <Dialog
                 open={openDialog}
                 onClose={handleCloseDialog}
@@ -688,8 +772,8 @@ const AccountPaymentMethods = () => {
                     }}
                 >
                     <CreditCardIcon sx={{ color: vistelicaColors.primary }} />
-                    <Typography variant="h6" fontWeight="400" fontSize={{ xs: '1.1rem', sm: '1.25rem',color: vistelicaColors.primary }}>
-                        {editingMethod ? 'Editar tarjeta' : 'Añadir nueva tarjeta'}
+                    <Typography variant="h6" fontWeight="400" fontSize={{ xs: '1.1rem', sm: '1.25rem' }} color={vistelicaColors.primary}>
+                        {editingMethod ? 'Editar Método de Pago' : 'Añadir Nuevo Método de Pago'}
                     </Typography>
                 </DialogTitle>
                 <DialogContent
@@ -717,7 +801,7 @@ const AccountPaymentMethods = () => {
                             <Grid size={{ xs: 12 }}>
                                 <FormControl fullWidth>
                                     <FormLabel component="legend" sx={{ textAlign: 'left', mb: 1, fontWeight: 500 }}>
-                                        Tipo de tarjeta
+                                        Tipo de Tarjeta
                                     </FormLabel>
                                     <Select
                                         name="provider"
@@ -748,22 +832,17 @@ const AccountPaymentMethods = () => {
 
                             <Grid size={{ xs: 12 }}>
                                 <TextField
-                                    name="card_last_four"
-                                    label="Últimos 4 dígitos"
-                                    value={formData.card_last_four}
+                                    name="card_number"
+                                    label="Número de Tarjeta"
+                                    value={formData.card_number}
                                     onChange={handleChange}
                                     fullWidth
                                     required
+                                    error={!!formErrors.card_number}
+                                    helperText={formErrors.card_number}
                                     inputProps={{
-                                        maxLength: 4,
+                                        maxLength: 19,
                                         pattern: '[0-9]*'
-                                    }}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                ••••
-                                            </InputAdornment>
-                                        ),
                                     }}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
@@ -780,7 +859,7 @@ const AccountPaymentMethods = () => {
                             <Grid size={{ xs: 12 }}>
                                 <TextField
                                     name="card_holder_name"
-                                    label="Nombre del titular"
+                                    label="Nombre del Titular"
                                     value={formData.card_holder_name}
                                     onChange={handleChange}
                                     fullWidth
@@ -800,11 +879,13 @@ const AccountPaymentMethods = () => {
                             <Grid size={{ xs: 6 }}>
                                 <TextField
                                     name="expiry_month"
-                                    label="Mes de expiración"
+                                    label="Mes de Expiración"
                                     value={formData.expiry_month}
                                     onChange={handleChange}
                                     fullWidth
                                     required
+                                    error={!!formErrors.expiry_month}
+                                    helperText={formErrors.expiry_month}
                                     placeholder="MM"
                                     inputProps={{
                                         maxLength: 2,
@@ -825,11 +906,13 @@ const AccountPaymentMethods = () => {
                             <Grid size={{ xs: 6 }}>
                                 <TextField
                                     name="expiry_year"
-                                    label="Año de expiración"
+                                    label="Año de Expiración"
                                     value={formData.expiry_year}
                                     onChange={handleChange}
                                     fullWidth
                                     required
+                                    error={!!formErrors.expiry_year}
+                                    helperText={formErrors.expiry_year}
                                     placeholder="AAAA"
                                     inputProps={{
                                         maxLength: 4,
@@ -929,14 +1012,14 @@ const AccountPaymentMethods = () => {
                 >
                     <DeleteIcon sx={{ color: '#d32f2f' }} />
                     <Typography variant="h6" fontWeight="600">
-                        Confirmar eliminación
+                        Confirmar Eliminación
                     </Typography>
                 </DialogTitle>
                 <DialogContent sx={{ px: 3, py: 3, mt: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
                         <InfoOutlinedIcon sx={{ color: 'text.secondary', mt: 0.5 }} />
                         <DialogContentText id="alert-dialog-description" sx={{ m: 0 }}>
-                            ¿Estás seguro de que deseas eliminar esta tarjeta?
+                            ¿Estás seguro de que deseas eliminar este método de pago?
                             <br />
                             Esta acción no se puede deshacer.
                         </DialogContentText>
@@ -975,6 +1058,7 @@ const AccountPaymentMethods = () => {
                 </DialogActions>
             </Dialog>
 
+            {/* Snackbar para notificaciones */}
             <Snackbar
                 open={snackbar.open}
                 autoHideDuration={4000}
@@ -989,6 +1073,38 @@ const AccountPaymentMethods = () => {
                     {snackbar.message}
                 </Alert>
             </Snackbar>
+
+            {/* Botón para abrir sidebar en móvil */}
+            {isMobile && (
+                <Fab
+                    color="primary"
+                    aria-label="menu"
+                    onClick={() => setSidebarOpen(true)}
+                    sx={{
+                        position: 'fixed',
+                        bottom: 16,
+                        right: 16,
+                        backgroundColor: vistelicaColors.primary,
+                        '&:hover': {
+                            backgroundColor: vistelicaColors.secondary
+                        },
+                        zIndex: 1050
+                    }}
+                >
+                    <MenuIcon />
+                </Fab>
+            )}
+
+            {/* Sidebar para móvil */}
+            {isMobile && (
+                <SidebarMenu
+                    username={userData?.name}
+                    avatarUrl={userData?.avatar}
+                    drawerOpen={sidebarOpen}
+                    setDrawerOpen={setSidebarOpen}
+                    key="mobile-sidebar"
+                />
+            )}
         </div>
     );
 };

@@ -36,7 +36,6 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Alert from '@mui/material/Alert';
 import Tooltip from '@mui/material/Tooltip';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-
 // Pasos traducidos al español con íconos
 const steps = [
     {
@@ -206,6 +205,9 @@ export default function Checkout(props) {
     const [shippingData, setShippingData] = useState(null);
     const [isPaymentCompleted, setIsPaymentCompleted] = useState(false);
     const [orderData, setOrderData] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+
 
     // Optimizar carga de datos con AbortController para limpieza adecuada
     useEffect(() => {
@@ -264,10 +266,12 @@ export default function Checkout(props) {
     // Función para limpiar el carrito por elementos
     const clearCartByItems = async () => {
         if (!cartData || !cartData.products) return;
+        console.log("Cositasss: " + JSON.stringify(cartData));
+        console.log("Cositasss 2222: " + JSON.stringify(cartData.products));
 
         try {
             for (const item of cartData.products) {
-                await cartService.removeFromCart(item.product.product_id);
+                await cartService.removeFromCart(item.cart_detail_id);
             }
         } catch (error) {
             console.error('Error al limpiar el carrito:', error);
@@ -295,70 +299,15 @@ export default function Checkout(props) {
     }, [activeStep, isPaymentCompleted]);
 
     const handleBack = useCallback(() => {
+        if (activeStep === 2 && isPaymentCompleted) {
+            return; // No permitir retroceder después del pago completado
+        }
         setActiveStep(prevStep => prevStep - 1);
-    }, []);
+    }, [activeStep, isPaymentCompleted]);
 
     const handleShippingData = useCallback((data) => {
         setShippingData(data);
     }, []);
-
-    // Memoizar la función createOrder para evitar recreaciones
-    const createOrder = useCallback(async () => {
-        try {
-            if (!cartData || !cartData.products || cartData.products.length === 0) {
-                alert('No hay productos en el carrito');
-                return;
-            }
-
-            if (!shippingData || !shippingData.selectedAddressId) {
-                alert('Por favor selecciona una dirección de envío');
-                return;
-            }
-
-            // Preparar los detalles del pedido
-            const orderDetails = cartData.products.map(item => {
-                const finalPrice = calculateDiscountedPrice(item.price, item.discount_percentage);
-
-                return {
-                    product_id: item.product.product_id,
-                    quantity: item.quantity,
-                    price: parseFloat(finalPrice.toFixed(2)), // Asegurar 2 decimales
-                    size: item.size || null,
-                    color: item.color || null
-                };
-            });
-
-            // Preparar el JSON del pedido según el formato requerido
-            const orderRequestData = {
-                address_id: shippingData.selectedAddressId,
-                payment_method_name: getPaymentMethodName(),
-                details: orderDetails
-            };
-
-            console.log('Enviando pedido:', orderRequestData);
-
-            const result = await orderService.createOrder(orderRequestData);
-
-            console.log('Pedido creado exitosamente:', result);
-
-            // Almacenar la respuesta del pedido en el estado
-            setOrderData(result);
-
-            // Limpiar carrito después de crear el pedido
-            try {
-                await clearCartByItems();
-            } catch (clearError) {
-                console.warn('No se pudo limpiar el carrito:', clearError);
-            }
-
-            // Avanzar al paso de confirmación
-            setActiveStep(activeStep + 1);
-
-        } catch (error) {
-            console.error('Error creando pedido:', error);
-            alert(error.message || 'Error al crear el pedido');
-        }
-    }, [cartData, shippingData, calculateDiscountedPrice, clearCartByItems, activeStep, router]);
 
     // Memoizar getPaymentMethodName para mejor rendimiento
     const getPaymentMethodName = useCallback(() => {
@@ -382,6 +331,59 @@ export default function Checkout(props) {
         }
     }, [paymentData]);
 
+    // Memoizar la función createOrder para evitar recreaciones
+    const createOrder = useCallback(async () => {
+        if (isSubmitting) return; // Evitar múltiples envíos
+
+        setIsSubmitting(true); // Bloquear el botón
+
+        try {
+            if (!cartData || !cartData.products || cartData.products.length === 0) {
+                alert('No hay productos en el carrito');
+                setIsSubmitting(false);
+                return;
+            }
+
+            if (!shippingData || !shippingData.selectedAddressId) {
+                alert('Por favor selecciona una dirección de envío');
+                setIsSubmitting(false);
+                return;
+            }
+
+            // Preparar los detalles del pedido
+            const orderDetails = cartData.products.map(item => {
+                const finalPrice = calculateDiscountedPrice(item.price, item.discount_percentage);
+
+                return {
+                    product_id: item.product.product_id,
+                    quantity: item.quantity,
+                    price: parseFloat(finalPrice.toFixed(2)),
+                    size: item.size || null,
+                    color: item.color || null
+                };
+            });
+
+            const orderRequestData = {
+                address_id: shippingData.selectedAddressId,
+                payment_method_name: getPaymentMethodName(),
+                details: orderDetails
+            };
+
+            const result = await orderService.createOrder(orderRequestData);
+            setOrderData(result);
+
+            await clearCartByItems();
+            setActiveStep(activeStep + 1);
+
+        } catch (error) {
+            console.error('Error creando pedido:', error);
+            alert(error.message || 'Error al crear el pedido');
+            setIsSubmitting(false); // Permitir reintentar si falla
+        }
+    }, [cartData, shippingData, calculateDiscountedPrice, clearCartByItems, activeStep, isSubmitting, getPaymentMethodName]);
+
+
+
     // Memoizar el contenido del paso actual para evitar re-renders
     const currentStepContent = useMemo(() => {
         return getStepContent(activeStep);
@@ -403,7 +405,7 @@ export default function Checkout(props) {
             case 2:
                 return <Review paymentData={paymentData} shippingData={shippingData} />;
             default:
-                throw new Error('Unknown step');
+                console.log("Error desconocido");
         }
     }
 
@@ -775,32 +777,13 @@ export default function Checkout(props) {
                                             : { justifyContent: 'flex-end' },
                                     ]}
                                 >
-                                    {activeStep !== 0 && (
+                                    {activeStep !== 0 && !(activeStep === 1 && isPaymentCompleted) && (
                                         <StyledButton
                                             startIcon={<ChevronLeftRoundedIcon />}
                                             onClick={handleBack}
                                             variant="outlined"
                                             sx={{
                                                 display: { xs: 'none', sm: 'flex' },
-                                                borderColor: '#bdbdbd',
-                                                color: '#666',
-                                                '&:hover': {
-                                                    borderColor: '#999',
-                                                    backgroundColor: 'rgba(0,0,0,0.04)'
-                                                }
-                                            }}
-                                        >
-                                            Anterior
-                                        </StyledButton>
-                                    )}
-                                    {activeStep !== 0 && (
-                                        <StyledButton
-                                            startIcon={<ChevronLeftRoundedIcon />}
-                                            onClick={handleBack}
-                                            variant="outlined"
-                                            fullWidth
-                                            sx={{
-                                                display: { xs: 'flex', sm: 'none' },
                                                 borderColor: '#bdbdbd',
                                                 color: '#666',
                                                 '&:hover': {
@@ -854,7 +837,7 @@ export default function Checkout(props) {
                                             variant="contained"
                                             endIcon={<ChevronRightRoundedIcon />}
                                             onClick={activeStep === steps.length - 1 ? createOrder : handleNext}
-                                            disabled={activeStep === 1 && !isPaymentCompleted}
+                                            disabled={activeStep === 1 && !isPaymentCompleted || (activeStep === steps.length - 1 && isSubmitting)}
                                             sx={{
                                                 width: { xs: '100%', sm: 'auto' },
                                                 minWidth: { sm: '180px' },
@@ -869,7 +852,9 @@ export default function Checkout(props) {
                                                 }
                                             }}
                                         >
-                                            {activeStep === steps.length - 1 ? 'Realizar pedido' : 'Siguiente'}
+                                            {activeStep === steps.length - 1 ?
+                                                (isSubmitting ? 'Procesando...' : 'Realizar pedido') :
+                                                'Siguiente'}
                                         </StyledButton>
                                     )}
                                 </Box>
