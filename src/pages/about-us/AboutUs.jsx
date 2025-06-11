@@ -230,7 +230,7 @@ export default function AboutUs(props) {
     const theme = useTheme();
 
     const handleGoToLogin = () => {
-        router.push('/sign-in-side/SignInSide');
+        router.push('/sign-in-side/Sign-in-side');
     };
 
     return (

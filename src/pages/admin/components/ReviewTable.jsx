@@ -100,6 +100,8 @@ export default function ReportTable() {
             'Spam': 'warning',
             'Información falsa': 'neutral',
             'Contenido inapropiado': 'danger',
+            'Falsa': 'neutral', // Agregado según tu JSON
+            'No tiene que ver con el tema': 'warning', // Agregado según tu JSON
             'Otro': 'primary'
         };
         return reasonColors[reason] || 'neutral';
@@ -127,10 +129,10 @@ export default function ReportTable() {
         ));
     };
 
-    // Filtrar reportes
+    // Filtrar reportes - CORREGIDO para usar review_text
     const filteredReports = reports.filter(report => {
         const matchesSearch = searchFilter === '' ||
-            report.review.comment.toLowerCase().includes(searchFilter.toLowerCase()) ||
+            (report.review.review_text && report.review.review_text.toLowerCase().includes(searchFilter.toLowerCase())) ||
             report.review.user.user_id.toString().includes(searchFilter) ||
             report.review.product.name.toLowerCase().includes(searchFilter.toLowerCase());
 
@@ -256,13 +258,13 @@ export default function ReportTable() {
                                     <strong>Fecha del reporte:</strong> {formatDate(report.reported_at)}
                                 </Typography>
                                 <Typography level="body-sm">
-                                    <strong>Reportado por:</strong> Usuario ID #{report.user.user_id}
+                                    <strong>Reportado por:</strong> Usuario ID #{report.reporter?.user_id || report.user?.user_id}
                                 </Typography>
                             </Box>
 
                             <Divider />
 
-                            {/* Información de la Reseña Reportada */}
+                            {/* Información de la Reseña Reportada - CORREGIDO */}
                             <Box>
                                 <Typography level="title-md" sx={{ mb: 1 }}>
                                     Reseña Reportada
@@ -287,7 +289,7 @@ export default function ReportTable() {
                                     borderColor: 'divider'
                                 }}>
                                     <Typography level="body-sm">
-                                        "{report.review.comment}"
+                                        "{report.review.review_text || 'Sin comentario'}"
                                     </Typography>
                                 </Box>
                                 <Typography level="body-sm" sx={{ mt: 1 }}>
@@ -307,7 +309,7 @@ export default function ReportTable() {
                                 </Typography>
                                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                                     <Avatar
-                                        src={report.review.product.images?.[0]?.image_url}
+                                        src={report.review.product.mainImage || report.review.product.images?.[0]?.image_url}
                                         size="lg"
                                         sx={{ borderRadius: 'sm' }}
                                     />
@@ -410,6 +412,8 @@ export default function ReportTable() {
                         <Option value="Spam">Spam</Option>
                         <Option value="Información falsa">Información falsa</Option>
                         <Option value="Contenido inapropiado">Contenido inapropiado</Option>
+                        <Option value="Falsa">Falsa</Option>
+                        <Option value="No tiene que ver con el tema">No tiene que ver con el tema</Option>
                         <Option value="Otro">Otro</Option>
                     </Select>
                 </FormControl>
@@ -447,7 +451,7 @@ export default function ReportTable() {
                                         WebkitLineClamp: 2,
                                         WebkitBoxOrient: 'vertical'
                                     }}>
-                                        "{report.review.comment}"
+                                        "{report.review.review_text || 'Sin comentario'}"
                                     </Typography>
                                     <Typography level="body-xs" color="neutral">
                                         Por Usuario #{report.review.user.user_id}
@@ -457,7 +461,7 @@ export default function ReportTable() {
                             <td>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Avatar
-                                        src={report.review.product.images?.[0]?.image_url}
+                                        src={report.review.product.mainImage || report.review.product.images?.[0]?.image_url}
                                         size="sm"
                                         sx={{ borderRadius: 'sm' }}
                                     />
@@ -483,7 +487,7 @@ export default function ReportTable() {
                             </td>
                             <td>
                                 <Typography level="body-sm">
-                                    Usuario #{report.user.user_id}
+                                    Usuario #{report.reporter?.user_id || report.user?.user_id}
                                 </Typography>
                             </td>
                             <td>
