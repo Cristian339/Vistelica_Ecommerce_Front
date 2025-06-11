@@ -12,21 +12,15 @@ import App from "@/pages/product-detail/page";
 import CartPage from "@/pages/cart/page";
 import ProductList from "@/pages/product-list/productList";
 import Checkout from "@/pages/checkout/Checkout";
+
   // Ruta del componente HomePage
 
 export default function Home() {
     return (
         <div>
-            <HomePage />
+            <HomePage/>
         </div>
     );
 }
 
-/*
-*         <div>
-            <Navbar />
-            <ProductList />
-            <FooterComponent />
-        </div>
-*
-* */
+

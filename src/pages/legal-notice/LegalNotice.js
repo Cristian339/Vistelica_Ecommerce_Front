@@ -197,7 +197,7 @@ export default function LegalNotice(props) {
     const { mode } = useColorScheme();
 
     const handleGoToLogin = () => {
-        router.push('/sign-in-side/SignInSide');
+        router.push('/sign-in-side/Sign-in-side');
     };
 
     return (

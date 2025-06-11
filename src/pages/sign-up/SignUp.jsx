@@ -29,7 +29,7 @@ import AdditionalAddressStep from './components/AdditionalAddressStep';
 import { useColorScheme } from '@mui/material/styles';
 import { vistelicaColors } from '../shared-theme/vistelicaColors';
 import PersonalizationStep from "./components/PersonalizationStep";
-import EmailVerificationStep from './components/EmailVerificationStep'; // Nuevo componente
+import EmailVerificationStep from './components/EmailVerificationStep';
 
 const Card = styled(MuiCard)(() => {
     const { mode } = useColorScheme();

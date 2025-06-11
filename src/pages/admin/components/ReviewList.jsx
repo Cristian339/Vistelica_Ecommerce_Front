@@ -55,15 +55,17 @@ export default function ReviewList() {
     };
 
     const handleSaveReview = (updatedReview) => {
-        setReviews(prev => prev.map(review =>
-            review.review_id === updatedReview.review_id ? updatedReview : review
+        setReviews(prev => prev.map(reviewData =>
+            reviewData.review.review_id === updatedReview.review_id ?
+                { ...reviewData, review: updatedReview } : reviewData
         ));
         setEditingReview(null);
     };
 
-    const filteredReviews = reviews.filter(review => {
-        // Safe access to nested properties with fallbacks
-        const userName = review.user?.name || review.user?.user_id?.toString() || '';
+    const filteredReviews = reviews.filter(reviewData => {
+        // Acceder a la estructura correcta de datos
+        const review = reviewData.review;
+        const userName = review.user?.email || review.user?.user_id?.toString() || '';
         const productName = review.product?.name || '';
         const createdDate = review.created_at || '';
 
@@ -88,16 +90,25 @@ export default function ReviewList() {
 
     // Helper function to get user display name
     const getUserDisplayName = (user) => {
-        if (user?.name) return user.name;
+        if (user?.email) return user.email;
         if (user?.user_id) return `Usuario #${user.user_id}`;
         return 'Usuario desconocido';
     };
 
     // Helper function to get user initial
     const getUserInitial = (user) => {
-        if (user?.name) return user.name.charAt(0).toUpperCase();
+        if (user?.email) return user.email.charAt(0).toUpperCase();
         if (user?.user_id) return user.user_id.toString().charAt(0);
         return '?';
+    };
+
+
+    // Helper function to get product main image
+    const getProductMainImage = (product) => {
+        return product?.mainImage ||
+            product?.images?.find(img => img.is_main)?.image_url ||
+            product?.images?.[0]?.image_url ||
+            null;
     };
 
     return (
@@ -155,72 +166,125 @@ export default function ReviewList() {
                 </ModalDialog>
             </Modal>
 
-            {filteredReviews.map((review) => (
-                <List key={review.review_id} size="sm" sx={{ '--ListItem-paddingX': 0 }}>
-                    <ListItem
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'start',
-                        }}
-                    >
-                        <ListItemContent sx={{ display: 'flex', gap: 2, alignItems: 'start' }}>
-                            <ListItemDecorator>
-                                <Avatar size="sm">
-                                    {getUserInitial(review.user)}
-                                </Avatar>
-                            </ListItemDecorator>
-                            <div>
-                                <Typography level="title-sm" gutterBottom>
-                                    Producto: {review.product?.name || 'Producto desconocido'}
-                                </Typography>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                                    <Typography level="body-xs">
-                                        Fecha: {review.created_at || 'Fecha no disponible'}
+            {filteredReviews.map((reviewData) => {
+                const review = reviewData.review;
+                const productImage = getProductMainImage(review.product);
+
+                return (
+                    <List key={review.review_id} size="sm" sx={{ '--ListItem-paddingX': 0 }}>
+                        <ListItem
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'start',
+                            }}
+                        >
+                            <ListItemContent sx={{ display: 'flex', gap: 2, alignItems: 'start' }}>
+                                <ListItemDecorator>
+                                    <Avatar size="sm">
+                                        {getUserInitial(review.user)}
+                                    </Avatar>
+                                </ListItemDecorator>
+                                <div style={{ flex: 1 }}>
+                                    <Typography level="title-sm" gutterBottom>
+                                        Producto: {review.product?.name || 'Producto desconocido'}
                                     </Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                                    <Typography level="body-sm">
-                                        {getUserDisplayName(review.user)}
-                                    </Typography>
-                                </Box>
-                                <Typography level="body-xs" gutterBottom>
-                                    "{review.comment || 'Sin comentario'}"
-                                </Typography>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    {renderStars(review.rating || 0)}
-                                    <Typography level="body-xs">
-                                        ({review.rating || 0}/5)
-                                    </Typography>
-                                </Box>
-                            </div>
-                        </ListItemContent>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
-                            <Chip
-                                variant="soft"
-                                size="sm"
-                                color="neutral"
-                            >
-                                Reseña ID: {review.review_id}
-                            </Chip>
-                            <Dropdown>
-                                <MenuButton
-                                    slots={{ root: IconButton }}
-                                    slotProps={{ root: { variant: 'plain', color: 'neutral', size: 'sm' } }}
+
+                                    {/* Imagen del producto */}
+                                    {productImage && (
+                                        <Box sx={{ mb: 2 }}>
+                                            <img
+                                                src={productImage}
+                                                alt={review.product?.name || 'Producto'}
+                                                style={{
+                                                    width: '100px',
+                                                    height: '100px',
+                                                    objectFit: 'cover',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid #e0e0e0'
+                                                }}
+                                            />
+                                        </Box>
+                                    )}
+
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                        <Typography level="body-xs">
+                                            Fecha: {review.created_at ? new Date(review.created_at).toLocaleDateString() : 'Fecha no disponible'}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                        <Typography level="body-sm">
+                                            {getUserDisplayName(review.user)}
+                                        </Typography>
+                                    </Box>
+
+                                    {/* Texto de la reseña que está siendo reportada */}
+                                    <Box sx={{ mb: 2, p: 1.5, bgcolor: 'warning.50', borderRadius: 1, border: '1px solid', borderColor: 'warning.200' }}>
+                                        <Typography level="body-xs" sx={{ fontWeight: 'bold', color: 'warning.800', mb: 0.5 }}>
+                                            Reseña reportada:
+                                        </Typography>
+                                        <Typography level="body-sm" sx={{ fontStyle: 'italic', color: 'warning.700' }}>
+                                            "{review.review_text || 'Sin comentario'}"
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                        {renderStars(review.rating || 0)}
+                                        <Typography level="body-xs">
+                                            ({review.rating || 0}/5)
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ mt: 1 }}>
+                                        <Typography level="body-xs" color="danger" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                            Reportes: {reviewData.totalReports}
+                                        </Typography>
+                                        {reviewData.reports?.map((report, index) => (
+                                            <Box key={report.report_id} sx={{ ml: 1, mb: 1, p: 1, bgcolor: 'neutral.50', borderRadius: 1 }}>
+                                                <Typography level="body-xs" color="neutral" sx={{ fontWeight: 'bold' }}>
+                                                    • Motivo: {report.reason}
+                                                </Typography>
+                                                {report.other_reason_text && (
+                                                    <Typography level="body-xs" color="neutral" sx={{ ml: 1, fontStyle: 'italic' }}>
+                                                        Descripción: "{report.other_reason_text}"
+                                                    </Typography>
+                                                )}
+                                                <Typography level="body-xs" color="neutral" sx={{ ml: 1 }}>
+                                                    Reportado por: {report.reporter?.email || `Usuario #${report.reporter?.user_id}`}
+                                                </Typography>
+                                                <Typography level="body-xs" color="neutral" sx={{ ml: 1 }}>
+                                                    Fecha del reporte: {new Date(report.reported_at).toLocaleDateString()}
+                                                </Typography>
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                </div>
+                            </ListItemContent>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+                                <Chip
+                                    variant="soft"
+                                    size="sm"
+                                    color="neutral"
                                 >
-                                    <MoreHorizRoundedIcon />
-                                </MenuButton>
-                                <Menu size="sm" sx={{ minWidth: 140 }}>
-                                    <MenuItem onClick={() => handleEditReview(review)}>Editar</MenuItem>
-                                    <Divider />
-                                    <MenuItem color="danger">Eliminar</MenuItem>
-                                </Menu>
-                            </Dropdown>
-                        </Box>
-                    </ListItem>
-                    <ListDivider />
-                </List>
-            ))}
+                                    Reseña ID: {review.review_id}
+                                </Chip>
+                                <Dropdown>
+                                    <MenuButton
+                                        slots={{ root: IconButton }}
+                                        slotProps={{ root: { variant: 'plain', color: 'neutral', size: 'sm' } }}
+                                    >
+                                        <MoreHorizRoundedIcon />
+                                    </MenuButton>
+                                    <Menu size="sm" sx={{ minWidth: 140 }}>
+                                        <MenuItem onClick={() => handleEditReview(review)}>Editar</MenuItem>
+                                        <Divider />
+                                        <MenuItem color="danger">Eliminar</MenuItem>
+                                    </Menu>
+                                </Dropdown>
+                            </Box>
+                        </ListItem>
+                        <ListDivider />
+                    </List>
+                );
+            })}
 
             <Box
                 className="Pagination-mobile"
