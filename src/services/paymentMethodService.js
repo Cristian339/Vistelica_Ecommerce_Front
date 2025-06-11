@@ -74,6 +74,36 @@ const paymentMethodService = {
 
 
 
+
+
+    /**
+     * Obtiene el método de pago por defecto del usuario (con número de tarjeta completo)
+     * @returns {Promise<Object|null>} - Método de pago con número completo
+     */
+    async getDefaultPaymentMethodWithCard() {
+        try {
+            const token = this.getAuthToken();
+            if (!token) {
+                throw new Error('Usuario no autenticado');
+            }
+
+            const response = await axios.get(`${API_URL}/payment-methods/default`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            return response.data.data || response.data;
+        } catch (error) {
+            if (error.response?.status === 404) {
+                return null;
+            }
+            return handleError(error, 'Error al obtener el método predeterminado');
+        }
+    },
+
+
+
     /**
      * Actualiza un método de pago existente
      * @param {number} methodId - ID del método de pago a actualizar

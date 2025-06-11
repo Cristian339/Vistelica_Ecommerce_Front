@@ -191,14 +191,6 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
         },
         {
             index: 3,
-            text: "Métodos de pago",
-            icon: <PaymentOutlinedIcon />,
-            path: "/account/AccountPaymentMethods",
-            selected: currentPath === "/account/AccountPaymentMethods",
-            ariaLabel: "Gestionar métodos de pago"
-        },
-        {
-            index: 4,
             text: "Devoluciones",
             icon: <AssignmentReturnOutlinedIcon />,
             path: "/account/RefundPage",
@@ -292,8 +284,8 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
             </Box>
 
             {/* Diálogo para cerrar sesión */}
-            <Dialog 
-                open={logoutDialogOpen} 
+            <Dialog
+                open={logoutDialogOpen}
                 onClose={() => setLogoutDialogOpen(false)}
                 PaperProps={{
                     sx: {
@@ -306,9 +298,9 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
                 sx={{ zIndex: 2000 }} // Aumentado z-index
                 aria-labelledby="logout-dialog-title"
             >
-                <DialogTitle 
-                    id="logout-dialog-title" 
-                    sx={{ 
+                <DialogTitle
+                    id="logout-dialog-title"
+                    sx={{
                         bgcolor: vistelicaColors.primaryLight,
                         color: vistelicaColors.secondary,
                         fontFamily: typography.fontFamily,
@@ -373,8 +365,8 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
             </Dialog>
 
             {/* Diálogo para eliminar cuenta - MEJORADO */}
-            <Dialog 
-                open={deleteDialogOpen} 
+            <Dialog
+                open={deleteDialogOpen}
                 onClose={() => setDeleteDialogOpen(false)}
                 PaperProps={{
                     sx: {
@@ -387,9 +379,9 @@ const SidebarMenu = ({ username, avatarUrl, drawerOpen, setDrawerOpen }) => {
                 sx={{ zIndex: 2000 }} // Aumentado z-index
                 aria-labelledby="delete-account-dialog-title"
             >
-                <DialogTitle 
+                <DialogTitle
                     id="delete-account-dialog-title"
-                    sx={{ 
+                    sx={{
                         bgcolor: vistelicaColors.primaryLight,
                         color: vistelicaColors.secondary,
                         fontFamily: typography.fontFamily,
