@@ -8,6 +8,8 @@ import {
 } from '@mui/material';
 import ImageGallery from './ImageGallery';
 import ProductGrid from './ProductGrid';
+import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
+import { typography } from "@/pages/shared-theme/themePrimitives";
 
 const MainContentSection = ({
                                 styleImages,
@@ -42,19 +44,28 @@ const MainContentSection = ({
     };
 
     return (
-        <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 2 } }}>
+        <Container maxWidth="lg" disableGutters sx={{
+            px: { xs: 1, sm: 2 },
+            backgroundColor: vistelicaColors.backgroundLight,
+        }}>
             <Box sx={{
                 display: 'flex',
                 flexDirection: { xs: 'column', md: 'row' },
                 alignItems: 'flex-start',
                 gap: { xs: 3, md: 4 },
-                ml: 0
+                ml: 0,
+                padding: { xs: 1, sm: 2 },
+                borderRadius: 2,
+                background: `linear-gradient(to bottom, ${vistelicaColors.backgroundLight}, ${vistelicaColors.backgroundAccent}10)`,
             }}>
                 {/* Galería de imágenes */}
                 <Box sx={{
                     width: { xs: '100%', md: '50%' },
                     maxWidth: { xs: '100%', md: 450 },
-                    order: { xs: 1, md: 1 }
+                    order: { xs: 1, md: 1 },
+                    transition: 'all 0.3s ease',
+                    borderRadius: 2,
+                    overflow: 'hidden',
                 }}>
                     <ImageGallery
                         styleImages={styleImages}
@@ -71,7 +82,13 @@ const MainContentSection = ({
                 <Box sx={{
                     flexGrow: 1,
                     width: { xs: '100%', md: 'auto' },
-                    order: { xs: 2, md: 2 }
+                    order: { xs: 2, md: 2 },
+                    borderRadius: 2,
+                    transition: 'all 0.3s ease',
+                    padding: { xs: 1, sm: 2 },
+                    backgroundColor: `${vistelicaColors.white}`,
+                    boxShadow: `0 4px 12px ${vistelicaColors.shadow}10`,
+                    border: `1px solid ${vistelicaColors.divider}`,
                 }}>
                     <ProductGrid
                         products={products}

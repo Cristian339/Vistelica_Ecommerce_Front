@@ -6,6 +6,8 @@ import {
     useTheme,
     useMediaQuery
 } from '@mui/material';
+import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
+import { typography } from "@/pages/shared-theme/themePrimitives";
 
 const HeaderComponent = ({ title, subtitle, articleCount, wishlistCount }) => {
     const theme = useTheme();
@@ -16,9 +18,10 @@ const HeaderComponent = ({ title, subtitle, articleCount, wishlistCount }) => {
         <Box sx={{
             width: '100%',
             borderBottom: '1px solid',
-            borderColor: 'divider',
+            borderColor: vistelicaColors.divider,
             py: { xs: 1.5, md: 2 },
-            mb: { xs: 2, md: 4 }
+            mb: { xs: 2, md: 4 },
+            backgroundColor: vistelicaColors.backgroundLight,
         }}>
             <Container maxWidth="lg">
                 <Box sx={{
@@ -35,7 +38,9 @@ const HeaderComponent = ({ title, subtitle, articleCount, wishlistCount }) => {
                         sx={{
                             fontSize: { xs: '1.1rem', sm: '1.3rem', md: '1.5rem' },
                             lineHeight: 1.2,
-                            maxWidth: { xs: '100%', sm: '40%' }
+                            maxWidth: { xs: '100%', sm: '40%' },
+                            fontFamily: typography.fontFamily,
+                            color: vistelicaColors.primary,
                         }}
                     >
                         {title}
@@ -45,12 +50,13 @@ const HeaderComponent = ({ title, subtitle, articleCount, wishlistCount }) => {
                     {!isMobile && (
                         <Typography
                             variant="h6"
-                            color="text.secondary"
+                            color={vistelicaColors.textSecondary}
                             sx={{
                                 fontSize: { sm: '1rem', md: '1.2rem' },
                                 textAlign: { xs: 'left', sm: 'center' },
                                 maxWidth: { sm: '35%', md: '40%' },
-                                display: { xs: 'none', sm: 'block' }
+                                display: { xs: 'none', sm: 'block' },
+                                fontFamily: typography.fontFamily,
                             }}
                         >
                             {subtitle}
@@ -62,14 +68,19 @@ const HeaderComponent = ({ title, subtitle, articleCount, wishlistCount }) => {
                         display: 'flex',
                         alignItems: 'center',
                         gap: 2,
-                        alignSelf: { xs: 'flex-end', sm: 'center' }
+                        alignSelf: { xs: 'flex-end', sm: 'center' },
+                        px: 1.5,
+                        py: 0.75,
+                        borderRadius: 1.5,
+                        backgroundColor: `${vistelicaColors.backgroundAccent}30`,
                     }}>
                         <Typography
                             variant="body2"
-                            color="text.secondary"
                             sx={{
                                 fontSize: { xs: '0.8rem', sm: '0.875rem' },
-                                fontWeight: 500
+                                fontWeight: 500,
+                                fontFamily: typography.fontFamily,
+                                color: vistelicaColors.secondary,
                             }}
                         >
                             {articleCount}
@@ -81,11 +92,12 @@ const HeaderComponent = ({ title, subtitle, articleCount, wishlistCount }) => {
                 {isMobile && subtitle && (
                     <Typography
                         variant="body2"
-                        color="text.secondary"
+                        color={vistelicaColors.textSecondary}
                         sx={{
                             mt: 1,
                             fontSize: '0.9rem',
-                            lineHeight: 1.4
+                            lineHeight: 1.4,
+                            fontFamily: typography.fontFamily,
                         }}
                     >
                         {subtitle}
