@@ -10,13 +10,7 @@ const nextConfig = {
             },
         ],
     },
-    // Deshabilita SSG para componentes problemáticos
-    exportPathMap: async function () {
-        return {
-            '/': { page: '/' },
-            // No incluyas las páginas que fallan
-        }
-    },
+    // Elimina exportPathMap - no es compatible con App Router
     async rewrites() {
         return [
             {
