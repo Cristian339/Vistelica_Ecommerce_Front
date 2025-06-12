@@ -6,13 +6,18 @@ import { vistelicaColors } from '@/components/shared/vistelicaColors';
 import { typography } from "@/components/shared/themePrimitives";
 
 const SizeSelector = ({
-                          availableSizes,
+                          availableSizes = [], // Default to empty array
                           selectedSize,
                           onSizeChange,
                           setShowSizeGuide,
                           highlightedSection,
                           pulseAnimation
                       }) => {
+    // Early return if no sizes available
+    if (!availableSizes || availableSizes.length === 0) {
+        return null; // or return a loading/empty state component
+    }
+
     return (
         <Box sx={{ mb: 3 }}>
             <Paper
@@ -48,7 +53,7 @@ const SizeSelector = ({
                     <Button
                         variant="text"
                         size="small"
-                        onClick={() => setShowSizeGuide(true)}
+                        onClick={() => setShowSizeGuide && setShowSizeGuide(true)}
                         sx={{
                             color: vistelicaColors.primary,
                             fontFamily: typography.fontFamily,
@@ -80,7 +85,7 @@ const SizeSelector = ({
                             <Tooltip title={size} arrow>
                                 <Button
                                     variant={selectedSize === size ? "contained" : "outlined"}
-                                    onClick={() => onSizeChange(size)}
+                                    onClick={() => onSizeChange && onSizeChange(size)}
                                     sx={{
                                         minWidth: '48px',
                                         height: '48px',

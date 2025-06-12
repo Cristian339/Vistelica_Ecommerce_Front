@@ -29,7 +29,7 @@ const PrimaryButton = styled(Button)(() => ({
 }));
 
 export default function AdditionalAddressStep({
-                                                  formData,
+                                                  formData = {}, // Default empty object
                                                   onChange,
                                                   onCheckboxChange,
                                                   errors = {},

@@ -69,12 +69,12 @@ const LinkText = styled('span')(({ theme }) => ({
 
 // Modal estilizado
 const StyledDialog = styled(Dialog)(({ theme }) => {
-    const { mode } = useColorScheme();
+    const { mode } = useColorScheme() || { mode: 'light' }; // Default fallback
     return {
         '& .MuiDialog-paper': {
             backgroundColor: mode === 'dark'
-                ? vistelicaColors.cardBackground.dark
-                : vistelicaColors.cardBackground.light,
+                ? vistelicaColors.cardBackground?.dark || '#1a1a1a'
+                : vistelicaColors.cardBackground?.light || '#ffffff',
             borderRadius: '16px',
             maxWidth: '800px',
             width: '90vw',
@@ -110,7 +110,7 @@ const AnimatedLogo = styled(Typography)(() => ({
 
 // Contenido scrolleable del modal
 const ScrollableContent = styled(Box)(({ theme }) => {
-    const { mode } = useColorScheme();
+    const { mode } = useColorScheme() || { mode: 'light' }; // Default fallback
     return {
         maxHeight: '60vh',
         overflowY: 'auto',
@@ -131,7 +131,7 @@ const ScrollableContent = styled(Box)(({ theme }) => {
 
 // Título de sección con línea lateral
 const SectionTitle = styled(Typography)(({ theme }) => {
-    const { mode } = useColorScheme();
+    const { mode } = useColorScheme() || { mode: 'light' }; // Default fallback
     return {
         position: 'relative',
         paddingLeft: theme.spacing(1.5),
@@ -153,8 +153,13 @@ const SectionTitle = styled(Typography)(({ theme }) => {
     };
 });
 
-export default function PersonalizationStep({ formData, onChange, onBack, required = {} }) {
-    const { mode } = useColorScheme();
+export default function PersonalizationStep({
+                                                formData = {},
+                                                onChange = () => {},
+                                                onBack = () => {},
+                                                required = {}
+                                            }) {
+    const { mode } = useColorScheme() || { mode: 'light' }; // Default fallback
     const [modalOpen, setModalOpen] = React.useState(false);
 
     const handleOpenModal = () => {
@@ -164,6 +169,9 @@ export default function PersonalizationStep({ formData, onChange, onBack, requir
     const handleCloseModal = () => {
         setModalOpen(false);
     };
+
+    // Safely access formData.avatar with fallback
+    const avatarValue = formData?.avatar || '';
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -179,7 +187,7 @@ export default function PersonalizationStep({ formData, onChange, onBack, requir
                     fullWidth
                     id="avatar"
                     placeholder="https://example.com/mi-avatar.jpg"
-                    value={formData.avatar}
+                    value={avatarValue}
                     onChange={onChange}
                     sx={{
                         '& .MuiOutlinedInput-root': {
