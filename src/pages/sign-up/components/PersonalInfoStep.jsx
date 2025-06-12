@@ -26,16 +26,16 @@ const PrimaryButton = styled(Button)(() => ({
 }));
 
 export default function PersonalInfoStep({
-                                             formData,
+                                             formData = {},
                                              onChange,
-                                             nameError,
-                                             nameErrorMessage,
-                                             lastNameError,
-                                             lastNameErrorMessage,
-                                             born_dateError,
-                                             born_dateErrorMessage,
-                                             phoneError,
-                                             phoneErrorMessage,
+                                             nameError = false,
+                                             nameErrorMessage = '',
+                                             lastNameError = false,
+                                             lastNameErrorMessage = '',
+                                             born_dateError = false,
+                                             born_dateErrorMessage = '',
+                                             phoneError = false,
+                                             phoneErrorMessage = '',
                                              onBack,
                                              required = {}
                                          }) {
@@ -48,15 +48,15 @@ export default function PersonalInfoStep({
                     color: mode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
                     fontWeight: 500
                 }}>
-                    Nombre{required.name ? ' *' : ''}
+                    Nombre{required?.name ? ' *' : ''}
                 </FormLabel>
                 <TextField
                     name="name"
-                    required={required.name}
+                    required={required?.name || false}
                     fullWidth
                     id="name"
                     placeholder="Juan"
-                    value={formData.name}
+                    value={formData?.name || ''}
                     onChange={onChange}
                     error={nameError}
                     helperText={nameErrorMessage}
@@ -78,15 +78,15 @@ export default function PersonalInfoStep({
                     color: mode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
                     fontWeight: 500
                 }}>
-                    Apellido{required.lastName ? ' *' : ''}
+                    Apellido{required?.lastName ? ' *' : ''}
                 </FormLabel>
                 <TextField
                     name="lastName"
-                    required={required.lastName}
+                    required={required?.lastName || false}
                     fullWidth
                     id="lastName"
                     placeholder="Pérez"
-                    value={formData.lastName}
+                    value={formData?.lastName || ''}
                     onChange={onChange}
                     error={lastNameError}
                     helperText={lastNameErrorMessage}
@@ -108,15 +108,15 @@ export default function PersonalInfoStep({
                     color: mode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
                     fontWeight: 500
                 }}>
-                    Fecha de nacimiento{required.born_date ? ' *' : ''}
+                    Fecha de nacimiento{required?.born_date ? ' *' : ''}
                 </FormLabel>
                 <TextField
                     name="born_date"
-                    required={required.born_date}
+                    required={required?.born_date || false}
                     fullWidth
                     id="born_date"
                     type="date"
-                    value={formData.born_date}
+                    value={formData?.born_date || ''}
                     onChange={onChange}
                     error={born_dateError}
                     helperText={born_dateErrorMessage}
@@ -138,15 +138,15 @@ export default function PersonalInfoStep({
                     color: mode === 'dark' ? vistelicaColors.tertiary : vistelicaColors.secondary,
                     fontWeight: 500
                 }}>
-                    Teléfono{required.phone ? ' *' : ''}
+                    Teléfono{required?.phone ? ' *' : ''}
                 </FormLabel>
                 <TextField
                     name="phone"
-                    required={required.phone}
+                    required={required?.phone || false}
                     fullWidth
                     id="phone"
                     placeholder="611778899"
-                    value={formData.phone}
+                    value={formData?.phone || ''}
                     onChange={onChange}
                     error={phoneError}
                     helperText={phoneErrorMessage}
