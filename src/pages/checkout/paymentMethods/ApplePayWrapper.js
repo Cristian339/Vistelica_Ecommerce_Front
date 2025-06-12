@@ -87,11 +87,18 @@ const ApplePayComponent = React.memo(function ApplePayComponent({
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
 
-    const amountInCents = paymentService.convertEurosToCents(amount);
+    const amountInCents = typeof amount === 'number' && amount > 0
+        ? paymentService.convertEurosToCents(amount)
+        : 0; // o algún valor seguro predeterminado
+
 
     useEffect(() => {
         if (!stripe || !elements) return;
 
+        if (!amountInCents || amountInCents <= 0) {
+            setError('No se proporcionó una cantidad válida para el pago');
+            return;
+        }
         // Notificar al padre que se seleccionó este método
         onPaymentMethodChange();
 

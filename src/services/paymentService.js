@@ -26,28 +26,24 @@ const payWithCard = async (id,amount) => {
  * @returns {number} Cantidad en céntimos (ej. 1099)
  */
 const convertEurosToCents = (euros) => {
-    // Si es string, reemplazar comas por puntos para decimales
+    if (euros === undefined || euros === null) {
+        throw new Error('No se proporcionó una cantidad válida');
+    }
+
     if (typeof euros === 'string') {
         euros = euros.replace(',', '.');
     }
 
-    // Convertir a número
     const amount = parseFloat(euros);
+    console.log("EL AMOUNT ES:", euros);
 
-
-    console.log("EL AMOUNT ES: " + euros);
-
-
-    // Verificar que es un número válido
     if (isNaN(amount)) {
         throw new Error('El valor proporcionado no es un número válido');
     }
 
-    // Redondear a 2 decimales y convertir a céntimos
-    const cents = Math.round(amount * 100);
-
-    return cents;
+    return Math.round(amount * 100);
 };
+
 
 
 const paymentService = {

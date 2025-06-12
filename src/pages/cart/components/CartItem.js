@@ -18,7 +18,8 @@ const CartItem = React.memo(({
                                  onRemove,
                                  loading = false
                              }) => {
-    const [quantity, setQuantity] = useState(item?.quantity || 1);
+    if (!item) return null;
+    const [quantity, setQuantity] = useState(item.quantity || 1);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [loadingImage, setLoadingImage] = useState(true);
 
@@ -50,16 +51,17 @@ const CartItem = React.memo(({
 
     // Manejadores de eventos optimizados
     const handleQuantityChange = useCallback((newQuantity) => {
-        if (newQuantity < 1 || newQuantity > 100 || loading) return;
+        if (!item || newQuantity < 1 || newQuantity > 100 || loading) return;
 
         setQuantity(newQuantity);
         onUpdateQuantity && onUpdateQuantity(item.cart_detail_id, newQuantity);
-    }, [item.cart_detail_id, onUpdateQuantity, loading]);
+    }, [item, onUpdateQuantity, loading]);
 
     const handleRemoveItem = useCallback(() => {
-        if (loading) return;
+        if (!item || loading) return;
         onRemove && onRemove(item.cart_detail_id);
-    }, [item.cart_detail_id, onRemove, loading]);
+    }, [item, onRemove, loading]);
+
 
     return (
         <motion.div
