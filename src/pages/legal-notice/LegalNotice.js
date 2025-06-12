@@ -289,7 +289,7 @@ export default function LegalNotice(props) {
                                 paragraph
                                 sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}
                             >
-                                Vistélica es una plataforma de comercio electrónico especializada en la venta de ropa para hombres, mujeres y niños. El presente aviso legal regula el acceso y uso del sitio web www.vistelica.com (en adelante, "el Sitio Web") que Vistélica pone a disposición de los usuarios interesados en los servicios y contenidos ofrecidos.
+                                Vistélica es una plataforma de comercio electrónico especializada en la venta de ropa para hombres, mujeres y niños. El presente aviso legal regula el acceso y uso del sitio web www.vistelica.com (en adelante, Sitio Web) que Vistélica pone a disposición de los usuarios interesados en los servicios y contenidos ofrecidos.
                             </Typography>
 
                             <Divider sx={{ my: { xs: 2, sm: 3 }, borderColor: 'rgba(228, 176, 2, 0.3)' }} />
@@ -301,7 +301,7 @@ export default function LegalNotice(props) {
                                 paragraph
                                 sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}
                             >
-                                Todos los contenidos del Sitio Web, entendiendo por estos, a título enunciativo, los textos, fotografías, gráficos, imágenes, iconos, tecnología, software, links y demás contenidos audiovisuales o sonoros, así como su diseño gráfico y códigos fuente (en adelante, los "Contenidos"), son propiedad intelectual de Vistélica o de terceros, sin que puedan entenderse cedidos al Usuario ninguno de los derechos de explotación reconocidos por la normativa vigente en materia de propiedad intelectual sobre los mismos.
+                                Todos los contenidos del Sitio Web, entendiendo por estos, a título enunciativo, los textos, fotografías, gráficos, imágenes, iconos, tecnología, software, links y demás contenidos audiovisuales o sonoros, así como su diseño gráfico y códigos fuente (en adelante, los Contenidos), son propiedad intelectual de Vistélica o de terceros, sin que puedan entenderse cedidos al Usuario ninguno de los derechos de explotación reconocidos por la normativa vigente en materia de propiedad intelectual sobre los mismos.
                             </Typography>
                             <Typography
                                 paragraph
