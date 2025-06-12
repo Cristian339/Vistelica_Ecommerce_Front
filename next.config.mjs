@@ -10,6 +10,13 @@ const nextConfig = {
             },
         ],
     },
+    // Deshabilita SSG para componentes problemáticos
+    exportPathMap: async function () {
+        return {
+            '/': { page: '/' },
+            // No incluyas las páginas que fallan
+        }
+    },
     async rewrites() {
         return [
             {

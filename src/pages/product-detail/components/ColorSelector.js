@@ -100,12 +100,43 @@ const COLOR_CATALOG = [
 ];
 
 const ColorSelector = ({
-                           availableColors,
+                           availableColors = [], // ✅ Valor por defecto agregado
                            selectedColor,
                            onColorChange,
                            highlightedSection,
                            pulseAnimation
                        }) => {
+    // ✅ Validación early return para evitar errores de SSR
+    if (!availableColors || !Array.isArray(availableColors) || availableColors.length === 0) {
+        return (
+            <Box sx={{ mb: 3 }}>
+                <Paper
+                    elevation={2}
+                    sx={{
+                        p: 2,
+                        borderRadius: '12px',
+                        background: 'linear-gradient(145deg, #ffffff, #f8f8f8)',
+                    }}
+                >
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            fontFamily: typography.fontFamily,
+                            fontWeight: 600,
+                            mb: 2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            color: vistelicaColors.secondary
+                        }}
+                    >
+                        <Palette sx={{ mr: 1, color: vistelicaColors.primary }} />
+                        Color: No disponible
+                    </Typography>
+                </Paper>
+            </Box>
+        );
+    }
+
     // Función para capitalizar la primera letra de cada palabra
     const capitalizeFirstLetter = (string) => {
         if (!string) return '';
@@ -194,21 +225,24 @@ const ColorSelector = ({
                         justifyContent: 'flex-start'
                     }}
                 >
-                    {availableColors.map(color => {
+                    {availableColors.map((color, index) => {
+                        // ✅ Validación adicional para cada color
+                        if (!color) return null;
+
                         const colorCode = getColorCode(color);
                         const isBrightColor = isLightColor(colorCode);
                         const translatedColor = translateColorName(color);
 
                         return (
                             <motion.div
-                                key={color}
+                                key={`${color}-${index}`} // ✅ Key más segura
                                 whileHover={{ scale: 1.1, rotate: 5 }}
                                 whileTap={{ scale: 0.95 }}
                             >
                                 <Tooltip title={translatedColor} arrow>
                                     <Button
                                         variant="contained"
-                                        onClick={() => onColorChange(color)}
+                                        onClick={() => onColorChange && onColorChange(color)} // ✅ Validación de función
                                         sx={{
                                             minWidth: '40px',
                                             height: '40px',
