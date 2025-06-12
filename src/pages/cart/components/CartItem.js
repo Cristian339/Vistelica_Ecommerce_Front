@@ -9,8 +9,8 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SavingsIcon from '@mui/icons-material/Savings';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
-import ImageWithFallback from '@/pages/shared-components/ImageWithFallback';
 import PaletteIcon from "@mui/icons-material/Palette";
+import ImageWithFallback from "@/pages/cart/components/ImageWithFallback";
 
 const CartItem = React.memo(({
                                  item,
