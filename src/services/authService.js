@@ -7,7 +7,7 @@ import {
 } from "firebase/auth";
 import { auth, googleProvider, facebookProvider } from "./firebase";
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api`;
 
 // ========== MÉTODOS DE REGISTRO CON VERIFICACIÓN ==========
 
