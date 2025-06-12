@@ -75,11 +75,11 @@ const AppleIconWrapper = styled(Box)(({ theme }) => ({
 
 // Componente optimizado con memo
 const ApplePayComponent = React.memo(function ApplePayComponent({
-    amount,
-    onPaymentSuccess,
-    onPaymentMethodChange,
-    setPaymentData
-}) {
+                                                                    amount,
+                                                                    onPaymentSuccess,
+                                                                    onPaymentMethodChange,
+                                                                    setPaymentData
+                                                                }) {
     const stripe = useStripe();
     const elements = useElements();
     const [paymentRequest, setPaymentRequest] = useState(null);
@@ -87,25 +87,23 @@ const ApplePayComponent = React.memo(function ApplePayComponent({
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
 
+    // Calcular amountInCents y validar amount al inicio
     const amountInCents = typeof amount === 'number' && amount > 0
         ? paymentService.convertEurosToCents(amount)
-        : 0; // o algún valor seguro predeterminado
+        : 0;
 
-    if (typeof amount !== 'number' || amount <= 0) {
-        return (
-            <Typography color="error" align="center" sx={{ mt: 4 }}>
-                No se proporcionó una cantidad válida para el pago.
-            </Typography>
-        );
-    }
+    const isValidAmount = typeof amount === 'number' && amount > 0;
 
+    // Los hooks siempre deben ejecutarse en el mismo orden
     useEffect(() => {
-        if (!stripe || !elements) return;
+        // Solo ejecutar la lógica si tenemos datos válidos
+        if (!stripe || !elements || !isValidAmount) return;
 
         if (!amountInCents || amountInCents <= 0) {
             setError('No se proporcionó una cantidad válida para el pago');
             return;
         }
+
         // Notificar al padre que se seleccionó este método
         onPaymentMethodChange();
 
@@ -184,7 +182,16 @@ const ApplePayComponent = React.memo(function ApplePayComponent({
         return () => {
             pr.off('paymentmethod', handlePaymentMethod);
         };
-    }, [stripe, elements, amountInCents, onPaymentSuccess, onPaymentMethodChange, setPaymentData, amount]);
+    }, [stripe, elements, amountInCents, onPaymentSuccess, onPaymentMethodChange, setPaymentData, amount, isValidAmount]);
+
+    // Renderizado condicional después de todos los hooks
+    if (!isValidAmount) {
+        return (
+            <Typography color="error" align="center" sx={{ mt: 4 }}>
+                No se proporcionó una cantidad válida para el pago.
+            </Typography>
+        );
+    }
 
     if (success) {
         return (
@@ -360,11 +367,11 @@ const ApplePayComponent = React.memo(function ApplePayComponent({
 
 // Optimizar el wrapper con React.memo
 export default React.memo(function ApplePayWrapper({
-    amount,
-    onPaymentSuccess,
-    onPaymentMethodChange,
-    setPaymentData
-}) {
+                                                       amount,
+                                                       onPaymentSuccess,
+                                                       onPaymentMethodChange,
+                                                       setPaymentData
+                                                   }) {
     return (
         <Elements stripe={stripePromise}>
             <ApplePayComponent
