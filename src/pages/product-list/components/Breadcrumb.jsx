@@ -4,8 +4,8 @@ import Link from 'next/link';
 import HomeIcon from '@mui/icons-material/Home';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { motion } from 'framer-motion';
-import { vistelicaColors } from '../../shared-theme/vistelicaColors';
-import { typography } from "../../shared-theme/themePrimitives";
+import { vistelicaColors } from '../../../components/shared/vistelicaColors';
+import { typography } from "../../../components/shared/themePrimitives";
 
 const BreadcrumbItem = React.memo(({ label, href, isActive }) => {
     const theme = useTheme();

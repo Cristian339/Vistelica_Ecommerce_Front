@@ -11,8 +11,8 @@ import TimerIcon from '@mui/icons-material/Timer';
 import { motion, AnimatePresence } from 'framer-motion';
 import productService from '../../../services/productService';
 import { useRouter } from 'next/navigation';
-import { vistelicaColors } from '../../shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '../../../components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 // Componente para los círculos de color mejorado
 const ColorCircle = React.memo(({ color }) => {

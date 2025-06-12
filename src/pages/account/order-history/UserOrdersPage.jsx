@@ -24,8 +24,8 @@ import { orderService } from '@/services/orderService';
 import { getUserProfile } from '@/services/profileService';
 import SidebarMenu from '@/components/layout/SidebarMenu';
 import Navbar from "@/components/layout/HeaderComponent";
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from '@/pages/shared-theme/themePrimitives';
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from '@/components/shared/themePrimitives';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 

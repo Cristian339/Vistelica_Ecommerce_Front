@@ -2,8 +2,8 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Box, Typography, Paper, IconButton, CircularProgress, Chip, Tooltip } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from "@/components/shared/themePrimitives";
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';

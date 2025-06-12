@@ -2,7 +2,7 @@
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
 
 const LoadingAnimation = () => {
     return (

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     Box,
     Paper,
@@ -23,8 +23,13 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import productService from '@/services/productService';
 import CircularProgress from '@mui/material/CircularProgress';
 import { motion, AnimatePresence } from "framer-motion";
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
+
+const fallbackImages = [
+    { image_url: '/assets/images/products/placeholder-image.jpg', is_fallback: true },
+    { image_url: '/assets/images/products/placeholder-image-2.jpg', is_fallback: true }
+];
 
 const ProductGallery = ({ productId, initialImages = [] }) => {
     const theme = useTheme();
@@ -48,19 +53,38 @@ const ProductGallery = ({ productId, initialImages = [] }) => {
     const loadingRetries = useRef(0);
     const MAX_RETRIES = 2;
 
-    // Imágenes de respaldo mejoradas
-    const fallbackImages = [
-        { image_url: '/assets/images/products/placeholder-image.jpg', is_fallback: true },
-        { image_url: '/assets/images/products/placeholder-image-2.jpg', is_fallback: true }
-    ];
-
     // Optimización de carga de imágenes - usando objeto para seguimiento individual
-    const handleImageLoad = (index) => {
+    const handleImageLoad = useCallback((index) => {
         setImagesLoaded(prev => ({
             ...prev,
             [index]: true
         }));
-    };
+    }, []);
+
+    // Funciones de navegación memoizadas
+    const handleNext = useCallback((e) => {
+        if (e) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+        setCurrentIndex((prevIndex) =>
+            prevIndex === images.length - 1 ? 0 : prevIndex + 1
+        );
+    }, [images.length]);
+
+    const handlePrev = useCallback((e) => {
+        if (e) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+        setCurrentIndex((prevIndex) =>
+            prevIndex === 0 ? images.length - 1 : prevIndex - 1
+        );
+    }, [images.length]);
+
+    const handleCloseZoom = useCallback(() => {
+        setOpenZoom(false);
+    }, []);
 
     // Pre-carga de imágenes adyacentes
     useEffect(() => {
@@ -75,7 +99,7 @@ const ProductGallery = ({ productId, initialImages = [] }) => {
             const preloadPrev = new Image();
             preloadPrev.src = images[prevIndex]?.image_url;
         }
-    }, [currentIndex, images]);
+    }, [currentIndex, images, images.length]);
 
     useEffect(() => {
         // Si ya tenemos imágenes, usamos esas
@@ -129,30 +153,10 @@ const ProductGallery = ({ productId, initialImages = [] }) => {
         };
 
         fetchProductImages();
-    }, [productId, initialImages]);
-
-    const handleNext = (e) => {
-        if (e) {
-            e.stopPropagation();
-            e.preventDefault();
-        }
-        setCurrentIndex((prevIndex) =>
-            prevIndex === images.length - 1 ? 0 : prevIndex + 1
-        );
-    };
-
-    const handlePrev = (e) => {
-        if (e) {
-            e.stopPropagation();
-            e.preventDefault();
-        }
-        setCurrentIndex((prevIndex) =>
-            prevIndex === 0 ? images.length - 1 : prevIndex - 1
-        );
-    };
+    }, [productId, initialImages, images.length]);
 
     // Función mejorada para manejar errores de imagen con retraso para evitar bucles
-    const handleImageError = (index) => {
+    const handleImageError = useCallback((index) => {
         console.warn(`Error al cargar la imagen ${index}`);
 
         // Solo reemplazamos si no es ya una imagen de fallback
@@ -170,12 +174,13 @@ const ProductGallery = ({ productId, initialImages = [] }) => {
             setTimeout(() => handleImageLoad(index), 100);
             return newImages;
         });
-    };
+    }, [handleImageLoad]);
 
-    const handleOpenZoom = () => setOpenZoom(true);
-    const handleCloseZoom = () => setOpenZoom(false);
+    const handleOpenZoom = useCallback(() => {
+        setOpenZoom(true);
+    }, []);
 
-    const handleMouseMove = (e) => {
+    const handleMouseMove = useCallback((e) => {
         if (!imageRef.current || !isHovering || isMobile) return;
 
         const { left, top, width, height } = imageRef.current.getBoundingClientRect();
@@ -187,17 +192,17 @@ const ProductGallery = ({ productId, initialImages = [] }) => {
             x: Math.max(0, Math.min(1, x)),
             y: Math.max(0, Math.min(1, y))
         });
-    };
+    }, [isHovering, isMobile]);
 
-    const handleMouseLeave = () => {
+    const handleMouseLeave = useCallback(() => {
         setIsHovering(false);
-    };
+    }, []);
 
-    const handleMouseEnter = () => {
+    const handleMouseEnter = useCallback(() => {
         if (!isMobile) {
             setIsHovering(true);
         }
-    };
+    }, [isMobile]);
 
     // Gestos para dispositivos móviles
     useEffect(() => {
@@ -231,7 +236,7 @@ const ProductGallery = ({ productId, initialImages = [] }) => {
                 container.removeEventListener('touchend', handleTouchEnd);
             };
         }
-    }, [isMobile, images.length]);
+    }, [isMobile, handleNext, handlePrev]);
 
     // Manejo de teclado para accesibilidad
     useEffect(() => {
@@ -255,7 +260,7 @@ const ProductGallery = ({ productId, initialImages = [] }) => {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [openZoom]);
+    }, [openZoom, handleNext, handlePrev, handleCloseZoom]);
 
     if (loading) {
         return (

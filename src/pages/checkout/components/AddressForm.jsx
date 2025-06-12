@@ -27,8 +27,8 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import SearchIcon from '@mui/icons-material/Search';
 import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from '@/pages/shared-theme/themePrimitives';
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from '@/components/shared/themePrimitives';
 import StarIcon from '@mui/icons-material/Star';
 
 const FormGrid = styled(Grid)(({ theme }) => ({

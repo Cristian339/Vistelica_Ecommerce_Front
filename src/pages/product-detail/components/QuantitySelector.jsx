@@ -2,8 +2,8 @@ import React from 'react';
 import { Box, Typography, IconButton, Paper } from '@mui/material';
 import { Add, Remove, TouchApp } from '@mui/icons-material';
 import { motion } from "framer-motion";
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 const QuantitySelector = ({
                               quantity,

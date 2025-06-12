@@ -24,15 +24,15 @@ import HeaderComponent from '@/components/layout/HeaderComponent';
 // Servicios y utilidades
 import wishlistService from '@/services/wishlistService';
 import categoryService from '@/services/categoryService';
-import { sortProducts } from './components/SortUtils';
-import { COLORS, BRANDS, SIZES } from './constants/filterOptions';
+import { sortProducts } from '../../components/productlist/SortUtils';
+import { COLORS, BRANDS, SIZES } from '../../components/productlist/filterOptions';
 // Componentes
 import ProductGrid from './components/ProductGrid';
 import SortDropdown from './components/SortDropdown';
 import FilterSidebar from './components/FilterSidebar';
-import { vistelicaColors } from '../shared-theme/vistelicaColors';
+import { vistelicaColors } from '../../components/shared/vistelicaColors';
 import productService from "@/services/productService";
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { typography } from "@/components/shared/themePrimitives";
 
 const ProductList = () => {
 // Router y parámetros de búsqueda optimizados

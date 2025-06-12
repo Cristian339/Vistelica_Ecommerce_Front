@@ -130,7 +130,8 @@ const fetchSubcategoryById = async (subcategoryId) => {
     }
 };
 
-export default {
+// Crear el objeto del servicio
+const categoryService = {
     fetchCategories,
     fetchCategoryById,
     createCategory,
@@ -143,3 +144,5 @@ export default {
     toggleDiscardSubcategory,
     fetchSubcategoryById
 };
+
+export default categoryService;

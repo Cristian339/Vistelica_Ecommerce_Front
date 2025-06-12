@@ -20,8 +20,8 @@ import {
     MinusCircle,
     PlusCircle
 } from 'lucide-react';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 const ImageGallery = ({
                           styleImages,
@@ -44,7 +44,9 @@ const ImageGallery = ({
     const [modalImagePos, setModalImagePos] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-
+    if (!styleImages || !Array.isArray(styleImages) || styleImages.length === 0) {
+        return null; // o un componente de loading/placeholder
+    }
     useEffect(() => {
         setImageLoading(true);
     }, [currentImageIndex]);

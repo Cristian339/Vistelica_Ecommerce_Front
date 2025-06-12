@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, CircularProgress, Badge, Tooltip, useMediaQuery, useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import ImageNotSupportedIcon from '@mui/icons-material/ImageNotSupported';
 

@@ -24,7 +24,7 @@ import BrightnessAutoRoundedIcon from '@mui/icons-material/BrightnessAutoRounded
 import ReportIcon from '@mui/icons-material/Report';
 
 import ColorSchemeToggle from '@/theme/ColorSchemeToggle';
-import { closeSidebar } from '@/pages/admin/utils';
+import { closeSidebar } from '@/components/admin/utils';
 import AssignmentReturnIcon from "@mui/icons-material/AssignmentReturn";
 
 function Toggler({ defaultExpanded = false, renderToggle, children }) {

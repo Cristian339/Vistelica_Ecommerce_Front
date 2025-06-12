@@ -12,8 +12,8 @@ import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useRouter } from 'next/navigation';
 import { isAdmin, getToken } from '@/services/authService';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 import NavigationMenu from '@/components/navigation/NavigationMenu';
 import SearchFilter from '@/components/search/SearchFilter';
 

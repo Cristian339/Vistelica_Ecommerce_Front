@@ -10,8 +10,8 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { motion, AnimatePresence } from 'framer-motion';
 import productService from '../../../services/productService';
 import { useRouter } from 'next/navigation';
-import { vistelicaColors } from '../../shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '../../../components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 // Componente memoizado para el badge de descuento
 const DiscountBadge = React.memo(({ discountPercentage }) => {

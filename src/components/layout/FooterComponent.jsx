@@ -20,8 +20,8 @@ import InstagramIcon from '@mui/icons-material/Instagram';
 import YouTubeIcon from '@mui/icons-material/YouTube';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 // Componentes optimizados
 const FooterSection = React.memo(({ title, links, delay = 0 }) => {

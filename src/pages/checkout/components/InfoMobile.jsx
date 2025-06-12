@@ -8,8 +8,8 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { styled } from '@mui/material/styles';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from '@/pages/shared-theme/themePrimitives';
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from '@/components/shared/themePrimitives';
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
 import CircularProgress from '@mui/material/CircularProgress';
 

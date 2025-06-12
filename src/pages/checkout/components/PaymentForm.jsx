@@ -31,8 +31,8 @@ import GoogleIcon from '@mui/icons-material/Google';
 import AppleIcon from '@mui/icons-material/Apple';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Collapse from "@mui/material/Collapse";
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from '@/pages/shared-theme/themePrimitives';
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from '@/components/shared/themePrimitives';
 
 const SectionTitle = styled(Typography)(({ theme }) => ({
     fontSize: '1.25rem',

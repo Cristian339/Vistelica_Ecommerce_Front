@@ -1,8 +1,8 @@
 'use client';
 import React, { useRef, useEffect, useState } from 'react';
 import { Box, Typography, Fade, Link } from '@mui/material';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 const BannerVideoSection = ({
     videoUrl = "https://res.cloudinary.com/dhyv4dpk2/video/upload/v1747847378/vistelica/subcategorias/vuo7vq7l9bizoandcyup.mp4",

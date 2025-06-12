@@ -2,8 +2,8 @@
 import React, { useMemo, useCallback } from 'react';
 import { Box, Typography, Breadcrumbs, Link, Chip, useMediaQuery, useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from "@/components/shared/themePrimitives";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import HomeIcon from '@mui/icons-material/Home';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';

@@ -6,8 +6,8 @@ import { GlobalStyles } from '@mui/material';
 import productService from '@/services/productService';
 import Link from 'next/link';
 import Image from 'next/image';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 const GenericSuggestedItemsCarousel = ({ categoryId }) => {
     const [currentSlide, setCurrentSlide] = useState(0);

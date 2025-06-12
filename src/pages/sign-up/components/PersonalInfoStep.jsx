@@ -7,7 +7,7 @@ import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import { styled } from '@mui/material/styles';
 import { useColorScheme } from '@mui/material/styles';
-import { vistelicaColors } from '../../shared-theme/vistelicaColors';
+import { vistelicaColors } from '../../../components/shared/vistelicaColors';
 
 // Botón primario con hover amarillo
 const PrimaryButton = styled(Button)(() => ({

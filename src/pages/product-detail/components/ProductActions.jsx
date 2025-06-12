@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, IconButton, Tooltip, CircularProgress } from '@mui/material';
 import { Share, Favorite, FavoriteBorder } from '@mui/icons-material';
 import { motion } from "framer-motion";
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
 
 const ProductActions = ({
                             isFavorite,

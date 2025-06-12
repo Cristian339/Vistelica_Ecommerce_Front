@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 const Carousel = ({ images, title = "out of core", intervalTime = 3000 }) => {
     const [currentIndex, setCurrentIndex] = useState(0);

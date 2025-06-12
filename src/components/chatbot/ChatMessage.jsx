@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { Box, Typography, Avatar, CircularProgress, Zoom } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
 
 const ChatMessage = ({ message }) => {
     const { text, isBot, isTyping } = message;

@@ -5,11 +5,11 @@ import productService from '../../../services/productService';
 import ProductGrid from '../components/ProductGrid';
 import FilterSidebar from '../components/FilterSidebar';
 import SortDropdown from '../components/SortDropdown';
-import { sortProducts } from '../components/SortUtils';
+import { sortProducts } from '../../../components/productlist/SortUtils';
 import { Box, Typography, Button, CircularProgress, Fade, Drawer, IconButton, useMediaQuery, Alert } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CloseIcon from '@mui/icons-material/Close';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
 
 const CategoryPage = () => {
     const router = useRouter();

@@ -20,8 +20,8 @@ import { loadStripe } from '@stripe/stripe-js';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import paymentService from '@/services/paymentService';
 import AppleIcon from '@mui/icons-material/Apple';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from '@/pages/shared-theme/themePrimitives';
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from '@/components/shared/themePrimitives';
 
 // Cargar Stripe sólo una vez
 const stripePromise = loadStripe("pk_test_51RPncWQc122Tani8pkjulLHNj5pnGssS5aP8eyTIKO7kBECr0X9ndIax3yFYraPQca5Ax6uH4l528N1zzsqLI8Rn00qx93QGQO");

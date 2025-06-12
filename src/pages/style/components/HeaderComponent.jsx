@@ -6,8 +6,8 @@ import {
     useTheme,
     useMediaQuery
 } from '@mui/material';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 const HeaderComponent = ({ title, subtitle, articleCount, wishlistCount }) => {
     const theme = useTheme();

@@ -15,8 +15,8 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SavingsIcon from '@mui/icons-material/Savings';
 import HomeIcon from '@mui/icons-material/Home';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from "@/components/shared/themePrimitives";
 
 const CartPage = React.memo(() => {
     const [cart, setCart] = useState(null);

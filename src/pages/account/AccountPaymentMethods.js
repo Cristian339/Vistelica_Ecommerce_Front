@@ -44,7 +44,7 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { Container } from '@mui/system';
 import { motion } from 'framer-motion';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
 import SidebarMenu from '@/components/layout/SidebarMenu';
 import Navbar from "@/components/layout/HeaderComponent";
 import paymentMethodService from '@/services/paymentMethodService';

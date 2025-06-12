@@ -15,8 +15,8 @@ import StyleOutlinedIcon from '@mui/icons-material/StyleOutlined';
 import EuroOutlinedIcon from '@mui/icons-material/EuroOutlined';
 import StraightenOutlinedIcon from '@mui/icons-material/StraightenOutlined';
 import { motion } from "framer-motion";
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from "@/components/shared/themePrimitives";
 
 // Lista de tallas comunes
 const SIZES = [

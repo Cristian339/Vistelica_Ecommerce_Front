@@ -2,8 +2,8 @@ import React from 'react';
 import { Box, Typography, Paper, Button, Tooltip } from '@mui/material';
 import { motion } from "framer-motion";
 import { TouchApp } from '@mui/icons-material';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 const SizeSelector = ({
                           availableSizes,

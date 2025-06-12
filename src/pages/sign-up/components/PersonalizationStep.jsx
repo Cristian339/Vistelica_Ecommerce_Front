@@ -15,7 +15,7 @@ import Divider from '@mui/material/Divider';
 import CloseIcon from '@mui/icons-material/Close';
 import { styled, keyframes } from '@mui/material/styles';
 import { useColorScheme } from '@mui/material/styles';
-import { vistelicaColors } from '../../shared-theme/vistelicaColors';
+import { vistelicaColors } from '../../../components/shared/vistelicaColors';
 
 // Animaciones para el modal
 const fadeIn = keyframes`

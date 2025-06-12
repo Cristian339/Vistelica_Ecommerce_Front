@@ -14,8 +14,8 @@ import {
     CircularProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { vistelicaColors } from '../../shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '../../../components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Componentes estilizados con mejor optimización

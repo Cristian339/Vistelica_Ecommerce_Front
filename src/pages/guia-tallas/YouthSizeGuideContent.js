@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 import Head from 'next/head';
 import { useRouter } from 'next/navigation';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import Navbar from "@/components/layout/HeaderComponent";
@@ -122,10 +122,7 @@ const YouthSizeGuideContent = () => {
             <Head>
                 <title>Guía de Tallas Jóvenes | Tu Marca</title>
                 <meta name="description" content="Guía de tallas para ropa de jóvenes" />
-                <link
-                    href="https://fonts.googleapis.com/css2?family=Amethysta&family=Tenor+Sans&display=swap"
-                    rel="stylesheet"
-                />
+
             </Head>
 
             <Container maxWidth="lg" sx={{ py: 4 }}>

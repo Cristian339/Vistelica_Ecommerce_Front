@@ -2,8 +2,8 @@
 import React, { useMemo } from 'react';
 import { Box, Typography, Container, Grid, Paper, useTheme, useMediaQuery } from '@mui/material';
 import { motion } from 'framer-motion';
-import { vistelicaColors } from '../../shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '../../../components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 // Componente para los iconos de valores
 const ValueIcon = React.memo(({ icon, alt }) => {

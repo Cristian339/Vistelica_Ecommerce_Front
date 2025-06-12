@@ -1,7 +1,7 @@
 import { alpha } from '@mui/material/styles';
-import { gray } from '../themePrimitives';
+import { gray } from './themePrimitives';
 
-/* eslint-disable import/prefer-default-export */
+// Removemos la directiva eslint-disable innecesaria
 export const surfacesCustomizations = {
     MuiAccordion: {
         defaultProps: {

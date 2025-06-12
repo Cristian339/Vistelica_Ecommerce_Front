@@ -4,8 +4,8 @@ import Navbar from "@/components/layout/HeaderComponent";
 import FooterComponent from "@/components/layout/FooterComponent";
 import { GlobalStyles } from '@mui/material';
 import BannerVideoSection from "@/components/layout/BannerVideo";
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 const GenericMainLayout = ({ 
     Carousel, 

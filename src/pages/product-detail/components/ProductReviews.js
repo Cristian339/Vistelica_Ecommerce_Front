@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
@@ -50,19 +51,19 @@ import {
     Report as ReportIcon
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from "framer-motion";
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
 import productService from '@/services/productService';
 import { getCurrentUser } from "@/services/authService";
 import cartService from '@/services/cartService';
 
 // Enum para las razones de reporte (debe coincidir con el backend)
-
 const ReportReason = {
     IRRELEVANT: "No tiene que ver con el tema",
     INAPPROPRIATE: "Inapropiada",
     FALSE: "Falsa",
     OTHER: "Otro"
 };
+
 const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -268,6 +269,16 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
         setSelectedReviewForMenu(null);
     }, []);
 
+    const handleCloseReportModal = useCallback(() => {
+        setReportModal({
+            open: false,
+            reviewId: null,
+            selectedReason: '',
+            otherReasonText: '',
+            submitting: false
+        });
+    }, []);
+
     const handleOpenReportModal = useCallback((review = null) => {
         const reviewToReport = review || selectedReviewForMenu;
         setReportModal({
@@ -279,16 +290,6 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
         });
         handleMenuClose();
     }, [selectedReviewForMenu, handleMenuClose]);
-
-    const handleCloseReportModal = useCallback(() => {
-        setReportModal({
-            open: false,
-            reviewId: null,
-            selectedReason: '',
-            otherReasonText: '',
-            submitting: false
-        });
-    }, []);
 
     const handleReportSubmit = useCallback(async () => {
         if (!reportModal.selectedReason) {
@@ -340,7 +341,7 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
         } finally {
             setReportModal(prev => ({ ...prev, submitting: false }));
         }
-    }, [reportModal]);
+    }, [reportModal, handleCloseReportModal]);
 
     const handleCloseSnackbar = useCallback(() => {
         setSnackbar(prev => ({ ...prev, open: false }));
@@ -404,74 +405,76 @@ const ProductReviews = ({ reviews = [], productId, onReviewAdded }) => {
         return review.user?.user_id !== currentUser.user_id;
     }, [hasToken, currentUser]);
 
-    // Componente de reseña individual
-    const ReviewCard = React.memo(({ review, index }) => (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-        >
-            <Card
-                elevation={1}
-                sx={{
-                    mb: 2,
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                        elevation: 4,
-                        transform: 'translateY(-2px)',
-                    }
-                }}
+    // Componente de reseña individual con displayName
+    const ReviewCard = React.memo(function ReviewCard({ review, index }) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
             >
-                <CardContent>
-                    <Box display="flex" alignItems="center" mb={1}>
-                        <Avatar
-                            sx={{
-                                bgcolor: vistelicaColors.primary,
-                                width: 40,
-                                height: 40,
-                                mr: 2
-                            }}
-                        >
-                            {review.user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                        </Avatar>
-                        <Box flex={1}>
-                            <Typography variant="subtitle2" fontWeight={600}>
-                                {review.user?.name || 'Usuario anónimo'}
-                            </Typography>
-                            <Rating value={review.rating} size="small" readOnly />
+                <Card
+                    elevation={1}
+                    sx={{
+                        mb: 2,
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                            elevation: 4,
+                            transform: 'translateY(-2px)',
+                        }
+                    }}
+                >
+                    <CardContent>
+                        <Box display="flex" alignItems="center" mb={1}>
+                            <Avatar
+                                sx={{
+                                    bgcolor: vistelicaColors.primary,
+                                    width: 40,
+                                    height: 40,
+                                    mr: 2
+                                }}
+                            >
+                                {review.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                            </Avatar>
+                            <Box flex={1}>
+                                <Typography variant="subtitle2" fontWeight={600}>
+                                    {review.user?.name || 'Usuario anónimo'}
+                                </Typography>
+                                <Rating value={review.rating} size="small" readOnly />
+                            </Box>
+                            <Box display="flex" alignItems="center" gap={1}>
+                                <Typography variant="caption" color="text.secondary">
+                                    {formatDate(review.created_at)}
+                                </Typography>
+                                {canReportReview(review) && (
+                                    <Button
+                                        size="small"
+                                        startIcon={<FlagIcon fontSize="small" />}
+                                        onClick={() => handleOpenReportModal(review)}
+                                        sx={{
+                                            color: 'text.secondary',
+                                            minWidth: 'auto',
+                                            px: 1,
+                                            fontSize: '0.75rem',
+                                            '&:hover': {
+                                                color: 'warning.main',
+                                                backgroundColor: 'rgba(255, 193, 7, 0.1)'
+                                            }
+                                        }}
+                                    >
+                                        Reportar
+                                    </Button>
+                                )}
+                            </Box>
                         </Box>
-                        <Box display="flex" alignItems="center" gap={1}>
-                            <Typography variant="caption" color="text.secondary">
-                                {formatDate(review.created_at)}
-                            </Typography>
-                            {canReportReview(review) && (
-                                <Button
-                                    size="small"
-                                    startIcon={<FlagIcon fontSize="small" />}
-                                    onClick={() => handleOpenReportModal(review)}
-                                    sx={{
-                                        color: 'text.secondary',
-                                        minWidth: 'auto',
-                                        px: 1,
-                                        fontSize: '0.75rem',
-                                        '&:hover': {
-                                            color: 'warning.main',
-                                            backgroundColor: 'rgba(255, 193, 7, 0.1)'
-                                        }
-                                    }}
-                                >
-                                    Reportar
-                                </Button>
-                            )}
-                        </Box>
-                    </Box>
-                    <Typography variant="body2" sx={{ mt: 1, lineHeight: 1.5 }}>
-                        {review.review_text}
-                    </Typography>
-                </CardContent>
-            </Card>
-        </motion.div>
-    ));
+                        <Typography variant="body2" sx={{ mt: 1, lineHeight: 1.5 }}>
+                            {review.review_text}
+                        </Typography>
+                    </CardContent>
+                </Card>
+            </motion.div>
+        );
+    });
 
     return (
         <Box sx={{ mt: 4 }}>

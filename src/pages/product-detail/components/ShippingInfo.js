@@ -14,8 +14,8 @@ import CachedIcon from '@mui/icons-material/Cached';
 import SecurityIcon from '@mui/icons-material/Security';
 import StraightenIcon from '@mui/icons-material/Straighten';
 import TimerIcon from '@mui/icons-material/Timer';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 // Variantes para animaciones optimizadas para rendimiento
 const containerVariants = {

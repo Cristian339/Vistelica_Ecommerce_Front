@@ -31,8 +31,8 @@ import {
 } from '@mui/material';
 import SidebarMenu from '@/components/layout/SidebarMenu';
 import { requestRefund, getDeliveredOrdersWithDetails } from '@/services/productService';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from '@/pages/shared-theme/themePrimitives';
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from '@/components/shared/themePrimitives';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import AssignmentReturnIcon from '@mui/icons-material/AssignmentReturn';

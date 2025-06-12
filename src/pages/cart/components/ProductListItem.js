@@ -1,8 +1,8 @@
 'use client';
 import { Box, Typography, Paper, IconButton, CircularProgress, Chip, Tooltip } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from "@/components/shared/themePrimitives";
 import DeleteIcon from '@mui/icons-material/Delete';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import CategoryIcon from '@mui/icons-material/Category';

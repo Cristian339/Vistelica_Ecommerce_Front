@@ -8,8 +8,8 @@ import Link from '@mui/material/Link';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useColorScheme } from '@mui/material/styles';
-import { vistelicaColors } from '../../shared-theme/vistelicaColors';
-import { GoogleIcon, FacebookIcon } from './CustomIcons';
+import { vistelicaColors } from '../../../components/shared/vistelicaColors';
+import { GoogleIcon, FacebookIcon } from '../../../components/sign/up/CustomIcons';
 
 // Importar los servicios de autenticación
 import {

@@ -4,8 +4,8 @@ import { Box, Button, Typography, Container, Paper, useTheme, useMediaQuery } fr
 import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from "@/components/shared/themePrimitives";
 import Navbar from "@/components/layout/HeaderComponent";
 
 const EmptyCart = React.memo(() => {

@@ -12,6 +12,17 @@ const ProductGrid = ({
                          isMobile,
                          isTablet
                      }) => {
+    if (!products || !Array.isArray(products) || products.length === 0) {
+        return (
+            <Grid container spacing={{ xs: 1, sm: 1 }}>
+                <Grid item xs={12}>
+                    <div style={{ textAlign: 'center', padding: '2rem' }}>
+                        No hay productos disponibles
+                    </div>
+                </Grid>
+            </Grid>
+        );
+    }
     return (
         <Grid container spacing={{ xs: 1, sm: 1 }}>
             {products.map((product) => (

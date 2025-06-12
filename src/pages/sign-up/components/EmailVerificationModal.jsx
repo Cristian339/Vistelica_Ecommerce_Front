@@ -13,7 +13,7 @@ import Link from '@mui/material/Link';
 import Divider from '@mui/material/Divider';
 import { styled } from '@mui/material/styles';
 import { useColorScheme } from '@mui/material/styles';
-import { vistelicaColors } from '../../shared-theme/vistelicaColors';
+import { vistelicaColors } from '../../../components/shared/vistelicaColors';
 import CloseIcon from '@mui/icons-material/Close';
 
 const StyledDialog = styled(Dialog)(({ theme }) => {
