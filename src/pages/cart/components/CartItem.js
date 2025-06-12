@@ -18,8 +18,8 @@ const CartItem = React.memo(({
                                  onRemove,
                                  loading = false
                              }) => {
-    if (!item) return null;
-    const [quantity, setQuantity] = useState(item.quantity || 1);
+    // All hooks must be called at the top level, before any conditional returns
+    const [quantity, setQuantity] = useState(item?.quantity || 1);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [loadingImage, setLoadingImage] = useState(true);
 
@@ -62,6 +62,8 @@ const CartItem = React.memo(({
         onRemove && onRemove(item.cart_detail_id);
     }, [item, onRemove, loading]);
 
+    // Now we can safely return null after all hooks have been called
+    if (!item) return null;
 
     return (
         <motion.div
