@@ -297,7 +297,7 @@ const GenericStylesShowcase = ({ categoryId }) => {
 
                     <Box
                         component="a"
-                        href="https://instagram.com/vistelica"
+                        href="https://www.instagram.com/vistelica_ecommerce/"
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Síguenos en Instagram @vistelica"

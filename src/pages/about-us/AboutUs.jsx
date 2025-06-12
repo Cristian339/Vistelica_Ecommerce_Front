@@ -279,6 +279,58 @@ export default function AboutUs(props) {
 
                         <ScrollableContent>
                             <SectionTitle variant="h5" gutterBottom>
+                                ¿En qué consiste Vistélica?
+                            </SectionTitle>
+                            <Typography paragraph sx={{ fontSize: { xs: '0.95rem', sm: '1.05rem' }, mb: { xs: 1, sm: 2 }, fontWeight: 500, color: vistelicaColors.primary, fontFamily: typography.fontFamily }}>
+                                Vistélica es una plataforma e-commerce premium diseñada para el sector de la moda, que combina una experiencia de usuario cautivadora con un sistema robusto, seguro y escalable. Nuestra solución integral potencia negocios digitales, aumenta ventas y fortalece la identidad de marca en el competitivo mercado actual.
+                            </Typography>
+                            <Typography paragraph sx={{ fontSize: { xs: '0.9rem', sm: '1rem' }, mb: { xs: 1, sm: 2 }, fontFamily: typography.fontFamily }}>
+                                Destacamos por un diseño exclusivo y personalizable, navegación intuitiva, experiencia móvil perfecta, proceso de compra optimizado, infraestructura de alto rendimiento y seguridad avanzada. Vistélica no es solo una tienda online, es un socio estratégico para el crecimiento digital de tu marca de moda.
+                            </Typography>
+                            <Divider sx={{ my: { xs: 2, sm: 3 }, borderColor: `rgba(${theme.palette.mode === 'dark' ? '228, 176, 2, 0.4' : '228, 176, 2, 0.3'})` }} />
+                            <SectionTitle variant="h5" gutterBottom>
+                                Tecnologías Utilizadas
+                            </SectionTitle>
+                            <Typography paragraph sx={{ fontSize: { xs: '0.9rem', sm: '1rem' }, mb: { xs: 1, sm: 2 }, fontFamily: typography.fontFamily }}>
+                                Vistélica está construida con tecnologías modernas y escalables, garantizando rendimiento, seguridad y facilidad de integración:
+                            </Typography>
+                            <Box sx={{ pl: { xs: 1, sm: 2 }, mb: 2 }}>
+                                <Typography sx={{ fontWeight: 600, color: vistelicaColors.primary, mb: 0.5 }}>Frontend:</Typography>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
+                                    <Box component="span" sx={{ bgcolor: vistelicaColors.primary, color: vistelicaColors.secondary, px: 1.5, py: 0.5, borderRadius: 2, fontSize: '0.95rem', fontWeight: 500 }}>React.js</Box>
+                                    <Box component="span" sx={{ bgcolor: vistelicaColors.quaternary, color: vistelicaColors.secondary, px: 1.5, py: 0.5, borderRadius: 2, fontSize: '0.95rem', fontWeight: 500 }}>Next.js</Box>
+                                    <Box component="span" sx={{ bgcolor: vistelicaColors.tertiary, color: vistelicaColors.secondary, px: 1.5, py: 0.5, borderRadius: 2, fontSize: '0.95rem', fontWeight: 500 }}>Material UI</Box>
+                                    <Box component="span" sx={{ bgcolor: vistelicaColors.quaternary, color: vistelicaColors.secondary, px: 1.5, py: 0.5, borderRadius: 2, fontSize: '0.95rem', fontWeight: 500 }}>JavaScript</Box>
+                                    <Box component="span" sx={{ bgcolor: vistelicaColors.primaryDark, color: vistelicaColors.secondary, px: 1.5, py: 0.5, borderRadius: 2, fontSize: '0.95rem', fontWeight: 500 }}>Cloudinary</Box>
+                                </Box>
+                                <Typography sx={{ fontWeight: 600, color: vistelicaColors.primary, mb: 0.5 }}>Backend:</Typography>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
+                                    <Box component="span" sx={{ bgcolor: vistelicaColors.primary, color: vistelicaColors.secondary, px: 1.5, py: 0.5, borderRadius: 2, fontSize: '0.95rem', fontWeight: 500 }}>Node.js</Box>
+                                    <Box component="span" sx={{ bgcolor: vistelicaColors.quaternary, color: vistelicaColors.secondary, px: 1.5, py: 0.5, borderRadius: 2, fontSize: '0.95rem', fontWeight: 500 }}>Next.js</Box>
+                                    <Box component="span" sx={{ bgcolor: vistelicaColors.tertiary, color: vistelicaColors.secondary, px: 1.5, py: 0.5, borderRadius: 2, fontSize: '0.95rem', fontWeight: 500 }}>TypeORM</Box>
+                                    <Box component="span" sx={{ bgcolor: vistelicaColors.quaternary, color: vistelicaColors.secondary, px: 1.5, py: 0.5, borderRadius: 2, fontSize: '0.95rem', fontWeight: 500 }}>TypeScript</Box>
+                                    <Box component="span" sx={{ bgcolor: vistelicaColors.primaryDark, color: vistelicaColors.secondary, px: 1.5, py: 0.5, borderRadius: 2, fontSize: '0.95rem', fontWeight: 500 }}>Stripe</Box>
+                                </Box>
+                                <Typography sx={{ fontWeight: 600, color: vistelicaColors.primary, mb: 0.5 }}>Base de datos:</Typography>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                    <Box component="span" sx={{ bgcolor: vistelicaColors.primary, color: vistelicaColors.secondary, px: 1.5, py: 0.5, borderRadius: 2, fontSize: '0.95rem', fontWeight: 500 }}>PostgreSQL</Box>
+                                </Box>
+                            </Box>
+                            <Divider sx={{ my: { xs: 2, sm: 3 }, borderColor: `rgba(${theme.palette.mode === 'dark' ? '228, 176, 2, 0.4' : '228, 176, 2, 0.3'})` }} />
+                            <SectionTitle variant="h5" gutterBottom>
+                                Ventajas Competitivas
+                            </SectionTitle>
+                            <Typography paragraph sx={{ fontSize: { xs: '0.9rem', sm: '1rem' }, mb: { xs: 1, sm: 2 }, fontFamily: typography.fontFamily }}>
+                                • Lanzamiento rápido y costes optimizados.<br />
+                                • Infraestructura escalable y de alta disponibilidad.<br />
+                                • Seguridad avanzada y cumplimiento normativo.<br />
+                                • Panel de administración intuitivo y personalizable.<br />
+                                • Análisis avanzado y soporte especializado.<br />
+                                • Actualizaciones continuas y plataforma evolutiva.
+                            </Typography>
+                            <Divider sx={{ my: { xs: 2, sm: 3 }, borderColor: `rgba(${theme.palette.mode === 'dark' ? '228, 176, 2, 0.4' : '228, 176, 2, 0.3'})` }} />
+
+                            <SectionTitle variant="h5" gutterBottom>
                                 Nuestro Proyecto
                             </SectionTitle>
                             <Typography

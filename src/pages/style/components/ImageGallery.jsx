@@ -1,328 +1,282 @@
-import React, { useState, useEffect, useCallback } from 'react';
+'use client';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import {
     Box,
     IconButton,
     useTheme,
     useMediaQuery,
-    Typography,
     Fade,
-    Grow,
     CircularProgress,
-    Modal,
-    Slide
+    Modal
 } from '@mui/material';
 import {
     ChevronLeft,
     ChevronRight,
     ZoomIn,
-    X,
-    Maximize,
-    MinusCircle,
-    PlusCircle
+    X
 } from 'lucide-react';
 import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
 import { typography } from "@/pages/shared-theme/themePrimitives";
 
-const ImageGallery = ({
-                          styleImages,
-                          currentImageIndex,
-                          selectedThumbnail,
-                          onPrevImage,
-                          onNextImage,
-                          onThumbnailClick,
-                          isMobile
-                      }) => {
+const ImageGallery = memo(({
+                               styleImages = [],
+                               currentImageIndex = 0,
+                               selectedThumbnail,
+                               onPrevImage,
+                               onNextImage,
+                               onThumbnailClick,
+                               isMobile,
+                               isFullWidth = false
+                           }) => {
     const theme = useTheme();
     const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
-    const [imageLoading, setImageLoading] = useState(true);
+    const [imageLoaded, setImageLoaded] = useState(false);
+    const [imageError, setImageError] = useState(false);
     const [touchStart, setTouchStart] = useState(null);
     const [touchEnd, setTouchEnd] = useState(null);
     const [zoomed, setZoomed] = useState(false);
     const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
     const [modalOpen, setModalOpen] = useState(false);
-    const [modalZoomLevel, setModalZoomLevel] = useState(1);
-    const [modalImagePos, setModalImagePos] = useState({ x: 0, y: 0 });
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
+    // Precargar imagen actual
     useEffect(() => {
-        setImageLoading(true);
-    }, [currentImageIndex]);
+        setImageLoaded(false);
+        setImageError(false);
 
-    // Reset zoom cuando se cambia de imagen en el modal
-    useEffect(() => {
-        if (modalOpen) {
-            setModalZoomLevel(1);
-            setModalImagePos({ x: 0, y: 0 });
+        if (!styleImages[currentImageIndex]?.image_url) {
+            setImageLoaded(true);
+            return;
         }
-    }, [currentImageIndex, modalOpen]);
 
-    const handleImageLoad = () => {
-        setImageLoading(false);
-    };
+        const img = new Image();
+        img.src = styleImages[currentImageIndex].image_url;
+        img.onload = () => setImageLoaded(true);
+        img.onerror = () => {
+            setImageError(true);
+            setImageLoaded(true);
+        };
 
-    // Handlers para swipe/deslizar
-    const handleTouchStart = (e) => {
+        const timeout = setTimeout(() => setImageLoaded(true), 3000);
+        return () => clearTimeout(timeout);
+    }, [currentImageIndex, styleImages]);
+
+    // Manejadores de eventos táctiles optimizados
+    const handleTouchStart = useCallback((e) => {
         setTouchStart(e.targetTouches[0].clientX);
-    };
+    }, []);
 
-    const handleTouchMove = (e) => {
+    const handleTouchMove = useCallback((e) => {
         setTouchEnd(e.targetTouches[0].clientX);
-    };
+    }, []);
 
-    const handleTouchEnd = () => {
+    const handleTouchEnd = useCallback(() => {
         if (touchStart === null || touchEnd === null) return;
         const distance = touchStart - touchEnd;
         if (distance > 50) onNextImage();
         if (distance < -50) onPrevImage();
         setTouchStart(null);
         setTouchEnd(null);
-    };
+    }, [touchStart, touchEnd, onNextImage, onPrevImage]);
 
-    // Handlers de zoom al pasar el mouse
-    const handleMouseMove = (e) => {
+    // Manejo de zoom optimizado
+    const handleMouseMove = useCallback((e) => {
         if (isMobile) return;
         const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
         const x = ((e.clientX - left) / width) * 100;
         const y = ((e.clientY - top) / height) * 100;
         setZoomPosition({ x, y });
-    };
+    }, [isMobile]);
 
-    const handleMouseEnter = () => !isMobile && setZoomed(true);
-    const handleMouseLeave = () => !isMobile && setZoomed(false);
+    const handleMouseEnter = useCallback(() => {
+        if (!isMobile) setZoomed(true);
+    }, [isMobile]);
 
-    // Handlers del modal
-    const handleOpenModal = () => setModalOpen(true);
-    const handleCloseModal = () => {
-        setModalOpen(false);
-        setModalZoomLevel(1);
-        setModalImagePos({ x: 0, y: 0 });
-    };
+    const handleMouseLeave = useCallback(() => {
+        if (!isMobile) setZoomed(false);
+    }, [isMobile]);
 
-    // Zoom en el modal
-    const increaseModalZoom = () => {
-        setModalZoomLevel(prev => Math.min(prev + 0.5, 3));
-    };
+    // Gestión del modal
+    const handleOpenModal = useCallback(() => setModalOpen(true), []);
+    const handleCloseModal = useCallback(() => setModalOpen(false), []);
 
-    const decreaseModalZoom = () => {
-        setModalZoomLevel(prev => {
-            const newZoom = Math.max(prev - 0.5, 1);
-            if (newZoom === 1) setModalImagePos({ x: 0, y: 0 });
-            return newZoom;
-        });
-    };
-
-    // Arrastrar imagen en el modal
-    const handleModalMouseDown = (e) => {
-        if (modalZoomLevel > 1) {
-            setIsDragging(true);
-            setDragStart({
-                x: e.clientX - modalImagePos.x,
-                y: e.clientY - modalImagePos.y
-            });
-        }
-    };
-
-    const handleModalMouseMove = useCallback((e) => {
-        if (isDragging && modalZoomLevel > 1) {
-            const maxOffset = 100 * (modalZoomLevel - 1);
-            setModalImagePos({
-                x: Math.max(Math.min(e.clientX - dragStart.x, maxOffset), -maxOffset),
-                y: Math.max(Math.min(e.clientY - dragStart.y, maxOffset), -maxOffset)
-            });
-        }
-    }, [isDragging, modalZoomLevel, dragStart]);
-
-    const handleModalMouseUp = () => {
-        setIsDragging(false);
-    };
-
-    // Escuchamos los eventos de mouse globales cuando estamos arrastrando
-    useEffect(() => {
-        if (isDragging) {
-            window.addEventListener('mousemove', handleModalMouseMove);
-            window.addEventListener('mouseup', handleModalMouseUp);
-        }
-        return () => {
-            window.removeEventListener('mousemove', handleModalMouseMove);
-            window.removeEventListener('mouseup', handleModalMouseUp);
-        };
-    }, [isDragging, handleModalMouseMove]);
-
-    // Navegación con teclado en el modal
+    // Navegación con teclado
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (!modalOpen) return;
 
             switch (e.key) {
-                case 'ArrowLeft':
-                    onPrevImage();
-                    break;
-                case 'ArrowRight':
-                    onNextImage();
-                    break;
-                case 'Escape':
-                    handleCloseModal();
-                    break;
-                case '+':
-                    increaseModalZoom();
-                    break;
-                case '-':
-                    decreaseModalZoom();
-                    break;
-                default:
-                    break;
+                case 'ArrowLeft': onPrevImage(); break;
+                case 'ArrowRight': onNextImage(); break;
+                case 'Escape': handleCloseModal(); break;
+                default: break;
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [modalOpen, onNextImage, onPrevImage]);
+    }, [modalOpen, onPrevImage, onNextImage, handleCloseModal]);
+
+    // URL de imagen segura
+    const currentImageUrl = styleImages[currentImageIndex]?.image_url || "/api/placeholder/800/1000";
 
     return (
-        <Box sx={{
-            position: 'relative',
-            borderRadius: 5,
-            overflow: 'hidden',
-            background: `linear-gradient(135deg, ${vistelicaColors.backgroundLight} 60%, ${vistelicaColors.backgroundAccent}50 100%)`,
-            boxShadow: `0 22px 55px ${vistelicaColors.shadow}30`,
-            border: `2px solid ${vistelicaColors.primary}40`,
-            minHeight: { xs: 450, sm: 560, md: 720 },
-            maxWidth: { xs: '98vw', md: 720, lg: 920 },
-            margin: '0 auto',
-            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-            '&:hover': {
-                boxShadow: `0 28px 70px ${vistelicaColors.primary}38, 0 6px 14px ${vistelicaColors.shadow}18`
-            }
-        }}>
+        <Box
+            role="region"
+            aria-label="Galería de imágenes del producto"
+            sx={{
+                position: 'relative',
+                borderRadius: { xs: 2, sm: 3 },
+                overflow: 'hidden',
+                background: vistelicaColors.white,
+                boxShadow: `0 10px 30px ${vistelicaColors.shadow}20`,
+                border: `1px solid #f0f0f0`,
+                minHeight: { xs: 480, sm: 600, md: 720 },  // AMPLIADO: aumentado la altura mínima
+                width: isFullWidth ? '100%' : { xs: '100vw', md: 620, lg: 720 },  // AMPLIADO: aumentado ancho
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                '&:hover': {
+                    boxShadow: `0 15px 45px ${vistelicaColors.shadow}25`,
+                    transform: 'translateY(-2px)'
+                },
+                willChange: 'transform',  // Optimización para animaciones
+            }}
+        >
             {/* Contador de imágenes */}
-            <Box sx={{
-                position: 'absolute',
-                top: 24,
-                right: 32,
-                zIndex: 5,
-                backgroundColor: `${vistelicaColors.backgroundDark}C0`,
-                color: vistelicaColors.white,
-                borderRadius: 16,
-                px: 2.5,
-                py: 0.7,
-                fontSize: { xs: '1rem', sm: '1.15rem' },
-                fontWeight: 700,
-                fontFamily: typography.fontFamily,
-                letterSpacing: 1,
-                backdropFilter: 'blur(8px)',
-                boxShadow: `0 2px 12px ${vistelicaColors.shadow}30`,
-                border: `1px solid ${vistelicaColors.white}30`
-            }}>
+            <Box
+                role="status"
+                aria-live="polite"
+                sx={{
+                    position: 'absolute',
+                    top: { xs: 16, sm: 20 },
+                    right: { xs: 16, sm: 20 },
+                    zIndex: 5,
+                    backgroundColor: vistelicaColors.white,
+                    color: vistelicaColors.textPrimary,
+                    borderRadius: '40px',
+                    px: { xs: 1.8, sm: 2 },
+                    py: { xs: 0.6, sm: 0.7 },
+                    fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                    fontWeight: 500,
+                    fontFamily: typography.fontFamily,
+                    backdropFilter: 'blur(5px)',
+                    boxShadow: '0 3px 8px rgba(0,0,0,0.08)',
+                    border: '1px solid rgba(0,0,0,0.03)'
+                }}
+            >
                 {currentImageIndex + 1} / {styleImages.length}
             </Box>
 
-            {/* Botones de navegación principales */}
+            {/* Botones de navegación */}
             <IconButton
                 onClick={onPrevImage}
                 aria-label="Imagen anterior"
+                tabIndex={0}
                 sx={{
                     position: 'absolute',
                     top: '50%',
-                    left: { xs: 10, sm: 24 },
+                    left: { xs: 12, sm: 20 },
                     transform: 'translateY(-50%)',
                     zIndex: 2,
-                    bgcolor: `${vistelicaColors.white}F0`,
-                    boxShadow: `0 6px 18px ${vistelicaColors.shadow}18`,
-                    border: `2px solid ${vistelicaColors.primary}30`,
+                    bgcolor: 'rgba(255,255,255,0.92)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
                     borderRadius: '50%',
-                    backdropFilter: 'blur(6px)',
-                    width: { xs: 54, sm: 64, md: 74 },
-                    height: { xs: 54, sm: 64, md: 74 },
-                    color: vistelicaColors.primary,
+                    width: { xs: 42, sm: 52 },  // AMPLIADO: botones más grandes
+                    height: { xs: 42, sm: 52 },
+                    color: vistelicaColors.textPrimary,
                     '&:hover': {
-                        bgcolor: vistelicaColors.primary,
-                        color: vistelicaColors.white,
-                        transform: 'translateY(-50%) scale(1.12)',
-                        boxShadow: `0 10px 24px ${vistelicaColors.primary}30`,
+                        bgcolor: 'rgba(255,255,255,1)',
+                        transform: 'translateY(-50%) scale(1.08)',
+                        boxShadow: '0 6px 16px rgba(0,0,0,0.16)'
                     },
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
+                    '&:focus': {
+                        outline: `2px solid ${vistelicaColors.primary}80`,
+                        outlineOffset: 2
+                    },
+                    transition: 'all 0.2s ease'
                 }}
             >
-                <ChevronLeft size={isMobile ? 28 : 36} strokeWidth={2.5} />
+                <ChevronLeft size={isMobile ? 22 : 26} />
             </IconButton>
 
             <IconButton
                 onClick={onNextImage}
                 aria-label="Imagen siguiente"
+                tabIndex={0}
                 sx={{
                     position: 'absolute',
                     top: '50%',
-                    right: { xs: 10, sm: 24 },
+                    right: { xs: 12, sm: 20 },
                     transform: 'translateY(-50%)',
                     zIndex: 2,
-                    bgcolor: `${vistelicaColors.white}F0`,
-                    boxShadow: `0 6px 18px ${vistelicaColors.shadow}18`,
-                    border: `2px solid ${vistelicaColors.primary}30`,
+                    bgcolor: 'rgba(255,255,255,0.92)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
                     borderRadius: '50%',
-                    backdropFilter: 'blur(6px)',
-                    width: { xs: 54, sm: 64, md: 74 },
-                    height: { xs: 54, sm: 64, md: 74 },
-                    color: vistelicaColors.primary,
+                    width: { xs: 42, sm: 52 },  // AMPLIADO: botones más grandes
+                    height: { xs: 42, sm: 52 },
+                    color: vistelicaColors.textPrimary,
                     '&:hover': {
-                        bgcolor: vistelicaColors.primary,
-                        color: vistelicaColors.white,
-                        transform: 'translateY(-50%) scale(1.12)',
-                        boxShadow: `0 10px 24px ${vistelicaColors.primary}30`,
+                        bgcolor: 'rgba(255,255,255,1)',
+                        transform: 'translateY(-50%) scale(1.08)',
+                        boxShadow: '0 6px 16px rgba(0,0,0,0.16)'
                     },
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
+                    '&:focus': {
+                        outline: `2px solid ${vistelicaColors.primary}80`,
+                        outlineOffset: 2
+                    },
+                    transition: 'all 0.2s ease'
                 }}
             >
-                <ChevronRight size={isMobile ? 28 : 36} strokeWidth={2.5} />
+                <ChevronRight size={isMobile ? 22 : 26} />
             </IconButton>
 
-            {/* Botón de ampliación */}
+            {/* Botón de zoom completo */}
             <IconButton
-                aria-label="Ampliar imagen"
                 onClick={handleOpenModal}
+                aria-label="Ampliar imagen"
+                tabIndex={0}
                 sx={{
                     position: 'absolute',
-                    bottom: { xs: 90, sm: 120 },
-                    right: 32,
-                    zIndex: 3,
-                    bgcolor: `${vistelicaColors.white}F0`,
-                    boxShadow: `0 4px 14px ${vistelicaColors.shadow}15`,
-                    border: `2px solid ${vistelicaColors.primary}30`,
-                    backdropFilter: 'blur(5px)',
-                    width: { xs: 44, sm: 54 },
-                    height: { xs: 44, sm: 54 },
-                    color: vistelicaColors.secondary,
+                    bottom: { xs: 96, sm: 116 },  // AMPLIADO: ajustado posición
+                    right: { xs: 16, sm: 20 },
+                    zIndex: 2,
+                    bgcolor: 'rgba(255,255,255,0.92)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                    borderRadius: '50%',
+                    width: { xs: 40, sm: 46 },
+                    height: { xs: 40, sm: 46 },
+                    color: vistelicaColors.textPrimary,
                     '&:hover': {
-                        bgcolor: vistelicaColors.primary,
-                        color: vistelicaColors.white,
+                        bgcolor: 'rgba(255,255,255,1)',
+                        transform: 'scale(1.08)',
+                        boxShadow: '0 6px 16px rgba(0,0,0,0.16)'
                     },
-                    transition: 'all 0.2s ease-in-out'
+                    '&:focus': {
+                        outline: `2px solid ${vistelicaColors.primary}80`,
+                        outlineOffset: 2
+                    },
+                    transition: 'all 0.2s ease'
                 }}
             >
-                <Maximize size={isMobile ? 22 : 26} />
+                <ZoomIn size={isMobile ? 20 : 22} />
             </IconButton>
 
-            {/* Imagen principal con efecto de lupa al hover */}
+            {/* Imagen principal con zoom al hover */}
             <Box
+                role="button"
+                tabIndex={0}
+                aria-label={`Ampliar imagen ${currentImageIndex + 1} de ${styleImages.length}`}
                 sx={{
                     position: 'relative',
                     overflow: 'hidden',
-                    borderRadius: '24px 24px 0 0',
-                    bgcolor: vistelicaColors.backgroundAccent,
-                    aspectRatio: { xs: '3/4', sm: '4/5', md: '4/5' },
+                    bgcolor: '#f9f9f9',
+                    aspectRatio: { xs: '3/4', sm: '4/5' },  // Mantiene proporción
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    minHeight: { xs: 320, sm: 420, md: 540 },
-                    cursor: zoomed ? 'zoom-in' : 'default',
-                    '&::before': {
-                        content: '""',
-                        position: 'absolute',
-                        inset: 0,
-                        opacity: zoomed ? 0 : 0.6,
-                        background: `radial-gradient(circle at center, transparent 30%, ${vistelicaColors.backgroundDark}20 100%)`,
-                        zIndex: 1,
-                        transition: 'opacity 0.5s ease'
+                    minHeight: { xs: 360, sm: 480, md: 580 },  // AMPLIADO: altura mínima aumentada
+                    cursor: 'zoom-in',
+                    '&:focus': {
+                        outline: `2px solid ${vistelicaColors.primary}80`,
+                        outlineOffset: '-2px'
                     }
                 }}
                 onTouchStart={handleTouchStart}
@@ -332,319 +286,281 @@ const ImageGallery = ({
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 onClick={handleOpenModal}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleOpenModal();
+                    }
+                }}
             >
-                {imageLoading && (
-                    <Box sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: `${vistelicaColors.backgroundLight}80`,
-                        zIndex: 2
-                    }}>
-                        <CircularProgress size={60} thickness={4.5} sx={{
+                {/* Loader - Solo visible cuando la imagen está cargando */}
+                {!imageLoaded && (
+                    <Box
+                        role="progressbar"
+                        aria-label="Cargando imagen"
+                        sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: '#f9f9f9',
+                            zIndex: 2
+                        }}
+                    >
+                        <CircularProgress size={54} thickness={3} sx={{
                             color: vistelicaColors.primary
                         }} />
                     </Box>
                 )}
-                <Fade in={!imageLoading} timeout={400}>
-                    <Box
-                        component="img"
-                        src={styleImages[currentImageIndex]?.image_url || "/api/placeholder/600/800"}
-                        alt={`Vista del producto ${currentImageIndex + 1}`}
-                        onLoad={handleImageLoad}
-                        sx={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'contain',
-                            objectPosition: 'center',
-                            padding: { xs: 0, sm: 2 },
-                            transition: 'transform 0.5s cubic-bezier(.25,.8,.25,1)',
-                            transform: zoomed && !isMobile ? 'scale(1.7)' : 'scale(1)',
-                            transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                            filter: zoomed ? 'none' : 'brightness(0.95)',
-                            zIndex: 1
-                        }}
-                    />
-                </Fade>
 
-                {/* Indicador de zoom (solo en desktop) */}
-                {!isMobile && (
-                    <Fade in={!imageLoading} timeout={600}>
-                        <Box sx={{
+                {/* Imagen con zoom al hover */}
+                <Box
+                    component="img"
+                    src={currentImageUrl}
+                    alt={`Vista del producto ${currentImageIndex + 1} de ${styleImages.length}`}
+                    loading="lazy"
+                    onError={() => setImageError(true)}
+                    sx={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                        objectPosition: 'center',
+                        transition: 'transform 0.4s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.3s ease',
+                        transform: zoomed && !isMobile ? 'scale(2)' : 'scale(1)',
+                        transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                        opacity: imageLoaded ? 1 : 0.2,
+                        willChange: 'transform',  // Optimización para transformaciones
+                    }}
+                />
+
+                {/* Mensaje de error en caso de fallo */}
+                {imageError && (
+                    <Box
+                        role="alert"
+                        sx={{
                             position: 'absolute',
                             bottom: 16,
                             left: '50%',
                             transform: 'translateX(-50%)',
-                            zIndex: 2,
-                            color: vistelicaColors.white,
-                            padding: '6px 16px',
-                            borderRadius: 20,
-                            background: `${vistelicaColors.backgroundDark}A0`,
-                            backdropFilter: 'blur(5px)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            opacity: 0.75,
-                            transition: 'opacity 0.3s',
-                            '&:hover': {
-                                opacity: 1
-                            }
-                        }}>
-                            <ZoomIn size={18} />
-                            <Typography sx={{
-                                fontSize: '0.85rem',
-                                fontWeight: 500,
-                                userSelect: 'none'
-                            }}>
-                                Pasa el mouse para zoom | Click para ampliar
-                            </Typography>
-                        </Box>
-                    </Fade>
+                            backgroundColor: 'rgba(0,0,0,0.6)',
+                            color: 'white',
+                            padding: '8px 12px',
+                            borderRadius: 1,
+                            fontSize: '0.8rem',
+                            maxWidth: '80%',
+                            textAlign: 'center'
+                        }}
+                    >
+                        No se pudo cargar la imagen
+                    </Box>
                 )}
             </Box>
 
-            {/* Modal avanzado para ver la imagen completa */}
+            {/* Modal para ver la imagen completa */}
             <Modal
                 open={modalOpen}
                 onClose={handleCloseModal}
                 closeAfterTransition
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 1300
-                }}
+                aria-labelledby="modal-image-title"
             >
                 <Fade in={modalOpen}>
-                    <Box sx={{
-                        outline: 'none',
-                        position: 'relative',
-                        bgcolor: '#000000',
-                        borderRadius: 3,
-                        boxShadow: 24,
-                        p: { xs: 1, sm: 3 },
-                        maxWidth: '96vw',
-                        maxHeight: '96vh',
-                        width: { xs: '100%', md: '90%' },
-                        height: { xs: '90%', md: '90%' },
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        border: `1px solid ${vistelicaColors.primary}30`
-                    }}>
-                        {/* Barra superior del modal */}
-                        <Box sx={{
-                            position: 'absolute',
+                    <Box
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="modal-image-title"
+                        sx={{
+                            position: 'fixed',
                             top: 0,
                             left: 0,
                             right: 0,
-                            padding: { xs: 1, sm: 2 },
+                            bottom: 0,
                             display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            backdropFilter: 'blur(10px)',
-                            background: 'rgba(0,0,0,0.5)',
-                            zIndex: 5,
-                            borderRadius: '12px 12px 0 0'
-                        }}>
-                            <Typography sx={{
-                                color: vistelicaColors.white,
-                                fontWeight: 500,
-                                ml: 2,
-                                fontSize: { xs: '0.9rem', md: '1.1rem' }
-                            }}>
-                                {currentImageIndex + 1} / {styleImages.length}
-                            </Typography>
-
-                            {/* Controles de zoom */}
-                            <Box sx={{ display: 'flex', gap: 1, mr: 2 }}>
-                                <IconButton
-                                    onClick={decreaseModalZoom}
-                                    disabled={modalZoomLevel <= 1}
-                                    size="small"
-                                    sx={{
-                                        color: vistelicaColors.white,
-                                        opacity: modalZoomLevel <= 1 ? 0.4 : 0.8,
-                                        '&:hover': {
-                                            opacity: 1,
-                                            bgcolor: `${vistelicaColors.primary}50`
-                                        }
-                                    }}
-                                >
-                                    <MinusCircle size={20} />
-                                </IconButton>
-
-                                <Typography sx={{
-                                    color: vistelicaColors.white,
+                            flexDirection: 'column',
+                            bgcolor: 'rgba(255,255,255,0.97)',
+                            outline: 'none',
+                            zIndex: theme.zIndex.modal
+                        }}
+                    >
+                        {/* Cabecera del modal */}
+                        <Box
+                            component="header"
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                p: { xs: 2, sm: 2.5 },
+                                borderBottom: '1px solid #f0f0f0',
+                                bgcolor: vistelicaColors.white
+                            }}
+                        >
+                            <Box sx={{ width: 40 }} />
+                            <Box
+                                id="modal-image-title"
+                                sx={{
+                                    px: 2.5,
+                                    py: 0.8,
+                                    borderRadius: '40px',
+                                    bgcolor: '#f5f5f5',
                                     fontWeight: 500,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    fontSize: '0.9rem'
-                                }}>
-                                    {Math.round(modalZoomLevel * 100)}%
-                                </Typography>
-
-                                <IconButton
-                                    onClick={increaseModalZoom}
-                                    disabled={modalZoomLevel >= 3}
-                                    size="small"
-                                    sx={{
-                                        color: vistelicaColors.white,
-                                        opacity: modalZoomLevel >= 3 ? 0.4 : 0.8,
-                                        '&:hover': {
-                                            opacity: 1,
-                                            bgcolor: `${vistelicaColors.primary}50`
-                                        }
-                                    }}
-                                >
-                                    <PlusCircle size={20} />
-                                </IconButton>
+                                    fontSize: '0.95rem',
+                                    fontFamily: typography.fontFamily
+                                }}
+                            >
+                                {currentImageIndex + 1} / {styleImages.length}
                             </Box>
-
-                            {/* Botón de cierre */}
                             <IconButton
                                 onClick={handleCloseModal}
-                                aria-label="Cerrar vista ampliada"
-                                sx={{
-                                    position: 'absolute',
-                                    top: { xs: 8, sm: 16 },
-                                    right: { xs: 8, sm: 16 },
-                                    color: vistelicaColors.quaternary,
-                                    bgcolor: 'rgba(0,0,0,0.4)',
-                                    '&:hover': {
-                                        bgcolor: vistelicaColors.primary,
-                                    }
-                                }}
+                                aria-label="Cerrar ventana de imagen"
                             >
                                 <X size={24} />
                             </IconButton>
                         </Box>
 
-                        {/* Container principal de la imagen con navegación */}
-                        <Box sx={{
-                            position: 'relative',
-                            width: '100%',
-                            height: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: modalZoomLevel > 1 ? isDragging ? 'grabbing' : 'grab' : 'default'
-                        }}
-                             onMouseDown={handleModalMouseDown}
+                        {/* Contenedor principal de la imagen */}
+                        <Box
+                            component="main"
+                            sx={{
+                                flex: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                position: 'relative',
+                                overflow: 'hidden'
+                            }}
                         >
-                            {/* Imagen con zoom */}
+                            {/* Botones de navegación grandes en el modal */}
+                            <IconButton
+                                onClick={onPrevImage}
+                                aria-label="Imagen anterior"
+                                tabIndex={0}
+                                sx={{
+                                    position: 'absolute',
+                                    left: { xs: 16, sm: 28, md: 48 },
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    bgcolor: 'white',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                    width: { xs: 46, sm: 54, md: 60 },
+                                    height: { xs: 46, sm: 54, md: 60 },
+                                    '&:hover': {
+                                        transform: 'translateY(-50%) scale(1.1)',
+                                        boxShadow: '0 6px 16px rgba(0,0,0,0.2)'
+                                    },
+                                    '&:focus': {
+                                        outline: `2px solid ${vistelicaColors.primary}80`,
+                                        outlineOffset: 2
+                                    }
+                                }}
+                            >
+                                <ChevronLeft size={28} />
+                            </IconButton>
+
                             <Box
                                 component="img"
-                                src={styleImages[currentImageIndex]?.image_url || "/api/placeholder/600/800"}
-                                alt={`Vista ampliada del producto ${currentImageIndex + 1}`}
+                                src={currentImageUrl}
+                                alt={`Vista ampliada del producto ${currentImageIndex + 1} de ${styleImages.length}`}
+                                loading="lazy"
+                                onError={() => setImageError(true)}
                                 sx={{
-                                    maxWidth: '100%',
-                                    maxHeight: '100%',
+                                    maxHeight: 'calc(100vh - 180px)',
+                                    maxWidth: '95%',
                                     objectFit: 'contain',
-                                    transition: isDragging ? 'none' : 'transform 0.3s ease',
-                                    transform: `scale(${modalZoomLevel}) translate(${modalImagePos.x / modalZoomLevel}px, ${modalImagePos.y / modalZoomLevel}px)`,
-                                    filter: 'drop-shadow(0 10px 25px rgba(0,0,0,0.4))'
+                                    transition: 'opacity 0.3s ease',
+                                    opacity: imageLoaded ? 1 : 0.4
                                 }}
                             />
 
-                            {/* Botones de navegación en el modal */}
-                            <Box sx={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                padding: { xs: '0 10px', sm: '0 20px' },
-                                pointerEvents: 'none' // Permitir clicks en la imagen
-                            }}>
-                                <IconButton
-                                    onClick={onPrevImage}
-                                    aria-label="Imagen anterior"
-                                    sx={{
-                                        bgcolor: 'rgba(0,0,0,0.2)',
-                                        color: vistelicaColors.white,
-                                        '&:hover': {
-                                            bgcolor: vistelicaColors.primary
-                                        },
-                                        pointerEvents: 'auto' // Reactivar clicks en este botón
-                                    }}
-                                >
-                                    <ChevronLeft size={24} />
-                                </IconButton>
-
-                                <IconButton
-                                    onClick={onNextImage}
-                                    aria-label="Imagen siguiente"
-                                    sx={{
-                                        bgcolor: 'rgba(0,0,0,0.2)',
-                                        color: vistelicaColors.white,
-                                        '&:hover': {
-                                            bgcolor: vistelicaColors.primary
-                                        },
-                                        pointerEvents: 'auto' // Reactivar clicks en este botón
-                                    }}
-                                >
-                                    <ChevronRight size={24} />
-                                </IconButton>
-                            </Box>
+                            <IconButton
+                                onClick={onNextImage}
+                                aria-label="Imagen siguiente"
+                                tabIndex={0}
+                                sx={{
+                                    position: 'absolute',
+                                    right: { xs: 16, sm: 28, md: 48 },
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    bgcolor: 'white',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                    width: { xs: 46, sm: 54, md: 60 },
+                                    height: { xs: 46, sm: 54, md: 60 },
+                                    '&:hover': {
+                                        transform: 'translateY(-50%) scale(1.1)',
+                                        boxShadow: '0 6px 16px rgba(0,0,0,0.2)'
+                                    },
+                                    '&:focus': {
+                                        outline: `2px solid ${vistelicaColors.primary}80`,
+                                        outlineOffset: 2
+                                    }
+                                }}
+                            >
+                                <ChevronRight size={28} />
+                            </IconButton>
                         </Box>
 
                         {/* Miniaturas en el modal */}
-                        <Box sx={{
-                            position: 'absolute',
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            display: 'flex',
-                            justifyContent: 'center',
-                            gap: 1.5,
-                            padding: '12px',
-                            backdropFilter: 'blur(10px)',
-                            background: 'rgba(0,0,0,0.5)',
-                            overflowX: 'auto',
-                            scrollbarWidth: 'none',
-                            '&::-webkit-scrollbar': { display: 'none' },
-                        }}>
-                            {styleImages.map((img, index) => (
+                        <Box
+                            component="footer"
+                            sx={{
+                                p: { xs: 2, sm: 2.5 },
+                                display: 'flex',
+                                justifyContent: 'center',
+                                gap: 1.8,   // AMPLIADO: más espacio entre miniaturas
+                                overflowX: 'auto',
+                                bgcolor: vistelicaColors.white,
+                                borderTop: '1px solid #f0f0f0',
+                                scrollbarWidth: 'none',
+                                '&::-webkit-scrollbar': { display: 'none' }
+                            }}
+                        >
+                            {styleImages.map((img, idx) => (
                                 <Box
-                                    key={index}
-                                    onClick={() => onThumbnailClick(index)}
+                                    key={idx}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label={`Seleccionar imagen ${idx + 1}${idx === currentImageIndex ? ' (seleccionada)' : ''}`}
+                                    aria-current={idx === currentImageIndex ? 'true' : 'false'}
+                                    onClick={() => onThumbnailClick(idx)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            onThumbnailClick(idx);
+                                        }
+                                    }}
                                     sx={{
-                                        width: { xs: 40, sm: 50 },
-                                        height: { xs: 50, sm: 60 },
-                                        borderRadius: 1,
+                                        width: { xs: 64, sm: 70 },   // AMPLIADO: miniaturas más grandes
+                                        height: { xs: 64, sm: 70 },
+                                        borderRadius: 1.2,   // AMPLIADO: bordes más redondeados
                                         overflow: 'hidden',
-                                        border: index === currentImageIndex
+                                        border: idx === currentImageIndex
                                             ? `2px solid ${vistelicaColors.primary}`
                                             : '2px solid transparent',
-                                        opacity: index === currentImageIndex ? 1 : 0.6,
-                                        transform: index === currentImageIndex ? 'scale(1.1)' : 'scale(1)',
-                                        transition: 'all 0.2s ease',
-                                        flexShrink: 0,
                                         cursor: 'pointer',
+                                        opacity: idx === currentImageIndex ? 1 : 0.7,
+                                        transition: 'all 0.3s ease',
                                         '&:hover': {
                                             opacity: 1,
-                                            transform: 'scale(1.1)'
+                                            transform: 'translateY(-4px)'
+                                        },
+                                        '&:focus': {
+                                            outline: `2px solid ${vistelicaColors.primary}80`,
+                                            outlineOffset: 2
                                         }
                                     }}
                                 >
                                     <Box
                                         component="img"
-                                        src={img.image_url}
-                                        alt={`Miniatura ${index + 1}`}
+                                        src={img.image_url || "/api/placeholder/100"}
+                                        alt={`Miniatura ${idx + 1}`}
+                                        loading="lazy"
                                         sx={{
                                             width: '100%',
                                             height: '100%',
-                                            objectFit: 'cover'
+                                            objectFit: 'cover',
                                         }}
                                     />
                                 </Box>
@@ -654,87 +570,84 @@ const ImageGallery = ({
                 </Fade>
             </Modal>
 
-            {/* Miniaturas mejoradas */}
-            <Box sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                padding: { xs: '18px 8px', sm: '24px 16px' },
-                background: `linear-gradient(90deg, ${vistelicaColors.white} 80%, ${vistelicaColors.backgroundLight} 100%)`,
-                gap: { xs: 1.5, sm: 2.5 },
-                overflowX: 'auto',
-                scrollbarWidth: 'none',
-                msOverflowStyle: 'none',
-                '&::-webkit-scrollbar': { display: 'none' },
-                boxShadow: `inset 0 2px 8px ${vistelicaColors.shadow}10`
-            }}>
+            {/* Miniaturas - AMPLIADAS */}
+            <Box
+                role="tablist"
+                aria-label="Miniaturas de imágenes"
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: { xs: '16px 10px', sm: '20px 16px' },  // AMPLIADO: más padding
+                    bgcolor: vistelicaColors.white,
+                    gap: { xs: 1.8, sm: 2 },  // AMPLIADO: más espacio entre miniaturas
+                    overflowX: 'auto',
+                    scrollbarWidth: 'none',
+                    '&::-webkit-scrollbar': { display: 'none' },
+                    borderTop: '1px solid #f0f0f0'
+                }}
+            >
                 {styleImages.map((img, index) => (
-                    <Grow
+                    <Box
                         key={index}
-                        in={true}
-                        style={{ transformOrigin: '0 0 0' }}
-                        timeout={350 + index * 60}
+                        role="tab"
+                        tabIndex={0}
+                        aria-selected={index === currentImageIndex}
+                        aria-label={`Miniatura ${index + 1}${index === currentImageIndex ? ' (seleccionada)' : ''}`}
+                        onClick={() => onThumbnailClick(index)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                onThumbnailClick(index);
+                            }
+                        }}
+                        sx={{
+                            width: { xs: 58, sm: 80 },  // AMPLIADO: miniaturas más grandes
+                            height: { xs: 58, sm: 80 },
+                            borderRadius: 1.5,  // AMPLIADO: bordes más redondeados
+                            overflow: 'hidden',
+                            border: index === currentImageIndex
+                                ? `3px solid ${vistelicaColors.primary}`  // AMPLIADO: borde más grueso
+                                : '1px solid #f0f0f0',
+                            cursor: 'pointer',
+                            opacity: index === currentImageIndex ? 1 : 0.7,
+                            transition: 'all 0.3s ease',
+                            transform: index === currentImageIndex
+                                ? 'scale(1.08)'
+                                : 'scale(1)',
+                            boxShadow: index === currentImageIndex
+                                ? `0 5px 12px ${vistelicaColors.shadow}40`  // AMPLIADO: sombra más pronunciada
+                                : 'none',
+                            '&:hover': {
+                                transform: 'scale(1.08)',
+                                opacity: 1,
+                                boxShadow: `0 6px 14px ${vistelicaColors.shadow}40`
+                            },
+                            '&:focus': {
+                                outline: `2px solid ${vistelicaColors.primary}80`,
+                                outlineOffset: 2
+                            }
+                        }}
                     >
                         <Box
-                            onClick={() => onThumbnailClick(index)}
+                            component="img"
+                            src={img.image_url || "/api/placeholder/100"}
+                            alt={`Miniatura ${index + 1}`}
+                            loading="lazy"
                             sx={{
-                                position: 'relative',
-                                width: { xs: 50, sm: 65, md: 75 },
-                                height: { xs: 70, sm: 90, md: 100 },
-                                borderRadius: 2,
-                                overflow: 'hidden',
-                                flexShrink: 0,
-                                cursor: 'pointer',
-                                boxShadow: index === selectedThumbnail
-                                    ? `0 0 0 3px ${vistelicaColors.primary}, 0 8px 20px ${vistelicaColors.shadow}30`
-                                    : `0 3px 10px ${vistelicaColors.shadow}20`,
-                                transform: index === selectedThumbnail ? 'translateY(-4px)' : 'none',
-                                transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-                                opacity: index === selectedThumbnail ? 1 : 0.85,
-                                '&:hover': {
-                                    transform: 'translateY(-5px)',
-                                    boxShadow: index === selectedThumbnail
-                                        ? `0 8px 20px ${vistelicaColors.shadow}30, 0 0 0 3px ${vistelicaColors.primary}`
-                                        : `0 8px 20px ${vistelicaColors.shadow}30`,
-                                    opacity: 1
-                                },
-                                '&::after': index === selectedThumbnail ? {
-                                    content: '""',
-                                    position: 'absolute',
-                                    bottom: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    height: '4px',
-                                    background: `linear-gradient(90deg, ${vistelicaColors.primary}20, ${vistelicaColors.primary}, ${vistelicaColors.primary}20)`,
-                                    animation: 'pulse 2s infinite',
-                                    '@keyframes pulse': {
-                                        '0%': { opacity: 0.6 },
-                                        '50%': { opacity: 1 },
-                                        '100%': { opacity: 0.6 },
-                                    }
-                                } : {}
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
                             }}
-                        >
-                            <Box
-                                component="img"
-                                src={img.image_url}
-                                alt={`Vista miniatura ${index + 1}`}
-                                sx={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover',
-                                    transition: 'transform 0.3s cubic-bezier(.2,1,.2,1)',
-                                    '&:hover': {
-                                        transform: 'scale(1.12)'
-                                    }
-                                }}
-                            />
-                        </Box>
-                    </Grow>
+                        />
+                    </Box>
                 ))}
             </Box>
         </Box>
     );
-};
+});
+
+// Nombre para DevTools
+ImageGallery.displayName = 'ImageGallery';
 
 export default ImageGallery;

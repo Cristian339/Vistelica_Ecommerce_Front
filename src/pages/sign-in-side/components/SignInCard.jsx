@@ -663,17 +663,6 @@ export default function SignInCard() {
                                 Sobre Nosotros
                             </StyledLink>
                             <StyledLink
-                                component="button"
-                                onClick={handleOpenTerms}
-                                variant="body2"
-                                sx={{
-                                    textDecoration: 'underline',
-                                    fontWeight: 600
-                                }}
-                            >
-                                Términos y condiciones
-                            </StyledLink>
-                            <StyledLink
                                 href="/privacy-policy/PrivacyPolicy"
                                 variant="body2"
                                 sx={{
@@ -702,12 +691,6 @@ export default function SignInCard() {
                 </Grid>
             </Grid>
 
-            {/* Modal de Términos y Condiciones */}
-            <TermsAndConditions
-                open={openTerms}
-                handleClose={handleCloseTerms}
-                handleAccept={handleAcceptTerms}
-            />
         </FullScreenContainer>
     );
 }

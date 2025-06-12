@@ -190,40 +190,27 @@ const FooterComponent = () => {
             links: [
                 { href: "/envios", text: "Envíos" },
                 { href: "/pagos", text: "Pagos" },
-                { href: "/guia-compra/ReturnsPage", text: "Cambios y devoluciones" },
+                { href: "/cambio-devolucion", text: "Política de Devoluciones" },
                 { href: "/tarjeta-regalo", text: "Tarjeta Regalo" },
-                { href: "/pack-trajearte", text: "Pack Trajearte" },
-                { href: "/vestuario-laboral", text: "Vestuario Laboral" }
+                { href: "/programa-fidelizacion", text: "Programa de puntos" },
+
             ]
         },
         {
             title: "Ayuda",
             links: [
-                { href: "/preguntas-frecuentes", text: "Preguntas frecuentes" },
                 { href: "/guia-tallas/MenSizeGuidePage", text: "Guía de tallas" },
-                { href: "/cambio-devolucion", text: "Cambios/devoluciones como invitado" },
+                { href: "/newsletter", text: "Suscripción a novedades" },
                 { href: "/contacto", text: "Contacto" },
-                { href: "/bases-sorteo", text: "Bases Sorteo" },
                 { href: "/condiciones-promocionales", text: "Condiciones Promocionales" }
             ]
         },
-        {
-            title: "Mi Cuenta", // Reemplazado "Tiendas" por "Mi Cuenta" más relevante para tienda online
-            links: [
-                { href: "/mi-cuenta", text: "Iniciar sesión" },
-                { href: "/pedidos", text: "Mis pedidos" },
-                { href: "/favoritos", text: "Lista de deseos" },
-                { href: "/direcciones", text: "Mis direcciones" },
-                { href: "/programa-fidelizacion", text: "Programa de puntos" },
-                { href: "/newsletter", text: "Suscripción a novedades" }
-            ]
-        },
+
         {
             title: "Legal",
             links: [
                 { href: "/legal-notice/LegalNotice", text: "Aviso legal" },
                 { href: "/privacy-policy/PrivacyPolicy", text: "Política de privacidad" },
-                { href: "/politica-cookies", text: "Política de Cookies" },
                 { href: "/datos-seguros", text: "Sus datos seguros" },
                 { href: "/condiciones/TermsOfUse", text: "Condiciones de uso" },
                 { href: "/about-us/AboutUs", text: "Sobre nosotros" }
