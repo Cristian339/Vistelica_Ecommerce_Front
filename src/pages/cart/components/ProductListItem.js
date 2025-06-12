@@ -24,7 +24,10 @@ export default function ProductListItem({
                                             userId,
                                             sessionId
                                         }) {
-    const [quantity, setQuantity] = useState(item.quantity);
+    if (!item || !item.product) {
+    return null; // Evita renderizar si item o item.product están undefined
+}
+    const [quantity, setQuantity] = useState(item.quantity ?? 1);
     const [mainImage, setMainImage] = useState(item.product?.image_url || "https://via.placeholder.com/80");
     const [loadingImage, setLoadingImage] = useState(!item.product?.image_url);
     const [loading, setLoading] = useState(false);
