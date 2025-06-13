@@ -2,6 +2,7 @@
 import { Box, Typography, Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import Navbar from "@/components/layout/HeaderComponent";
 
 const EmptyWishlist = () => {
     const router = useRouter();

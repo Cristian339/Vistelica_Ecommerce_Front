@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api`;
+const API_URL = `http://localhost:5000/api`;
 
 const getClients = async () => {
     const response = await axios.get(`${API_URL}/admin/clients`);
@@ -323,6 +323,7 @@ const deleteReportsForReview = async (reviewId) => {
         throw new Error(error.response?.data?.message || 'Error al eliminar reportes de la reseña');
     }
 };
+// eslint-disable-next-line import/no-anonymous-default-export
 export default {
     getClients,
     getSuppliers,

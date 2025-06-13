@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api`;
+const API_URL = `http://localhost:5000/api`;
 
 // Obtener todas las categorías con subcategorías anidadas
 const fetchCategories = async () => {
@@ -130,6 +130,7 @@ const fetchSubcategoryById = async (subcategoryId) => {
     }
 };
 
+// eslint-disable-next-line import/no-anonymous-default-export
 export default {
     fetchCategories,
     fetchCategoryById,

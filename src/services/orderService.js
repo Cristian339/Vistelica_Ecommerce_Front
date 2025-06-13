@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api`;
+const API_URL = `http://localhost:5000/api`;
 
 const createOrder = async (orderData) => {
     try {
@@ -14,10 +14,22 @@ const createOrder = async (orderData) => {
         return response.data;
     } catch (error) {
         console.error('Error creating order:', error);
-        throw new Error(
-            error.response?.data?.message ||
-            'No se pudo crear el pedido. Inténtalo más tarde.'
-        );
+
+        // Mejor manejo de errores
+        let errorMessage = 'No se pudo crear el pedido. Inténtalo más tarde.';
+
+        if (error.response) {
+            // Errores de validación del backend
+            if (error.response.data.errors) {
+                errorMessage = Object.values(error.response.data.errors).join('\n');
+            } else if (error.response.data.message) {
+                errorMessage = error.response.data.message;
+            }
+        } else if (error.request) {
+            errorMessage = 'No se recibió respuesta del servidor';
+        }
+
+        throw new Error(errorMessage);
     }
 };
 

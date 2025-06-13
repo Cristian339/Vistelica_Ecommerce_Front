@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api`;
+const API_URL = `http://localhost:5000/api`;
 
 // Función auxiliar para incluir el token de autenticación en las peticiones
 const authConfig = () => {
@@ -139,6 +139,7 @@ const getDefaultAddress = async () => {
     }
 };
 
+// eslint-disable-next-line import/no-anonymous-default-export
 export default {
     getAddresses,
     addAddress,

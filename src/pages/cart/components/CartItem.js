@@ -9,11 +9,11 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SavingsIcon from '@mui/icons-material/Savings';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import ImageWithFallback from '@/pages/cart/components/ImageWithFallback.js';
 import PaletteIcon from "@mui/icons-material/Palette";
-import ImageWithFallback from "@/pages/cart/components/ImageWithFallback";
 
 const CartItem = React.memo(({
-                                 item,
+                                 item = {},
                                  onUpdateQuantity,
                                  onRemove,
                                  loading = false
@@ -61,6 +61,10 @@ const CartItem = React.memo(({
         onRemove && onRemove(item.cart_detail_id);
     }, [item.cart_detail_id, onRemove, loading]);
 
+
+    if(!item){
+        return null;
+    }
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}

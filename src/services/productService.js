@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // URL base para las peticiones API
-const API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api`;
+const API_URL = `http://localhost:5000/api`;
 
 /**
  * Obtiene todos los productos desde el servidor

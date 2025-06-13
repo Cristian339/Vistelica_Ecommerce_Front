@@ -30,6 +30,7 @@ import TextField from '@mui/material/TextField';
 import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
 import { typography } from '@/pages/shared-theme/themePrimitives';
 import StarIcon from '@mui/icons-material/Star';
+import FormHelperText from '@mui/material/FormHelperText';
 
 const FormGrid = styled(Grid)(({ theme }) => ({
     display: 'flex',
@@ -37,7 +38,8 @@ const FormGrid = styled(Grid)(({ theme }) => ({
     marginBottom: theme.spacing(2),
 }));
 
-// Estilo personalizado para los inputs
+
+
 const StyledOutlinedInput = styled(OutlinedInput)(({ theme }) => ({
     borderRadius: '8px',
     transition: 'all 0.2s',
@@ -52,7 +54,6 @@ const StyledOutlinedInput = styled(OutlinedInput)(({ theme }) => ({
     }
 }));
 
-// Estilo para las etiquetas
 const StyledFormLabel = styled(FormLabel)(({ theme }) => ({
     fontFamily: typography.fontFamily,
     marginBottom: '6px',
@@ -61,7 +62,6 @@ const StyledFormLabel = styled(FormLabel)(({ theme }) => ({
     color: '#424242',
 }));
 
-// Título de sección con la paleta primary
 const SectionTitle = styled(Typography)(({ theme }) => ({
     fontSize: '1.25rem',
     fontWeight: 700,
@@ -83,7 +83,6 @@ const SectionTitle = styled(Typography)(({ theme }) => ({
     }
 }));
 
-// Convertir a componente memo para mejorar el rendimiento
 const AddressForm = React.memo(function AddressForm({ onDataChange }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -91,109 +90,120 @@ const AddressForm = React.memo(function AddressForm({ onDataChange }) {
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
-        address1: '',
-        address2: '',
+        street: '',
+        label: '',
         city: '',
         state: '',
-        zip: '',
-        country: '',
+        postal_code: '',
+        country: 'España',
         block: '',
         floor: '',
         door: ''
+    });
+    const [initialLoad, setInitialLoad] = useState(true);
+    const [errors, setErrors] = useState({
+        firstName: '',
+        lastName: '',
+        street: '',
+        city: '',
+        state: '',
+        postal_code: '',
+        country: ''
+    });
+    const [touched, setTouched] = useState({
+        firstName: false,
+        lastName: false,
+        street: false,
+        city: false,
+        state: false,
+        postal_code: false,
+        country: false
     });
     const [openDialog, setOpenDialog] = useState(false);
     const [addresses, setAddresses] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Función para enviar datos al componente padre
-    const sendDataToParent = useCallback((addressId, formDataToSend) => {
+    const validateField = (name, value) => {
+        // No validar durante la carga inicial si no hay dirección guardada
+        if (initialLoad && !selectedAddressId) {
+            return '';
+        }
+
+        if (!value && value !== 0 && name !== 'country') { // Excluir país de la validación de campo obligatorio
+            return 'Este campo es obligatorio';
+        }
+
+        const stringValue = String(value).trim();
+
+        switch (name) {
+            case 'postal_code':
+                if (!/^\d{5}$/.test(stringValue)) {
+                    return 'Código postal inválido (5 dígitos)';
+                }
+                break;
+            case 'firstName':
+            case 'lastName':
+                if (stringValue.length < 2) {
+                    return 'Mínimo 2 caracteres';
+                }
+                break;
+            case 'street':
+                if (stringValue.length < 5) {
+                    return 'Dirección demasiado corta';
+                }
+                break;
+            case 'city':
+            case 'state':
+                if (stringValue.length < 3) {
+                    return 'Mínimo 3 caracteres';
+                }
+                break;
+            // Eliminamos el caso 'country' completamente
+        }
+
+        return '';
+    };
+
+    const validateForm = useCallback(() => {
+        const newErrors = {
+            firstName: validateField('firstName', formData.firstName),
+            lastName: validateField('lastName', formData.lastName),
+            street: validateField('street', formData.street),
+            city: validateField('city', formData.city),
+            state: validateField('state', formData.state),
+            postal_code: validateField('postal_code', formData.postal_code)
+        };
+
+        setErrors(newErrors);
+        const isValid = !Object.values(newErrors).some(error => error !== '');
+        return isValid;
+    }, [formData.firstName, formData.lastName, formData.street,
+        formData.city, formData.state, formData.postal_code]);
+
+    const handleBlur = (event) => {
+        const { name } = event.target;
+        setTouched(prev => ({ ...prev, [name]: true }));
+
+        // Validar el campo específico
+        const error = validateField(name, formData[name]);
+        setErrors(prev => ({ ...prev, [name]: error }));
+
+        // Forzar validación completa al salir del código postal
+        if (name === 'postal_code') {
+            const isValid = validateForm();
+            sendDataToParent(selectedAddressId, formData, isValid);
+        }
+    };
+
+    const sendDataToParent = useCallback((addressId, formDataToSend, isValid) => {
         if (onDataChange) {
             onDataChange({
                 selectedAddressId: addressId,
-                formData: formDataToSend
+                formData: formDataToSend || formData,
+                isValid: isValid !== undefined ? isValid : validateForm()
             });
         }
-    }, [onDataChange]);
-
-    // Corrección: Removida la dependencia sendDataToParent para evitar el bucle infinito
-    useEffect(() => {
-        const loadUserData = async () => {
-            try {
-                setLoading(true);
-                const data = await getProfileAndAddresses();
-
-                // Extraer el nombre y apellido del perfil
-                const { name, lastName } = data;
-
-                // Guardar todas las direcciones para usar en el modal
-                setAddresses(data.addresses || []);
-
-                // Encontrar la dirección predeterminada
-                const defaultAddress = data.addresses.find(address => address.is_default === true) ||
-                    (data.addresses.length > 0 ? data.addresses[0] : null);
-
-                if (defaultAddress) {
-                    const newFormData = {
-                        firstName: name || '',
-                        lastName: lastName || '',
-                        address1: defaultAddress.street || '',
-                        address2: defaultAddress.label || '',
-                        city: defaultAddress.city || '',
-                        state: defaultAddress.state || '',
-                        zip: defaultAddress.postal_code || '',
-                        country: defaultAddress.country || '',
-                        block: defaultAddress.block || '',
-                        floor: defaultAddress.floor || '',
-                        door: defaultAddress.door || ''
-                    };
-
-                    setFormData(newFormData);
-                    setSelectedAddressId(defaultAddress.id);
-
-                    // Llamamos a la función directamente en vez de usar la versión memoizada
-                    if (onDataChange) {
-                        onDataChange({
-                            selectedAddressId: defaultAddress.id,
-                            formData: newFormData
-                        });
-                    }
-                } else {
-                    // Si no hay dirección predeterminada, al menos establecer nombre y apellido
-                    const newFormData = {
-                        firstName: name || '',
-                        lastName: lastName || '',
-                        address1: '',
-                        address2: '',
-                        city: '',
-                        state: '',
-                        zip: '',
-                        country: '',
-                        block: '',
-                        floor: '',
-                        door: ''
-                    };
-
-                    setFormData(newFormData);
-
-                    // Llamamos a la función directamente en vez de usar la versión memoizada
-                    if (onDataChange) {
-                        onDataChange({
-                            selectedAddressId: null,
-                            formData: newFormData
-                        });
-                    }
-                }
-
-                setLoading(false);
-            } catch (err) {
-                console.error('Error al cargar los datos del usuario:', err);
-                setError('No se pudieron cargar los datos del usuario. Por favor, inténtelo de nuevo más tarde.');
-                setLoading(false);
-            }
-        };
-
-        loadUserData();
-    }, []); // Eliminamos sendDataToParent de las dependencias
+    }, [onDataChange, formData, validateForm]);
 
     const handleChange = useCallback((event) => {
         const { name, value } = event.target;
@@ -204,11 +214,34 @@ const AddressForm = React.memo(function AddressForm({ onDataChange }) {
 
         setFormData(newFormData);
 
-        // Cuando el usuario modifica manualmente el formulario,
-        // consideramos que ya no está usando una dirección guardada
-        setSelectedAddressId(null);
-        sendDataToParent(null, newFormData);
-    }, [formData, sendDataToParent]);
+        // Al primer cambio, marcar todos los campos obligatorios como touched
+        if (initialLoad) {
+            setTouched({
+                firstName: true,
+                lastName: true,
+                street: true,
+                city: true,
+                state: true,
+                postal_code: true
+            });
+            setInitialLoad(false);
+        }
+
+        // Validar el campo modificado inmediatamente
+        if (touched[name] || !initialLoad) {
+            const error = validateField(name, value);
+            setErrors(prev => ({ ...prev, [name]: error }));
+        }
+
+        // Si es el código postal, forzar validación completa
+        if (name === 'postal_code') {
+            const isValid = validateForm();
+            sendDataToParent(selectedAddressId, newFormData, isValid);
+        } else {
+            setSelectedAddressId(null);
+            sendDataToParent(null, newFormData);
+        }
+    }, [formData, touched, initialLoad, sendDataToParent, selectedAddressId, validateForm]);
 
     const handleOpenDialog = useCallback(() => {
         setOpenDialog(true);
@@ -222,12 +255,12 @@ const AddressForm = React.memo(function AddressForm({ onDataChange }) {
     const handleSelectAddress = useCallback((address) => {
         const newFormData = {
             ...formData,
-            address1: address.street || '',
-            address2: address.label || '',
+            street: address.street || '',
+            label: address.label || '',
             city: address.city || '',
             state: address.state || '',
-            zip: address.postal_code || '',
-            country: address.country || '',
+            postal_code: address.postal_code || '',
+            country: address.country || 'España',
             block: address.block || '',
             floor: address.floor || '',
             door: address.door || ''
@@ -235,7 +268,32 @@ const AddressForm = React.memo(function AddressForm({ onDataChange }) {
 
         setFormData(newFormData);
         setSelectedAddressId(address.id);
-        sendDataToParent(address.id, newFormData);
+
+        // Marcar campos como touched solo si tienen valor
+        setTouched({
+            firstName: !!newFormData.firstName,
+            lastName: !!newFormData.lastName,
+            street: !!newFormData.street,
+            city: !!newFormData.city,
+            state: !!newFormData.state,
+            postal_code: !!newFormData.postal_code,
+            country: !!newFormData.country
+        });
+
+        // Validación inmediata
+        const newErrors = {
+            firstName: validateField('firstName', newFormData.firstName),
+            lastName: validateField('lastName', newFormData.lastName),
+            street: validateField('street', newFormData.street),
+            city: validateField('city', newFormData.city),
+            state: validateField('state', newFormData.state),
+            postal_code: validateField('postal_code', newFormData.postal_code),
+            country: validateField('country', newFormData.country)
+        };
+
+        setErrors(newErrors);
+        const isValid = !Object.values(newErrors).some(error => error !== '');
+        sendDataToParent(address.id, newFormData, isValid);
 
         handleCloseDialog();
     }, [formData, handleCloseDialog, sendDataToParent]);
@@ -252,7 +310,6 @@ const AddressForm = React.memo(function AddressForm({ onDataChange }) {
         return <PlaceIcon />;
     }, []);
 
-    // Filtrado de direcciones memoizado
     const filteredAddresses = useMemo(() => addresses.filter(address => {
         if (!searchTerm) return true;
         const searchLower = searchTerm.toLowerCase();
@@ -266,6 +323,88 @@ const AddressForm = React.memo(function AddressForm({ onDataChange }) {
             (address.door && address.door.toLowerCase().includes(searchLower))
         );
     }), [addresses, searchTerm]);
+
+    // En el AddressForm, modifica el useEffect que carga los datos iniciales:
+    useEffect(() => {
+        const loadUserData = async () => {
+            try {
+                setLoading(true);
+                const data = await getProfileAndAddresses();
+                const { name, lastName } = data;
+
+                setAddresses(data.addresses || []);
+
+                const defaultAddress = data.addresses.find(address => address.is_default === true) ||
+                    (data.addresses.length > 0 ? data.addresses[0] : null);
+
+                if (defaultAddress) {
+                    const newFormData = {
+                        firstName: name || '',
+                        lastName: lastName || '',
+                        street: defaultAddress.street || '',
+                        label: defaultAddress.label || '',
+                        city: defaultAddress.city || '',
+                        state: defaultAddress.state || '',
+                        postal_code: defaultAddress.postal_code || '',
+                        country: defaultAddress.country || 'España',
+                        block: defaultAddress.block || '',
+                        floor: defaultAddress.floor || '',
+                        door: defaultAddress.door || ''
+                    };
+
+                    setFormData(newFormData);
+                    setSelectedAddressId(defaultAddress.id);
+
+                    // Marcar como touched solo si hay dirección guardada
+                    setTouched({
+                        firstName: true,
+                        lastName: true,
+                        street: true,
+                        city: true,
+                        state: true,
+                        postal_code: true,
+                        country: true
+                    });
+
+                    // Validar inmediatamente solo si hay dirección guardada
+                    const isValid = validateForm();
+                    sendDataToParent(defaultAddress.id, newFormData, isValid);
+                } else {
+                    // Si no hay dirección, solo precargar nombre/apellido
+                    const newFormData = {
+                        firstName: name || '',
+                        lastName: lastName || '',
+                        street: '',
+                        label: '',
+                        city: '',
+                        state: '',
+                        postal_code: '',
+                        country: 'España',
+                        block: '',
+                        floor: '',
+                        door: ''
+                    };
+
+                    setFormData(newFormData);
+                    // No marcar como touched ni validar automáticamente
+                    sendDataToParent(null, newFormData, false);
+                }
+
+                setInitialLoad(false);
+                setLoading(false);
+            } catch (err) {
+                console.error('Error al cargar los datos del usuario:', err);
+                setError('No se pudieron cargar los datos del usuario. Por favor, inténtelo de nuevo más tarde.');
+                setInitialLoad(false);
+                setLoading(false);
+            }
+        };
+
+        loadUserData();
+    }, []);
+
+
+
 
     if (loading) {
         return (
@@ -310,9 +449,16 @@ const AddressForm = React.memo(function AddressForm({ onDataChange }) {
                         size="small"
                         value={formData.firstName}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={touched.firstName && !!errors.firstName}
                         aria-required="true"
                         fullWidth
                     />
+                    {touched.firstName && errors.firstName && (
+                        <FormHelperText error sx={{ mt: 0.5 }}>
+                            {errors.firstName}
+                        </FormHelperText>
+                    )}
                 </FormGrid>
                 <FormGrid item xs={12} md={6}>
                     <StyledFormLabel htmlFor="lastName" required>
@@ -328,40 +474,54 @@ const AddressForm = React.memo(function AddressForm({ onDataChange }) {
                         size="small"
                         value={formData.lastName}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={touched.lastName && !!errors.lastName}
                         aria-required="true"
                         fullWidth
                     />
+                    {touched.lastName && errors.lastName && (
+                        <FormHelperText error sx={{ mt: 0.5 }}>
+                            {errors.lastName}
+                        </FormHelperText>
+                    )}
                 </FormGrid>
                 <FormGrid item xs={12}>
-                    <StyledFormLabel htmlFor="address1" required>
+                    <StyledFormLabel htmlFor="street" required>
                         Dirección línea 1
                     </StyledFormLabel>
                     <StyledOutlinedInput
-                        id="address1"
-                        name="address1"
+                        id="street"
+                        name="street"
                         type="text"
                         placeholder="Nombre de calle y número"
                         autoComplete="shipping address-line1"
                         required
                         size="small"
-                        value={formData.address1}
+                        value={formData.street}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={touched.street && !!errors.street}
                         aria-required="true"
                         fullWidth
                     />
+                    {touched.street && errors.street && (
+                        <FormHelperText error sx={{ mt: 0.5 }}>
+                            {errors.street}
+                        </FormHelperText>
+                    )}
                 </FormGrid>
                 <FormGrid item xs={12}>
-                    <StyledFormLabel htmlFor="address2">
+                    <StyledFormLabel htmlFor="label">
                         Dirección línea 2
                     </StyledFormLabel>
                     <StyledOutlinedInput
-                        id="address2"
-                        name="address2"
+                        id="label"
+                        name="label"
                         type="text"
                         placeholder="Apartamento, suite, unidad, etc. (opcional)"
                         autoComplete="shipping address-line2"
                         size="small"
-                        value={formData.address2}
+                        value={formData.label}
                         onChange={handleChange}
                         fullWidth
                     />
@@ -380,9 +540,16 @@ const AddressForm = React.memo(function AddressForm({ onDataChange }) {
                         size="small"
                         value={formData.city}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={touched.city && !!errors.city}
                         aria-required="true"
                         fullWidth
                     />
+                    {touched.city && errors.city && (
+                        <FormHelperText error sx={{ mt: 0.5 }}>
+                            {errors.city}
+                        </FormHelperText>
+                    )}
                 </FormGrid>
                 <FormGrid item xs={12} sm={6}>
                     <StyledFormLabel htmlFor="state" required>
@@ -398,27 +565,41 @@ const AddressForm = React.memo(function AddressForm({ onDataChange }) {
                         size="small"
                         value={formData.state}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={touched.state && !!errors.state}
                         aria-required="true"
                         fullWidth
                     />
+                    {touched.state && errors.state && (
+                        <FormHelperText error sx={{ mt: 0.5 }}>
+                            {errors.state}
+                        </FormHelperText>
+                    )}
                 </FormGrid>
                 <FormGrid item xs={12} sm={6}>
-                    <StyledFormLabel htmlFor="zip" required>
+                    <StyledFormLabel htmlFor="postal_code" required>
                         Código Postal
                     </StyledFormLabel>
                     <StyledOutlinedInput
-                        id="zip"
-                        name="zip"
+                        id="postal_code"
+                        name="postal_code"
                         type="text"
                         placeholder="28001"
                         autoComplete="shipping postal-code"
                         required
                         size="small"
-                        value={formData.zip}
+                        value={formData.postal_code}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={touched.postal_code && !!errors.postal_code}
                         aria-required="true"
                         fullWidth
                     />
+                    {touched.postal_code && errors.postal_code && (
+                        <FormHelperText error sx={{ mt: 0.5 }}>
+                            {errors.postal_code}
+                        </FormHelperText>
+                    )}
                 </FormGrid>
                 <FormGrid item xs={12} sm={6}>
                     <StyledFormLabel htmlFor="country" required>
@@ -434,9 +615,16 @@ const AddressForm = React.memo(function AddressForm({ onDataChange }) {
                         size="small"
                         value={formData.country}
                         onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={touched.country && !!errors.country}
                         aria-required="true"
                         fullWidth
                     />
+                    {touched.country && errors.country && (
+                        <FormHelperText error sx={{ mt: 0.5 }}>
+                            {errors.country}
+                        </FormHelperText>
+                    )}
                 </FormGrid>
                 <FormGrid item xs={12} sm={4}>
                     <StyledFormLabel htmlFor="block">
@@ -512,7 +700,6 @@ const AddressForm = React.memo(function AddressForm({ onDataChange }) {
                 </Grid>
             </Grid>
 
-            {/* Modal para seleccionar direcciones */}
             <Dialog
                 open={openDialog}
                 onClose={handleCloseDialog}
@@ -723,7 +910,6 @@ const AddressForm = React.memo(function AddressForm({ onDataChange }) {
                                                             {address.country || 'España'}
                                                         </Typography>
 
-                                                        {/* Información adicional con mejor diseño */}
                                                         {(address.block || address.floor || address.door) && (
                                                             <Box
                                                                 sx={{
@@ -817,6 +1003,5 @@ const AddressForm = React.memo(function AddressForm({ onDataChange }) {
     );
 });
 
-// Añadir displayName para herramientas de desarrollo
 AddressForm.displayName = 'AddressForm';
 export default AddressForm;

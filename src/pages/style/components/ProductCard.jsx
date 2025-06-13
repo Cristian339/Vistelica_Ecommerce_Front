@@ -23,15 +23,15 @@ const ProductCard = ({
     isTablet
 }) => {
     const [isHovered, setIsHovered] = useState(false);
-    
+
     const formattedPrice = `${product.price} €`;
     const hasDiscount = product.discount_percentage && parseFloat(product.discount_percentage) > 0;
     const mainImage = product.main_image ||
         (product.images?.find(img => img.is_main)?.image_url) ||
         "/api/placeholder/400";
-    
+
     // Calcular precio con descuento
-    const discountedPrice = hasDiscount 
+    const discountedPrice = hasDiscount
         ? `${(product.price * (1 - parseFloat(product.discount_percentage) / 100)).toFixed(2)} €`
         : null;
 
@@ -59,18 +59,18 @@ const ProductCard = ({
                 onMouseLeave={() => setIsHovered(false)}
             >
                 {/* Contenedor de imagen con efectos */}
-                <Box sx={{ 
+                <Box sx={{
                     position: 'relative',
                     borderRadius: '16px',
                     overflow: 'hidden',
-                    boxShadow: isFavorite 
-                        ? `0 10px 25px ${vistelicaColors.accent}30` 
+                    boxShadow: isFavorite
+                        ? `0 10px 25px ${vistelicaColors.accent}30`
                         : `0 10px 25px ${vistelicaColors.shadow}20`,
                     aspectRatio: '3/4',
                     transition: 'all 0.4s ease',
                     transform: isHovered ? 'scale(1.02)' : 'scale(1)',
-                    border: isFavorite 
-                        ? `2px solid ${vistelicaColors.accent}60` 
+                    border: isFavorite
+                        ? `2px solid ${vistelicaColors.accent}60`
                         : `1px solid ${vistelicaColors.divider}`,
                 }}>
                     <CardMedia
@@ -85,7 +85,7 @@ const ProductCard = ({
                             transform: isHovered ? 'scale(1.08)' : 'scale(1)',
                         }}
                     />
-                    
+
                     {/* Capa de gradiente */}
                     <Box sx={{
                         position: 'absolute',
@@ -93,8 +93,8 @@ const ProductCard = ({
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        background: isHovered 
-                            ? 'linear-gradient(to top, rgba(0,0,0,0.15), rgba(0,0,0,0) 50%)' 
+                        background: isHovered
+                            ? 'linear-gradient(to top, rgba(0,0,0,0.15), rgba(0,0,0,0) 50%)'
                             : 'linear-gradient(to top, rgba(0,0,0,0.2), rgba(0,0,0,0) 70%)',
                         transition: 'opacity 0.3s ease',
                     }} />
@@ -111,14 +111,14 @@ const ProductCard = ({
                             position: 'absolute',
                             top: 10,
                             right: 10,
-                            bgcolor: isFavorite 
-                                ? vistelicaColors.accent 
+                            bgcolor: isFavorite
+                                ? vistelicaColors.accent
                                 : `${vistelicaColors.white}DD`,
                             width: { xs: 32, sm: 38 },
                             height: { xs: 32, sm: 38 },
                             '&:hover': {
-                                bgcolor: isFavorite 
-                                    ? vistelicaColors.accent 
+                                bgcolor: isFavorite
+                                    ? vistelicaColors.accent
                                     : vistelicaColors.white,
                                 transform: 'scale(1.15)',
                             },
@@ -188,7 +188,7 @@ const ProductCard = ({
                 </Box>
 
                 {/* Contenido de la tarjeta */}
-                <CardContent 
+                <CardContent
                     sx={{
                         p: 0,
                         pt: 1.5,
@@ -238,7 +238,7 @@ const ProductCard = ({
                             )}
                         </Box>
                     )}
-                    
+
                     {/* Nombre del producto */}
                     <Typography
                         variant="body2"
@@ -261,9 +261,9 @@ const ProductCard = ({
                     </Typography>
 
                     {/* Precios */}
-                    <Box sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
+                    <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
                         justifyContent: 'space-between',
                         mt: 0.8
                     }}>
@@ -289,8 +289,8 @@ const ProductCard = ({
                                 sx={{
                                     fontWeight: 700,
                                     fontSize: { xs: '0.9rem', sm: '1rem' },
-                                    color: hasDiscount 
-                                        ? vistelicaColors.secondary 
+                                    color: hasDiscount
+                                        ? vistelicaColors.secondary
                                         : vistelicaColors.primary,
                                     fontFamily: typography.fontFamily,
                                 }}
@@ -298,9 +298,9 @@ const ProductCard = ({
                                 {hasDiscount ? discountedPrice : formattedPrice}
                             </Typography>
                         </Box>
-                        
+
                         {/* Indicador de stock */}
-                        <Box 
+                        <Box
                             sx={{
                                 fontSize: '0.65rem',
                                 fontWeight: 600,
@@ -316,10 +316,10 @@ const ProductCard = ({
                                 border: `1px solid ${vistelicaColors.success}20`,
                             }}
                         >
-                            <span style={{ 
-                                width: 6, 
-                                height: 6, 
-                                borderRadius: '50%', 
+                            <span style={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: '50%',
                                 backgroundColor: vistelicaColors.success,
                                 display: 'inline-block'
                             }}></span>
