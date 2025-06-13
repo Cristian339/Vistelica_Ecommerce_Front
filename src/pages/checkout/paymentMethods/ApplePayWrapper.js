@@ -346,10 +346,10 @@ const ApplePayComponent = React.memo(function ApplePayComponent({
 
 // Optimizar el wrapper con React.memo
 export default React.memo(function ApplePayWrapper({
-    amount,
-    onPaymentSuccess,
-    onPaymentMethodChange,
-    setPaymentData
+   amount,
+   onPaymentSuccess,
+   onPaymentMethodChange,
+   setPaymentData
 }) {
     return (
         <Elements stripe={stripePromise}>

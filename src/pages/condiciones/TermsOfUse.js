@@ -255,7 +255,7 @@ export default function TermsOfUse(props) {
                                 paragraph
                                 sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}
                             >
-                                Al acceder y utilizar el sitio web www.vistelica.com (en adelante, "el Sitio Web"), propiedad de Vistélica , usted acepta estar legalmente obligado por estos Términos y Condiciones de Uso, que constituyen un acuerdo legal entre usted y Vistélica.
+                                Al acceder y utilizar el sitio web www.vistelica.com (en adelante, Sitio Web), propiedad de Vistélica , usted acepta estar legalmente obligado por estos Términos y Condiciones de Uso, que constituyen un acuerdo legal entre usted y Vistélica.
                             </Typography>
                             <Typography
                                 paragraph

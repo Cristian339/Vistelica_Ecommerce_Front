@@ -139,7 +139,9 @@ const PaymentRequiredHelp = styled(Box)(({ theme }) => ({
     border: '1px solid rgba(255, 152, 0, 0.2)',
     color: '#f57c00',
     fontFamily: typography.fontFamily,
-    fontSize: '0.875rem'
+    fontSize: '0.875rem',
+    width: '100%',
+    marginBottom: theme.spacing(2)
 }));
 
 // Estilizar el tooltip para el mensaje de pago requerido
@@ -206,7 +208,7 @@ export default function Checkout(props) {
     const [isPaymentCompleted, setIsPaymentCompleted] = useState(false);
     const [orderData, setOrderData] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-
+    const [isAddressValid, setIsAddressValid] = useState(false);
 
 
     // Optimizar carga de datos con AbortController para limpieza adecuada
@@ -290,13 +292,18 @@ export default function Checkout(props) {
     }, []);
 
     const handleNext = useCallback(() => {
+        if (activeStep === 0 && !isAddressValid) {
+            alert('Por favor completa todos los campos obligatorios de la dirección antes de continuar.');
+            return;
+        }
+
         if (activeStep === 1 && !isPaymentCompleted) {
             alert('Por favor, completa el pago antes de continuar.');
             return;
         }
 
         setActiveStep(prevStep => prevStep + 1);
-    }, [activeStep, isPaymentCompleted]);
+    }, [activeStep, isPaymentCompleted, isAddressValid]);
 
     const handleBack = useCallback(() => {
         if (activeStep === 2 && isPaymentCompleted) {
@@ -305,8 +312,10 @@ export default function Checkout(props) {
         setActiveStep(prevStep => prevStep - 1);
     }, [activeStep, isPaymentCompleted]);
 
+
     const handleShippingData = useCallback((data) => {
         setShippingData(data);
+        setIsAddressValid(data.isValid);
     }, []);
 
     // Memoizar getPaymentMethodName para mejor rendimiento
@@ -344,8 +353,8 @@ export default function Checkout(props) {
                 return;
             }
 
-            if (!shippingData || !shippingData.selectedAddressId) {
-                alert('Por favor selecciona una dirección de envío');
+            if (!shippingData) {
+                alert('Por favor completa los datos de envío');
                 setIsSubmitting(false);
                 return;
             }
@@ -363,8 +372,40 @@ export default function Checkout(props) {
                 };
             });
 
+
+            console.log(JSON.stringify(shippingData));
+
+            // Preparar los datos de la dirección
+            let addressPayload;
+            if (shippingData.selectedAddressId) {
+                // Usar dirección existente
+                addressPayload = {
+                    address_id: shippingData.selectedAddressId
+                };
+            } else if (shippingData.formData) {
+                // Usar nueva dirección
+                addressPayload = {
+                    address_data: {
+                        street: shippingData.formData.street,
+                        city: shippingData.formData.city,
+                        state: shippingData.formData.state,
+                        postal_code: shippingData.formData.postal_code,
+                        country: shippingData.formData.country,
+                        block: shippingData.formData.block,
+                        floor: shippingData.formData.floor,
+                        door: shippingData.formData.door,
+                        label: shippingData.formData.label || 'Dirección temporal',
+                        description: shippingData.formData.description || ''
+                    }
+                };
+            } else {
+                alert('Por favor selecciona o ingresa una dirección de envío');
+                setIsSubmitting(false);
+                return;
+            }
+
             const orderRequestData = {
-                address_id: shippingData.selectedAddressId,
+                ...addressPayload,
                 payment_method_name: getPaymentMethodName(),
                 details: orderDetails
             };
@@ -381,7 +422,6 @@ export default function Checkout(props) {
             setIsSubmitting(false); // Permitir reintentar si falla
         }
     }, [cartData, shippingData, calculateDiscountedPrice, clearCartByItems, activeStep, isSubmitting, getPaymentMethodName]);
-
 
 
     // Memoizar el contenido del paso actual para evitar re-renders
@@ -743,6 +783,13 @@ export default function Checkout(props) {
                                         {steps[activeStep].label}
                                     </Typography>
 
+                                    {activeStep === 0 && !isAddressValid && (
+                                        <PaymentRequiredHelp>
+                                            <InfoOutlinedIcon fontSize="small" sx={{ mr: 1 }} />
+                                            Por favor, completa todos los campos obligatorios para continuar
+                                        </PaymentRequiredHelp>
+                                    )}
+
                                     {currentStepContent}
 
                                     {/* Mostrar alerta de éxito cuando el pago está completo */}
@@ -837,7 +884,11 @@ export default function Checkout(props) {
                                             variant="contained"
                                             endIcon={<ChevronRightRoundedIcon />}
                                             onClick={activeStep === steps.length - 1 ? createOrder : handleNext}
-                                            disabled={activeStep === 1 && !isPaymentCompleted || (activeStep === steps.length - 1 && isSubmitting)}
+                                            disabled={
+                                                (activeStep === 0 && !isAddressValid) ||
+                                                (activeStep === 1 && !isPaymentCompleted) ||
+                                                (activeStep === steps.length - 1 && isSubmitting)
+                                            }
                                             sx={{
                                                 width: { xs: '100%', sm: 'auto' },
                                                 minWidth: { sm: '180px' },

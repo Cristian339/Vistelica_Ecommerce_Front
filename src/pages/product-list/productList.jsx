@@ -141,6 +141,32 @@ const ProductList = () => {
         }
     }, [currentPage, totalPages]);
 
+
+    useEffect(() => {
+        // Verificar si hay algún filtro activo (excepto subcategorías que se manejan aparte)
+        const hasFilterChanged =
+            filters.brands.length > 0 ||
+            filters.colors.length > 0 ||
+            filters.sizes.length > 0 ||
+            filters.ratings.length > 0 ||
+            filters.priceMin !== '' ||
+            filters.priceMax !== '' ||
+            filters.lowStock ||
+            filters.hasDiscount;
+
+        if (hasFilterChanged || sortOption !== 'relevancia') {
+            // Solo resetear si no estamos ya en la página 1
+            if (currentPage !== 1) {
+                setCurrentPage(1);
+
+                // Actualizar URL sin recargar la página
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.delete('page');
+                window.history.replaceState({}, '', newUrl);
+            }
+        }
+    }, [filters, sortOption, currentPage]);
+
     const prevPage = useCallback(() => {
         if (currentPage > 1) {
             setRefreshing({
@@ -1329,6 +1355,15 @@ const ProductList = () => {
                 return;
             }
 
+            // Resetear a página 1 antes de aplicar nuevos filtros
+            if (currentPage !== 1) {
+                setCurrentPage(1);
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.delete('page');
+                window.history.replaceState({}, '', newUrl);
+            }
+
+
             // Usar una función de filtrado más eficiente
             try {
                 console.time('filtrado'); // Para medir rendimiento
@@ -1422,7 +1457,6 @@ const ProductList = () => {
 
 // Resetear filtros - Optimizado
     const resetFilters = useCallback(() => {
-        // Uso de useCallback para evitar recreaciones innecesarias de la función
         setFilters({
             brands: [],
             colors: [],
@@ -1438,22 +1472,26 @@ const ProductList = () => {
         setSortOption('relevancia');
         clearURLFilters();
 
+        // Resetear a página 1
+        if (currentPage !== 1) {
+            setCurrentPage(1);
+            const newUrl = new URL(window.location);
+            newUrl.searchParams.delete('page');
+            window.history.replaceState({}, '', newUrl);
+        }
+
         const urlFilter = searchParams.get('filter');
         if (urlFilter === 'topRated') {
-            // Mostrar indicador de carga antes de redirigir
             setLoading(true);
-            // Utilizar router para navegación más limpia en lugar de window.location
             router.push('/product-list/productList');
         }
 
-        // Opcional: mostrar confirmación visual de reseteo
         setToast({
             open: true,
             message: 'Filtros restablecidos',
             severity: 'info'
         });
-
-    }, [searchParams, router, clearURLFilters, setLoading, setToast]);
+    }, [searchParams, router, clearURLFilters, currentPage]);
 
 // Verificar si hay filtros activos - Optimizado
     const hasActiveFilters = useCallback(() => {
@@ -1799,6 +1837,13 @@ const ProductList = () => {
                                                 ...prev,
                                                 brands: prev.brands.filter(b => b !== brandId)
                                             }));
+                                            // Resetear a página 1
+                                            if (currentPage !== 1) {
+                                                setCurrentPage(1);
+                                                const newUrl = new URL(window.location);
+                                                newUrl.searchParams.delete('page');
+                                                window.history.replaceState({}, '', newUrl);
+                                            }
                                         }}
                                         sx={{
                                             m: 0.5,
@@ -1831,6 +1876,13 @@ const ProductList = () => {
                                                 ...prev,
                                                 colors: prev.colors.filter(c => c !== colorId)
                                             }));
+                                            // Resetear a página 1
+                                            if (currentPage !== 1) {
+                                                setCurrentPage(1);
+                                                const newUrl = new URL(window.location);
+                                                newUrl.searchParams.delete('page');
+                                                window.history.replaceState({}, '', newUrl);
+                                            }
                                         }}
                                         sx={{
                                             m: 0.5,
@@ -1862,6 +1914,13 @@ const ProductList = () => {
                                                 ...prev,
                                                 sizes: prev.sizes.filter(s => s !== sizeId)
                                             }));
+                                            // Resetear a página 1
+                                            if (currentPage !== 1) {
+                                                setCurrentPage(1);
+                                                const newUrl = new URL(window.location);
+                                                newUrl.searchParams.delete('page');
+                                                window.history.replaceState({}, '', newUrl);
+                                            }
                                         }}
                                         sx={{
                                             m: 0.5,
@@ -1891,6 +1950,13 @@ const ProductList = () => {
                                             ...prev,
                                             ratings: prev.ratings.filter(r => r !== rating)
                                         }));
+                                        // Resetear a página 1
+                                        if (currentPage !== 1) {
+                                            setCurrentPage(1);
+                                            const newUrl = new URL(window.location);
+                                            newUrl.searchParams.delete('page');
+                                            window.history.replaceState({}, '', newUrl);
+                                        }
                                     }}
                                     sx={{
                                         m: 0.5,
@@ -1919,6 +1985,13 @@ const ProductList = () => {
                                             priceMin: '',
                                             priceMax: ''
                                         }));
+                                        // Resetear a página 1
+                                        if (currentPage !== 1) {
+                                            setCurrentPage(1);
+                                            const newUrl = new URL(window.location);
+                                            newUrl.searchParams.delete('page');
+                                            window.history.replaceState({}, '', newUrl);
+                                        }
                                     }}
                                     sx={{
                                         m: 0.5,

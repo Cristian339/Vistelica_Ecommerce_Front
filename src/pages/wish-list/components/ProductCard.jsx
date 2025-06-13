@@ -69,29 +69,44 @@ const ProductCard = ({ product, onRemoveFromWishlist, showRemoveWishlist }) => {
     const [imageError, setImageError] = useState(false);
     const [addingToCart, setAddingToCart] = useState(false);
 
+    // Early return si product no existe o es null/undefined
+    if (!product) {
+        return null;
+    }
+
+    // Definir valores por defecto para evitar errores
+    const productData = {
+        id: product.id || product.product_id || product._id || '',
+        name: product.name || 'Producto sin nombre',
+        description: product.description || 'No hay descripción disponible',
+        price: product.price || 0,
+        image_url: product.image_url || product.image || (product.images && product.images[0]) || '/images/placeholder-product.jpg',
+        images: product.images || []
+    };
+
     useEffect(() => {
-        if (product && (product.id || product.product_id)) {
-            const productId = product.id || product.product_id;
-            setIsInFavorites(isInLocalWishlist(productId));
+        if (productData.id) {
+            setIsInFavorites(isInLocalWishlist(productData.id));
         }
-    }, [product]);
+    }, [productData.id]);
 
     const handleViewDetail = (e) => {
         e.preventDefault();
-        const productId = product.id || product.product_id || product._id;
-        router.push(`/product-detail/page?id=${productId}`);
+        if (productData.id) {
+            router.push(`/product-detail/page?id=${productData.id}`);
+        }
     };
 
     const handleRemoveFromWishlist = async (e) => {
         e?.preventDefault();
         e?.stopPropagation();
 
-        try {
-            const productId = product.id || product.product_id;
+        if (!productData.id) return;
 
+        try {
             // Eliminar de favoritos sin esperar respuesta del servidor
             try {
-                await wishlistService.removeFromWishlist(productId);
+                await wishlistService.removeFromWishlist(productData.id);
             } catch (error) {
                 console.log('El producto ya no estaba en la wishlist del servidor');
             }
@@ -100,7 +115,7 @@ const ProductCard = ({ product, onRemoveFromWishlist, showRemoveWishlist }) => {
             setIsInFavorites(false);
 
             if (onRemoveFromWishlist) {
-                onRemoveFromWishlist(productId);
+                onRemoveFromWishlist(productData.id);
             }
         } catch (error) {
             console.error('Error removing from wishlist:', error);
@@ -110,6 +125,8 @@ const ProductCard = ({ product, onRemoveFromWishlist, showRemoveWishlist }) => {
     const handleAddToCart = async (e) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (!productData.id) return;
 
         setAddingToCart(true);
         try {
@@ -127,9 +144,9 @@ const ProductCard = ({ product, onRemoveFromWishlist, showRemoveWishlist }) => {
             // Añadir producto al carrito
             await cartService.addToCart(
                 cart.cart_id,
-                product.id || product.product_id,
+                productData.id,
                 1,
-                parseFloat(product.price),
+                parseFloat(productData.price),
                 null, // Talla
                 null  // Color
             );
@@ -162,19 +179,18 @@ const ProductCard = ({ product, onRemoveFromWishlist, showRemoveWishlist }) => {
         }
     };
 
-    if (!product) return null;
+    const imageUrl = !imageError ? productData.image_url : "/images/placeholder-product.jpg";
 
-    const imageUrl = !imageError ?
-        (product.image_url || product.image || product.images?.[0] || "/images/placeholder-product.jpg") :
-        "/images/placeholder-product.jpg";
-
-    const productId = product.id || product.product_id || product._id || '';
+    // Validar que tengamos al menos un ID válido antes de renderizar
+    if (!productData.id) {
+        return null;
+    }
 
     return (
         <ProductCardContainer>
             <Link
-                href={`/product-detail/page/${productId}`}
-                as={`/product-detail/page?id=${productId}`}
+                href={`/product-detail/page/${productData.id}`}
+                as={`/product-detail/page?id=${productData.id}`}
                 passHref
                 style={{ textDecoration: 'none', color: 'inherit' }}
             >
@@ -183,7 +199,7 @@ const ProductCard = ({ product, onRemoveFromWishlist, showRemoveWishlist }) => {
                         component="img"
                         className="product-image"
                         image={imageUrl}
-                        alt={product.name || 'Producto'}
+                        alt={productData.name}
                         onError={() => setImageError(true)}
                     />
                     {showRemoveWishlist && (
@@ -234,7 +250,7 @@ const ProductCard = ({ product, onRemoveFromWishlist, showRemoveWishlist }) => {
                         lineHeight: '1.5em'
                     }}
                 >
-                    {product.name || 'Producto sin nombre'}
+                    {productData.name}
                 </Typography>
 
                 <Box sx={{ flexGrow: 0, mb: 0.5 }}>
@@ -251,8 +267,8 @@ const ProductCard = ({ product, onRemoveFromWishlist, showRemoveWishlist }) => {
                             lineHeight: '1.2em'
                         }}
                     >
-                        {product.description?.substring(0, 80) || "No hay descripción disponible"}
-                        {product.description?.length > 80 ? "..." : ""}
+                        {productData.description.substring(0, 80)}
+                        {productData.description.length > 80 ? "..." : ""}
                     </Typography>
                 </Box>
 
@@ -266,7 +282,10 @@ const ProductCard = ({ product, onRemoveFromWishlist, showRemoveWishlist }) => {
                         mt: 'auto'
                     }}
                 >
-                    {typeof product.price === 'number' ? product.price.toFixed(2) : (parseFloat(product.price) || 0).toFixed(2)}€
+                    {typeof productData.price === 'number' ?
+                        productData.price.toFixed(2) :
+                        (parseFloat(productData.price) || 0).toFixed(2)
+                    }€
                 </Typography>
             </CardContent>
 
@@ -303,8 +322,8 @@ const ProductCard = ({ product, onRemoveFromWishlist, showRemoveWishlist }) => {
                 </Tooltip>
 
                 <Link
-                    href={`/product-detail/page/${productId}`}
-                    as={`/product-detail/page?id=${productId}`}
+                    href={`/product-detail/page/${productData.id}`}
+                    as={`/product-detail/page?id=${productData.id}`}
                     passHref
                     style={{ textDecoration: 'none' }}
                 >

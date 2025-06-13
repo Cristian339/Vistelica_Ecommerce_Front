@@ -148,10 +148,6 @@ const WomenSizeGuideContent = () => {
             <Head>
                 <title>Guía de Tallas Mujer | Tu Marca</title>
                 <meta name="description" content="Guía de tallas para ropa de mujer" />
-                <link
-                    href="https://fonts.googleapis.com/css2?family=Amethysta&family=Tenor+Sans&display=swap"
-                    rel="stylesheet"
-                />
             </Head>
 
             <Container maxWidth="lg" sx={{ py: 4 }}>

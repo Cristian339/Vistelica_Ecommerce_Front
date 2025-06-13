@@ -384,30 +384,6 @@ const PaymentForm = React.forwardRef(({
                             onPaymentMethodChange={onPaymentMethodChange}
                             setPaymentData={setPaymentData}
                         />
-                        <FormControlLabel
-                            control={
-                                <StyledCheckbox
-                                    name="saveCard"
-                                    sx={{
-                                        color: 'text.secondary',
-                                        '&.Mui-checked': {
-                                            color: vistelicaColors.primary,
-                                        }
-                                    }}
-                                />
-                            }
-                            label={
-                                <Typography
-                                    sx={{
-                                        fontFamily: typography.fontFamily,
-                                        fontSize: '0.9rem',
-                                        color: 'text.secondary'
-                                    }}
-                                >
-                                    Recordar los datos de la tarjeta para la próxima vez
-                                </Typography>
-                            }
-                        />
                     </Box>
                 );
             case 'paypal':

@@ -4,104 +4,88 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d2552b46-10ff-4ec7-9938-b5fd6cff6f16" name="Changes" comment="Rediseño completo en Sub-Menus, Hombre,Mujer, Chico y chica, ademas del responsive y volverlo accesible.&#10;Tambien se mejoro un poco el diseño de la page de estilos.">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-    </list>
+    <list default="true" id="d2552b46-10ff-4ec7-9938-b5fd6cff6f16" name="Changes" comment="bugs y direcciones" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="developer" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 2
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;jesusmj05&quot;
+  }
 }</component>
-  <component name="ProjectId" id="2yC7gn3Re1Hz9sYOfm1oa6VU7S6" />
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Cristian339/Vistelica_Ecommerce_Front.git&quot;,
+    &quot;accountId&quot;: &quot;6ea04e1b-e912-4593-96ff-56695691464d&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="2yQFmu8Ggr8JfvZftZNf5LkhVVo" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;developer&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;js.debugger.nextJs.config.created.client&quot;: &quot;true&quot;,
-    &quot;js.debugger.nextJs.config.created.server&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;npm.Next.js: server-side.executor&quot;: &quot;Run&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;C:\\Program Files\\JetBrains\\IntelliJ IDEA 2024.2.4\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "ts.external.directory.path": "C:\\Program Files\\JetBrains\\IntelliJ IDEA 2024.3\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
-  <component name="RunManager" selected="npm.Next.js: server-side">
-    <configuration name="Next.js: debug client-side" type="JavascriptDebugType" uri="http://localhost:3000/">
-      <method v="2" />
-    </configuration>
-    <configuration name="Next.js: server-side" type="js.build_tools.npm">
-      <package-json value="$PROJECT_DIR$/package.json" />
-      <command value="run" />
-      <scripts>
-        <script value="dev" />
-      </scripts>
-      <node-interpreter value="project" />
-      <envs />
-      <method v="2" />
-    </configuration>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\bruno\Desktop\Vistelica_Ecommerce_Front\src\pages\style\components" />
+      <recent name="C:\Users\bruno\Desktop\Vistelica_Ecommerce_Front\src\utils" />
+    </key>
   </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="d2552b46-10ff-4ec7-9938-b5fd6cff6f16" name="Changes" comment="" />
-      <created>1749326815349</created>
+      <changelist id="d2552b46-10ff-4ec7-9938-b5fd6cff6f16" name="Changes" comment="admin y pago" />
+      <created>1749759053672</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1749326815349</updated>
-      <workItem from="1749326816890" duration="23000" />
-      <workItem from="1749326841781" duration="2842000" />
-      <workItem from="1749331145896" duration="1234000" />
-      <workItem from="1749403860472" duration="13202000" />
-      <workItem from="1749463414641" duration="26652000" />
-      <workItem from="1749504809968" duration="92000" />
-      <workItem from="1749504928940" duration="32000" />
-      <workItem from="1749504964153" duration="1494000" />
-      <workItem from="1749548122640" duration="13438000" />
-      <workItem from="1749571521795" duration="18015000" />
-      <workItem from="1749636308401" duration="28160000" />
+      <updated>1749759053672</updated>
+      <workItem from="1749759054983" duration="9258000" />
+      <workItem from="1749795374758" duration="1425000" />
     </task>
-    <task id="LOCAL-00001" summary="Seccion de pago completa.">
+    <task id="LOCAL-00001" summary="bugs y direcciones">
       <option name="closed" value="true" />
-      <created>1749504133584</created>
+      <created>1749796377152</created>
       <option name="number" value="00001" />
       <option name="presentableId" value="LOCAL-00001" />
       <option name="project" value="LOCAL" />
-      <updated>1749504133584</updated>
+      <updated>1749796377154</updated>
     </task>
-    <task id="LOCAL-00002" summary="Rediseño completo en Sub-Menus, Hombre,Mujer, Chico y chica, ademas del responsive y volverlo accesible.&#10;Tambien se mejoro un poco el diseño de la page de estilos.">
-      <option name="closed" value="true" />
-      <created>1749673931215</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1749673931215</updated>
-    </task>
-    <option name="localTasksCounter" value="3" />
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Seccion de pago completa." />
-    <MESSAGE value="Rediseño completo en Sub-Menus, Hombre,Mujer, Chico y chica, ademas del responsive y volverlo accesible.&#10;Tambien se mejoro un poco el diseño de la page de estilos." />
-    <option name="LAST_COMMIT_MESSAGE" value="Rediseño completo en Sub-Menus, Hombre,Mujer, Chico y chica, ademas del responsive y volverlo accesible.&#10;Tambien se mejoro un poco el diseño de la page de estilos." />
+    <MESSAGE value="bugs y direcciones" />
+    <option name="LAST_COMMIT_MESSAGE" value="bugs y direcciones" />
   </component>
 </project>

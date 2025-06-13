@@ -117,6 +117,9 @@ function CreditCardForm({ amount, onPaymentSuccess, onPaymentMethodChange }) {
     const [error, setError] = React.useState(null);
     const [paymentSuccess, setPaymentSuccess] = React.useState(false);
 
+
+
+
     React.useEffect(() => {
         // Notificar al padre que se seleccionó este método
         onPaymentMethodChange();
@@ -170,6 +173,10 @@ function CreditCardForm({ amount, onPaymentSuccess, onPaymentMethodChange }) {
     const handleNameChange = useCallback((e) => {
         setName(e.target.value);
     }, []);
+
+    if(!amount){
+        return null;
+    }
 
     if (paymentSuccess) {
         return (
