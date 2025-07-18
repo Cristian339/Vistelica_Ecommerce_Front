@@ -14,8 +14,8 @@ import ColorModeSelect from '../shared-theme/ColorModeSelect';
 import { useRouter } from 'next/navigation';
 import Fade from '@mui/material/Fade';
 import GroupsIcon from '@mui/icons-material/Groups';
-import { vistelicaColors } from '../shared-theme/vistelicaColors';
-import { typography } from '../shared-theme/themePrimitives';
+import { vistelicaColors } from '../../components/shared/vistelicaColors';
+import { typography } from '../../components/shared/themePrimitives';
 
 // Animación para el logo
 const fadeIn = keyframes`

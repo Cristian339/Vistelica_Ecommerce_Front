@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from 'react';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
     Box,
     Typography,
@@ -20,7 +20,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import GoogleIcon from '@mui/icons-material/Google';
 import paymentService from '@/services/paymentService';
-import { typography } from '@/pages/shared-theme/themePrimitives';
+import { typography } from '@/components/shared/themePrimitives';
 
 const stripePromise = loadStripe("pk_test_51RPncWQc122Tani8pkjulLHNj5pnGssS5aP8eyTIKO7kBECr0X9ndIax3yFYraPQca5Ax6uH4l528N1zzsqLI8Rn00qx93QGQO");
 
@@ -71,7 +71,6 @@ const GoogleIconWrapper = styled(Box)(({ theme }) => ({
     boxShadow: '0 4px 12px rgba(66, 133, 244, 0.3)'
 }));
 
-// Optimizar componente con React.memo para evitar re-renderizados innecesarios
 const GooglePayComponent = React.memo(function GooglePayComponent({ amount, onPaymentSuccess, onPaymentMethodChange }) {
     const stripe = useStripe();
     const elements = useElements();
@@ -79,20 +78,59 @@ const GooglePayComponent = React.memo(function GooglePayComponent({ amount, onPa
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
+    const [isClient, setIsClient] = useState(false);
 
-    // Memoizar el monto convertido
+    // Detectar ejecución en cliente para evitar SSR
+    React.useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    // Validar amount
+    const validAmount = typeof amount === 'number' && amount > 0;
+
+    // Convertir a céntimos solo si es válido
     const amountInCents = useMemo(() => {
-        return paymentService.convertEurosToCents(amount);
-    }, [amount]);
+        if (!validAmount) return 0;
+        try {
+            return paymentService.convertEurosToCents(amount);
+        } catch {
+            return 0;
+        }
+    }, [amount, validAmount]);
 
-    // Optimizar efectos con cleanup adecuado
     useEffect(() => {
+        if (!isClient) return; // esperar a que estemos en cliente
         if (!stripe || !elements) return;
+        if (!validAmount || amountInCents <= 0) {
+            setError('No se proporcionó una cantidad válida para el pago');
+            return;
+        }
 
-        // Notificar cambio de método de pago
         onPaymentMethodChange();
 
         let pr = null;
+
+        const handlePaymentMethod = async (ev) => {
+            setLoading(true);
+            setError(null);
+
+            try {
+                const paymentResult = await paymentService.payWithCard(ev.paymentMethod.id, amountInCents);
+                if (paymentResult) {
+                    setSuccess(true);
+                    onPaymentSuccess();
+                    ev.complete('success');
+                } else {
+                    setError('No se pudo procesar el pago');
+                    ev.complete('fail');
+                }
+            } catch (err) {
+                setError('Error al procesar el pago: ' + (err.message || err));
+                ev.complete('fail');
+            } finally {
+                setLoading(false);
+            }
+        };
 
         const initializePaymentRequest = () => {
             pr = stripe.paymentRequest({
@@ -110,7 +148,6 @@ const GooglePayComponent = React.memo(function GooglePayComponent({ amount, onPa
                 if (result) {
                     setPaymentRequest(pr);
                 } else {
-                    console.warn('Google Pay no disponible en este navegador o dispositivo');
                     setError('Google Pay no está disponible');
                 }
             });
@@ -118,38 +155,27 @@ const GooglePayComponent = React.memo(function GooglePayComponent({ amount, onPa
             pr.on('paymentmethod', handlePaymentMethod);
         };
 
-        const handlePaymentMethod = async (ev) => {
-            setLoading(true);
-            setError(null);
-
-            try {
-                const paymentResult = await paymentService.payWithCard(ev.paymentMethod.id, amountInCents);
-                if (paymentResult) {
-                    setSuccess(true);
-                    onPaymentSuccess(); // Notificar éxito al componente padre
-                    ev.complete('success');
-                } else {
-                    setError('No se pudo procesar el pago');
-                    ev.complete('fail');
-                }
-            } catch (err) {
-                setError('Error al procesar el pago: ' + err.message);
-                console.error(err);
-                ev.complete('fail');
-            } finally {
-                setLoading(false);
-            }
-        };
-
         initializePaymentRequest();
 
-        // Limpieza al desmontar
         return () => {
             if (pr) {
                 pr.off('paymentmethod', handlePaymentMethod);
             }
         };
-    }, [stripe, elements, amountInCents, onPaymentSuccess, onPaymentMethodChange]);
+    }, [stripe, elements, amountInCents, validAmount, isClient, onPaymentSuccess, onPaymentMethodChange]);
+
+    if (!validAmount) {
+        return (
+            <Typography color="error" align="center" sx={{ mt: 4 }}>
+                No se proporcionó una cantidad válida para el pago.
+            </Typography>
+        );
+    }
+
+    if (!isClient) {
+        // Opcional: mostrar loading o nada mientras no está en cliente
+        return null;
+    }
 
     if (success) {
         return (
@@ -327,7 +353,7 @@ const GooglePayComponent = React.memo(function GooglePayComponent({ amount, onPa
                             textAlign: 'center'
                         }}
                     >
-                        Cargando opciones de pago...
+                        Google Pay no está disponible en este dispositivo o navegador.
                     </Typography>
                 )}
             </PaymentContainer>
@@ -335,8 +361,7 @@ const GooglePayComponent = React.memo(function GooglePayComponent({ amount, onPa
     );
 });
 
-// Optimizar el wrapper con React.memo
-export default React.memo(function GooglePayWrapper({ amount, onPaymentSuccess, onPaymentMethodChange }) {
+export default function GooglePay({ amount = 1, onPaymentSuccess = () => {}, onPaymentMethodChange = () => {} }) {
     return (
         <Elements stripe={stripePromise}>
             <GooglePayComponent
@@ -346,4 +371,4 @@ export default React.memo(function GooglePayWrapper({ amount, onPaymentSuccess, 
             />
         </Elements>
     );
-});
+}

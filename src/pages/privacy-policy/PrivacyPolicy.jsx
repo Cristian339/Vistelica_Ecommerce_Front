@@ -12,8 +12,8 @@ import ColorModeSelect from '../shared-theme/ColorModeSelect';
 import { useRouter } from 'next/navigation';
 import LockIcon from '@mui/icons-material/Lock';
 import Fade from '@mui/material/Fade';
-import { vistelicaColors } from '../shared-theme/vistelicaColors';
-import {typography} from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '../../components/shared/vistelicaColors';
+import {typography} from "@/components/shared/themePrimitives";
 
 // Animación para el logo
 const fadeIn = keyframes`

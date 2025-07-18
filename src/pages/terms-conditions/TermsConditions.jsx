@@ -10,7 +10,7 @@ import Checkbox from '@mui/material/Checkbox';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { styled } from '@mui/material/styles';
-import { vistelicaColors } from '../shared-theme/vistelicaColors';
+import { vistelicaColors } from '../../components/shared/vistelicaColors';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';

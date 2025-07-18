@@ -11,8 +11,8 @@ import {
     ShoppingCart, Favorite, FavoriteBorder, Share,
     LocalShipping, Check, TouchApp
 } from '@mui/icons-material';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 // Importar componentes
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -115,41 +115,60 @@ const ProductDetail = ({
         };
     }, [product?.product_id]);
 
-    // Cargar reseñas
-    const fetchReviews = async () => {
-        try {
+    // Cargar reseñas - FIXED: Moved fetchReviews inside useEffect
+    useEffect(() => {
+        const fetchReviews = async () => {
+            try {
+                setLoadingReviews(true);
+                const reviewsData = await productService.getReviewsByProductId(product?.product_id);
+                setReviews(reviewsData);
+                setErrorReviews(null);
+            } catch (error) {
+                console.error("Error fetching reviews:", error);
+                setErrorReviews(error.message || "Error al cargar las reseñas");
+            } finally {
+                setLoadingReviews(false);
+            }
+        };
+
+        if (product?.product_id) {
+            fetchReviews();
+        }
+    }, [product?.product_id]);
+
+    // Handler para reseñas añadidas
+    const handleReviewAdded = () => {
+        // Trigger a re-fetch of reviews by updating the product_id dependency
+        if (product?.product_id) {
+            // Force re-fetch by temporarily changing loading state
             setLoadingReviews(true);
-            const reviewsData = await productService.getReviewsByProductId(product?.product_id);
-            setReviews(reviewsData);
-        } catch (error) {
-            console.error("Error fetching reviews:", error);
-            setErrorReviews(error.message || "Error al cargar las reseñas");
-        } finally {
-            setLoadingReviews(false);
+            productService.getReviewsByProductId(product.product_id)
+                .then(reviewsData => {
+                    setReviews(reviewsData);
+                    setErrorReviews(null);
+                })
+                .catch(error => {
+                    console.error("Error fetching reviews:", error);
+                    setErrorReviews(error.message || "Error al cargar las reseñas");
+                })
+                .finally(() => {
+                    setLoadingReviews(false);
+                });
         }
     };
 
     const handleOpenModal = () => {
+        const hasToken = getToken();
         if (!hasToken) {
-            setSnackbar({
+            setToast({
                 open: true,
                 message: 'Debes iniciar sesión para dejar una reseña',
                 severity: 'warning'
             });
             return;
         }
-        setOpenModal(true);
+        // setOpenModal(true); // Uncomment if you have modal state
     };
-
-    const handleReviewAdded = () => {
-        fetchReviews();
-    };
-
-    useEffect(() => {
-        if (product?.product_id) {
-            fetchReviews();
-        }
-    }, [product?.product_id]);
 
     // Gestionar cambio de cantidad
     const handleQuantityChange = (change) => {

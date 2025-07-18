@@ -9,8 +9,8 @@ import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
 import { motion } from 'framer-motion';
 import { isInLocalWishlist } from '@/utils/localStorageHelpers';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from "@/components/shared/themePrimitives";
 import wishlistService from '@/services/wishlistService'; // Importar el servicio
 
 // Corrección de estilos para eliminar la advertencia de largeView

@@ -3,6 +3,24 @@ import { Card, CardActionArea, CardMedia, CardContent, Typography, Box } from '@
 import Link from 'next/link';
 
 const ProductCard = ({ product }) => {
+    // ✅ Validación principal - si product no existe, no renderizar nada
+    if (!product) {
+        return null;
+    }
+
+    // ✅ Valores por defecto para propiedades que podrían no existir
+    const {
+        product_id,
+        main_image = '/images/placeholder.jpg', // Imagen por defecto
+        name = 'Producto sin nombre',
+        price = '0'
+    } = product;
+
+    // ✅ Validación adicional para product_id (requerido para el link)
+    if (!product_id) {
+        return null;
+    }
+
     return (
         <Card sx={{
             width: '100%',
@@ -22,7 +40,7 @@ const ProductCard = ({ product }) => {
             }
         }}>
             <Link
-                href={`/product-detail/page?id=${product.product_id}`}
+                href={`/product-detail/page?id=${product_id}`}
                 passHref
                 style={{ textDecoration: 'none', color: 'inherit', height: '100%' }}
             >
@@ -46,8 +64,8 @@ const ProductCard = ({ product }) => {
                     }}>
                         <CardMedia
                             component="img"
-                            image={product.main_image}
-                            alt={product.name}
+                            image={main_image}
+                            alt={name}
                             sx={{
                                 objectFit: 'cover',
                                 width: '100%',
@@ -58,6 +76,10 @@ const ProductCard = ({ product }) => {
                                     transform: 'scale(1.05)'
                                 }
                             }}
+                            // ✅ Manejo de error de imagen
+                            onError={(e) => {
+                                e.target.src = '/images/placeholder.jpg';
+                            }}
                         />
                     </Box>
 
@@ -67,7 +89,7 @@ const ProductCard = ({ product }) => {
                         height: '30%',
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'flex-start', // Ajuste para subir el precio
+                        justifyContent: 'flex-start',
                         px: 3,
                         py: 2,
                         borderTop: '1px solid #f0f0f0'
@@ -76,8 +98,8 @@ const ProductCard = ({ product }) => {
                             variant="subtitle1"
                             component="h3"
                             sx={{
-                                fontWeight: 700, // Más bold (600 es semi-bold, 700 es bold)
-                                mb: 1, // Reducido el margen inferior para subir el precio
+                                fontWeight: 700,
+                                mb: 1,
                                 height: '3em',
                                 display: '-webkit-box',
                                 WebkitLineClamp: 2,
@@ -88,7 +110,7 @@ const ProductCard = ({ product }) => {
                                 paddingLeft: '8px'
                             }}
                         >
-                            {product.name}
+                            {name}
                         </Typography>
                         <Typography
                             variant="h5"
@@ -102,7 +124,7 @@ const ProductCard = ({ product }) => {
                                 alignSelf: 'flex-start'
                             }}
                         >
-                            {product.price}€
+                            {price}€
                         </Typography>
                     </CardContent>
                 </CardActionArea>

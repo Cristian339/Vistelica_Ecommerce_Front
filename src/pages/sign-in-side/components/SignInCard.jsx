@@ -31,8 +31,8 @@ import { useColorScheme } from '@mui/material/styles';
 
 // Importaciones de componentes personalizados
 import ForgotPassword from './ForgotPassword';
-import { GoogleIcon, FacebookIcon } from './CustomIcons';
-import { vistelicaColors } from '../../shared-theme/vistelicaColors';
+import { GoogleIcon, FacebookIcon } from '../../../components/sign/CustomIcons';
+import { vistelicaColors } from '../../../components/shared/vistelicaColors';
 import ColorModeSelect from '../../shared-theme/ColorModeSelect';
 import Content from './Content';
 import TermsAndConditions from "../../terms-conditions/TermsConditions";

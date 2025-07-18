@@ -1,8 +1,8 @@
 'use client';
 import { Box, Typography, Paper, IconButton, CircularProgress, Chip, Tooltip } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from "@/components/shared/themePrimitives";
 import DeleteIcon from '@mui/icons-material/Delete';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import CategoryIcon from '@mui/icons-material/Category';
@@ -24,35 +24,37 @@ export default function ProductListItem({
                                             userId,
                                             sessionId
                                         }) {
-    const [quantity, setQuantity] = useState(item.quantity);
-    const [mainImage, setMainImage] = useState(item.product?.image_url || "https://via.placeholder.com/80");
-    const [loadingImage, setLoadingImage] = useState(!item.product?.image_url);
+
+    const fallbackItem = {
+        quantity: 1,
+        product: {},
+    };
+    const safeItem = item && item.product ? item : fallbackItem;
+
+    const [quantity, setQuantity] = useState(safeItem.quantity ?? 1);
+    const [mainImage, setMainImage] = useState(safeItem.product?.image_url || "https://via.placeholder.com/80");
+    const [loadingImage, setLoadingImage] = useState(!safeItem.product?.image_url);
     const [loading, setLoading] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [animatePrice, setAnimatePrice] = useState(false);
     const [showProductDetails, setShowProductDetails] = useState(false);
 
-    // Función para determinar si un color es claro y necesita sombra de texto
+    const product = safeItem.product || {};
+
     const isLightColor = (colorName) => {
         if (!colorName) return false;
         const lightColors = ['WHITE', 'YELLOW', 'BEIGE', 'GOLD', 'PINK'];
         return lightColors.includes(colorName.toUpperCase());
     };
 
-    // Estructura del item basada en la versión original
-    const product = item.product || {};
-
-    // Verificar si el producto tiene descuento
     const hasDiscount = product.discount_percentage && parseFloat(product.discount_percentage) > 0;
     const discountPercentage = hasDiscount ? parseFloat(product.discount_percentage) : 0;
 
-    // Precios calculados
     const originalPrice = parseFloat(product.price || 0);
     const currentPrice = hasDiscount
         ? originalPrice * (1 - discountPercentage / 100)
         : originalPrice;
 
-    // Efecto para cargar la imagen principal
     useEffect(() => {
         const loadMainImage = async () => {
             if (product.product_id && !product.image_url) {
@@ -73,7 +75,6 @@ export default function ProductListItem({
         loadMainImage();
     }, [product.product_id, product.image_url]);
 
-    // Efecto para mostrar detalles del producto con delay
     useEffect(() => {
         const timer = setTimeout(() => {
             setShowProductDetails(true);
@@ -89,7 +90,7 @@ export default function ProductListItem({
             setLoading(true);
             setAnimatePrice(true);
             await cartService.updateCartItem(
-                item.cart_detail_id,
+                safeItem.cart_detail_id,
                 newQuantity
             );
 
@@ -107,7 +108,7 @@ export default function ProductListItem({
     const handleRemoveItem = async () => {
         try {
             setLoading(true);
-            await cartService.removeFromCart(item.cart_detail_id);
+            await cartService.removeFromCart(safeItem.cart_detail_id);
             onUpdate && onUpdate();
         } catch (error) {
             console.error("Error al eliminar producto:", error);
@@ -115,7 +116,7 @@ export default function ProductListItem({
             setLoading(false);
         }
     };
-// Función para traducir colores del inglés al español
+
     const getColorTranslation = (colorName) => {
         if (!colorName) return 'N/A';
 

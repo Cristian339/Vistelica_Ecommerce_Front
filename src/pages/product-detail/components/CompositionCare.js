@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FabricIcon from '@mui/icons-material/Checkroom';
 import LocalLaundryServiceIcon from '@mui/icons-material/LocalLaundryService';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 const CompositionCare = ({ composition }) => {
     const [expanded, setExpanded] = useState(false);

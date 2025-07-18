@@ -7,7 +7,14 @@ import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 
-export default function AccountInfoStep({ formData, onChange, emailError, emailErrorMessage, passwordError, passwordErrorMessage }) {
+export default function AccountInfoStep({
+                                            formData = { email: '', password: '' },
+                                            onChange = () => {},
+                                            emailError = false,
+                                            emailErrorMessage = '',
+                                            passwordError = false,
+                                            passwordErrorMessage = ''
+                                        }) {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <FormControl>
@@ -18,7 +25,7 @@ export default function AccountInfoStep({ formData, onChange, emailError, emailE
                     id="email"
                     placeholder="tu@correo.com"
                     name="email"
-                    value={formData.email}
+                    value={formData.email || ''}
                     onChange={onChange}
                     autoComplete="email"
                     variant="outlined"
@@ -35,7 +42,7 @@ export default function AccountInfoStep({ formData, onChange, emailError, emailE
                     placeholder="••••••"
                     type="password"
                     id="password"
-                    value={formData.password}
+                    value={formData.password || ''}
                     onChange={onChange}
                     autoComplete="new-password"
                     variant="outlined"

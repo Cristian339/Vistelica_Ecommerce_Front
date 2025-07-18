@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Box, Typography, Paper, Divider, Chip, Badge, Alert, IconButton, Tooltip, Grid } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { typography } from "@/pages/shared-theme/themePrimitives";
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import { typography } from "@/components/shared/themePrimitives";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import LoopIcon from '@mui/icons-material/Loop';

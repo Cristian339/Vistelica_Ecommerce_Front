@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { isAdmin } from '@/services/authService';
 import { Button, Typography, Box } from '@mui/joy';
 import CircularProgress from '@mui/material/CircularProgress';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
 
 export default function AdminPage() {
     const [loading, setLoading] = useState(true);

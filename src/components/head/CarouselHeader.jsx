@@ -1,3 +1,6 @@
+import React from 'react';
+import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
+
 const CarouselHeader = React.memo(({ title, subtitle, onSeeAllClick }) => {
     return (
         <Box

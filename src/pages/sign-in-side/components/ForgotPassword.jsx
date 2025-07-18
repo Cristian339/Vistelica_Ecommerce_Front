@@ -16,7 +16,7 @@ import Alert from '@mui/material/Alert';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { requestPasswordReset, verifyResetCode, completePasswordReset } from '../../../services/authService';
-import { vistelicaColors } from '../../shared-theme/vistelicaColors';
+import { vistelicaColors } from '../../../components/shared/vistelicaColors';
 import { styled } from '@mui/material/styles';
 
 // Botón personalizado

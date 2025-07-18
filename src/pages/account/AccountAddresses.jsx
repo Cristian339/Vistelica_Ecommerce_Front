@@ -39,7 +39,7 @@ import addressService from '@/services/addressService';
 import {Container} from '@mui/system';
 import SidebarMenu from '@/components/layout/SidebarMenu';
 import Navbar from "@/components/layout/HeaderComponent";
-import {vistelicaColors} from "@/pages/shared-theme/vistelicaColors";
+import {vistelicaColors} from "@/components/shared/vistelicaColors";
 import StarOutlineIcon from '@mui/icons-material/StarOutline';
 import StarIcon from '@mui/icons-material/Star';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';

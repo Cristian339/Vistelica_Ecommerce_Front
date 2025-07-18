@@ -10,7 +10,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 import { useColorScheme } from '@mui/material/styles';
-import { vistelicaColors } from '../../shared-theme/vistelicaColors';
+import { vistelicaColors } from '../../../components/shared/vistelicaColors';
 
 // Botón primario con hover amarillo
 const PrimaryButton = styled(Button)(() => ({
@@ -29,7 +29,7 @@ const PrimaryButton = styled(Button)(() => ({
 }));
 
 export default function AdditionalAddressStep({
-                                                  formData,
+                                                  formData = {}, // Default empty object
                                                   onChange,
                                                   onCheckboxChange,
                                                   errors = {},

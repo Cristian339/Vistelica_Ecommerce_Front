@@ -20,14 +20,14 @@ import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
 import AppTheme from '../shared-theme/AppTheme';
 import ColorModeSelect from '../shared-theme/ColorModeSelect';
-import {SitemarkIcon} from './components/CustomIcons';
+import {SitemarkIcon} from '../../components/sign/up/CustomIcons';
 import RegistrationOptions from './components/RegistrationOptions';
 import AccountInfoStep from './components/AccountInfoStep';
 import PersonalInfoStep from './components/PersonalInfoStep';
 import ContactInfoStep from './components/PersonalizationStep';
 import AdditionalAddressStep from './components/AdditionalAddressStep';
 import { useColorScheme } from '@mui/material/styles';
-import { vistelicaColors } from '../shared-theme/vistelicaColors';
+import { vistelicaColors } from '../../components/shared/vistelicaColors';
 import PersonalizationStep from "./components/PersonalizationStep";
 import EmailVerificationStep from './components/EmailVerificationStep';
 

@@ -22,7 +22,7 @@ import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import AssignmentReturnIcon from '@mui/icons-material/AssignmentReturn';
 import PaymentIcon from '@mui/icons-material/Payment';
 import PersonIcon from '@mui/icons-material/Person';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
 import ChatMessage from './ChatMessage';
 import { getResponse, getChatCategories } from '@/services/chatbotService';
 

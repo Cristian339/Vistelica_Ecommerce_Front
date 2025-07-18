@@ -15,8 +15,8 @@ import StyleOutlinedIcon from '@mui/icons-material/StyleOutlined';
 import EuroOutlinedIcon from '@mui/icons-material/EuroOutlined';
 import StraightenOutlinedIcon from '@mui/icons-material/StraightenOutlined';
 import { motion } from "framer-motion";
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from "@/components/shared/themePrimitives";
 
 // Lista de tallas comunes
 const SIZES = [
@@ -52,7 +52,18 @@ const COLORS = [
     { id: 'NAVY', label: 'Azul Marino', hex: '#000080' },
 ];
 
-
+// Filtros por defecto
+const DEFAULT_FILTERS = {
+    subcategories: [],
+    brands: [],
+    colors: [],
+    sizes: [],
+    ratings: [],
+    priceMin: '',
+    priceMax: '',
+    hasDiscount: false,
+    lowStock: false
+};
 
 // Componente para el encabezado de cada acordeón
 const FilterAccordionHeader = React.memo(({ icon: Icon, title, activeCount = 0 }) => (
@@ -190,7 +201,7 @@ SizeSelector.displayName = 'SizeSelector';
 
 // Componente principal FilterSidebar
 const FilterSidebar = ({
-                           filters,
+                           filters = DEFAULT_FILTERS,
                            setFilters,
                            categories = [],
                            subcategories = [],
@@ -212,6 +223,7 @@ const FilterSidebar = ({
     const handleAccordionChange = (panel) => (event, isExpanded) => {
         setExpandedAccordion(isExpanded ? panel : false);
     };
+
     const getRatingCount = (rating) => {
         if (!products || products.length === 0) return 0;
 
@@ -227,14 +239,22 @@ const FilterSidebar = ({
             }
         }).length;
     };
+
     // Función para manejar checkboxes
     const handleCheckbox = (key, value) => {
-        setFilters(prev => ({
-            ...prev,
-            [key]: prev[key].includes(value)
-                ? prev[key].filter(item => item !== value)
-                : [...prev[key], value]
-        }));
+        if (!setFilters) return;
+
+        setFilters(prev => {
+            const currentFilters = prev || DEFAULT_FILTERS;
+            const currentArray = currentFilters[key] || [];
+
+            return {
+                ...currentFilters,
+                [key]: currentArray.includes(value)
+                    ? currentArray.filter(item => item !== value)
+                    : [...currentArray, value]
+            };
+        });
     };
 
     // Función para manejar tallas
@@ -249,8 +269,10 @@ const FilterSidebar = ({
 
     // Función para manejar cambios de precio
     const handlePriceChange = (key, value) => {
+        if (!setFilters) return;
+
         setFilters(prev => ({
-            ...prev,
+            ...(prev || DEFAULT_FILTERS),
             [key]: value
         }));
     };
@@ -262,37 +284,37 @@ const FilterSidebar = ({
 
     // Función para limpiar todos los filtros
     const clearAllFilters = () => {
-        setFilters({
-            subcategories: [],
-            brands: [],
-            colors: [],
-            sizes: [],
-            ratings: [],
-            priceMin: '',
-            priceMax: '',
-            hasDiscount: false,
-            lowStock: false
-        });
+        if (!setFilters) return;
+
+        setFilters(DEFAULT_FILTERS);
     };
+
+    // Normalizar filtros para evitar errores
+    const normalizedFilters = useMemo(() => {
+        return {
+            ...DEFAULT_FILTERS,
+            ...filters
+        };
+    }, [filters]);
 
     // Contar filtros activos por sección
     const getActiveFiltersCount = useMemo(() => {
         return {
-            subcategories: filters.subcategories.length,
-            colors: filters.colors.length,
-            sizes: filters.sizes ? filters.sizes.length : 0,
-            price: (filters.priceMin !== '' || filters.priceMax !== '') ? 1 : 0,
-            ratings: filters.ratings.length,
-            stockDiscount: (filters.hasDiscount ? 1 : 0) + (filters.lowStock ? 1 : 0),
+            subcategories: (normalizedFilters.subcategories || []).length,
+            colors: (normalizedFilters.colors || []).length,
+            sizes: (normalizedFilters.sizes || []).length,
+            price: (normalizedFilters.priceMin !== '' || normalizedFilters.priceMax !== '') ? 1 : 0,
+            ratings: (normalizedFilters.ratings || []).length,
+            stockDiscount: (normalizedFilters.hasDiscount ? 1 : 0) + (normalizedFilters.lowStock ? 1 : 0),
         };
-    }, [filters]);
+    }, [normalizedFilters]);
 
     // Verificar si hay algún filtro activo
     const hasActiveFilters = useMemo(() => {
         return Object.values(getActiveFiltersCount).some(count => count > 0) ||
-            filters.hasDiscount ||
-            filters.lowStock;
-    }, [filters, getActiveFiltersCount]);
+            normalizedFilters.hasDiscount ||
+            normalizedFilters.lowStock;
+    }, [normalizedFilters, getActiveFiltersCount]);
 
     return (
         <>

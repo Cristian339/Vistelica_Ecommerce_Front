@@ -11,8 +11,8 @@ import {
 } from '@mui/material';
 import { Favorite, FavoriteBorder, Star } from '@mui/icons-material';
 import Link from 'next/link';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 const ProductCard = ({
     product,
@@ -23,7 +23,9 @@ const ProductCard = ({
     isTablet
 }) => {
     const [isHovered, setIsHovered] = useState(false);
-    
+    if (!product) {
+        return null;
+    }
     const formattedPrice = `${product.price} €`;
     const hasDiscount = product.discount_percentage && parseFloat(product.discount_percentage) > 0;
     const mainImage = product.main_image ||

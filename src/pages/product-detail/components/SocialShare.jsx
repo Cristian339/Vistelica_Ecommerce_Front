@@ -13,8 +13,8 @@ import {
     WhatsApp, LinkedIn, ContentCopy, Close,
     Email, Telegram
 } from '@mui/icons-material';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 const SocialShareButton = ({ icon, label, color, onClick, smallScreen }) => (
     <motion.div

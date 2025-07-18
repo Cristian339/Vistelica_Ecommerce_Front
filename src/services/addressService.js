@@ -139,7 +139,8 @@ const getDefaultAddress = async () => {
     }
 };
 
-export default {
+// Crear el objeto del servicio
+const addressService = {
     getAddresses,
     addAddress,
     updateAddress,
@@ -147,3 +148,5 @@ export default {
     setDefaultAddress,
     getDefaultAddress
 };
+
+export default addressService;

@@ -2,7 +2,7 @@
 import React, {useMemo} from 'react';
 import {Box, Typography, LinearProgress, useTheme, useMediaQuery} from '@mui/material';
 import {motion, AnimatePresence} from 'framer-motion';
-import {vistelicaColors} from "@/pages/shared-theme/vistelicaColors";
+import {vistelicaColors} from "@/components/shared/vistelicaColors";
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import LocalMallIcon from '@mui/icons-material/LocalMall';

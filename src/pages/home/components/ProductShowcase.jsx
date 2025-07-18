@@ -18,8 +18,8 @@ import {
 import { styled } from '@mui/material/styles';
 import productService from "@/services/productService";
 import Link from 'next/link';
-import { vistelicaColors } from '../../shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '../../../components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 import { motion } from 'framer-motion';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import StarIcon from '@mui/icons-material/Star';

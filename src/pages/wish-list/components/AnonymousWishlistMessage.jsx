@@ -3,8 +3,8 @@ import { Box, Button, Typography, Paper, useTheme, useMediaQuery, Fade } from '@
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useRouter } from 'next/router';
-import { vistelicaColors } from '../../shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '../../../components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 import { motion } from 'framer-motion';
 
 const AnonymousWishlistMessage = () => {

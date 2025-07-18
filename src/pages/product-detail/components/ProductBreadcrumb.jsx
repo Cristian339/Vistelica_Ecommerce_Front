@@ -8,8 +8,8 @@ import HomeIcon from '@mui/icons-material/Home';
 import CategoryIcon from '@mui/icons-material/Category';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 const ProductBreadcrumb = ({ product }) => {
     const theme = useTheme();

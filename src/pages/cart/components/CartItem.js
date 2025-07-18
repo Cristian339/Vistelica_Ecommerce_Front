@@ -2,8 +2,8 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Box, Typography, Paper, IconButton, CircularProgress, Chip, Tooltip } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from "@/components/shared/themePrimitives";
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -18,6 +18,7 @@ const CartItem = React.memo(({
                                  onRemove,
                                  loading = false
                              }) => {
+    // All hooks must be called at the top level, before any conditional returns
     const [quantity, setQuantity] = useState(item?.quantity || 1);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [loadingImage, setLoadingImage] = useState(true);
@@ -50,16 +51,19 @@ const CartItem = React.memo(({
 
     // Manejadores de eventos optimizados
     const handleQuantityChange = useCallback((newQuantity) => {
-        if (newQuantity < 1 || newQuantity > 100 || loading) return;
+        if (!item || newQuantity < 1 || newQuantity > 100 || loading) return;
 
         setQuantity(newQuantity);
         onUpdateQuantity && onUpdateQuantity(item.cart_detail_id, newQuantity);
-    }, [item.cart_detail_id, onUpdateQuantity, loading]);
+    }, [item, onUpdateQuantity, loading]);
 
     const handleRemoveItem = useCallback(() => {
-        if (loading) return;
+        if (!item || loading) return;
         onRemove && onRemove(item.cart_detail_id);
-    }, [item.cart_detail_id, onRemove, loading]);
+    }, [item, onRemove, loading]);
+
+    // Now we can safely return null after all hooks have been called
+    if (!item) return null;
 
     return (
         <motion.div

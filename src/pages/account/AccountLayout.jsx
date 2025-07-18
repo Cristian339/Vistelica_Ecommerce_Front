@@ -14,7 +14,7 @@ import AccountInfo from './AcountInfo';
 import { getUserProfile } from '@/services/profileService';
 import Navbar from "@/components/layout/HeaderComponent";
 import MenuIcon from '@mui/icons-material/Menu';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
 import { motion } from 'framer-motion';
 
 const AccountLayout = () => {

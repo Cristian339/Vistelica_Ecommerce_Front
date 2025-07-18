@@ -1,7 +1,7 @@
 import React, { useState, useCallback, memo } from 'react';
 import { Select, MenuItem, FormControl, InputLabel, Box } from '@mui/material';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from "@/components/shared/themePrimitives";
 
 // Iconos para las opciones
 import SortIcon from '@mui/icons-material/Sort';

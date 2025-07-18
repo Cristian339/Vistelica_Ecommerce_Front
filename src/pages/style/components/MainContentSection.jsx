@@ -8,8 +8,8 @@ import {
 } from '@mui/material';
 import ImageGallery from './ImageGallery';
 import ProductGrid from './ProductGrid';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 const MainContentSection = ({
                                 styleImages,
@@ -25,14 +25,23 @@ const MainContentSection = ({
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
-
+    if (!styleImages || !Array.isArray(styleImages)) {
+        return null; // o un componente de loading
+    }
+    if (!products || !Array.isArray(products)) {
+        return null; // o un componente de loading
+    }
     const handlePrevImage = () => {
+        if (!styleImages || !Array.isArray(styleImages) || styleImages.length === 0) return;
+
         const prevIndex = currentImageIndex === 0 ? styleImages.length - 1 : currentImageIndex - 1;
         setCurrentImageIndex(prevIndex);
         setSelectedThumbnail(prevIndex);
     };
 
     const handleNextImage = () => {
+        if (!styleImages || !Array.isArray(styleImages) || styleImages.length === 0) return;
+
         const nextIndex = currentImageIndex === styleImages.length - 1 ? 0 : currentImageIndex + 1;
         setCurrentImageIndex(nextIndex);
         setSelectedThumbnail(nextIndex);

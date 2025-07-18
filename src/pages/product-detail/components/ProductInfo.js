@@ -12,8 +12,8 @@ import ArticleIcon from '@mui/icons-material/Article';
 import InfoIcon from '@mui/icons-material/Info';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 const ProductInfo = ({ product }) => {
     const [expanded, setExpanded] = useState(false);
@@ -33,7 +33,7 @@ const ProductInfo = ({ product }) => {
 
     useEffect(() => {
         console.log("La descripcion es: " + description);
-    }, []);
+    }, [description]);
     // Animaciones optimizadas
     const containerVariants = {
         hidden: { opacity: 0, y: isMobile ? 5 : 10 },

@@ -10,6 +10,7 @@ const getClients = async () => {
         fullName: client.profile ? `${client.profile.name} ${client.profile.lastName}` : 'Sin nombre'
     }));
 };
+
 const getAllOrders = async () => {
     try {
         const response = await axios.get(`${API_URL}/admin/orders`);
@@ -44,7 +45,6 @@ const getSuppliers = async () => {
     const response = await axios.get(`${API_URL}/suppliers`);
     return response.data;
 };
-
 
 const banUser = async (userId, reason) => {
     try {
@@ -82,8 +82,6 @@ const unbanUser = async (userId) => {
     }
 };
 
-
-
 const deleteOrder = async (orderId) => {
     await axios.delete(`${API_URL}/orders/${orderId}`);
 };
@@ -93,7 +91,6 @@ const createSupplier = async (supplierData) => {
     const response = await axios.post(`${API_URL}/suppliers`, supplierData);
     return response.data;
 };
-
 
 const toggleDiscardProduct = async (productId) => {
     const response = await axios.patch(`${API_URL}/products/${productId}/discard`);
@@ -129,9 +126,6 @@ const getAllProducts = async () => {
 
 const createProduct = async (formData) => {
     try {
-
-
-
         // 3. Enviar petición
         const response = await axios.post(`${API_URL}/products`, formData, {
             headers: {
@@ -180,8 +174,6 @@ const getProductsByCategory = async (categoryId, subcategoryId) => {
     return response.data;
 };
 
-
-
 const getCategories = async () => {
     const response = await axios.get(`${API_URL}/categories`);
     return response.data;
@@ -226,6 +218,7 @@ const getSubcategoriesByCategory = async (categoryId) => {
     const response = await axios.get(`${API_URL}/categories/${categoryId}/subcategories`);
     return response.data;
 };
+
 // Obtener todas las reseñas reportadas (agrupadas por reseña)
 const getReportedReviews = async () => {
     try {
@@ -247,8 +240,6 @@ const getAllReports = async () => {
         throw new Error(error.response?.data?.message || 'Error al obtener todos los reportes');
     }
 };
-
-
 
 const getRefundsInReview = async () => {
     try {
@@ -291,6 +282,7 @@ const updateRefundStatus = async (orderDetailId, status, rejectionReason) => {
         );
     }
 };
+
 // Eliminar una reseña reportada (y todos sus reportes)
 const deleteReview = async (reviewId) => {
     try {
@@ -323,7 +315,9 @@ const deleteReportsForReview = async (reviewId) => {
         throw new Error(error.response?.data?.message || 'Error al eliminar reportes de la reseña');
     }
 };
-export default {
+
+// Crear el objeto del servicio
+const adminService = {
     getClients,
     getSuppliers,
     getCategories,
@@ -358,7 +352,8 @@ export default {
     deleteReview,
     deleteReport,
     deleteReportsForReview,
-
     updateRefundStatus,
     getRefundsInReview
 };
+
+export default adminService;

@@ -5,8 +5,8 @@ import { Paper, Typography, Box, useMediaQuery, useTheme, Chip } from '@mui/mate
 import { motion } from "framer-motion";
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import PercentIcon from '@mui/icons-material/Percent';
-import { vistelicaColors } from '@/pages/shared-theme/vistelicaColors';
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from '@/components/shared/vistelicaColors';
+import { typography } from "@/components/shared/themePrimitives";
 
 const PromotionBanner = ({ offer, price }) => {
     const theme = useTheme();

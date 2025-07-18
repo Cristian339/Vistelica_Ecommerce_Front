@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Box, Typography, Button, Divider, Tooltip, Paper, CircularProgress, Badge, Snackbar, Alert } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { vistelicaColors } from "@/pages/shared-theme/vistelicaColors";
-import { typography } from "@/pages/shared-theme/themePrimitives";
+import { vistelicaColors } from "@/components/shared/vistelicaColors";
+import { typography } from "@/components/shared/themePrimitives";
 import { useRouter } from 'next/navigation';
 import { getCurrentUser } from '@/services/authService';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
