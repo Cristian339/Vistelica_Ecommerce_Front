@@ -211,7 +211,7 @@ const ImageCarousel = () => {
     // Datos del carrusel memorizados
     const slides = useMemo(() => [
         {
-            src: "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1743791584/vistelica/Carrusel/hslrccwjzkmexfjv2sc8.jpg",
+            src: "https://res.cloudinary.com/dnehunzxx/image/upload/v1752841949/carrousel_njstp1.png",
             alt: "Monstera leaf close-up",
             title: "Colecciones exclusivas",
             subtitle: "Explora nuestra amplia gama de productos, colaborando con los mejores proveedores del país.",

@@ -347,7 +347,7 @@ const FeaturedCategories = () => {
     const categories = useMemo(() => [
         {
             title: 'Hombre',
-            video: 'https://res.cloudinary.com/dhyv4dpk2/video/upload/v1747333743/vistelica/home%20page/Img-Main/man/hudcof9s4ukdnj0kpb6l.webm',
+            video: 'https://res.cloudinary.com/dnehunzxx/video/upload/v1752854048/Hombre_a6hdu1.mp4',
             type: 'video/webm',
             imageAlt: 'Categoría de moda para hombres',
             path: '/sub-men/MainLayout-subM',
@@ -355,7 +355,7 @@ const FeaturedCategories = () => {
         },
         {
             title: 'Mujer',
-            video: 'https://res.cloudinary.com/dhyv4dpk2/video/upload/v1747333750/vistelica/home%20page/Img-Main/Women/alihfmkaaz3humbjwnu2.mp4',
+            video: 'https://res.cloudinary.com/dnehunzxx/video/upload/v1752854028/Woman_akrzjf.mp4',
             type: 'video/mp4',
             imageAlt: 'Categoría de moda para mujeres',
             path: '/sub-women/MainLayout-subW',
@@ -363,7 +363,7 @@ const FeaturedCategories = () => {
         },
         {
             title: 'Chica',
-            video: 'https://res.cloudinary.com/dhyv4dpk2/video/upload/v1747333744/vistelica/home%20page/Img-Main/Girl/bn4dotyydgmc25nrnmtx.webm',
+            video: 'https://res.cloudinary.com/dnehunzxx/video/upload/v1752854068/Girl_wrsaa1.mp4',
             type: 'video/webm',
             imageAlt: 'Categoría de moda para adolescentes',
             path: '/sub-girl/MainLayout-subG',
@@ -371,7 +371,7 @@ const FeaturedCategories = () => {
         },
         {
             title: 'Chico',
-            video: 'https://res.cloudinary.com/dhyv4dpk2/video/upload/v1747333744/vistelica/home%20page/Img-Main/Boy/dj4xcaojseib3xypqtqa.webm',
+            video: 'https://res.cloudinary.com/dnehunzxx/video/upload/v1752854039/Chico_nj6tou.mp4',
             type: 'video/webm',
             imageAlt: 'Categoría de accesorios de moda',
             path: '/sub-boy/MainLayout-subB',
