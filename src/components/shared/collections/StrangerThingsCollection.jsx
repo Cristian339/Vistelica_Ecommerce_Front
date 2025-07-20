@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { vistelicaColors } from '@/components/shared/vistelicaColors';
 import { typography } from "@/components/shared/themePrimitives";
 
-const StrangerThingsCollection = () => {
+const HalloweenCollection = () => {
     const [isHovered, setIsHovered] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
     const [glitchEffect, setGlitchEffect] = useState(false);
@@ -17,14 +17,14 @@ const StrangerThingsCollection = () => {
     const prefersReducedMotion = typeof window !== 'undefined' ?
         window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
 
-    // Memoizar colores para prevenir recálculos
-    const stColors = useMemo(() => ({
-        background: '#1A0315',
-        title: '#E62C2F',
-        gradientStart: '#1A0315',
-        gradientEnd: '#500A3C',
-        buttonHover: vistelicaColors.accent,
-        lightRed: '#FF4A5F',
+    // Colores de Halloween
+    const halloweenColors = useMemo(() => ({
+        background: '#0F0906',
+        title: '#FF5B00',
+        gradientStart: '#0F0906',
+        gradientEnd: '#230A29',
+        buttonHover: '#39FF14',
+        accent: '#6B238E',
     }), []);
 
     // Detector de tamaño de pantalla optimizado con debounce
@@ -68,7 +68,7 @@ const StrangerThingsCollection = () => {
             glitchTimeoutId = setTimeout(() => setGlitchEffect(false), 200);
         }, 5000);
 
-        // VHS scan optimizado con RAF
+        // Efecto de línea animada optimizado con RAF
         let lastTime = 0;
         let vhsTimerId;
 
@@ -123,7 +123,7 @@ const StrangerThingsCollection = () => {
         }
     }, []);
 
-    // Generación determinista de líneas plásticas memoizada
+    // Generación determinista de líneas decorativas
     const plasticLines = useMemo(() => {
         const lines = [];
         for (let i = 0; i < (isMobile ? 10 : 20); i++) {
@@ -134,13 +134,13 @@ const StrangerThingsCollection = () => {
                 top: `${(i * 5) % 100}%`,
                 transform: `rotate(${i * 18}deg)`,
                 position: 'absolute',
-                backgroundColor: stColors.title,
+                backgroundColor: halloweenColors.title,
                 opacity: 0.4,
                 willChange: prefersReducedMotion ? 'auto' : 'opacity',
             });
         }
         return lines;
-    }, [stColors.title, isMobile, prefersReducedMotion]);
+    }, [halloweenColors.title, isMobile, prefersReducedMotion]);
 
     // Estilos optimizados y memoizados
     const styles = useMemo(() => ({
@@ -159,7 +159,7 @@ const StrangerThingsCollection = () => {
         mainContainer: {
             display: 'flex',
             flexDirection: 'column',
-            backgroundColor: stColors.background,
+            backgroundColor: halloweenColors.background,
             color: 'white',
             position: 'relative',
             overflow: 'hidden',
@@ -175,10 +175,10 @@ const StrangerThingsCollection = () => {
         imageSection: {
             position: 'relative',
             width: '100%',
-            height: isMobile ? '450px' : '500px', // Aumenté la altura en móviles para mejor visibilidad
+            height: isMobile ? '450px' : '500px',
             flex: isMobile ? '1 1 auto' : '1 1 60%',
             minWidth: '300px',
-            backgroundColor: stColors.background,
+            backgroundColor: halloweenColors.background,
             overflow: 'hidden',
             display: 'flex',
             alignItems: 'center',
@@ -195,7 +195,7 @@ const StrangerThingsCollection = () => {
             height: '100%',
             opacity: 0.7,
             zIndex: 1,
-            background: `linear-gradient(135deg, ${stColors.gradientStart} 0%, ${stColors.gradientEnd} 100%)`,
+            background: `linear-gradient(135deg, ${halloweenColors.gradientStart} 0%, ${halloweenColors.gradientEnd} 100%)`,
         },
         glitchOverlay: {
             position: 'absolute',
@@ -204,7 +204,7 @@ const StrangerThingsCollection = () => {
             width: '100%',
             height: '100%',
             zIndex: 4,
-            backgroundColor: 'rgba(255,0,0,0.05)',
+            backgroundColor: 'rgba(255,91,0,0.05)',
             mixBlendMode: 'overlay',
             opacity: glitchEffect ? 1 : 0,
             transition: prefersReducedMotion ? 'none' : 'opacity 0.1s ease',
@@ -216,7 +216,7 @@ const StrangerThingsCollection = () => {
             left: 0,
             width: '100%',
             height: '100%',
-            backgroundImage: 'repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 2px)',
+            backgroundImage: 'repeating-linear-gradient(0deg, rgba(255,91,0,0.03) 0px, rgba(255,91,0,0.03) 1px, transparent 1px, transparent 2px)',
             backgroundSize: '100% 2px',
             zIndex: 3,
             opacity: 0.5,
@@ -244,7 +244,7 @@ const StrangerThingsCollection = () => {
             willChange: prefersReducedMotion ? 'auto' : 'transform',
         },
         textSection: {
-            padding: isMobile ? '2.5rem 0.5rem' : '3.5rem 3rem', // Ajusté el padding para centrar mejor en móviles
+            padding: isMobile ? '2.5rem 0.5rem' : '3.5rem 3rem',
             flex: '1 1 40%',
             minWidth: '300px',
             display: 'flex',
@@ -253,7 +253,7 @@ const StrangerThingsCollection = () => {
             alignItems: 'center',
             textAlign: 'center',
             zIndex: 10,
-            background: `linear-gradient(160deg, ${stColors.background} 0%, #2A0523 100%)`,
+            background: `linear-gradient(160deg, ${halloweenColors.background} 0%, ${halloweenColors.gradientEnd} 100%)`,
             borderRadius: isMobile ?
                 '0 0 12px 12px' :
                 '0 16px 16px 0',
@@ -277,7 +277,7 @@ const StrangerThingsCollection = () => {
             left: '0',
             width: '100%',
             height: '3px',
-            background: 'rgba(255,255,255,0.3)',
+            background: 'rgba(255,91,0,0.4)',
             zIndex: 20,
             opacity: 0.4,
             willChange: prefersReducedMotion ? 'auto' : 'top',
@@ -285,7 +285,7 @@ const StrangerThingsCollection = () => {
         artistName: {
             fontSize: isMobile ? '2.4rem' : '2.8rem',
             fontWeight: 'bold',
-            color: stColors.title,
+            color: halloweenColors.title,
             marginBottom: '0.5rem',
             lineHeight: '1.1',
             textTransform: 'uppercase',
@@ -293,7 +293,7 @@ const StrangerThingsCollection = () => {
             letterSpacing: '2px',
             marginTop: '0',
             textShadow: (isHovered || isFocused) ?
-                '0 0 10px rgba(230,44,47,0.7), 0 0 20px rgba(230,44,47,0.5)' :
+                '0 0 10px rgba(255,91,0,0.7), 0 0 20px rgba(255,91,0,0.5)' :
                 '2px 2px 4px rgba(0,0,0,0.5)',
             transition: prefersReducedMotion ? 'none' : 'text-shadow 0.3s ease',
             position: 'relative',
@@ -308,7 +308,7 @@ const StrangerThingsCollection = () => {
         tourName: {
             fontSize: isMobile ? '1.6rem' : '1.8rem',
             fontWeight: 'bold',
-            color: stColors.title,
+            color: halloweenColors.title,
             marginBottom: '1.2rem',
             lineHeight: '1.2',
             textTransform: 'uppercase',
@@ -331,7 +331,7 @@ const StrangerThingsCollection = () => {
             transform: 'translateX(-50%)',
             width: '60px',
             height: '2px',
-            backgroundColor: stColors.title,
+            backgroundColor: halloweenColors.title,
             opacity: 0.6,
         },
         promoText: {
@@ -355,7 +355,7 @@ const StrangerThingsCollection = () => {
             padding: isMobile ? '12px 24px' : '14px 28px',
             borderRadius: '50px',
             backgroundColor: 'white',
-            color: stColors.background,
+            color: halloweenColors.background,
             border: 'none',
             cursor: 'pointer',
             fontSize: isMobile ? '0.95rem' : '1rem',
@@ -363,21 +363,21 @@ const StrangerThingsCollection = () => {
             transition: prefersReducedMotion ? 'none' : 'all 0.3s ease',
             fontFamily: typography.fontFamily,
             fontWeight: '600',
-            boxShadow: '0 4px 12px rgba(230,44,47,0.3)',
+            boxShadow: '0 4px 12px rgba(255,91,0,0.3)',
             position: 'relative',
             overflow: 'hidden',
             zIndex: 5,
-            outline: isFocused ? `3px solid ${stColors.title}` : 'none',
+            outline: isFocused ? `3px solid ${halloweenColors.title}` : 'none',
             outlineOffset: '3px',
             touchAction: 'manipulation',
             maxWidth: isMobile ? '280px' : 'none',
             width: isMobile ? '100%' : 'auto',
         },
         buttonHovered: {
-            backgroundColor: stColors.title,
+            backgroundColor: halloweenColors.title,
             color: 'white',
             transform: prefersReducedMotion ? 'none' : 'translateY(-3px)',
-            boxShadow: '0 6px 16px rgba(230,44,47,0.5)',
+            boxShadow: '0 6px 16px rgba(255,91,0,0.5)',
         },
         buttonBefore: {
             content: '""',
@@ -386,7 +386,7 @@ const StrangerThingsCollection = () => {
             left: 0,
             width: (isHovered || isFocused) ? '100%' : '0%',
             height: '100%',
-            backgroundColor: stColors.title,
+            backgroundColor: halloweenColors.title,
             transition: prefersReducedMotion ? 'none' : 'width 0.3s ease',
             zIndex: -1,
         },
@@ -401,7 +401,7 @@ const StrangerThingsCollection = () => {
             position: 'absolute',
             top: '20px',
             right: '20px',
-            backgroundColor: stColors.title,
+            backgroundColor: halloweenColors.title,
             color: 'white',
             padding: '0.5rem 1rem',
             borderRadius: '20px',
@@ -418,7 +418,7 @@ const StrangerThingsCollection = () => {
             width: '16px',
             height: '16px',
         },
-        strangerFlicker: {
+        halloweenFlicker: {
             animation: !prefersReducedMotion && glitchEffect ? 'flicker 0.2s ease infinite' : 'none',
         },
         decorativeCorner: {
@@ -426,7 +426,7 @@ const StrangerThingsCollection = () => {
             width: '50px',
             height: '50px',
             borderStyle: 'solid',
-            borderColor: 'rgba(230,44,47,0.5)',
+            borderColor: `rgba(255,91,0,0.5)`,
             borderWidth: '0',
             zIndex: 4,
         },
@@ -442,7 +442,6 @@ const StrangerThingsCollection = () => {
             borderBottomWidth: '2px',
             borderLeftWidth: '2px',
         },
-        // Estilos específicos para accesibilidad y foco
         srOnly: {
             position: 'absolute',
             width: '1px',
@@ -454,24 +453,24 @@ const StrangerThingsCollection = () => {
             whiteSpace: 'nowrap',
             borderWidth: 0
         }
-    }), [isHovered, isFocused, isVisible, glitchEffect, stColors, isMobile, prefersReducedMotion]);
+    }), [isHovered, isFocused, isVisible, glitchEffect, halloweenColors, isMobile, prefersReducedMotion]);
 
     return (
         <section
             aria-labelledby="collection-title"
-            className="stranger-things-collection"
+            className="halloween-collection"
             style={styles.container}
             ref={sectionRef}
         >
             <div style={{...styles.mainContainer, width: '100%'}}>
                 <div style={styles.contentWrapper}>
-                    {/* Sección de imagen (izquierda o superior en móvil) */}
+                    {/* Sección de imagen */}
                     <div
                         style={styles.imageSection}
                         onMouseEnter={handleMouseEnter}
                         onMouseLeave={handleMouseLeave}
                         role="img"
-                        aria-label="Imagen promocional de la colección Stranger Things mostrando ropa inspirada en la serie"
+                        aria-label="Imagen promocional de la colección de Halloween mostrando ropa temática"
                     >
                         {/* Fondo con efecto de gradiente */}
                         <div style={styles.blueBackground}></div>
@@ -486,12 +485,12 @@ const StrangerThingsCollection = () => {
                         {/* Líneas de escaneo */}
                         <div style={styles.scanlines} aria-hidden="true"></div>
 
-                        {/* Imagen principal optimizada */}
+                        {/* Imagen principal optimizada - Imagen libre de derechos de Halloween */}
                         <div style={styles.artist}>
                             {clientSideRendered && (
                                 <Image
-                                    src="https://res.cloudinary.com/dhyv4dpk2/image/upload/v1747850681/vistelica/subcategorias/Chica/dutqii5vmisykfo7br45.jpg"
-                                    alt="Colección de ropa Stranger Things"
+                                    src="https://res.cloudinary.com/dnehunzxx/image/upload/v1752881625/man-5808561_1920_epxtux.jpg"
+                                    alt="Colección especial de Halloween"
                                     fill
                                     sizes="(max-width: 768px) 100vw, 60vw"
                                     priority
@@ -508,7 +507,7 @@ const StrangerThingsCollection = () => {
                         {/* Efecto de glitch */}
                         <div style={styles.glitchOverlay} aria-hidden="true"></div>
 
-                        {/* Efecto de línea VHS */}
+                        {/* Efecto de línea animada */}
                         <div
                             style={{
                                 ...styles.vhsEffect,
@@ -521,7 +520,7 @@ const StrangerThingsCollection = () => {
                         <div
                             style={styles.releaseDateBadge}
                             role="status"
-                            aria-label="Disponible el 20 de julio"
+                            aria-label="Disponible el 15 de octubre"
                         >
                             <svg style={styles.calendarIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -529,11 +528,11 @@ const StrangerThingsCollection = () => {
                                 <line x1="8" y1="2" x2="8" y2="6"></line>
                                 <line x1="3" y1="10" x2="21" y2="10"></line>
                             </svg>
-                            20/07
+                            15/10
                         </div>
                     </div>
 
-                    {/* Sección de texto (derecha o inferior en móvil) */}
+                    {/* Sección de texto */}
                     <div style={styles.textSection}>
                         {/* Overlay de ruido */}
                         <div style={styles.noiseOverlay} aria-hidden="true"></div>
@@ -542,24 +541,24 @@ const StrangerThingsCollection = () => {
                         <div style={{...styles.decorativeCorner, ...styles.cornerTopRight}} aria-hidden="true"></div>
                         <div style={{...styles.decorativeCorner, ...styles.cornerBottomLeft}} aria-hidden="true"></div>
 
-                        {/* Título principal con ID para accesibilidad */}
+                        {/* Título principal */}
                         <h2
                             id="collection-title"
-                            style={{...styles.artistName, ...styles.strangerFlicker}}
+                            style={{...styles.artistName, ...styles.halloweenFlicker}}
                         >
-                            Stranger<br />Things
+                            Halloween<br />2024
                         </h2>
 
                         {/* Subtítulo de colección */}
                         <h3 style={styles.tourName}>
-                            Colección<br />Exclusiva
+                            Colección<br />Especial
                             <span style={styles.tourNameUnderline} aria-hidden="true"></span>
                         </h3>
 
                         {/* Texto promocional */}
                         <p style={styles.promoText}>
-                            Descubre nuestra colección exclusiva<br />
-                            Stranger Things disponible el 20/07 en nuestra tienda
+                            Descubre nuestra colección especial<br />
+                            de Halloween disponible el 15/10 en nuestra tienda
                         </p>
 
                         {/* Botón CTA con accesibilidad mejorada */}
@@ -574,13 +573,13 @@ const StrangerThingsCollection = () => {
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
                             onKeyDown={handleKeyPress}
-                            aria-label="Explorar productos de la colección Stranger Things"
+                            aria-label="Explorar productos de la colección de Halloween"
                         >
                             <div style={styles.buttonBefore} aria-hidden="true"></div>
                             <span style={{
                                 position: 'relative',
                                 zIndex: 2,
-                                color: (isHovered || isFocused) ? 'white' : stColors.background
+                                color: (isHovered || isFocused) ? 'white' : halloweenColors.background
                             }}>
                                 Explorar productos
                                 <svg
@@ -603,7 +602,7 @@ const StrangerThingsCollection = () => {
                 </div>
             </div>
 
-            {/* Estilos CSS con soporta para prefers-reduced-motion */}
+            {/* Estilos CSS con soporte para prefers-reduced-motion */}
             <style jsx global>{`
                 @media (prefers-reduced-motion: no-preference) {
                     @keyframes vhsScan {
@@ -617,8 +616,8 @@ const StrangerThingsCollection = () => {
                     }
                 }
 
-                .stranger-things-collection:focus-within {
-                    outline: 2px solid ${stColors.title};
+                .halloween-collection:focus-within {
+                    outline: 2px solid ${halloweenColors.title};
                     outline-offset: 4px;
                 }
             `}</style>
@@ -626,4 +625,4 @@ const StrangerThingsCollection = () => {
     );
 };
 
-export default StrangerThingsCollection;
+export default HalloweenCollection;

@@ -5,7 +5,7 @@ import { vistelicaColors } from '@/components/shared/vistelicaColors';
 import { typography } from "@/components/shared/themePrimitives";
 
 const BannerVideoSection = ({
-    videoUrl = "https://res.cloudinary.com/dhyv4dpk2/video/upload/v1747847378/vistelica/subcategorias/vuo7vq7l9bizoandcyup.mp4",
+    videoUrl = "https://res.cloudinary.com/dnehunzxx/video/upload/v1752879979/185787-876545918_small_epl9yj.mp4",
     posterUrl = "https://res.cloudinary.com/dhyv4dpk2/image/upload/v1747847378/vistelica/subcategorias/vuo7vq7l9bizoandcyup.jpg",
     catalogLink = "/catalog"
 }) => {
